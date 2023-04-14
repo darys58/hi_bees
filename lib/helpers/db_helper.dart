@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:path/path.dart';
 import 'package:sqflite/sqlite_api.dart';
@@ -51,11 +51,13 @@ class DBHelper {
         'CREATE TABLE pasieki(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ileUli INTEGER, przeglad TEXT, ikona TEXT, opis TEXT)');
       await db.execute(
         'CREATE TABLE info(id TEXT PRIMARY KEY, data TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, uwagi TEXT)');
-      //     'CREATE TABLE restauracje(id TEXT PRIMARY KEY, nazwa TEXT, obiekt TEXT, adres TEXT, miaId TEXT, miasto TEXT, wojId TEXT, woj TEXT, latitude TEXT, longitude TEXT, online TEXT, dostawy TEXT, opakowanie TEXT, doStolika TEXT, rezerwacje TEXT, mogeJesc TEXT, modMenu TEXT)');
-      //await db.execute(
-      //    'CREATE TABLE memory(nazwa TEXT PRIMARY KEY, a TEXT, b TEXT, c TEXT, d TEXT, e TEXT, f TEXT)');
-      //await db.execute(
-
+      await db.execute(
+        'CREATE TABLE memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT, od TEXT, do TEXT)');
+      await db.execute(
+        'CREATE TABLE dodatki1(id TEXT PRIMARY KEY, a TEXT, b TEXT, c TEXT, d TEXT, e TEXT, f TEXT, h TEXT, i TEXT)');
+      await db.execute(
+        'CREATE TABLE dodatki2(id TEXT PRIMARY KEY, a TEXT, b TEXT, c TEXT, d TEXT, e TEXT, f TEXT, h TEXT, i TEXT)');
+      
       //    'CREATE TABLE podkategorie(id TEXT PRIMARY KEY, kolejnosc TEXT, kaId TEXT, nazwa TEXT)');
     }, version: 1);
   }
@@ -108,6 +110,12 @@ class DBHelper {
   }
 
  
+  //update memory - czy bez aktywacji - dla apiarys_screen
+  static Future<void> updateActivate(String dev, String text) async {
+    final db = await DBHelper.database();
+    print('db_helpers: update memory - praca bez aktywacji');
+    db.update('memory', {'od': text}, where: 'dev = ?', whereArgs: [dev]);
+  }
  
   //odczyt z tabeli ule - ule z wybranej pasieki - dla hives_screen
   static Future<List<Map<String, dynamic>>> getHives(nrPasieki) async {
@@ -130,7 +138,7 @@ class DBHelper {
   static Future<List<Map<String, dynamic>>> getFramesOfHive(int pasieka, int ul) async {
     final db = await DBHelper.database();
     print('DBHelper - pobieranie ramek z ula nr $ul dla pasieki nr $pasieka');
-    return  db.query("ramka",where: "pasiekaNr=? and ulNr=? ORDER BY korpusNr, zasob ASC", whereArgs: [pasieka, ul]);
+    return  db.query("ramka",where: "pasiekaNr=? and ulNr=? ORDER BY korpusNr, ramkaNr, zasob ASC", whereArgs: [pasieka, ul]);
   }
 
    //pobieranie info dla danego ula i pasieki - dla infos
@@ -146,8 +154,53 @@ class DBHelper {
     final db = await DBHelper.database();
     print('DBHelper - pobieranie unikalnych numerów korpusów dla ula nr $ul');
     return db.rawQuery(
-        'SELECT DISTINCT korpusNr, typ FROM ramka WHERE data=? and pasiekaNr=? and ulNr = ? ORDER BY korpusNr ASC',[wybranaData,pasieka, ul]);
+        'SELECT DISTINCT korpusNr, typ FROM ramka WHERE data=? and pasiekaNr=? and ulNr = ? ORDER BY korpusNr ASC',[wybranaData, pasieka, ul]);
   }
+
+  //odczyt z tabeli memory  - dla apiary_screen
+  static Future<List<Map<String, dynamic>>> getMem(String dev) async {
+    final db = await DBHelper.database();
+    print('DBHelper - pobieranie memory dla dev = $dev');
+    return db.rawQuery(
+        'SELECT * FROM memory WHERE  dev = ?',[dev]);
+  }
+  
+  
+  //usuniecie rekordu z tabeli info - dla frame_screen 
+  static Future<void> deleteInfo(String id) async {
+    final db = await DBHelper.database();
+    print('DBhelper: delete info id = $id');
+    db.delete('info', where: 'id= ?', whereArgs: [id]);
+  }
+
+  //usuniecie rekordu z tabeli ule - dla info_item 
+  static Future<void> deleteUl(int pasieka, int ul) async {
+    final db = await DBHelper.database();
+    print('DBhelper: delete ul nr = $ul');
+    db.delete('ule', where: 'pasiekaNr=? and ulNr=?', whereArgs: [pasieka,ul]);
+  }
+
+   //usuniecie rekordu z tabeli pasieki - dla info_item 
+  static Future<void> deletePasieki(int pasieka) async {
+    final db = await DBHelper.database();
+    print('DBhelper: delete pasieki nr = $pasieka');
+    db.delete('pasieki', where: 'pasiekaNr=? ', whereArgs: [pasieka]);
+  }
+
+  //usuniecie rekordu o podanym id z tabeli ramka - dla frame_detail_screen 
+  static Future<void> deleteFrame(String id) async {
+    final db = await DBHelper.database();
+    print('DBhelper: delete ramka id = $id');
+    db.delete('ramka', where: 'id= ?', whereArgs: [id]);
+  }
+  
+   //usuniecie rekordów z tabeli ramka dla danej daty, pasieki i ula - dla frame_detail_screen 
+  static Future<void> deleteInspection(String data, int pasieka, int ul) async {
+    final db = await DBHelper.database();
+    print('DBhelper: delete ramki dla: data = $data, pasieka = $pasieka, ul = $ul');
+    db.delete('ramka', where: 'data=? and pasiekaNr=? and ulNr =?', whereArgs: [data,pasieka,ul]);
+  }
+  
   
   // //odczyt z bazy jednej ramki
   //  static Future<List<Map<String, dynamic>>> getFrame(String ul) async {

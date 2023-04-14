@@ -1,25 +1,29 @@
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; //zarejestrowanie dostawcy
 //import 'package:flutter_localizations/flutter_localizations.dart';
+//import 'package:in_app_purchase/in_app_purchase.dart'; //subskrypcja
 
 import './screens/frames_screen.dart';
 import './screens/hives_screen.dart';
 import './screens/apiarys_screen.dart';
 import './screens/voice_screen.dart';
-import 'screens/infos_screen.dart';
-
-import './models/apiarys.dart'; 
+import './screens/infos_screen.dart';
+import './screens/frames_detail_screen.dart';
+import './screens/subscription_screen.dart';
+import './models/apiarys.dart';
 import './models/frames.dart'; //zaimportowanie klasy dostawcy
 import './models/hives.dart';
 import './models/infos.dart';
+import './models/memory.dart';
 
 //import 'screens/languages.dart';
 //import 'all_translations.dart';
 
 void main() async {
-//  HttpOverrides.global = MyHttpOverrides(); //obejście certyfikatu na stronie www
-//  WidgetsFlutterBinding.ensureInitialized ();
+  HttpOverrides.global =
+      MyHttpOverrides(); //obejście certyfikatu na stronie www
+  WidgetsFlutterBinding.ensureInitialized();
   // Initializes the translation module
 //    await allTranslations.init();
   // then start the application
@@ -46,22 +50,29 @@ class _MyAppState extends State<MyApp> {
           //zarejestrowanie dostawcy danych (bez kontekstu)
           value: Frames(), //dla Frames
         ),
-        ChangeNotifierProvider.value( //zarejestrowanie dostawcy danych (bez kontekstu)
+        ChangeNotifierProvider.value(
+          //zarejestrowanie dostawcy danych (bez kontekstu)
           value: Hives(), //dla Hives
-         ),
-        ChangeNotifierProvider.value( //zarejestrowanie dostawcy danych (bez kontekstu)
+        ),
+        ChangeNotifierProvider.value(
+          //zarejestrowanie dostawcy danych (bez kontekstu)
           value: Apiarys(), //dla Hives
         ),
-        ChangeNotifierProvider.value( //zarejestrowanie dostawcy danych (bez kontekstu)
+        ChangeNotifierProvider.value(
+          //zarejestrowanie dostawcy danych (bez kontekstu)
           value: Infos(), //dla Hives
-         ),
+        ),
+        ChangeNotifierProvider.value(
+          //zarejestrowanie dostawcy danych (bez kontekstu)
+          value: Memory(), //dla Hives
+        ),
       ],
       child: MaterialApp(
         ///title: 'Hi Bees',
         theme: ThemeData(
           //definiowanie danych decydujących o wyglądzie (kolory, style, czcionki)
           //appBarTheme: AppBarTheme(color: Color.fromRGBO(55, 125, 255, 1),),
-          primaryColor: Color.fromARGB(255, 247, 34, 34), //kolor podstawowy
+          primaryColor: Color.fromARGB(255, 233, 140, 0), //kolor podstawowy
           primaryColorLight: const Color.fromRGBO(255, 118, 122, 1),
           primaryColorDark:
               const Color.fromRGBO(160, 0, 38, 1), //kolor wyrózniający
@@ -97,6 +108,8 @@ class _MyAppState extends State<MyApp> {
           HivesScreen.routeName: (ctx) => HivesScreen(),
           VoiceScreen.routeName: (ctx) => VoiceScreen(),
           InfoScreen.routeName: (ctx) => InfoScreen(),
+          SubsScreen.routeName: (ctx) => SubsScreen(),
+          FramesDetailScreen.routeName: (ctx) => FramesDetailScreen(),
           //FiltersScreen.routeName: (ctx) => FiltersScreen(_filters, _setFilters),
         },
         //onGenerateRoute:  - (kure 168) - jezeli brak zdefiniowanej trasy, wyświetla argumenty, dynamiczne trasy
@@ -108,5 +121,15 @@ class _MyAppState extends State<MyApp> {
         },
       ),
     );
+  }
+}
+
+//obejście certyfikatu na stronie www
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }

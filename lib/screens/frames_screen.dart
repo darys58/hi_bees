@@ -1,14 +1,15 @@
 import 'dart:async';
-import 'dart:io';
+//import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hi_bees/models/hive.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:wakelock/wakelock.dart';
 
-import 'package:rhino_flutter/rhino.dart';
-import 'package:picovoice_flutter/picovoice_manager.dart';
-import 'package:picovoice_flutter/picovoice_error.dart';
+//import 'package:rhino_flutter/rhino.dart';
+//import 'package:picovoice_flutter/picovoice_manager.dart';
+//import 'package:picovoice_flutter/picovoice_error.dart';
 import 'package:intl/intl.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
@@ -17,6 +18,7 @@ import '../models/frame.dart';
 import '../models/hives.dart';
 import '../models/infos.dart';
 import '../models/info.dart';
+import '../screens/frames_detail_screen.dart';
 
 class FramesScreen extends StatefulWidget {
   static const routeName = '/screen-frames'; //nazwa trasy do tego ekranu
@@ -26,18 +28,18 @@ class FramesScreen extends StatefulWidget {
 }
 
 class _FramesScreenState extends State<FramesScreen> {
-  final String accessKey =
-      'xPj3ezZa5Y9gQj+v6xQ5YvESy7eLtUcC3NPRFj8E5yDt5MvQWj3b1w=='; // AccessKey obtained from Picovoice Console (https://console.picovoice.ai/)
+  // final String accessKey =
+  //    'xPj3ezZa5Y9gQj+v6xQ5YvESy7eLtUcC3NPRFj8E5yDt5MvQWj3b1w=='; // AccessKey obtained from Picovoice Console (https://console.picovoice.ai/)
   bool _isInit = true;
-  bool isError = false;
-  String errorMessage = "";
+  //bool isError = false;
+  // String errorMessage = "";
 
-  bool isButtonDisabled = false; //czy klawisz nieaktywny?
-  bool isProcessing =
-      false; //czy uruchomiono proces rozpoznawania mowy przyciskiem START
-  bool wakeWordDetected = false;
+  // bool isButtonDisabled = false; //czy klawisz nieaktywny?
+  // bool isProcessing =
+  //    false; //czy uruchomiono proces rozpoznawania mowy przyciskiem START
+  // bool wakeWordDetected = false;
   //String rhinoText = "";
-  PicovoiceManager? _picovoiceManager;
+  // PicovoiceManager? _picovoiceManager;
   var now = new DateTime.now();
   var formatter = new DateFormat('yyyy-MM-dd');
   List<Frames> frame =
@@ -87,50 +89,31 @@ class _FramesScreenState extends State<FramesScreen> {
   int drone = 0;
   String porpouseOfFrame = '';
   String actionOnFrame = '';
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   setState(() {
-  //     isButtonDisabled = true;
-  //     rhinoText = "";
-  //   });
-
-  //   initPicovoice();
-  // }
+  @override
+  void initState() {
+    super.initState();
+    Wakelock.enable(); //blokada wyłaczania ekranu
+  }
 
   @override
   void didChangeDependencies() {
     print('frames_screen - didChangeDependencies');
-
     print('frames_screen - _isInit = $_isInit');
+    globals.ileRamek = 0; //ustawiane w frames_detail_screen
 
     if (_isInit) {
-      //DBHelper.deleteBase().then((_) {
-
-      //  DBHelper.insert('ramka', {
-      //   'id': '1801.1.1.1.0.2.2.5',//data.pasiekaNr.ulNr.korpusNr.polkorpus.ramkaNr.strona.zasob
-      //   'data': '18-01-2023',
-      //   'pasiekaNr': '1',
-      //   'ulNr': '1',
-      //   'korpusNr': '1',
-      //   'typ': '0',
-      //   'ramkaNr': '2',
-      //   'rozmiar': '0',
-      //   'strona': '2',
-      //   'zasob': '5',
-      //   'wartosc': '60',
-      //     }).then((_) {
-      // Provider.of<Frames>(context, listen: false).fetchAndSetFrames().then((_) {
-      //   print('pobrano dane z bazy lokalnej');
-      // });
-
-      //     }) ;
-      //  });
-
       getDaty(globals.pasiekaID, globals.ulID).then((_) {
         //pobranie dat z bazy
-        wybranaData = _daty[0].data; //najwcześniejsza data pobrana z bazy
+        print('data inspekcji ${globals.dataInspekcji}');
+        if (globals.dataInspekcji != '') {
+          wybranaData = globals.dataInspekcji; //data z elementu listy info
+          globals.dataInspekcji = '';
+        } else {
+          if (_daty.isNotEmpty) {
+            print('wybrana = $wybranaData');
+            wybranaData = _daty[0].data;
+          } //najwcześniejsza data pobrana z bazy
+        }
 
         getKorpusy(globals.pasiekaID, globals.ulID, wybranaData).then((_) {
           //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
@@ -165,6 +148,7 @@ class _FramesScreenState extends State<FramesScreen> {
   //pobranie listy ramek z unikalnymi datami dla wybranego ula i pasieki z bazy lokalnej
   Future<List<Frame>> getDaty(pasieka, ul) async {
     final dataList = await DBHelper.getDate(pasieka, ul); //numer wybranego ula
+    print('getDaty: pasieka $pasieka ul $ul');
     _daty = dataList
         .map(
           (item) => Frame(
@@ -182,6 +166,7 @@ class _FramesScreenState extends State<FramesScreen> {
           ),
         )
         .toList();
+    print('daty = $_daty');
     return _daty;
   }
 
@@ -207,6 +192,46 @@ class _FramesScreenState extends State<FramesScreen> {
         )
         .toList();
     return _korpusy;
+  }
+
+  Future<void> _dialogBuilderHelp(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.only(left: 15, right: 15),
+          //title: const Text('Inspection - say e.g.:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),),
+          content: Container(
+            child: SingleChildScrollView(
+              child: Column(children: <Widget>[
+                //for (var i = 0; i < frames.length; i++) {}
+                //Text(frames[0].data),
+                Container(
+                  //szare body
+                  //alignment: Alignment.center,
+                  color: Color.fromARGB(173, 173, 173, 173),
+                  // ignore: sort_child_properties_last
+                  child: CustomPaint(
+                    painter: MyHiveHelp(),
+                    size: Size(200, 365),
+                  ),
+                  margin: EdgeInsets.all(20),
+                  //padding: EdgeInsets.all(10),
+                ),
+              ]),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Disable'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -256,120 +281,154 @@ class _FramesScreenState extends State<FramesScreen> {
     List<Hive> hive = hivesData.items.where((hv) {
       return hv.ulNr == hiveNr; // jest ==  a było contain ale dla typu String
     }).toList();
-    
-    globals.iloscRamek = hive[0].opis; //ilość ramek w korpusie zapamiętana w bazie
+
+    globals.iloscRamek =
+        hive[0].opis; //ilość ramek w korpusie zapamiętana w bazie
     widthCanvas = int.parse(hive[0].opis) * 20 +
         20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
     //print('hive= ${hive[0].opis}');
 
     print('szerokość = $widthCanvas');
 
-//var frame = Provider.of<Frames>(context, listen: false).fetchAndSetFrames().then((_) {
-    //    print('wczytanie danych');
-    // });
-    //    frame = frameData.items.where((fr) {
-    //      return fr.pasiekaId.contains('1');
-    //   }).toList();
-
     return MaterialApp(
         home: Scaffold(
       appBar: AppBar(
-        title: Text('Inspection hive $hiveNr'),
-        backgroundColor: Color.fromARGB(255, 233, 140, 0),
+        iconTheme: IconThemeData(
+          color: Color.fromARGB(255, 0, 0, 0)),
+        title: Text('Inspection hive $hiveNr', style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),),
+        backgroundColor: Color.fromARGB(255, 255, 255, 255),       
+        // title: Text('Inspection hive $hiveNr'),
+        // backgroundColor: Color.fromARGB(255, 233, 140, 0),
         //automaticallyImplyLeading: false, //usuwanie cofania
         //przycisk cofania bo go nie było
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios,
-              color: Color.fromARGB(255, 255, 255, 255)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            // podstawić zamiast podkat9 - _daty. uzyskć przyciski z datami i wyświetlać ramki danego ula z danej daty !!!
-
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-//daty przeglądów
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
-                height: 46, //MediaQuery.of(context).size.height * 0.35,
-                child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _daty.length,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        //width: MediaQuery.of(context).size.width * 0.6,
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              wybranaData =
-                                  _daty[index].data; //dla filtrowania po dacie
-                              getKorpusy(globals.pasiekaID, globals.ulID,
-                                      wybranaData)
-                                  .then((_) {});
-                            });
-                          },
-                          child: wybranaData == _daty[index].data
-                              ? Card(
-                                  color: Colors.white,
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 10.0, vertical: 1.0),
-                                    child: Center(
-                                        child: Text(
-                                      _daty[index].data, //nazwa
-                                      style: const TextStyle(
-                                          color: Colors.black, fontSize: 17.0),
-                                    )),
-                                  ),
-                                )
-                              : Card(
-                                  color: Colors.white,
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 10.0, vertical: 1.0),
-                                    child: Center(
-                                        child: Text(
-                                      _daty[index].data,
-                                      style: TextStyle(
-                                          color: Colors.grey, fontSize: 17.0),
-                                    )),
-                                  ),
-                                ),
-                        ),
-                      );
-                    }),
-              ),
-              SingleChildScrollView(
-                  child: Column(children: <Widget>[
-                //for (var i = 0; i < frames.length; i++) {}
-                //Text(frames[0].data),
-                Container(
-                  //szare body
-                  //alignment: Alignment.center,
-                  color: Color.fromARGB(173, 173, 173, 173),
-                  // ignore: sort_child_properties_last
-                  child: CustomPaint(
-                    painter: MyHive(
-                        ramki: frames,
-                        korpusy: _korpusy,
-                        width: widthCanvas,
-                        high: highCanvas,
-                        informacje: infos),
-                    size: Size(widthCanvas, highCanvas),
-                  ),
-                  margin: EdgeInsets.all(20),
-                  //padding: EdgeInsets.all(10),
-                ),
-              ])),
-            ],
+            icon: const Icon(Icons.arrow_back_ios,
+                color: Color.fromARGB(255, 0, 0, 0)),
+            onPressed: () => {
+                  Wakelock.disable(), //usunięcie blokowania wygaszania ekranu
+                  Navigator.of(context).pop(),
+                }),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_center,color: Color.fromARGB(255, 0, 0, 0)),
+            onPressed: () => _dialogBuilderHelp(context),
           ),
-        ),
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () => Navigator.of(context)
+                .pushNamed(FramesDetailScreen.routeName, arguments: {
+              'ul': globals.ulID,
+              'data': wybranaData,
+            }),
+          )
+        ],
       ),
+      body: frames.length == 0
+          ? Center(
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.only(top: 50),
+                    child: const Text(
+                      'There are no inspection yet.',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Column(
+                  // podstawić zamiast podkat9 - _daty. uzyskć przyciski z datami i wyświetlać ramki danego ula z danej daty !!!
+
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+//daty przeglądów
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
+                      height: 46, //MediaQuery.of(context).size.height * 0.35,
+                      child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _daty.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              //width: MediaQuery.of(context).size.width * 0.6,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    wybranaData = _daty[index]
+                                        .data; //dla filtrowania po dacie
+                                    getKorpusy(globals.pasiekaID, globals.ulID,
+                                            wybranaData)
+                                        .then((_) {});
+                                  });
+                                },
+                                child: wybranaData == _daty[index].data
+                                    ? Card(
+                                        color: Colors.white,
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 10.0, vertical: 1.0),
+                                          child: Center(
+                                              child: Text(
+                                            _daty[index].data, //nazwa
+                                            style: const TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 17.0),
+                                          )),
+                                        ),
+                                      )
+                                    : Card(
+                                        color: Colors.white,
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 10.0, vertical: 1.0),
+                                          child: Center(
+                                              child: Text(
+                                            _daty[index].data,
+                                            style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 17.0),
+                                          )),
+                                        ),
+                                      ),
+                              ),
+                            );
+                          }),
+                    ),
+                    SingleChildScrollView(
+                        child: Column(children: <Widget>[
+                      //for (var i = 0; i < frames.length; i++) {}
+                      //Text(frames[0].data),
+                      Container(
+                        //szare body
+                        //alignment: Alignment.center,
+                        color: Color.fromARGB(173, 173, 173, 173),
+                        // ignore: sort_child_properties_last
+                        child: CustomPaint(
+                          painter: MyHive(
+                              ramki: frames,
+                              korpusy: _korpusy,
+                              width: widthCanvas,
+                              high: highCanvas,
+                              informacje: infos),
+                          size: Size(widthCanvas, highCanvas),
+                        ),
+                        margin: EdgeInsets.all(20),
+                        //padding: EdgeInsets.all(10),
+                      ),
+                    ])),
+                  ],
+                ),
+              ),
+            ),
     ));
   }
 
@@ -393,9 +452,7 @@ class MyHive extends CustomPainter {
   double width;
   double high;
   List<Info> informacje;
-  // final double sides;
-  // final double radius;
-  // final double radians;
+
   MyHive({
     required this.ramki,
     required this.korpusy,
@@ -407,26 +464,6 @@ class MyHive extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    //   final textStyle = TextStyle(
-    //   color: Colors.black,
-    //   fontSize: 30,
-    // );
-    // final textSpan = TextSpan(
-    //   text: 'Hello, world.',
-    //   style: textStyle,
-    // );
-    // final textPainter = TextPainter(
-    //   text: textSpan,
-    //   textDirection: TextDirection.ltr,
-    // );
-    // textPainter.layout(
-    //   minWidth: 0,
-    //   maxWidth: size.width,
-    // );
-
-    // final offset = Offset(100, 100);
-    // textPainter.paint(canvas, offset);
-
     Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
     Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
     Paint obrysPaint = Paint()
@@ -434,7 +471,8 @@ class MyHive extends CustomPainter {
       ..color = Color.fromARGB(255, 122, 122, 122); //obrys
     Paint honeyPaint = Paint()
       ..strokeWidth = 4
-      ..color = Color.fromARGB(255, 206, 144, 1); //(1) honey / miód, nakrop
+      ..color = Color.fromARGB(255, 222, 156,
+          1); //(1) honey / miód, nakrop 255, 252, 193, 104//,255, 206, 144, 1
     Paint sealedPaint = Paint()
       ..strokeWidth = 4
       ..color =
@@ -442,7 +480,7 @@ class MyHive extends CustomPainter {
     Paint pollenPaint = Paint()
       ..strokeWidth = 4
       ..color = Color.fromARGB(255, 0, 197, 0); //(3) pollen / pierzga
-    Paint brookPaint = Paint()
+    Paint broodPaint = Paint()
       ..strokeWidth = 4
       ..color = Color.fromARGB(255, 255, 17, 0); //(4) brook / czerw
     Paint larvaePaint = Paint()
@@ -493,36 +531,11 @@ class MyHive extends CustomPainter {
     //double wDol = math.pi/2; //1,57 - trójkąt w dół
     var path = Path();
 
-    // var angle = (math.pi * 2) / sides; //kąt
-    // print(angle);
-    // Offset center = Offset(size.width / 2, size.height / 2);
-    // Offset startPoint =
-    //     Offset(radius * math.cos(radians), radius * math.sin(radians));
-
-    // path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
-
-    // for (int i = 1; i <= sides; i++) {
-    //   double x = radius * math.cos(radians + angle * i) + center.dx;
-    //   double y = radius * math.sin(radians + angle * i) + center.dy;
-    //   path.lineTo(x, y);
-    // }
-    // path.close();
-    // canvas.drawPath(path, paintStroke);
-
     //text
     final textStyle = TextStyle(
       color: Colors.black,
       fontSize: 15,
     );
-    // var textSpan = TextSpan(
-    //   text: '1',
-    //   style: textStyle,
-    // );
-
-//TextSpan span = new TextSpan(style: new TextStyle(color: Colors.grey[600]), text: 'Yrfc');
-//TextPainter tp = new TextPainter(text: span, textAlign: TextAlign.left);
-//tp.layout();
-//tp.paint(canvas, new Offset(5.0, 5.0));
 
     //======= obrysy korpusów =======
     double obrysPoziomy = 0;
@@ -666,7 +679,7 @@ class MyHive extends CustomPainter {
           canvas.drawLine(
               Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
               Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
-                  start + (75 * ramki[i].rozmiar) + 10),
+                  start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas =
@@ -679,16 +692,16 @@ class MyHive extends CustomPainter {
                 Offset(
                     10 +
                         (ramki[i].ramkaNr - 1) * 20 +
-                        (ramki[i].strona * 13) -
+                        (ramki[i].strona * 8) -
                         2,
-                    start + 10 + startZasobu),
+                    start + 15 + startZasobu),
                 Offset(
                     10 +
                         (ramki[i].ramkaNr - 1) * 20 +
-                        (ramki[i].strona * 13) -
+                        (ramki[i].strona * 8) -
                         2,
                     start +
-                        10 +
+                        15 +
                         startZasobu -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 dronePaint); //zasob 1 - drone // dla strony lewej i prawej
@@ -737,7 +750,7 @@ class MyHive extends CustomPainter {
                         15 +
                         startZasobu -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
-                brookPaint); //zasob 2 - brook // dla strony lewej i prawej
+                broodPaint); //zasob 2 - brook // dla strony lewej i prawej
 
             //print('${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}');
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -1222,7 +1235,7 @@ class MyHive extends CustomPainter {
             case 'to insulate': //ramka dobra do zaizolowania na niej matki
               sides = 4;
               radians = math.pi / 4;
-              var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+              //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
               canvas.drawLine(
                   Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 6, start + 9),
@@ -1359,6 +1372,559 @@ class MyHive extends CustomPainter {
       print(startyZasobow);
       //print(ramki[i].wartosc);
     }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter old) {
+    //throw UnimplementedError();
+    return true;
+  }
+}
+
+class MyHiveHelp extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
+    Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
+    // Paint obrysPaint = Paint()
+    //   ..strokeWidth = 1
+    //   ..color = Color.fromARGB(255, 122, 122, 122); //obrys
+    Paint honeyPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 222, 156,
+          1); //(1) honey / miód, nakrop 255, 252, 193, 104//,255, 206, 144, 1
+    Paint sealedPaint = Paint()
+      ..strokeWidth = 4
+      ..color =
+          Color.fromARGB(255, 131, 92, 0); //(2) sealed / zasklep, miód poszyty
+    Paint pollenPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 0, 197, 0); //(3) pollen / pierzga
+    Paint broodPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 255, 17, 0); //(4) brook / czerw
+    Paint larvaePaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 253, 195, 192); //(5) larvae / larwy
+    Paint eggPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 255, 255, 255); //(6) eggs / jaja
+    Paint dronePaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 114, 0, 0); //(7) drone / trut
+    Paint waxPaint = Paint()
+      ..strokeWidth = 1
+      ..color = Color.fromARGB(255, 255, 255, 0); //(8) wax / węza
+    Paint combPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(
+          255, 255, 255, 0); //(9) comb, wax comb / susz, woszczyna
+    Paint matka = Paint()
+      ..color = Color.fromARGB(255, 59, 59, 59)
+      ..style = PaintingStyle.fill; //matka
+    Paint matecznik = Paint()
+      ..color = Color.fromARGB(255, 255, 17, 0)
+      ..style = PaintingStyle.fill
+      ..strokeWidth = 1; //matecznik
+    Paint delMat = Paint()
+      ..color = Color.fromARGB(255, 153, 125, 125)
+      ..style = PaintingStyle.fill //stroke
+      ..strokeWidth = 1; //mateczniki usuniete
+
+    Paint paintStroke = Paint()
+      ..color = Color.fromARGB(255, 0, 0, 0)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke //fill
+      ..strokeCap = StrokeCap.round;
+    // Paint paintStroke = Paint()
+    //   ..color = Color.fromARGB(255, 0, 0, 0)
+    //   ..strokeWidth = 1
+    //   ..style = PaintingStyle.fill //stroke
+    //   ..strokeCap = StrokeCap.round;
+
+    //wielokąty
+    double sides = 3;
+    double radius = 5;
+    double radians = 0; //kąt - początek rysowania
+    //3.14 - trójkąt w lewo, //1,57(/2) - w dół //(/6) - w górę, 0 - w prawo
+    //double wDol = math.pi/2; //1,57 - trójkąt w dół
+    var path = Path();
+
+    //text
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 15,
+    );
+//ramka pracy
+    var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
+    radians = math.pi / 4;
+
+    Offset center = Offset(10, 20);
+    Offset startPoint =
+        Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center.dx;
+      double y = radius * math.sin(radians + angle * i) + center.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    var opisSpan = TextSpan(
+      text: '- work frame',
+      style: textStyle,
+    );
+    var textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 10));
+//to delete
+    sides = 3;
+    radians = math.pi / 6;
+    angle = (math.pi * 2) / sides; //kąt
+
+    Offset center1 = Offset(10, 35);
+    Offset startPoint1 =
+        Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint1.dx + center1.dx, startPoint1.dy + center1.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center1.dx;
+      double y = radius * math.sin(radians + angle * i) + center1.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- to delete',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 25));
+//to extraction
+    double radiusEx = 4;
+    sides = 6;
+    radians = 0;
+    angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+
+    Offset center2 = Offset(10, 50);
+    Offset startPoint2 =
+        Offset(radiusEx * math.cos(radians), radiusEx * math.sin(radians));
+
+    path.moveTo(startPoint2.dx + center2.dx, startPoint2.dy + center2.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radiusEx * math.cos(radians + angle * i) + center2.dx;
+      double y = radiusEx * math.sin(radians + angle * i) + center2.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- to extraction',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 40));
+//to insutate
+    sides = 4;
+    radians = math.pi / 4;
+    angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+
+    canvas.drawLine(
+        Offset(7, 68), Offset(13, 68), linePaint); // - (kreska pozioma)
+
+    canvas.drawLine(
+        Offset(7, 62), Offset(7, 68), linePaint); // | (kreska pionowa lewa)
+    canvas.drawLine(Offset(13, 62), Offset(13, 68), linePaint);
+    opisSpan = TextSpan(
+      text: '- to insulate',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 55));
+//queen
+    canvas.drawCircle(Offset(10, 80), 3, matka);
+    opisSpan = TextSpan(
+      text: '- queen',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 70));
+//wax
+    canvas.drawLine(Offset(10, 90), Offset(10, 100), waxPaint);
+    opisSpan = TextSpan(
+      text: '- wax foundation',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 85));
+//comb
+    canvas.drawLine(Offset(10, 105), Offset(10, 115), combPaint);
+    opisSpan = TextSpan(
+      text: '- wax comb',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 100));
+//honey
+    canvas.drawLine(Offset(10, 120), Offset(10, 130), honeyPaint);
+    opisSpan = TextSpan(
+      text: '- honey',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 115));
+    //sealed
+    canvas.drawLine(Offset(10, 135), Offset(10, 145), sealedPaint);
+    opisSpan = TextSpan(
+      text: '- honey sealed',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 130));
+//pollen
+    canvas.drawLine(Offset(10, 150), Offset(10, 160), pollenPaint);
+    opisSpan = TextSpan(
+      text: '- pollen',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 145));
+//eggs
+    canvas.drawLine(Offset(10, 165), Offset(10, 175), eggPaint);
+    opisSpan = TextSpan(
+      text: '- eggs',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 160));
+//larvae
+    canvas.drawLine(Offset(10, 180), Offset(10, 190), larvaePaint);
+    opisSpan = TextSpan(
+      text: '- larvae',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 175));
+//brood
+    canvas.drawLine(Offset(10, 195), Offset(10, 205), broodPaint);
+    opisSpan = TextSpan(
+      text: '- covered brood',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 190));
+//drone
+    canvas.drawLine(Offset(10, 210), Offset(10, 220), dronePaint);
+    opisSpan = TextSpan(
+      text: '- drone',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 205));
+//inserted
+    sides = 3;
+    radians = math.pi / 6;
+    angle = (math.pi * 2) / sides; //kąt
+
+    Offset center3 = Offset(10, 232);
+    Offset startPoint3 =
+        Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint3.dx + center3.dx, startPoint3.dy + center3.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center3.dx;
+      double y = radius * math.sin(radians + angle * i) + center3.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- inserted',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 220));
+//deleted
+    sides = 3;
+    radians = math.pi / 2;
+    angle = (math.pi * 2) / sides; //kąt
+
+    Offset center4 = Offset(10, 243);
+    Offset startPoint4 =
+        Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint4.dx + center4.dx, startPoint4.dy + center4.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center4.dx;
+      double y = radius * math.sin(radians + angle * i) + center4.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- deleted',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 235));
+//moved left
+    sides = 3;
+    radians = math.pi; //w lewo
+    angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
+
+    Offset center5 = Offset(12, 259);
+    Offset startPoint5 =
+        Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint5.dx + center5.dx, startPoint5.dy + center5.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center5.dx;
+      double y = radius * math.sin(radians + angle * i) + center5.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- moved left',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 250));
+//moved right
+    sides = 3;
+    radians = 0; //w lewo
+    angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
+
+    Offset center6 = Offset(10, 274);
+    Offset startPoint6 =
+        Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint6.dx + center6.dx, startPoint6.dy + center6.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center6.dx;
+      double y = radius * math.sin(radians + angle * i) + center6.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- moved right',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 265));
+//insulated
+    canvas.drawLine(
+        Offset(4, 293), Offset(16, 293), linePaint); // - (kreska pozioma)
+    canvas.drawLine(
+        Offset(4, 285), Offset(4, 293), linePaint); // | (kreska pionowa lewa)
+    canvas.drawLine(Offset(16, 285), Offset(16, 293), linePaint);
+    opisSpan = TextSpan(
+      text: '- insulated',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 280));
+//queen cell
+    canvas.drawCircle(Offset(10, 305), 3, matecznik);
+    opisSpan = TextSpan(
+      text: '- queen cell',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 295));
+//delete queen cell
+    canvas.drawCircle(Offset(10, 320), 3, delMat);
+    opisSpan = TextSpan(
+      text: '- delete queen cell',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 310));
+//iexcluder
+    canvas.drawLine(
+        Offset(4, 335), Offset(16, 335), lineExcluder); // - (kreska pozioma)
+    opisSpan = TextSpan(
+      text: '- excluder',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 325));
+//nr body
+    opisSpan = TextSpan(
+      text: '1 - body number',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(6, 340));
   }
 
   @override

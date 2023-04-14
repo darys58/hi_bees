@@ -1,35 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+//import 'package:intl/intl.dart';
 //import '../screens/product_detail_screen.dart';
-import '../screens/frames_screen.dart';
+//import '../screens/frames_screen.dart';
 import '../screens/infos_screen.dart';
 import '../globals.dart' as globals;
 import '../models/hive.dart';
-import '../models/info.dart';
+//import '../models/info.dart';
 
 class HivesItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //nadawcą danych jest ChangeNotifierProvider w hives_screen.dart
     final hive = Provider.of<Hive>(context, listen: false);
+    int kolor = hive.pasiekaNr;
+    while (kolor > 10) {
+      kolor = kolor - 10;
+    }
+    
     //final cart = Provider.of<Cart>(context, listen: false); //dostęp do cart.addItem(
     //var color = Colors.orange;
     var now = new DateTime.now();
-    var formatter = new DateFormat('yyyy-MM-dd');
-    String formattedDate = '';
+    //var formatter = new DateFormat('yyyy-MM-dd');
+    //String formattedDate = '';
 
-    List<Color> color = [
-      const Color.fromARGB(255, 252, 193, 104),
-      const Color.fromARGB(255, 255, 114, 104),
-      const Color.fromARGB(255, 104, 187, 254),
-      const Color.fromARGB(255, 99, 255, 104),
-      const Color.fromARGB(255, 255, 217, 104),
-      const Color.fromARGB(255, 253, 182, 76),
-      const Color.fromARGB(255, 255, 86, 74),
-      const Color.fromARGB(255, 71, 170, 251),
-      const Color.fromARGB(255, 70, 255, 76),
-      const Color.fromARGB(255, 255, 209, 73),
+    List<Color> colory = [
+    const Color.fromARGB(255, 252, 193, 104),
+    const Color.fromARGB(255, 255, 114, 104),
+    const Color.fromARGB(255, 104, 187, 254),
+    const Color.fromARGB(255, 83, 215, 88),
+    const Color.fromARGB(255, 203, 174, 85),
+    const Color.fromARGB(255, 253, 182, 76),
+    const Color.fromARGB(255, 255, 86, 74),
+    const Color.fromARGB(255, 71, 170, 251),
+    Color.fromARGB(255, 61, 214, 66),
+    Color.fromARGB(255, 210, 170, 49),
     ];
 
     //obliczanie róznicy miedzy dwoma datami
@@ -54,7 +59,7 @@ class HivesItem extends StatelessWidget {
       splashColor: Theme.of(context).primaryColor,
       borderRadius: BorderRadius.circular(15),
       child: Card(
-        color: color[hive.pasiekaNr -
+        color: colory[kolor -
             1], //zeby byl taki sam kolor ula jak pasieki
         shape: RoundedRectangleBorder(
           //kształt karty

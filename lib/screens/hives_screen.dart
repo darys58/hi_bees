@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'apiarys_screen.dart';
-import '../models/apiarys.dart';
-import '../widgets/apiarys_item.dart';
+// import 'apiarys_screen.dart';
+// import '../models/apiarys.dart';
+// import '../widgets/apiarys_item.dart';
 
 import 'package:provider/provider.dart';
 import '../globals.dart' as globals;
@@ -72,10 +72,33 @@ class _HivesScreenState extends State<HivesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Apiary $numerPasieki'),
-        backgroundColor: Color.fromARGB(255, 233, 140, 0),
+        iconTheme: IconThemeData(
+          color: Color.fromARGB(255, 0, 0, 0)),
+        title: Text('Apiary $numerPasieki', style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),),
+        backgroundColor: Color.fromARGB(255, 255, 255, 255),       
+      //   title: Text('Apiary $numerPasieki'),
+      //   backgroundColor: Color.fromARGB(255, 233, 140, 0),
       ),
-      body: GridView.builder(
+      body: 
+      hives.length == 0
+      ? Center( 
+          child:Column(
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.only(top: 50),
+                child: const Text(
+                  'There are no hives',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),          
+            ],
+          ),
+        ) 
+      
+      : GridView.builder(
         padding: const EdgeInsets.all(10.0),
         itemCount: hives.length,
         itemBuilder: (ctx, i) => ChangeNotifierProvider.value(

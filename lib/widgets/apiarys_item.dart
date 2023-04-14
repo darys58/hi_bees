@@ -1,30 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_beep/flutter_beep.dart';
+//import 'package:flutter_beep/flutter_beep.dart';
 
 import '../globals.dart' as globals;
 import '../screens/hives_screen.dart';
-import '../screens/apiarys_screen.dart';
+//import '../screens/apiarys_screen.dart';
 import '../models/apiary.dart';
 
 class ApiarysItem extends StatelessWidget {
-  List<Color> color = [
+  final List<Color> colory = [
     const Color.fromARGB(255, 252, 193, 104),
     const Color.fromARGB(255, 255, 114, 104),
     const Color.fromARGB(255, 104, 187, 254),
-    const Color.fromARGB(255, 99, 255, 104),
-    const Color.fromARGB(255, 255, 217, 104),
+    const Color.fromARGB(255, 83, 215, 88),
+    const Color.fromARGB(255, 203, 174, 85),
     const Color.fromARGB(255, 253, 182, 76),
     const Color.fromARGB(255, 255, 86, 74),
     const Color.fromARGB(255, 71, 170, 251),
-    const Color.fromARGB(255, 70, 255, 76),
-    const Color.fromARGB(255, 255, 209, 73),
+    const Color.fromARGB(255, 61, 214, 66),
+    const Color.fromARGB(255, 210, 170, 49),
   ];
 
   @override
   Widget build(BuildContext context) {
     final apiary = Provider.of<Apiary>(context, listen: false);
-
+    int kolor = int.parse(apiary.id);
+    while (kolor > 10) {
+      kolor = kolor - 10;
+    }
     //int ileUli = 0;
 
     //obliczanie róznicy miedzy dwoma datami
@@ -65,8 +68,8 @@ class ApiarysItem extends StatelessWidget {
           ],
           gradient: LinearGradient(
             colors: [
-              color[int.parse(apiary.id) - 1].withOpacity(0.7),
-              color[int.parse(apiary.id) - 1],
+              colory[kolor - 1].withOpacity(0.7),
+              colory[kolor - 1],
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
