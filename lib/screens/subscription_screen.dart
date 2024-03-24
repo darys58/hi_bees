@@ -4,7 +4,7 @@
 
 import 'dart:async';
 import 'dart:io';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
@@ -188,7 +188,7 @@ class _SubsScreenState extends State<SubsScreen> {
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
           title: Text(
-            'Subscription',
+            AppLocalizations.of(context)!.subscription,
             style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
           ),
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
@@ -212,7 +212,7 @@ class _SubsScreenState extends State<SubsScreen> {
 
   Card _buildConnectionCheckTile() {
     if (_loading) {
-      return const Card(child: ListTile(title: Text('Trying to connect...')));
+      return  Card(child: ListTile(title: Text(AppLocalizations.of(context)!.tryingToConnect + '...')));
     }
     final Widget storeHeader = ListTile(
       leading: Icon(_isAvailable ? Icons.check : Icons.block,
@@ -220,7 +220,7 @@ class _SubsScreenState extends State<SubsScreen> {
               ? Colors.green
               : ThemeData.light().colorScheme.error),
       title:
-          Text('The store is ${_isAvailable ? 'available' : 'unavailable'}.'),
+          Text(AppLocalizations.of(context)!.theStoreIs + ' ${_isAvailable ? AppLocalizations.of(context)!.available : AppLocalizations.of(context)!.unavailable}.'),
     );
     final List<Widget> children = <Widget>[storeHeader];
 
@@ -228,7 +228,7 @@ class _SubsScreenState extends State<SubsScreen> {
       children.addAll(<Widget>[
         const Divider(),
         ListTile(
-          title: Text('Not connected',
+          title: Text(AppLocalizations.of(context)!.notConnected,
               style: TextStyle(color: ThemeData.light().colorScheme.error)),
           subtitle: const Text(
               'Unable to connect to the payments processor. Has this app been configured correctly? See the example README for instructions.'),
@@ -240,19 +240,19 @@ class _SubsScreenState extends State<SubsScreen> {
 
   Card _buildProductList() {
     if (_loading) {
-      return const Card(
+      return Card(
           child: ListTile(
               leading: CircularProgressIndicator(),
-              title: Text('Fetching products...')));
+              title: Text( AppLocalizations.of(context)!.fetchingProducts + '...')));
     }
     if (!_isAvailable) {
       return const Card();
     }
-    const ListTile productHeader = ListTile(title: Text('Products for Sale'));
+    ListTile productHeader = ListTile(title: Text(AppLocalizations.of(context)!.productsForSale));
     final List<ListTile> productList = <ListTile>[];
     if (_notFoundIds.isNotEmpty) {
       productList.add(ListTile(
-          title: Text('[${_notFoundIds.join(", ")}] not found',
+          title: Text('[${_notFoundIds.join(", ")}]' +  AppLocalizations.of(context)!.notFound,
               style: TextStyle(color: ThemeData.light().colorScheme.error)),
           subtitle: const Text(
               'This app needs special configuration to run. Please see example/README.md for instructions.')));
@@ -338,16 +338,16 @@ class _SubsScreenState extends State<SubsScreen> {
 
   Card _buildConsumableBox() {
     if (_loading) {
-      return const Card(
+      return Card(
           child: ListTile(
               leading: CircularProgressIndicator(),
-              title: Text('Fetching consumables...')));
+              title: Text(AppLocalizations.of(context)!.fetchingConsumables + '...')));
     }
     if (!_isAvailable || _notFoundIds.contains(_kConsumableId)) {
       return const Card();
     }
-    const ListTile consumableHeader =
-        ListTile(title: Text('Purchased consumables'));
+    ListTile consumableHeader =
+        ListTile(title: Text(AppLocalizations.of(context)!.purchasedConsumables));
     final List<Widget> tokens = _consumables.map((String id) {
       return GridTile(
         child: IconButton(
@@ -392,7 +392,7 @@ class _SubsScreenState extends State<SubsScreen> {
               primary: Colors.white,
             ),
             onPressed: () => _inAppPurchase.restorePurchases(),
-            child: const Text('Restore purchases'),
+            child: Text(AppLocalizations.of(context)!.restorePurchases),
           ),
         ],
       ),
@@ -490,14 +490,14 @@ class _SubsScreenState extends State<SubsScreen> {
       );
       //if (context.mounted) {
       if (priceChangeConfirmationResult.responseCode == BillingResponse.ok) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Price change accepted'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.priceChangeAccepted),
         ));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
             priceChangeConfirmationResult.debugMessage ??
-                'Price change failed with code ${priceChangeConfirmationResult.responseCode}',
+                AppLocalizations.of(context)!.priceChangeFailedWithCode + ' ${priceChangeConfirmationResult.responseCode}',
           ),
         ));
       }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
 import 'apiary.dart';
 
@@ -33,7 +34,7 @@ class Apiarys with ChangeNotifier {
     notifyListeners();
   }
 
-  //zapisanie ula do bazy lokalnej
+  //zapisanie pasieki do bazy lokalnej
   static Future<void> insertApiary(String id, int pasieka, int uli,
       String przeglad, String ikona, String opis) async {
     await DBHelper.insert('pasieki', {

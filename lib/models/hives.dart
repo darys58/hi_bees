@@ -14,7 +14,53 @@ class Hives with ChangeNotifier {
     return [..._items];
   }
 
-  //pobranie wpisów o ulach z tabeli ule z bazy lokalnej
+//pobranie wpisów o ulach z tabeli ule z bazy lokalnej
+  Future<void> fetchAndSetHivesAll() async {
+    final dataList = await DBHelper.getData('ule');
+    _items = dataList
+        .map(
+          (item) => Hive(
+            id: item['id'],
+            pasiekaNr: item['pasiekaNr'],
+            ulNr: item['ulNr'],
+            przeglad: item['przeglad'],
+            ikona: item['ikona'],
+            ramek: item['ramek'],
+            korpusNr: item['korpusNr'],
+            trut: item['trut'],
+            czerw: item['czerw'],
+            larwy: item['larwy'],
+            jaja: item['jaja'],
+            pierzga: item['pierzga'],
+            miod: item['miod'],
+            dojrzaly: item['dojrzaly'],
+            weza: item['weza'],
+            susz: item['susz'],
+            matka: item['matka'],
+            mateczniki: item['mateczniki'],
+            usunmat: item['usunmat'],
+            todo: item['todo'],
+            kategoria: item['kategoria'],
+            parametr: item['parametr'],
+            wartosc: item['wartosc'],
+            miara: item['miara'],
+            matka1: item['matka1'],
+            matka2: item['matka2'],
+            matka3: item['matka3'],
+            matka4: item['matka4'],
+            matka5: item['matka5'],
+          ),
+        )
+        .toList();
+    print('wczytanie wszystkich!!!!!!! danych o ulach --> Hives <---');
+    //print(_items);
+    notifyListeners();
+  }
+
+
+
+
+  //pobranie wpisów o ulach z danej pasieki z tabeli ule z bazy lokalnej
   Future<void> fetchAndSetHives(nrPasieki) async {
     final dataList = await DBHelper.getHives(nrPasieki);
     _items = dataList
@@ -25,11 +71,34 @@ class Hives with ChangeNotifier {
             ulNr: item['ulNr'],
             przeglad: item['przeglad'],
             ikona: item['ikona'],
-            opis: item['opis'],
+            ramek: item['ramek'],
+            korpusNr: item['korpusNr'],
+            trut: item['trut'],
+            czerw: item['czerw'],
+            larwy: item['larwy'],
+            jaja: item['jaja'],
+            pierzga: item['pierzga'],
+            miod: item['miod'],
+            dojrzaly: item['dojrzaly'],
+            weza: item['weza'],
+            susz: item['susz'],
+            matka: item['matka'],
+            mateczniki: item['mateczniki'],
+            usunmat: item['usunmat'],
+            todo: item['todo'],
+            kategoria: item['kategoria'],
+            parametr: item['parametr'],
+            wartosc: item['wartosc'],
+            miara: item['miara'],
+            matka1: item['matka1'],
+            matka2: item['matka2'],
+            matka3: item['matka3'],
+            matka4: item['matka4'],
+            matka5: item['matka5'],
           ),
         )
         .toList();
-    print('wczytanie wszystkich!!!!!!! danych o ulach --> Hives <---');
+    print('wczytanie wszystkich!!!!!!! danych o ulach z pasieki nr --> Hives <---');
     //print(_items);
     notifyListeners();
   }
@@ -41,14 +110,62 @@ class Hives with ChangeNotifier {
       int ul,
       String przeglad,
       String ikona,
-      String opis) async {
+      int ramek,
+      int korpusNr,
+      int trut,
+      int czerw,
+      int larwy,
+      int jaja,
+      int pierzga,
+      int miod,
+      int dojrzaly,
+      int weza,
+      int susz,
+      int matka,
+      int mateczniki,
+      int usunmat, 
+      String todo,
+      String kategoria,
+      String parametr,
+      String wartosc,
+      String miara,
+      String matka1,
+      String matka2,
+      String matka3,
+      String matka4,
+      String matka5,
+
+      ) async {
     await DBHelper.insert('ule', {
       'id': id, //utworzony klucz unikalny  pasiekaNr.ulNr.
       'pasiekaNr': pasieka,
       'ulNr': ul,
       'przeglad': przeglad,
       'ikona': ikona,
-      'opis': opis,
+      'ramek': ramek,
+      'korpusNr': korpusNr,
+      'trut': trut,
+      'czerw': czerw,
+      'larwy': larwy,
+      'jaja':jaja,
+      'pierzga': pierzga,
+      'miod': miod,
+      'dojrzaly': dojrzaly,
+      'weza': weza,
+      'susz': susz,
+      'matka': matka,
+      'mateczniki': mateczniki,
+      'usunmat': usunmat,
+      'todo': todo, 
+      'kategoria': kategoria,
+      'parametr': parametr,
+      'wartosc': wartosc,
+      'miara': miara,
+      'matka1': matka1,
+      'matka2': matka2,
+      'matka3': matka3,
+      'matka4': matka4,
+      'matka5': matka5,
     });
   }
 

@@ -15,8 +15,9 @@ class Frame with ChangeNotifier {
   final int ramkaNr; //
   final int rozmiar; //2-duza, 1-mała
   final int strona; // 1-lewa, 2-prawa
-  final int zasob; //1-trut,2-czerw,3-larwy,4-jaja,5-pierzga,6-zasklep,7-miód,8-susz,9-węza,10-matka,
+  final int zasob; //1-trut,2-czerw,3-larwy,4-jaja,5-pierzga,6-miód,7-zasklep,8-susz,9-węza,10-matka,
   final String wartosc; //ilość lub wartość zasobu        11-mateczniki,12-delMat,13-przeznaczenie,14-akcja
+  final int arch; //0-niezarchiwizowane, 1-przesłane do chmury, 2-zaimportowane z chmury
 
   Frame({
     required this.id,
@@ -30,6 +31,7 @@ class Frame with ChangeNotifier {
     required this.strona,
     required this.zasob,
     required this.wartosc,
+    required this.arch,
   });
 /*
   void toggleFavoriteStatus(String id) {

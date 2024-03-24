@@ -5,7 +5,7 @@ description: A new Flutter project.
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.1+4
+version: 1.4.0+32
 
 environment:
   sdk: '>=2.18.5 <3.0.0'
@@ -20,6 +20,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -32,9 +34,8 @@ dev_dependencies:
     sdk: flutter
   
   path_provider: ^2.0.9
-  picovoice_flutter: "^2.1.6"
   sqflite: ^2.2.2
-  intl: ^0.18.0
+  intl: ^0.17.0
   provider: ^6.0.5
   flutter_beep: ^1.0.0
   wakelock: ^0.6.2
@@ -43,6 +44,9 @@ dev_dependencies:
   connectivity_plus: ^3.0.3
   in_app_purchase: ^3.1.5
   shared_preferences: ^2.1.0
+  picovoice_flutter: ^3.0.1
+  flutter_slidable: ^2.0.0
+  url_launcher: ^6.1.10
 
 
 
@@ -67,22 +71,36 @@ flutter_icons:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/contexts/android/apiary_android.rhn
-    - assets/contexts/ios/apiary_ios.rhn
-    - assets/keyword_files/android/hi-bees_android.ppn
-    - assets/keyword_files/ios/hi-bees_ios.ppn
+    - assets/contexts/android/apiary_android_en_US.rhn
+    - assets/contexts/android/apiary_android_pl_PL.rhn
+    - assets/contexts/ios/apiary_ios_pl_PL.rhn
+    - assets/contexts/ios/apiary_ios_en_US.rhn
+    - assets/keyword_files/android/Hi-Maya_android_en_US.ppn
+    - assets/keyword_files/android/Hi-Maya_android_pl_PL.ppn
+    - assets/keyword_files/ios/Hi-Maya_ios_pl_PL.ppn
+    - assets/keyword_files/ios/Hi-Maya_ios_en_US.ppn
+    - assets/porcupine/porcupine_params_pl_PL.pv
+    - assets/porcupine/porcupine_params_en_US.pv
+    - assets/rhino/rhino_params_pl_PL.pv
+    - assets/rhino/rhino_params_en_US.pv
     - assets/image/matka1.png
+    - assets/image/matka11.png
     - assets/image/hi_bees_1024.png
     - assets/image/apivarol1.png
     - assets/image/invert.png
     - assets/image/korpus.png
     - assets/image/hi_bees.png
     - assets/image/pszczola1.png
+    - assets/image/zbiory.png
+    - assets/image/wind.png
+    - assets/image/rain.png
+    - assets/image/EN.png
+    - assets/image/PL.png
    # - assets/audio/sound7.mp3
   
   
   uses-material-design: true
-
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

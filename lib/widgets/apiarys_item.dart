@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-//import 'package:flutter_beep/flutter_beep.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../globals.dart' as globals;
 import '../screens/hives_screen.dart';
@@ -48,6 +48,7 @@ class ApiarysItem extends StatelessWidget {
       onTap: () {
         //FlutterBeep.playSysSound(iOSSoundIDs.Headset_TransitionEnd);
         globals.pasiekaID = apiary.pasiekaNr;
+        globals.ikonaPasieki = apiary.ikona; //bo mozna zmienić przy edycji uli
         Navigator.of(context).pushNamed(
           HivesScreen.routeName,
           arguments: {'numerPasieki': apiary.pasiekaNr},
@@ -74,7 +75,7 @@ class ApiarysItem extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -94,7 +95,8 @@ class ApiarysItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          'Apiary ${apiary.id}',
+                          AppLocalizations.of(context)!.aPiary +
+                              " ${apiary.id}",
                           style: Theme.of(context).textTheme.headline6,
 
 //nazwa pasieki
@@ -113,9 +115,12 @@ class ApiarysItem extends StatelessWidget {
                           height: 18,
                           child:
                               //ilość dni od ostatniego przegladu
-                              apiary.ileUli != '1'
+                              apiary.ileUli > 1
                                   ? Text(
-                                      '${apiary.ileUli} hives / $difference days',
+                                      "${apiary.ileUli} " +
+                                          AppLocalizations.of(context)!.hives +
+                                          " / $difference " +
+                                          AppLocalizations.of(context)!.days,
                                       style: const TextStyle(
                                         fontSize: 15,
                                         color: Color.fromARGB(255, 69, 69, 69),
@@ -125,17 +130,26 @@ class ApiarysItem extends StatelessWidget {
                                       overflow: TextOverflow
                                           .ellipsis, //skracanie tekstu
                                     )
-                                  : Text(
-                                      '${apiary.ileUli} hive / $difference days',
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        color: Color.fromARGB(255, 69, 69, 69),
-                                      ),
-                                      softWrap: true, //zawijanie tekstu
-                                      maxLines: 2, //ilość wierszy opisu
-                                      overflow: TextOverflow
-                                          .ellipsis, //skracanie tekstu
-                                    ),
+                                  : apiary.ileUli == 1
+                                      ? Text(
+                                          "${apiary.ileUli} " +
+                                              AppLocalizations.of(context)!
+                                                  .hive +
+                                              " / $difference " +
+                                              AppLocalizations.of(context)!
+                                                  .days,
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            color:
+                                                Color.fromARGB(255, 69, 69, 69),
+                                          ),
+                                          softWrap: true, //zawijanie tekstu
+                                          maxLines: 2, //ilość wierszy opisu
+                                          overflow: TextOverflow
+                                              .ellipsis, //skracanie tekstu
+                                        )
+                                      : Text(
+                                          ''), //jezeli jest 0 to brak tekstu - po imporcie danych bo nie mozna obliczyć ilości uli w poszczególnych pasiekach
                         ),
                         Padding(
                           //odstępy dla wiersza z ikonami
@@ -159,19 +173,25 @@ class ApiarysItem extends StatelessWidget {
                                   apiary.ikona == 'green'
                                       ? const Icon(
                                           Icons.hive,
-                                          color: Color.fromARGB(255, 0, 255, 0),
+                                          color: Color.fromARGB(255, 0, 227, 0),
                                         )
                                       : apiary.ikona == 'yellow'
                                           ? const Icon(
                                               Icons.hive,
                                               color: Color.fromARGB(
-                                                  255, 255, 251, 0),
+                                                  255, 233, 229, 1),
                                             )
-                                          : const Icon(
-                                              Icons.hive,
-                                              color: Color.fromARGB(
-                                                  255, 255, 0, 0),
-                                            ),
+                                          : apiary.ikona == 'orange'
+                                              ? const Icon(
+                                                  Icons.hive,
+                                                  color: Color.fromARGB(
+                                                      255, 233, 160, 1),
+                                                )
+                                              : const Icon(
+                                                  Icons.hive,
+                                                  color: Color.fromARGB(
+                                                      255, 255, 0, 0),
+                                                ),
                                   const SizedBox(
                                     width: 0,
                                   ), //odległość
