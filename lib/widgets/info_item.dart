@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/frames.dart';
 import '../models/hives.dart';
+import '../models/hive.dart';
 import '../models/apiarys.dart';
 import '../models/infos.dart';
 import '../models/info.dart';
 import '../helpers/db_helper.dart';
 import '../screens/frames_screen.dart';
+import '../screens/infos_edit_screen.dart';
 import '../globals.dart' as globals;
 
 class InfoItem extends StatelessWidget {
+  String zmienDate(String data) {
+    String rok = data.substring(0, 4);
+    String miesiac = data.substring(5, 7);
+    String dzien = data.substring(8);
+    return '$dzien.$miesiac.$rok';
+  }
+
   @override
   Widget build(BuildContext context) {
     final info = Provider.of<Info>(context, listen: false);
@@ -26,7 +35,10 @@ class InfoItem extends StatelessWidget {
     //   Color.fromARGB(255, 61, 214, 66),
     //   Color.fromARGB(255, 210, 170, 49),
     // ];
-
+    List<Hive> hive = [];
+    
+   
+    
     return Dismissible(
       //usuwalny element listy
       key: ValueKey(info.id),
@@ -57,8 +69,8 @@ class InfoItem extends StatelessWidget {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Are you sure to remove this item?'),
-              content: Text('It will delete item permanently.'),
+              title: Text(AppLocalizations.of(context)!.removeThisItem),
+              content: Text(AppLocalizations.of(context)!.deletePermanently),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -69,11 +81,60 @@ class InfoItem extends StatelessWidget {
                     Navigator.of(context).pop(true), //skasowanie elementu listy
                     if (info.kategoria == 'inspection')
                       {
-                        //kasowanie wpisów dotyczących przeglądu dla pasieki, ula i daty
+                        //kasowanie wszystkich wpisów dotyczących przeglądu dla pasieki, ula i daty
                         DBHelper.deleteInspection(
                                 info.data, globals.pasiekaID, globals.ulID)
                             .then((_) {
                           print('1... kasowanie inspekcji');
+
+                          //kasowanie belki jezeli zgadza się id i data
+                          final hiveData =
+                              Provider.of<Hives>(context, listen: false);
+                          hive = hiveData.items.where((element) {
+                            //to wczytanie danych edytowanego ula
+                            return element.id.contains(
+                                '${globals.pasiekaID}.${globals.ulID}');
+                          }).toList();
+                          if (hive[0].przeglad == info.data) {
+                            Hives.insertHive(
+                              '${hive[0].pasiekaNr}.${hive[0].ulNr}',
+                              hive[0].pasiekaNr, //pasieka nr
+                              hive[0].ulNr, //ul nr
+                              hive[0].przeglad, //przeglad
+                              hive[0].ikona, //ikona
+                              hive[0].ramek, //opis - ilość ramek w korpusie
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              '0',
+                              '0',
+                              '0',
+                              '0',
+                              '0',
+                              hive[0].matka1,
+                              hive[0].matka2,
+                              hive[0].matka3,
+                              hive[0].matka4,
+                              hive[0].matka5,
+                            ).then((_) {
+                              //pobranie do Hives_items z tabeli ule
+                              Provider.of<Hives>(context, listen: false)
+                                  .fetchAndSetHives(
+                                hive[0].pasiekaNr,
+                              );
+                            });
+                          }
+
                           Provider.of<Frames>(context, listen: false)
                               .fetchAndSetFramesForHive(
                                   globals.pasiekaID, globals.ulID)
@@ -88,7 +149,7 @@ class InfoItem extends StatelessWidget {
                             print(ileRamek);
 
                             if (ileRamek == 0) {
-                            //jezeli nie ma ramek to czy są info?
+                              //jezeli nie ma ramek to czy są info?
                               Provider.of<Infos>(context, listen: false)
                                   .fetchAndSetInfosForHive(
                                       globals.pasiekaID, globals.ulID)
@@ -98,61 +159,66 @@ class InfoItem extends StatelessWidget {
                                     Provider.of<Infos>(context, listen: false);
                                 final infos = infosData.items;
                                 int ileInfo = infos.length;
-                                print('5... info_item - ilość info dla ulu =');
+                                print('5... info_item - ilość info dla ula =');
                                 //print(hives.length);
                                 print(ileInfo);
                                 //jezeli nie ma info
-                                if (ileInfo == 0)//usuwanie ula bo wszystkie przeglady/ramki usunieto
-                                  DBHelper.deleteUl(globals.pasiekaID, globals.ulID)
-                                    .then((_) {
-                                  Provider.of<Hives>(context, listen: false)
-                                      .fetchAndSetHives(globals.pasiekaID)
+                                if (ileInfo ==
+                                    0) //usuwanie ula bo wszystkie przeglady/ramki usunieto
+                                  DBHelper.deleteUl(
+                                          globals.pasiekaID, globals.ulID)
                                       .then((_) {
-                                    print('6..wczytanie uli ');
-                                    final hivesData = Provider.of<Hives>(context,
-                                        listen: false);
-                                    final hives = hivesData.items;
-                                    int ileUli = hives.length;
-                                    print('7... info_item - ilość uli =');
-                                    //print(hives.length);
-                                    print(ileRamek);
-                                    if (ileUli > 0) {
-                                      DBHelper.updateIleUli(
-                                              globals.pasiekaID, ileUli)
-                                          .then((_) {
-                                        print(
-                                            '8...info_item: upgrade ilość uli w pasiece');
-                                        Provider.of<Apiarys>(context,
-                                                listen: false)
-                                            .fetchAndSetApiarys()
+                                    Provider.of<Hives>(context, listen: false)
+                                        .fetchAndSetHives(globals.pasiekaID)
+                                        .then((_) {
+                                      print('6..wczytanie uli ');
+                                      final hivesData = Provider.of<Hives>(
+                                          context,
+                                          listen: false);
+                                      final hives = hivesData.items;
+                                      int ileUli = hives.length;
+                                      print('7... info_item - ilość uli =');
+                                      //print(hives.length);
+                                      print(ileRamek);
+                                      if (ileUli > 0) {
+                                        DBHelper.updateIleUli(
+                                                globals.pasiekaID, ileUli)
                                             .then((_) {
                                           print(
-                                              '9...info_item: aktualizacja Apiarys_items bo ileUli>0');
-                                          Navigator.of(context).pop();
+                                              '8...info_item: upgrade ilość uli w pasiece');
+                                          Provider.of<Apiarys>(context,
+                                                  listen: false)
+                                              .fetchAndSetApiarys()
+                                              .then((_) {
+                                            print(
+                                                '9...info_item: aktualizacja Apiarys_items bo ileUli>0');
+                                            Navigator.of(context).pop();
+                                          });
                                         });
-                                      });
-                                    } else {
-                                      DBHelper.deletePasieki(globals.pasiekaID)
-                                          .then((_) {
-                                        print('10... usuwanie pasieki');
-                                        Provider.of<Apiarys>(context,
-                                                listen: false)
-                                            .fetchAndSetApiarys()
+                                      } else {
+                                        DBHelper.deletePasieki(
+                                                globals.pasiekaID)
                                             .then((_) {
-                                          print(
-                                              '11...info_item: aktualizacja Apiarys_items bo ileUli=0');
-                                          Navigator.of(context).pop();
+                                          print('10... usuwanie pasieki');
+                                          Provider.of<Apiarys>(context,
+                                                  listen: false)
+                                              .fetchAndSetApiarys()
+                                              .then((_) {
+                                            print(
+                                                '11...info_item: aktualizacja Apiarys_items bo ileUli=0');
+                                            Navigator.of(context).pop();
+                                          });
                                         });
-                                      });
-                                    }
-                                 });
-                                });
+                                      }
+                                    });
+                                  });
                               });
                             }
                           });
                           //kasowanie wpisu o inspekcji w bazie info
                           DBHelper.deleteInfo(info.id).then((_) {
                             print('10...kasowanie info w bazie');
+
                             Provider.of<Infos>(context, listen: false)
                                 .fetchAndSetInfosForHive(
                                     globals.pasiekaID, globals.ulID)
@@ -167,17 +233,67 @@ class InfoItem extends StatelessWidget {
                           });
                           //komunikat na dole ekranu
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("The inspection has been deleted"),
+                            SnackBar(
+                              content: Text(AppLocalizations.of(context)!
+                                  .inspectionDeleted),
                             ),
                           );
                         }),
                       }
-                    else
+                    else //jezeli to nie jest inspection (kasowanie innych info)
                       {
                         //usuwanie info dla pozostałych kategorii - dla pasieki i ula
                         DBHelper.deleteInfo(info.id).then((_) {
                           print('1.1... kasowanie info');
+
+                          //kasowanie info w belce ula jezeli zgadza się id i data
+                          final hiveData =
+                              Provider.of<Hives>(context, listen: false);
+                          hive = hiveData.items.where((element) {
+                            //to wczytanie danych edytowanego ula
+                            return element.id.contains(
+                                '${globals.pasiekaID}.${globals.ulID}');
+                          }).toList();
+                          if (hive[0].przeglad == info.data) {
+                            Hives.insertHive(
+                              '${hive[0].pasiekaNr}.${hive[0].ulNr}',
+                              hive[0].pasiekaNr, //pasieka nr
+                              hive[0].ulNr, //ul nr
+                              hive[0].przeglad, //przeglad
+                              hive[0].ikona, //ikona
+                              hive[0].ramek, //opis - ilość ramek w korpusie
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              '0',
+                              '0',
+                              '0',
+                              '0',
+                              '0',
+                              hive[0].matka1,
+                              hive[0].matka2,
+                              hive[0].matka3,
+                              hive[0].matka4,
+                              hive[0].matka5,
+                            ).then((_) {
+                              //pobranie do Hives_items z tabeli ule
+                              Provider.of<Hives>(context, listen: false)
+                                  .fetchAndSetHives(
+                                hive[0].pasiekaNr,
+                              );
+                            });
+                          }
+
                           //ile info dla ula pozostało?
                           Provider.of<Infos>(context, listen: false)
                               .fetchAndSetInfosForHive(
@@ -280,7 +396,7 @@ class InfoItem extends StatelessWidget {
                     //   });
                     // }),
                   },
-                  child: Text('Yes Delete'),
+                  child: Text(AppLocalizations.of(context)!.yesDelete),
                 ),
               ],
             );
@@ -307,14 +423,61 @@ class InfoItem extends StatelessWidget {
                       backgroundColor: Colors.white,
                       child: Image.asset('assets/image/hi_bees.png'),
                     ),
-                    title: Text('${info.data}  ${info.uwagi}',
-                        style: const TextStyle(fontSize: 14)),
-                    subtitle: Text(
-                        '${info.parametr}  ${info.wartosc} ${info.miara}',
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.black)),
+                    title: globals.jezyk == 'pl_PL'
+                        ? Text(
+                            '${zmienDate(info.data)}  ${info.czas}  ${info.temp}',
+                            style: const TextStyle(fontSize: 14))
+                        : Text('${info.data}  ${info.czas}  ${info.temp}',
+                            style: const TextStyle(fontSize: 14)),
+                    subtitle: Row(
+                      children: [
+                        Text(
+                            '${info.parametr} ', //  ${info.wartosc} ${info.miara}',
+                            style: const TextStyle(
+                                fontSize: 18, color: Colors.black)),
+                        info.wartosc == 'green'
+                            ? Icon(
+                                Icons.hive,
+                                color: Color.fromARGB(255, 0, 227, 0),
+                              )
+                            : info.wartosc == 'yellow'
+                                ? Icon(
+                                    Icons.hive,
+                                    color: Color.fromARGB(255, 233, 229, 1),
+                                    //size: 20,
+                                  )
+                                : info.wartosc == 'red'
+                                    ? Icon(
+                                        Icons.hive,
+                                        color: Color.fromARGB(255, 255, 0, 0),
+                                        //size: 20,
+                                      )
+                                    : Icon(
+                                        Icons.hive,
+                                        color:
+                                            Color.fromARGB(255, 116, 116, 116),
+                                        //size: 20,
+                                      ),
+                        // if(info.pogoda != '')
+                        //   Image.network(
+                        //     //obrazek pogody pobierany z neta
+                        //     'https://openweathermap.org/img/w/${info.pogoda}.png', //adres internetowy
+                        //     height: 40, //wysokość obrazka
+                        //     //width: 140,
+                        //     fit: BoxFit.cover, //dopasowanie do pojemnika
+                        //   ),
+                      ],
+                    ),
                     trailing: const Icon(Icons.arrow_forward_ios))
                 : ListTile(
+                    onTap: () {
+                      //_showAlert(context, 'Edycja', '${frame.id}');
+                      // globals.dataInspekcji = frame.data;
+                      Navigator.of(context).pushNamed(
+                        InfosEditScreen.routeName,
+                        arguments: {'idInfo': info.id},
+                      );
+                    },
                     leading: CircleAvatar(
                         backgroundColor: Colors.white,
                         child: info.kategoria == 'feeding'
@@ -322,27 +485,62 @@ class InfoItem extends StatelessWidget {
                             : info.kategoria == 'treatment'
                                 ? Image.asset('assets/image/apivarol1.png')
                                 : info.kategoria == 'equipment'
-                                    ? Image.asset(
-                                        'assets/image/korpus.png') //construction_rounded)//verified_user_rounded) //info_rounded) //visability_rounded //check
-                                    : info.kategoria ==
-                                            'queen' //done_outline_rounted //face //female_rounded
-                                        ? Image.asset(
-                                            'assets/image/matka1.png') //done_outline_rounted //face //female_rounded
-                                        : info.kategoria ==
-                                            'colony' //done_outline_rounted //face //female_rounded
-                                        ? Image.asset(
-                                            'assets/image/pszczola1.png') //done_outline_rounted //face //female_rounded
-                                        : const Icon(
-                                            Icons.info_rounded,
-                                            color: Colors.black,
-                                          )),
-                    title: Text('${info.data}  ${info.uwagi}',
-                        style: const TextStyle(fontSize: 14)),
-                    subtitle: Text(
-                        '${info.parametr} ${info.wartosc} ${info.miara}',
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.black)),
-                  )),
+                                    ? Image.asset('assets/image/korpus.png')
+                                    : info.kategoria == 'queen'
+                                        ? Image.asset('assets/image/matka1.png')
+                                        : info.kategoria == 'colony'
+                                            ? Image.asset(
+                                                'assets/image/pszczola1.png')
+                                            : info.kategoria == 'harvest'
+                                                ? Image.asset(
+                                                    'assets/image/zbiory.png')
+                                                : const Icon(
+                                                    Icons.info_rounded,
+                                                    color: Colors.black,
+                                                  )),
+                    title: globals.jezyk == 'pl_PL'
+                        ? Text(
+                            '${zmienDate(info.data)}  ${info.czas}  ${info.temp}',
+                            style: const TextStyle(fontSize: 14))
+                        : Text('${info.data}  ${info.czas}  ${info.temp}',
+                            style: const TextStyle(fontSize: 14)),
+                    subtitle: RichText(
+                        text: TextSpan(
+                            style: TextStyle(color: Colors.black),
+                            children: [
+                          TextSpan(
+                            text: ('${info.parametr} '),
+                            style: TextStyle(
+                                fontSize: 16,
+                                //fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 0, 0, 0)),
+                          ),
+                          TextSpan(
+                            text: ('${info.wartosc.replaceAll('.', ',')} '),
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 0, 0, 0)),
+                          ),
+                          TextSpan(
+                            text: ('${info.miara}'),
+                            style: TextStyle(
+                                fontSize: 16,
+                                //fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 0, 0, 0)),
+                          ),
+                          TextSpan(
+                            text: '\n${info.uwagi}',
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: Color.fromARGB(255, 0, 0, 0)),
+                          )
+                        ])),
+                    // Text(
+                    //     '${info.parametr} ${info.wartosc} ${info.miara}',
+                    //     style:
+                    //         const TextStyle(fontSize: 18, color: Colors.black)),
+                    trailing: const Icon(Icons.edit))),
       ),
     );
   }

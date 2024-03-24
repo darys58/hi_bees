@@ -1,7 +1,7 @@
 //dane dań
-//import 'dart:convert'; //obsługa json'a
+import 'dart:convert'; //obsługa json'a
 import 'package:flutter/material.dart';
-//import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as http;
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
 import './frame.dart';
 
@@ -64,7 +64,43 @@ class Frames with ChangeNotifier {
   }
 */
 
-//pobranie wpisów o ramce z bazy lokalnej
+  //pobranie ramek z serwera www
+  static Future<void> fetchFramesFromSerwer(String url) async {
+    //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
+    try {
+      final response = await http.get(Uri.parse(url));
+      print(json.decode(response.body));
+
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      if (extractedData == null) {
+        return;
+      }
+
+      extractedData.forEach((ramkaId, ramkaData) {
+        if (ramkaId != 'brak') {//jezeli są wpisy a tabeli ramka_xxxx
+          //zapis ramki do bazy
+          DBHelper.insert('ramka', {
+            'id': ramkaId,
+            'data': ramkaData['ra_data'],
+            'pasiekaNr': ramkaData['ra_pasiekaNr'],
+            'ulNr': ramkaData['ra_ulNr'],
+            'korpusNr': ramkaData['ra_korpusNr'],
+            'typ': ramkaData['ra_typ'],
+            'ramkaNr': ramkaData['ra_ramkaNr'],
+            'rozmiar': ramkaData['ra_rozmiar'],
+            'strona': ramkaData['ra_strona'],
+            'zasob': ramkaData['ra_zasob'],
+            'wartosc': ramkaData['ra_wartosc'],
+            'arch': 2,
+          });
+        }
+      });
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+//pobranie wszystkich wpisów o ramce z bazy lokalnej
   Future<void> fetchAndSetFrames() async {
     final dataList = await DBHelper.getData('ramka');
     _items = dataList
@@ -81,6 +117,7 @@ class Frames with ChangeNotifier {
             strona: item['strona'],
             zasob: item['zasob'],
             wartosc: item['wartosc'],
+            arch: item['arch']!,
           ),
         )
         .toList();
@@ -89,7 +126,7 @@ class Frames with ChangeNotifier {
     notifyListeners();
   }
 
-  //pobranie wpisów o ramce z bazy lokalnej
+  //pobranie wpisów o ramce z bazy lokalnej dla podanego ula
   Future<void> fetchAndSetFramesForHive(pasieka, ul) async {
     final dataList = await DBHelper.getFramesOfHive(pasieka, ul);
     _items = dataList
@@ -106,18 +143,69 @@ class Frames with ChangeNotifier {
             strona: item['strona'],
             zasob: item['zasob'],
             wartosc: item['wartosc'],
+            arch: item['arch']!,
           ),
         )
         .toList();
-    print('wczytanie danych o ramkach dla podanego ula i pasieki ---> Frames <---');
+    print(
+        'wczytanie danych o ramkach dla podanego ula i pasieki ---> Frames <---');
     //print(_items);
     notifyListeners();
   }
-//'CREATE TABLE ramka(id TEXT PRIMARY KEY, data TEXT, pasiekaId TEXT, ulId TEXT, korpusNr TEXT,
-//korpusTyp TEXT, ramkaNr TEXT, rozmiar TEXT, miodL TEXT, miodP TEXT, zasklepL TEXT, zasklepP TEXT,
-//pierzgaL TEXT, pierzgaP TEXT, czerwL TEXT, czerwP TEXT, larwyL TEXT, larwyP TEXT, jajaL TEXT, jajaP TEXT,
-//trutL TEXT, trutP TEXT, wezaL TEXT, wezaP TEXT, suszL TEXT, suszP TEXT, matecznikiL TEXT, matecznikiP TEXT,
-//delMatL TEXT, delMatP TEXT, matkaL TEXT, matkaP TEXT, przeznaczenie TEXT, akcja TEXT)');
+
+  //pobranie nowych wpisów o ramce z bazy lokalnej do archiwizacji
+  Future<void> fetchAndSetFramesToArch() async {
+    final dataList = await DBHelper.getFramesToArch();
+    _items = dataList
+        .map(
+          (item) => Frame(
+            id: item['id'],
+            data: item['data'],
+            pasiekaNr: item['pasiekaNr'],
+            ulNr: item['ulNr'],
+            korpusNr: item['korpusNr'],
+            typ: item['typ'],
+            ramkaNr: item['ramkaNr'],
+            rozmiar: item['rozmiar'],
+            strona: item['strona'],
+            zasob: item['zasob'],
+            wartosc: item['wartosc'],
+            arch: item['arch']!,
+          ),
+        )
+        .toList();
+    print(
+        'wczytanie nowych danych o ramkach do archiwizacji ---> Frames <---');
+    //print(_items);
+    notifyListeners();
+  }
+
+  //pobranie ramki z bazy lokalnej dla podanego id
+  Future<void> fetchAndSetFrameForId(idRamki) async {
+    final dataList = await DBHelper.getFrame(idRamki);
+    _items = dataList
+        .map(
+          (item) => Frame(
+            id: item['id'],
+            data: item['data'],
+            pasiekaNr: item['pasiekaNr'],
+            ulNr: item['ulNr'],
+            korpusNr: item['korpusNr'],
+            typ: item['typ'],
+            ramkaNr: item['ramkaNr'],
+            rozmiar: item['rozmiar'],
+            strona: item['strona'],
+            zasob: item['zasob'],
+            wartosc: item['wartosc'],
+            arch: item['arch']!,
+          ),
+        )
+        .toList();
+    print(
+        'wczytanie ramki dla podanego id ---> Frame <---');
+    //print(_items);
+    notifyListeners();
+  }
 
   //zapisanie rekordu memory do bazy lokalnej
   // static Future<void> insertMemory(String nazwa, String a, String b, String c,
@@ -132,11 +220,6 @@ class Frames with ChangeNotifier {
   //     'f': f,
   //   });
   // }
-//'CREATE TABLE ramka(id TEXT PRIMARY KEY, data TEXT, pasiekaId TEXT, ulId TEXT, korpusNr TEXT,
-//korpusTyp TEXT, ramkaNr TEXT, rozmiar TEXT, miodL TEXT, miodP TEXT, zasklepL TEXT, zasklepP TEXT,
-//pierzgaL TEXT, pierzgaP TEXT, czerwL TEXT, czerwP TEXT, larwyL TEXT, larwyP TEXT, jajaL TEXT, jajaP TEXT,
-//trutL TEXT, trutP TEXT, wezaL TEXT, wezaP TEXT, suszL TEXT, suszP TEXT, matecznikiL TEXT, matecznikiP TEXT,
-//delMatL TEXT, delMatP TEXT, matkaL TEXT, matkaP TEXT, przeznaczenie TEXT, akcja TEXT)');
 
   //zapisanie ramki do bazy lokalnej
   static Future<void> insertFrame(
@@ -150,7 +233,8 @@ class Frames with ChangeNotifier {
       int rozmiar,
       int strona,
       int zasob,
-      String wartosc) async {
+      String wartosc,
+      int arch) async {
     await DBHelper.insert('ramka', {
       'id': id, //utworzony klucz unikalny
       'data': data,
@@ -163,6 +247,7 @@ class Frames with ChangeNotifier {
       'strona': strona,
       'zasob': zasob,
       'wartosc': wartosc,
+      'arch': arch,
     });
   }
   /* 
