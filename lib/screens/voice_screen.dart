@@ -128,6 +128,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   int nrXXDoFrame = 0;
   int nrXXDoFrameTemp = 0;
   int nrXXOfFrame = 0;
+  int nrXXOfFramePo = 0;
   int nrXXOfFrameTemp = 0;
   String siteOfFrame = '0'; //both, whole, left, right, obie
   String sizeOfFrame = '0'; //big, small   2-duza, 1-mała
@@ -3197,16 +3198,6 @@ class _VoiceScreenState extends State<VoiceScreen> {
         hive = hiveData.items.where((element) {
           return element.id.contains('$nrXXOfApiary.$nrXXOfHive');
         }).toList();
-      
-      // //dopisywanie czy liczenie od nowa
-      // if (tempKorpusNr == 0) {
-      //   //jezeli korpus został otworzony bo miał numer 0
-
-      //   final hiveData = Provider.of<Hives>(context, listen: false);
-      //   hive = hiveData.items.where((element) {
-      //     return element.id.contains('$nrXXOfApiary.$nrXXOfHive');
-      //   }).toList();
-      // }
 
       //jezeli ul istnieje
       if (hive.isNotEmpty)
@@ -3282,7 +3273,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
     print('zapis do bazy ----------- zasob=$zas wartosc=$wart');
 
     if (readyFrames) {
-      //dla wszystkich ramek w korpusie lub półkorpusie
+      //dla zakresu ramek w korpusie lub półkorpusie
 
       //print('readyFrames wejście w zapis do bazy=================');
       //jezeli ustawione jest miejsce do zapisu
@@ -3291,7 +3282,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
           _korpusNr != 0 &&
           nrXXOdFrame != 0) {
         //print('if wejscie przed for');
-        //zapis w pętli dia wszystkich ramek
+        //zapis w pętli dia zakresu ramek
         for (var i = nrXXOdFrame; i <= nrXXDoFrame; i++) {
           //print('pętla for - i = $i');
           if (siteOfFrame == 'left' ||
@@ -3299,13 +3290,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
               siteOfFrame == 'lewej' ||
               siteOfFrame == 'lewą') {
             Frames.insertFrame(
-                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.1.$zas',
+                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.1.$zas',
                 formattedDate,
                 nrXXOfApiary,
                 nrXXOfHive,
                 _korpusNr,
                 _typ,
                 i,
+                i, //ramka po ??? i trzeba zmienić id - dodać ramkaNrPo 
                 _rozmiar,
                 1, //lewa
                 zas,
@@ -3317,13 +3309,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
               siteOfFrame == 'prawej' ||
               siteOfFrame == 'prawą') {
             Frames.insertFrame(
-                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.2.$zas',
+                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.2.$zas',
                 formattedDate,
                 nrXXOfApiary,
                 nrXXOfHive,
                 _korpusNr,
                 _typ,
                 i,
+                i, //ramka po ???
                 _rozmiar,
                 2, //prawa
                 zas,
@@ -3333,12 +3326,13 @@ class _VoiceScreenState extends State<VoiceScreen> {
           } else {
             //bo both lub whole
             Frames.insertFrame(
-                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.1.$zas',
+                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.1.$zas',
                 formattedDate,
                 nrXXOfApiary,
                 nrXXOfHive,
                 _korpusNr,
                 _typ,
+                i,
                 i,
                 _rozmiar,
                 1, //lewa
@@ -3347,12 +3341,13 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 0);
             sumujZasob(zas, wart);
             Frames.insertFrame(
-                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.2.$zas',
+                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.2.$zas',
                 formattedDate,
                 nrXXOfApiary,
                 nrXXOfHive,
                 _korpusNr,
                 _typ,
+                i,
                 i,
                 _rozmiar,
                 2, //prawa
@@ -3376,13 +3371,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
             siteOfFrame == 'lewej' ||
             siteOfFrame == 'lewą') {
           Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.1.$zas',
+              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFrame.1.$zas',
               formattedDate,
               nrXXOfApiary,
               nrXXOfHive,
               _korpusNr,
               _typ,
               nrXXOfFrame,
+              nrXXOfFrame, //ramka po ???
               _rozmiar,
               1, //lewa
               zas,
@@ -3394,13 +3390,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
             siteOfFrame == 'prawej' ||
             siteOfFrame == 'prawą') {
           Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.2.$zas',
+              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFrame.2.$zas',
               formattedDate,
               nrXXOfApiary,
               nrXXOfHive,
               _korpusNr,
               _typ,
               nrXXOfFrame,
+              nrXXOfFrame, //ramka po ??
               _rozmiar,
               2, //prawa
               zas,
@@ -3410,13 +3407,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
         } else {
           //bo both lub whole
           Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.1.$zas',
+              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFrame.1.$zas',
               formattedDate,
               nrXXOfApiary,
               nrXXOfHive,
               _korpusNr,
               _typ,
               nrXXOfFrame,
+              nrXXOfFrame, //ramka po ???
               _rozmiar,
               1, //lewa
               zas,
@@ -3424,13 +3422,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
               0);
           sumujZasob(zas, wart);
           Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.2.$zas',
+              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFrame.2.$zas',
               formattedDate,
               nrXXOfApiary,
               nrXXOfHive,
               _korpusNr,
               _typ,
               nrXXOfFrame,
+              nrXXOfFrame, //ramka po ???
               _rozmiar,
               2, //prawa
               zas,
@@ -3494,6 +3493,10 @@ class _VoiceScreenState extends State<VoiceScreen> {
       matka3,
       matka4,
       matka5,
+      '0',
+      '0',
+      '0',
+      1, //nieaktualne - zmiana zasobu
     ).then((_) {
       //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
       Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrXXOfApiary)
@@ -3667,6 +3670,10 @@ class _VoiceScreenState extends State<VoiceScreen> {
               matka3, //?????????/
               matka4,
               matka5,
+              '0',
+              '0',
+              '0',
+              0,
             );
           }
         }
@@ -3890,6 +3897,10 @@ class _VoiceScreenState extends State<VoiceScreen> {
           matka3,
           matka4,
           matka5,
+          '0',
+          '0',
+          '0',
+          0,
         ).then((_) {
           //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
           Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrXXOfApiary,)
@@ -6122,6 +6133,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
             korpusNr: 0,
             typ: 0,
             ramkaNr: 0,
+            ramkaNrPo: 0,
             rozmiar: 0,
             strona: 0,
             zasob: 0,
@@ -6148,6 +6160,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
             korpusNr: item['korpusNr'],
             typ: item['typ'],
             ramkaNr: 0,
+            ramkaNrPo: 0,
             rozmiar: 0,
             strona: 0,
             zasob: 0,

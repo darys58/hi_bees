@@ -49,6 +49,10 @@ class Hives with ChangeNotifier {
             matka3: item['matka3'],
             matka4: item['matka4'],
             matka5: item['matka5'],
+            h1: item['h1'],
+            h2: item['h2'],
+            h3: item['h3'],
+            aktual: item['aktual'],
           ),
         )
         .toList();
@@ -95,6 +99,10 @@ class Hives with ChangeNotifier {
             matka3: item['matka3'],
             matka4: item['matka4'],
             matka5: item['matka5'],
+            h1: item['h1'],
+            h2: item['h2'],
+            h3: item['h3'],
+            aktual: item['aktual'],
           ),
         )
         .toList();
@@ -134,7 +142,10 @@ class Hives with ChangeNotifier {
       String matka3,
       String matka4,
       String matka5,
-
+      String h1,
+      String h2,
+      String h3,
+      int aktual,
       ) async {
     await DBHelper.insert('ule', {
       'id': id, //utworzony klucz unikalny  pasiekaNr.ulNr.
@@ -166,6 +177,10 @@ class Hives with ChangeNotifier {
       'matka3': matka3,
       'matka4': matka4,
       'matka5': matka5,
+      'h1': h1,
+      'h2': h2,
+      'h3': h3,
+      'aktual': aktual,
     });
   }
 

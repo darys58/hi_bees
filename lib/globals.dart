@@ -7,7 +7,9 @@ int iloscRamek = 10; //ilość ramek w korpusie ula
 String dataInspekcji = ''; //data inspekcji dla wybranego elementu listy info
 int ileRamek = 0; //ile ramek w "edit inspection" - szczegóły inspekcji
 String aktualnaKategoriaInfo = 'inspection'; //aktualnie wybrana kategoria Info
-String rokStatystyk = DateTime.now().toString().substring(0, 4); //rok wybrany w Info do ststystyk
+String rokStatystyk = DateTime.now().toString().substring(0, 4); //rok wybrany w Info do ststystyk\
+double aktualTemp = 0.0; //aktualna temperatura
+String stopnie = '\u2103'; //nazwa jednostki temperatury
 
 String kod = ''; //kod do pobrania klucza picovoice z bazy www
 String key = ''; //kaccessKey picovoice
@@ -19,6 +21,18 @@ String jezyk = ''; //język obsługiwany przez aplikację
 //String memJezyk = 'system'; //język z systemu "system" lub z ustawień w aplikacji 
 String ikonaUla = 'green'; //
 String ikonaPasieki = 'green'; //
+
+String dataWpisu = DateTime.now().toString().substring(0, 10);
+int nowyNrKorpusu = 1;
+int nowyNrRamki = 1;
+int nowyNrRamkiPo = 1;
+int zakresRamek = 0; //0-jedna, 1-wiele
+int nrRamkiOd = 1;
+int nrRamkiDo = 5;
+int korpus = 2;
+int rozmiarRamki = 2;
+int stronaRamki = 2;
+
 
 //z/do tabeli Memory
 //String id = '';

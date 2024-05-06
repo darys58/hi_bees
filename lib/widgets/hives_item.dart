@@ -53,6 +53,7 @@ class HivesItem extends StatelessWidget {
     final przeglad = DateTime.parse(hive.przeglad);
     //final date2 = DateTime.now();
     final difference = daysBetween(przeglad, now);
+   
 
     //sony Z3 592px, mały ios 568px
     double heightScreen = MediaQuery.of(context).size.height;
@@ -61,6 +62,9 @@ class HivesItem extends StatelessWidget {
     double belka = 150;
     if (heightScreen < 600 && heightScreen > 590) {
       belka = 120; //zmniejszenie długości belki ze 150 pixeli do 120
+    }
+    if (heightScreen < 590) {
+      belka = 90; //zmniejszenie długości belki  do 90
     }
 
     // //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
@@ -126,14 +130,24 @@ class HivesItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis, //skracanie tekstu
                     ),
                     Text(' / '),
-                    Text(
-                      '$difference ',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
-                    ),
+                    difference > 365
+                      ? Text(
+                          '? ',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.black,
+                          ),
+                        )
+                      : Text(
+                          '$difference ',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.black,
+                          ),
+                        ),
+                    
                     difference != 1
                         ? Text(
                             AppLocalizations.of(context)!.days,

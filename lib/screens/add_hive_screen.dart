@@ -416,6 +416,10 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                                       '',
                                       '',
                                       '',
+                                      '',
+                                      '',
+                                      '',
+                                      0, //aktualny bo dopiero utworzony
                                     ).then((_) {
                                       //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
                                       Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowyNrPasieki,)

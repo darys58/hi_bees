@@ -43,10 +43,10 @@ class DBHelper {
     return sql.openDatabase(path, onCreate: (db, version) async {
       print('DBHelper - tworzenie tabeli');
       await db.execute(
-          'CREATE TABLE ramka(id TEXT PRIMARY KEY, data TEXT, pasiekaNr INTEGER, ulNr INTEGER, korpusNr INTEGER, typ INTEGER, ramkaNr INTEGER, rozmiar INTEGER, strona INTEGER, zasob INTEGER, wartosc TEXT, arch INTEGER)');
+          'CREATE TABLE ramka(id TEXT PRIMARY KEY, data TEXT, pasiekaNr INTEGER, ulNr INTEGER, korpusNr INTEGER, typ INTEGER, ramkaNr INTEGER, ramkaNrPo INTEGER, rozmiar INTEGER, strona INTEGER, zasob INTEGER, wartosc TEXT, arch INTEGER)');
       // 'CREATE TABLE ramka(id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT, pasiekaId TEXT, ulId TEXT, korpusNr TEXT, polkorpusNr TEXT, ramkaNr TEXT, rozmiar TEXT, miodL TEXT, miodP TEXT, zasklepL TEXT, zasklepP TEXT, pierzgaL TEXT, pierzgaP TEXT, czerwL TEXT, czerwP TEXT, larwyL TEXT, larwyP TEXT, jajaL TEXT, jajaP TEXT, trutL TEXT, trutP TEXT, wezaL TEXT, wezaP TEXT, suszL TEXT, suszP TEXT, matecznikiL TEXT, matecznikiP TEXT, delMatL TEXT, delMatP TEXT, matkaL TEXT, matkaP TEXT, przeznaczenie TEXT, akcja TEXT)');
       await db.execute(
-          'CREATE TABLE ule(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ulNr INTEGER, przeglad TEXT, ikona TEXT, ramek INTEGER, korpusNr INTEGER, trut INTEGER, czerw INTEGER, larwy INTEGER, jaja INTEGER, pierzga INTEGER, miod INTEGER, dojrzaly INTEGER, weza INTEGER, susz INTEGER, matka INTEGER, mateczniki INTEGER, usunmat INTEGER, todo TEXT, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, matka1 TEXT, matka2 TEXT, matka3 TEXT, matka4 TEXT, matka5 TEXT)');
+          'CREATE TABLE ule(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ulNr INTEGER, przeglad TEXT, ikona TEXT, ramek INTEGER, korpusNr INTEGER, trut INTEGER, czerw INTEGER, larwy INTEGER, jaja INTEGER, pierzga INTEGER, miod INTEGER, dojrzaly INTEGER, weza INTEGER, susz INTEGER, matka INTEGER, mateczniki INTEGER, usunmat INTEGER, todo TEXT, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, matka1 TEXT, matka2 TEXT, matka3 TEXT, matka4 TEXT, matka5 TEXT, h1 TEXT, h2 TEXT, h3 TEXT, aktual INTEGER)');
       await db.execute(
           'CREATE TABLE pasieki(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ileUli INTEGER, przeglad TEXT, ikona TEXT, opis TEXT)');
       await db.execute(
@@ -115,6 +115,13 @@ class DBHelper {
     final db = await DBHelper.database();
     print('db_helpers: update ramka - id=$id');
     db.update('ramka', {'arch': 1}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  //update tabeli ramki - ustawienie "ramkaNrPo" - dla frame_edit_screen
+  static Future<void> updateRamkaNrPo(String id, int ramkaNrPo) async {
+    final db = await DBHelper.database();
+    print('db_helpers: update ramkaNrPo - id=$id, ramkaNrPo = $ramkaNrPo');
+    db.update('ramka', {'ramkaNrPo': ramkaNrPo}, where: 'id = ?', whereArgs: [id]);
   }
 
   //update tabeli info - rekord zarchiwizowany - dla import_screen

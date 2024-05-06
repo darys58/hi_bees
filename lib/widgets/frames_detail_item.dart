@@ -7,6 +7,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 // import '../models/info.dart';
 import '../helpers/db_helper.dart';
 import '../screens/frame_edit_screen.dart';
+import '../screens/frame_edit_screen2.dart';
 import '../globals.dart' as globals;
 import '../models/frames.dart';
 import '../models/frame.dart';
@@ -502,14 +503,17 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
     if (frame.typ == 1)
       korpus = AppLocalizations.of(context)!.halfBody;
     else if (frame.typ == 2) korpus = AppLocalizations.of(context)!.body;
+    
     String rozmiar = '';
     if (frame.rozmiar == 1)
       rozmiar = AppLocalizations.of(context)!.small;
     else if (frame.rozmiar == 2) rozmiar = AppLocalizations.of(context)!.big;
+    
     String strona = '';
     if (frame.strona == 1)
       strona = AppLocalizations.of(context)!.left;
     else if (frame.strona == 2) strona = AppLocalizations.of(context)!.right;
+    
     String zasob = '';
     switch (frame.zasob) {
       case 1:
@@ -740,6 +744,10 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                             matka3,
                             matka4,
                             matka5,
+                            '0',
+                            '0',
+                            '0',
+                            1, //nieaktualne zasoby bo mogła być zmiana ???
                           ).then((_) {
                             //ustawienie szarej ikony w info o przeglądzie
                             Infos.insertInfo(
@@ -812,7 +820,7 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
       },
       child: Card(
         margin: const EdgeInsets.symmetric(
-          horizontal: 15,
+          horizontal: 5,//było 15
           vertical: 4,
         ),
         child: Padding(
@@ -829,8 +837,9 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                 leading: CircleAvatar(
                   backgroundColor: Colors.white,
                   child: //Image.asset('assets/image/hi_bees.png'),
-                      Text('${frame.korpusNr}/${frame.ramkaNr}',
-                          style: const TextStyle(fontSize: 18)),
+                      Text('${frame.korpusNr}\n${frame.ramkaNr}/${frame.ramkaNrPo}',
+                          style: const TextStyle(fontSize: 16,),
+                          textAlign: TextAlign.center),
                 ),
                 title: Text(
                     "$korpus ${frame.korpusNr}, $rozmiar " +
