@@ -77,7 +77,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       tytulEkranu = AppLocalizations.of(context)!.editingInfo;
     }else { //a jezeli dodanie nowego info
       edycja = false;
-      dateController.text = DateTime.now().toString().substring(0, 10);
+      dateController.text = globals.dataWpisu; //DateTime.now().toString().substring(0, 10);
       nowaPasieka = int.parse(idPasieki.toString());
       nowyUl = int.parse(idUla.toString());
       nowaKategoria = kategoria.toString();
@@ -110,7 +110,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-     
+     final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
+      backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+      fixedSize: Size(126.0, 35.0),
+      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
+    );
+    
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
@@ -133,27 +140,86 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     //** */ data
-                    TextField(
-                      controller: dateController, //editing controller of this TextField
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.calendar_today), //icon of text field
-                        labelText: AppLocalizations.of(context)!.noteDate),
-                      readOnly: true, // when true user cannot edit text
-                        onTap: () async {
-                          DateTime? pickedDate = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.parse(dateController.text),
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2101));
-                          if (pickedDate != null) {
-                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-                            setState(() {
-                              dateController.text = formattedDate;
-                            });
-                          } else {
-                            print("Date is not selected");
-                          }
-                        }),
+                   
+                   Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+ //data przeglądu  
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(AppLocalizations.of(context)!.noteDate),
+                                      OutlinedButton(
+                                        style: dataButtonStyle,
+                                        onPressed: () async {
+                                          DateTime? pickedDate =
+                                            await showDatePicker(
+                                              context: context,
+                                              initialDate: DateTime.parse(dateController.text),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime(2101),
+                                              builder:(context , child){
+                                                return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
+                                                  colorScheme: ColorScheme.light(
+                                                    primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
+                                                    onPrimary: Colors.white, // titles and 
+                                                    onSurface: Colors.black, // Month days , years 
+                                                  ),
+                                                  textButtonTheme: TextButtonThemeData(
+                                                    style: TextButton.styleFrom(
+                                                      foregroundColor: Colors.black, // ok , cancel    buttons
+                                                    ),
+                                                  ),
+                                                ),  child: child!   );  // pass child to this child
+                                              }
+                                            );
+                                          if (pickedDate != null) {
+                                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                                            setState(() {
+                                              dateController.text = formattedDate;
+                                             // globals.dataWpisu = formattedDate;
+                                            });
+                                          } else {print("Date is not selected");}
+                                        },
+  
+                                         child: Text(dateController.text ,
+                                          style: const TextStyle(
+                                            color: Color.fromARGB(255, 0, 0, 0),
+                                            fontSize: 15),),   
+                                      ),
+                                  ]),  
+                                ]),
+                   
+                    
+                    
+                    
+                    
+                    
+                    
+                    // TextField(
+                    //   controller: dateController, //editing controller of this TextField
+                    //   decoration: InputDecoration(
+                    //     icon: Icon(Icons.calendar_today), //icon of text field
+                    //     labelText: AppLocalizations.of(context)!.noteDate),
+                    //   readOnly: true, // when true user cannot edit text
+                    //     onTap: () async {
+                    //       DateTime? pickedDate = await showDatePicker(
+                    //         context: context,
+                    //         initialDate: DateTime.parse(dateController.text),
+                    //         firstDate: DateTime(2000),
+                    //         lastDate: DateTime(2101));
+                    //       if (pickedDate != null) {
+                    //         String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                    //         setState(() {
+                    //           dateController.text = formattedDate;
+                    //         });
+                    //       } else {
+                    //         print("Date is not selected");
+                    //       }
+                    //     }),
+
+
                     SizedBox(
                       height: 20,
                     ),
@@ -1351,7 +1417,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
               ),
               SizedBox(height: 30),
 //*********************************************** */
-              //** */przycisk
+              //** */przycisk "Zapisz"
 //*********************************************** */
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1397,7 +1463,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             nowyWartosc,
                             nowyMiara!,
                             '',//info[0].pogoda,
-                            '',//info[0].temp,
+                            '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
                             formatterHm.format(DateTime.now()),
                             nowyUwagi!,
                             0, //info[0].arch,
@@ -1444,7 +1510,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           String matka5 = hive[0].matka5;
 
                            
-                          //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki
+                          //jezeli wpis  dotyczy leczenia lub dokarmiania
                           if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment'){                        
                             //to jezeli edytowano info ula z datą taką jak ostatnie (lub pózniejszą) info ula to modyfikacja danych
                             //bo zmiana dla leczenia i pokarmu
@@ -1605,6 +1671,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             matka3,
                             matka4,
                             matka5,
+                            '0',
+                            '0',
+                            '0',
+                            0,// aktualne bo aktualizowane na biezaco
                           ).then((_) {
                             //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
                             Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowaPasieka,)
@@ -1661,7 +1731,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                         //}//if edycja
                       };//if validate
                     },//onPressed
-                    child: Text('   ' + (AppLocalizations.of(context)!.saveZ) +'   '), //Modyfikuj
+                    child: Text('   ' + (AppLocalizations.of(context)!.saveZ) +'   '), //Zapisz
                     color: Theme.of(context).primaryColor,
                     textColor: Colors.white,
                     disabledColor: Colors.grey,

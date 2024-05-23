@@ -100,8 +100,8 @@ class InfoItem extends StatelessWidget {
                               '${hive[0].pasiekaNr}.${hive[0].ulNr}',
                               hive[0].pasiekaNr, //pasieka nr
                               hive[0].ulNr, //ul nr
-                              hive[0].przeglad, //przeglad
-                              hive[0].ikona, //ikona
+                              '2000-01-01', //przeglad - zerowanie daty
+                              'green', //ikona - zerowanie ikony
                               hive[0].ramek, //opis - ilość ramek w korpusie
                               0,
                               0,
@@ -126,6 +126,10 @@ class InfoItem extends StatelessWidget {
                               hive[0].matka3,
                               hive[0].matka4,
                               hive[0].matka5,
+                              '0',
+                              '0',
+                              '0',
+                              0,
                             ).then((_) {
                               //pobranie do Hives_items z tabeli ule
                               Provider.of<Hives>(context, listen: false)
@@ -259,8 +263,8 @@ class InfoItem extends StatelessWidget {
                               '${hive[0].pasiekaNr}.${hive[0].ulNr}',
                               hive[0].pasiekaNr, //pasieka nr
                               hive[0].ulNr, //ul nr
-                              hive[0].przeglad, //przeglad
-                              hive[0].ikona, //ikona
+                              '2000-01-01', //przeglad - zerowanie daty
+                              'green', //ikona - zerowanie ikony
                               hive[0].ramek, //opis - ilość ramek w korpusie
                               0,
                               0,
@@ -285,6 +289,10 @@ class InfoItem extends StatelessWidget {
                               hive[0].matka3,
                               hive[0].matka4,
                               hive[0].matka5,
+                              '0',
+                              '0',
+                              '0',
+                              0,
                             ).then((_) {
                               //pobranie do Hives_items z tabeli ule
                               Provider.of<Hives>(context, listen: false)

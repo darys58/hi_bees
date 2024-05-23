@@ -75,8 +75,13 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.3.5.30 11.02.2024 - wersja dla AppStore - bo było dwa razy wysyłane dlatego (30), uwaga zmienić SDK na 17
   //1.3.6.31 12.02.2024 - wersja z testem dla App Store - kod aktywacyjny 00043210
   //1.4.0.32 15.02.2024 - dodano 3 pola w tabeli memory (na zapas), ustawianie domyślnego języka na "en" (zmiany w main i Info.plist) jezeli jest nieobsługiwany język
-  final wersja = '1.4.0.32'; //wersja aplikacji
-  final dataWersji = '2024-02-15';
+  //1.5.0.33 04.04.2024 - dodano pole w tabeli "ramka" ramkaNrPo, mozliwość pokazywania zasobów ramki przed i po przeglądzie, brak odpowiednich poprawek w voice_screen
+  //1.5.1.34 05.04.2024 - poprawka bo nie mozna było aktywować apki - w tym pliku brakowało ramkaNrPo
+  //1.5.2.36 06.04.2024 - dodawane zasobów ramek z pozycji widoku ramek w ulu, mozliwość dodawania kilku nowych ramek (z "ramkaNr" == 0) czyli dodanie do id ramek "ramkaNrPo", pamietanie daty w info_edit_screen 
+  //1.6.0.37 28.04.2024 - numery ramek w widoku ula, nowy interfejs dodawania i edycji zasobów na ramkach, dodatkowe pola w tabeli "ule" (niewykorzystane jeszcze)
+  //1.6.1.38 02.05.2024 - poprawki działania nowego interfejsu dodawania zasobów na ramkach (przeglądy)
+  final wersja = '1.6.1.38'; //wersja aplikacji
+  final dataWersji = '2024-05-02';
   final now = DateTime.now();
   int aktywnosc = 0;
 
@@ -276,6 +281,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                         jsonData += '"korpusNr": ${ramki[i].korpusNr},';
                         jsonData += '"typ": ${ramki[i].typ},';
                         jsonData += '"ramkaNr": ${ramki[i].ramkaNr},';
+                        jsonData += '"ramkaNrPo": ${ramki[i].ramkaNrPo},';
                         jsonData += '"rozmiar": ${ramki[i].rozmiar},';
                         jsonData += '"strona": ${ramki[i].strona},';
                         jsonData += '"zasob": ${ramki[i].zasob},';
@@ -430,7 +436,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -478,7 +484,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   Future<void> wyslijBackupInfo(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -535,6 +541,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
         "jezyk": globals.jezyk,
       }),
     );
+    print('$kod ${globals.deviceId} $wersja ${globals.jezyk}');
     print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
@@ -1174,58 +1181,58 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       SizedBox(height: 100),
                     ])),
       //=== stopka
-      bottomSheet: globals.key == ''
-          ? null
-          : Container(
-              //margin:  EdgeInsets.only(bottom:15),
-              height: 100,
-              color: Colors.white,
-              //width: MediaQuery.of(context).size.width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      // ElevatedButton(
-                      //   child: Text('English'),
-                      //   onPressed: () => _changeLanguage(Locale('en')),
-                      // ),
-                      // ElevatedButton(
-                      //   child: Text('Polski'),
-                      //   onPressed: () => _changeLanguage(Locale('pl')),
-                      // ),
-                      const SizedBox(
-                        width: 9,
-                      ),
-                      SizedBox(
-                          width: 200,
-                          height: 50,
-                          child: ElevatedButton(
-                            style: buttonStyle,
-                            onPressed: () {
-                              globals.key == '' //jezeli brak accessKey
-                                  ? null
-                                  : {
-                                      //_isInit = true,
-                                      Navigator.of(context).pushNamed(
-                                        VoiceScreen.routeName,
-                                      ),
-                                    };
-                            },
-                            child: Text(
-                                AppLocalizations.of(context)!.voiceControl,
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    color: Color.fromARGB(255, 0, 0, 0))),
-                          )),
-                      const SizedBox(
-                        width: 15,
-                      ), //interpolacja ciągu znaków
-                    ],
-                  )
-                ],
-              ),
-            ),
+      // bottomSheet: globals.key == ''
+      //     ? null
+      //     : Container(
+      //         //margin:  EdgeInsets.only(bottom:15),
+      //         height: 100,
+      //         color: Colors.white,
+      //         //width: MediaQuery.of(context).size.width,
+      //         child: Row(
+      //           mainAxisAlignment: MainAxisAlignment.center,
+      //           children: <Widget>[
+      //             Row(
+      //               children: <Widget>[
+      //                 // ElevatedButton(
+      //                 //   child: Text('English'),
+      //                 //   onPressed: () => _changeLanguage(Locale('en')),
+      //                 // ),
+      //                 // ElevatedButton(
+      //                 //   child: Text('Polski'),
+      //                 //   onPressed: () => _changeLanguage(Locale('pl')),
+      //                 // ),
+      //                 const SizedBox(
+      //                   width: 9,
+      //                 ),
+      //                 SizedBox(
+      //                     width: 200,
+      //                     height: 50,
+      //                     child: ElevatedButton(
+      //                       style: buttonStyle,
+      //                       onPressed: () {
+      //                         globals.key == '' //jezeli brak accessKey
+      //                             ? null
+      //                             : {
+      //                                 //_isInit = true,
+      //                                 Navigator.of(context).pushNamed(
+      //                                   VoiceScreen.routeName,
+      //                                 ),
+      //                               };
+      //                       },
+      //                       child: Text(
+      //                           AppLocalizations.of(context)!.voiceControl,
+      //                           style: TextStyle(
+      //                               fontSize: 14,
+      //                               color: Color.fromARGB(255, 0, 0, 0))),
+      //                     )),
+      //                 const SizedBox(
+      //                   width: 15,
+      //                 ), //interpolacja ciągu znaków
+      //               ],
+      //             )
+      //           ],
+      //         ),
+      //       ),
     );
   }
 }

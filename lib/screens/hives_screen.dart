@@ -46,10 +46,14 @@ class _HivesScreenState extends State<HivesScreen> {
       //  Provider.of<Weathers>(context, listen: false)
       //   .fetchAndSetWeathers();
       //.then((_) {});
+      
+      //pobranie danych wszystkich uli z tabeli "ule" z bazy lokalnej (dane do belki, dokarmiania, leczenia i o matce)
       Provider.of<Hives>(context, listen: false)
           .fetchAndSetHives(globals.pasiekaID)
           .then((_) {
-        //wszystkie ule z tabeli ule z bazy lokalnej
+        
+        // print('hives_screen - ilość uli =');
+        // print(hives.length);
 
         // setState(() {
         //   // _isLoading = false; //zatrzymanie wskaznika ładowania dań
@@ -138,7 +142,10 @@ class _HivesScreenState extends State<HivesScreen> {
       // setState(() {
       temp = double.parse(pogoda![0].temp);
       icon = pogoda![0].icon;
-      //print('setState icon - z bazy po OdswiezPogode');
+      globals.aktualTemp = temp;
+      globals.stopnie = stopnie;
+      print('setState icon - z bazy po OdswiezPogode');
+      print('aktualna temperatura pobrana z bazy = $temp');
       //  });
     });
   }
@@ -152,6 +159,22 @@ class _HivesScreenState extends State<HivesScreen> {
     //  final startBoxColor = routeArgs['color'];
 
     final hivesData = Provider.of<Hives>(context);
+     
+    //  // final hivesData = Provider.of<Hives>(context, listen: false);
+    // //pobranie danych o nieaktualnych ulach do zmiennej
+    // final hivesToAktual = hivesData.items.where((hi) {
+    //     return hi.aktual != 0 ; //tylko ule nieaktualne
+    //   }).toList();
+    //   print('hives_screen - ilość uli nieaktualnych = ${hivesToAktual.length}');
+    // //aktualizacja nieaktualnych uli
+    
+    // print('AKTUALIZACJA ULI !!!!!!!!!!!!!');
+    // for (var i = 0; i < hivesToAktual.length; i++) {
+    
+    
+    // }
+    
+    //pobranie danych o wszystkich ulach do zmiennej
     final hives = hivesData.items; //showFavs ? productsData.favoriteItems :
     // print('hives_screen - ilość uli =');
     // print(hives.length);
@@ -201,6 +224,7 @@ class _HivesScreenState extends State<HivesScreen> {
       //pobranie danych z bazy lokalnej na wypadek gdyby nie było internetu lub dane byłyby świeze
       pogoda![0].temp != '' ? temp = double.parse(pogoda![0].temp) : temp = 500; //500 - fikcyjna temp zeby jej nie wyswietlać
       pogoda![0].icon != '' ? icon = pogoda![0].icon : icon = '';
+      globals.aktualTemp = temp;
       print(
           '=================${pogoda![0].id},${pogoda![0].miasto},${pogoda![0].pobranie},${pogoda![0].temp},${pogoda![0].icon},${pogoda![0].miasto},');
 
@@ -222,6 +246,7 @@ class _HivesScreenState extends State<HivesScreen> {
           units = 'metric';
           stopnie = "\u2103";
       }
+      globals.stopnie = stopnie;
       var now = DateTime.now();
       // print('data now =');
       // print('=$now=');
@@ -239,15 +264,15 @@ class _HivesScreenState extends State<HivesScreen> {
           (inter) {
             if (inter) {
               // print('$inter - jest internet');
-              print('pobranie danych o pogodzie');
+             // print('pobranie danych o pogodzie');
               if (pogoda![0].latitude != '' && pogoda![0].longitude != '') {
                 getCurrentWeatherCoord(numerPasieki.toString(),
                     pogoda![0].latitude, pogoda![0].longitude);
               } else if (pogoda![0].miasto != '') {
                 getCurrentWeather(numerPasieki.toString(), pogoda![0].miasto);
               }
-              print('ikona po pobraniu');
-              print(icon);
+              // print('ikona po pobraniu');
+              // print(icon);
             } else {
               // print('braaaaaak internetu');
                //komunikat na dole ekranu
@@ -277,8 +302,8 @@ class _HivesScreenState extends State<HivesScreen> {
       }
       //print('${pogoda[0].id}, ${pogoda[0].miasto}, ${pogoda[0].latitude}');
     }
-    print('ikona przed Scaffold');
-    print(icon);
+    // print('ikona przed Scaffold');
+    // print(icon);
 
     return Scaffold(
         appBar: AppBar(

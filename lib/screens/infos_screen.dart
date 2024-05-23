@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hi_bees/screens/frame_edit_screen2.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../globals.dart' as globals;
@@ -8,6 +9,7 @@ import '../widgets/info_item.dart';
 import '../models/dodatki1.dart';
 import '../screens/infos_edit_screen.dart';
 import '../screens/frame_edit_screen.dart';
+import '../screens/frame_edit_screen2.dart';
 
 class InfoScreen extends StatefulWidget {
   static const routeName = '/screen-infos';
@@ -514,7 +516,16 @@ class _InfoScreenState extends State<InfoScreen> {
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
                 );
             }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18))
-            ),  
+            ), 
+          // if(wybranaKategoria == 'inspection')
+          //   TextButton(onPressed: (){
+          //     Navigator.of(context).pop();
+          //     Navigator.of(context).pushNamed(
+          //         FrameEditScreen2.routeName,
+          //         arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+          //       );
+          //   }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18))
+          //   ),  
           if(wybranaKategoria == 'inspection')  
             TextButton(onPressed: (){
               Navigator.of(context).pop();
@@ -994,7 +1005,7 @@ class _InfoScreenState extends State<InfoScreen> {
         title: 
         wybranaKategoria == 'inspection'
         ? Text(
-            AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.inspection,
+            AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.frameInspections,
             style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
           )
         : wybranaKategoria == 'equipment'

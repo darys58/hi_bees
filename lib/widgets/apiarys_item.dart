@@ -41,8 +41,8 @@ class ApiarysItem extends StatelessWidget {
     final przeglad = DateTime.parse(apiary.przeglad);
     final now = DateTime.now();
     final difference = daysBetween(przeglad, now);
-    print('apiary.przeglad');
-    print('${apiary.przeglad}');
+    // print('apiary.przeglad');
+    // print('${apiary.przeglad}');
 
     return InkWell(
       onTap: () {

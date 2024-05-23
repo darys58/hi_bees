@@ -527,6 +527,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                                         //   icon = pogoda![0].icon;
                                         //print('setState icon - z bazy bo nie ma internetu - else1');
                                         // });
+                                        Navigator.of(context).pop();
                                       }
                                     },
                                   );

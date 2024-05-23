@@ -323,6 +323,10 @@ class _ImportScreenState extends State<ImportScreen> {
                           '0',
                           '0',
                           '0',
+                          '0',
+                          '0',
+                          '0',
+                          0, //aktualny - stan po wczytaniu z chmury
                         );
                         i++;
                       }
@@ -375,6 +379,10 @@ class _ImportScreenState extends State<ImportScreen> {
                               '0',
                               '0',
                               '0',
+                              '0',
+                              '0',
+                              '0',
+                              0, //aktualny - stan po wczytaniu z chmury
                             );
                             i++;
                           }
@@ -794,6 +802,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     jsonData += '"korpusNr": ${ramki[i].korpusNr},';
                     jsonData += '"typ": ${ramki[i].typ},';
                     jsonData += '"ramkaNr": ${ramki[i].ramkaNr},';
+                    jsonData += '"ramkaNrPo": ${ramki[i].ramkaNrPo},';
                     jsonData += '"rozmiar": ${ramki[i].rozmiar},';
                     jsonData += '"strona": ${ramki[i].strona},';
                     jsonData += '"zasob": ${ramki[i].zasob},';
@@ -1174,6 +1183,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     jsonData += '"korpusNr": ${ramki[i].korpusNr},';
                     jsonData += '"typ": ${ramki[i].typ},';
                     jsonData += '"ramkaNr": ${ramki[i].ramkaNr},';
+                    jsonData += '"ramkaNrPo": ${ramki[i].ramkaNrPo},';
                     jsonData += '"rozmiar": ${ramki[i].rozmiar},';
                     jsonData += '"strona": ${ramki[i].strona},';
                     jsonData += '"zasob": ${ramki[i].zasob},';
@@ -1299,7 +1309,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup10.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -1348,7 +1358,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupInfo(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup10.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -1396,7 +1406,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupZbiory(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup10.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -1444,7 +1454,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupSprzedaz(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup10.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -1492,7 +1502,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupZakupy(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup10.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -1540,7 +1550,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupNotatki(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup10.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

@@ -19,6 +19,7 @@ import './screens/import_screen.dart';
 import './screens/about_screen.dart';
 import './screens/activation_screen.dart';
 import './screens/frame_edit_screen.dart';
+import './screens/frame_edit_screen2.dart';
 import './screens/harvest_screen.dart';
 import './screens/parametr_screen.dart';
 import './screens/apiarys_weather_edit_screen.dart';
@@ -196,6 +197,7 @@ class _MyAppState extends State<MyApp> {
           AboutScreen.routeName: (ctx) => AboutScreen(),
           ActivationScreen.routeName: (ctx) => ActivationScreen(),
           FrameEditScreen.routeName: (ctx) => FrameEditScreen(),
+          FrameEditScreen2.routeName: (ctx) => FrameEditScreen2(),
           HarvestScreen.routeName:(ctx) => HarvestScreen(),
           HarvestEditScreen.routeName: (ctx) => HarvestEditScreen(),
           ParametrScreen.routeName: (ctx) => ParametrScreen(),

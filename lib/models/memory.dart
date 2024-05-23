@@ -60,8 +60,8 @@ class Memory with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie danych do uruchomienia apki --> Memory <---');
-    print(_items);
+    // print('wczytanie danych do uruchomienia apki --> Memory <---');
+    // print(_items);
     notifyListeners();
   }
 

@@ -5,6 +5,7 @@ import '../models/frames.dart';
 import '../models/frame.dart';
 import '../widgets/frames_detail_item.dart';
 import '../screens/frame_edit_screen.dart';
+import '../screens/frame_edit_screen2.dart';
 import '../globals.dart' as globals;
 
 class FramesDetailScreen extends StatefulWidget {
