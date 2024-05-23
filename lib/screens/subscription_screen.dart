@@ -288,7 +288,7 @@ class _SubsScreenState extends State<SubsScreen> {
                     backgroundColor: Colors.green[800],
                     // TODO(darrenaustin): Migrate to new API once it lands in stable: https://github.com/flutter/flutter/issues/105724
                     // ignore: deprecated_member_use
-                    primary: Colors.white,
+                    foregroundColor: Colors.white,
                   ),
                   onPressed: () {
                     late PurchaseParam purchaseParam;
@@ -389,7 +389,7 @@ class _SubsScreenState extends State<SubsScreen> {
               backgroundColor: Theme.of(context).primaryColor,
               // TODO(darrenaustin): Migrate to new API once it lands in stable: https://github.com/flutter/flutter/issues/105724
               // ignore: deprecated_member_use
-              primary: Colors.white,
+              foregroundColor: Colors.white,
             ),
             onPressed: () => _inAppPurchase.restorePurchases(),
             child: Text(AppLocalizations.of(context)!.restorePurchases),

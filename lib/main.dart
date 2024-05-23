@@ -154,6 +154,7 @@ class _MyAppState extends State<MyApp> {
         theme: ThemeData(
           //definiowanie danych decydujących o wyglądzie (kolory, style, czcionki)
           //appBarTheme: AppBarTheme(color: Color.fromRGBO(55, 125, 255, 1),),
+          scaffoldBackgroundColor: const Color(0xFFFFFFFF),
           primaryColor: Color.fromARGB(255, 255, 183, 75), //kolor podstawowy
           primaryColorLight: const Color.fromRGBO(255, 118, 122, 1),
           primaryColorDark:
