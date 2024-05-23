@@ -80,8 +80,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.5.2.36 06.04.2024 - dodawane zasobów ramek z pozycji widoku ramek w ulu, mozliwość dodawania kilku nowych ramek (z "ramkaNr" == 0) czyli dodanie do id ramek "ramkaNrPo", pamietanie daty w info_edit_screen 
   //1.6.0.37 28.04.2024 - numery ramek w widoku ula, nowy interfejs dodawania i edycji zasobów na ramkach, dodatkowe pola w tabeli "ule" (niewykorzystane jeszcze)
   //1.6.1.38 02.05.2024 - poprawki działania nowego interfejsu dodawania zasobów na ramkach (przeglądy)
-  final wersja = '1.6.1.38'; //wersja aplikacji
-  final dataWersji = '2024-05-02';
+  //1.6.2.39 17.05.2024 - rozbudowa dodawania/edycji zasobów dla wielu ramek jednoczesnie - numery wielu ramek przed i po, zasób na ramce "tylko ten" lub "wszystkie"
+  //1.6.3.40 20.05.2024 - mozliwość eksportu wybranych danych, poprawka wygladu edycji notatek, zakupów, zbiorów i sprzedazy, problem z podpisaniem a play.googlecom
+  final wersja = '1.6.3.40'; //wersja aplikacji
+  final dataWersji = '2024-05-20';
   final now = DateTime.now();
   int aktywnosc = 0;
 

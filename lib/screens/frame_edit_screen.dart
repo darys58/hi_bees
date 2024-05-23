@@ -41,6 +41,8 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   List<bool> _selectedRozmiarRamki = <bool>[false, true]; // mała|duza
   int stronaRamki = 1; //0-obie, 1-lewa, 2-prawa
   List<bool> _selectedStronaRamki = <bool>[true, false, false]; // lewa|obie|prawa
+  int numeryWieluRamek = 1;// 0- xx/0 po=0, 1- xx/xx przed=po, 2- 0/xx przed=0
+  List<bool> _selectedNumeryWieluRamek = <bool>[false, true, false]; // po=0 | przed=po | przed=0
   int? nowyZasob;
   //int? tempZasob;
   String nowaWartosc = '0';
@@ -54,6 +56,8 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   TextEditingController dateController = TextEditingController();
   int zakresRamek = 0; //"0" - jedna,ramki przed i po przeglądzie; "1" - wiele, zakres ramek od do
   List<bool> _selectedZakresRamek = <bool>[true, false]; // jedna|wiele
+  int zakresZasobow = 1; //"0" - zmiana jednego zasobu, "1" - zmiana wszystkich zasobów (przeniesienie ramki)
+  List<bool> _selectedZakresZasobow = <bool>[false, true]; //jeden|wszystkie
   int nrRamkiOd = 1;
   int nrRamkiDo = 5;
   List<bool> _selectedZasoby = <bool>[false, true]; // wartość|zasób
@@ -249,6 +253,11 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       } 
      });
     
+    //ustawienie numerów wielu ramek
+    if(globals.numeryWieluRamek == 1) _selectedNumeryWieluRamek=<bool>[false, true, false];
+    else if(globals.numeryWieluRamek == 0) _selectedNumeryWieluRamek=<bool>[true, false, false];
+    else if(globals.numeryWieluRamek == 2) _selectedNumeryWieluRamek=<bool>[false, false, true];
+
     globals.jezyk == 'pl_PL'
       ? gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych']
       : gridItemsKolor = ['black','yellow','red','green','blue','white','no\ndata'];
@@ -276,7 +285,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
           children: <Widget>[           
             SizedBox(
               //height: 200.0,
-              height: 380,
+              height: 340,
               width: 300,
               child:GridView.count(
                 physics: NeverScrollableScrollPhysics(),
@@ -714,7 +723,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
           children: <Widget>[           
             SizedBox(
               //height: 200.0,
-              height: 380,
+              height: 360,
               width: 300,
               child:GridView.count(
                 physics: NeverScrollableScrollPhysics(),
@@ -941,7 +950,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                         child: Text('$data',
                           style: TextStyle(
                             //fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                            fontSize: 16,
                             color: Color.fromARGB(255, 0, 0, 0)),
                           textAlign: TextAlign.center)))
                     
@@ -1001,7 +1010,27 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
     //======= Zapis zasobu do tabeli  "ramka" ========
     //jezeli zakres ramek
     if(_selectedZakresRamek[1]){ //jezeli "true" to wiele ramek
+      int nrWieluRamekPo = 0;
+      int nrWieluRamekPrzed = 0 ;
+      
+      //dla kazdej z wielu ramek
       for (var i = nrRamkiOd; i <= nrRamkiDo; i++) {
+        
+        //jezeli ramki są wstawiane lub usuwane
+        if ((_selectedNumeryWieluRamek[1]==true)){ // przed = po
+            nrWieluRamekPrzed = i;
+            nrWieluRamekPo = i ;
+            globals.numeryWieluRamek = 1;
+        }else if(_selectedNumeryWieluRamek[0]==true) {
+          nrWieluRamekPrzed = i; // przed = bez zmian
+          nrWieluRamekPo = 0; //po = 0
+          globals.numeryWieluRamek = 0;
+        }else if(_selectedNumeryWieluRamek[2]==true){
+          nrWieluRamekPrzed = 0; //przed = 0
+          nrWieluRamekPo = i ; //po = bez zmian
+          globals.numeryWieluRamek = 2;
+        }
+
         if (stronaRamki == 1) { //dla lewej strony
             // print(
             //     'zapis do bazy id = $formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nowyNrRamki.1.$zas');
@@ -1010,14 +1039,14 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
             // print(
             //     'dane do zapisu = $formattedDate, $nowyNrPasieki,$nowyNrUla,$nowyNrKorpusu,$korpus,$nowyNrRamki,$nowyNrRamkiPo,$rozmiarRamki,1,$zas,$wart,0');
           Frames.insertFrame(
-            '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$i.$i.1.$zas',
+            '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nrWieluRamekPrzed.$nrWieluRamekPo.1.$zas',
             formattedDate,
             nowyNrPasieki!,
             nowyNrUla!,
             nowyNrKorpusu!,
             korpus,
-            i,
-            i,
+            nrWieluRamekPrzed,
+            nrWieluRamekPo,
             rozmiarRamki,
             1, //lewa
             zas,
@@ -1025,14 +1054,14 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
             0); //arch
         }else if (stronaRamki == 2) { //dla prawej strony
           Frames.insertFrame(
-            '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$i.$i.2.$zas',
+            '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nrWieluRamekPrzed.$nrWieluRamekPo.2.$zas',
             formattedDate,
             nowyNrPasieki!,
             nowyNrUla!,
             nowyNrKorpusu!,
             korpus,
-            i,
-            i,
+            nrWieluRamekPrzed,
+            nrWieluRamekPo,
             rozmiarRamki,
             2, //prawa
             zas,
@@ -1040,28 +1069,28 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
             0); //arch
         }else { //dla obu stron ramki
           Frames.insertFrame(
-            '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$i.$i.1.$zas',
+            '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nrWieluRamekPrzed.$nrWieluRamekPo.1.$zas',
             formattedDate,
             nowyNrPasieki!,
             nowyNrUla!,
             nowyNrKorpusu!,
             korpus,
-            i,
-            i,
+            nrWieluRamekPrzed,
+            nrWieluRamekPo,
             rozmiarRamki,
             1, //lewa
             zas,
             wart,
             0);
           Frames.insertFrame(
-            '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$i.$i.2.$zas',
+            '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nrWieluRamekPrzed.$nrWieluRamekPo.2.$zas',
             formattedDate,
             nowyNrPasieki!,
             nowyNrUla!,
             nowyNrKorpusu!,
             korpus,
-            i,
-            i,
+            nrWieluRamekPrzed,
+            nrWieluRamekPo,
             rozmiarRamki,
             2, //lewa
             zas,
@@ -1168,8 +1197,8 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
     matka4 = hive[0].matka4;
     matka5 = hive[0].matka5;
 
-    // print('nowyNrPasieki = $nowyNrPasieki, nowyNrUla = $nowyNrUla, id wpisu w "ule" = ${hive[0].id}, data wybranego przeglądu = $formattedDate, data ostatniego przeglądu =  ${hive[0].przeglad}');
-    // print('nowyZasob = $nowyZasob, korpusNr = $korpusNr, nowyNrKorpusu = $nowyNrKorpusu');
+    print('nowyNrPasieki = $nowyNrPasieki, nowyNrUla = $nowyNrUla, id wpisu w "ule" = ${hive[0].id}, data wybranego przeglądu = $formattedDate, data ostatniego przeglądu =  ${hive[0].przeglad}');
+    print('nowyZasob = $nowyZasob, korpusNr = $korpusNr, nowyNrKorpusu = $nowyNrKorpusu');
     
     //===== Jezeli data dodawanego lub modyfikowanego przegladu jest nowsza lub taka sama jak data ostatniego przegladu
     //===== to modyfikacja belki bo jest zmiana zasobu
@@ -1550,17 +1579,49 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 //mainAxisAlignment: MainAxisAlignment.start,
                                 children: <Widget>[ 
-//zakres ramek                  
+//jeden zasób - wszystkie zasoby na ramce                  
                                 if(tryb == 'edycja') 
                                   Column(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      SizedBox(height: 20),
-                                      SizedBox(width: 110,child:Text(AppLocalizations.of(context)!.fRameNumber + ': ', style: const TextStyle(
-                                              fontSize: 15,),textAlign:TextAlign.end,),),
+                                      Text(AppLocalizations.of(context)!.rEsourceOnFrame),
+                                      ToggleButtons(
+                                        direction: Axis.horizontal, 
+                                        onPressed: (int index) {
+                                          setState(() {
+                                            // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
+                                            for (int i = 0; i < _selectedZakresZasobow.length; i++) {
+                                              _selectedZakresZasobow[i] = i == index;
+                                            }
+                                          });
+                                        },
+                                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                        borderColor: Color.fromARGB(255, 162, 103, 0),
+                                        selectedBorderColor: Color.fromARGB(255, 162, 103, 0), //obramowanie wybranego przycisku
+                                        selectedColor: Color.fromARGB(255, 0, 0, 0), //napis wybranego
+                                        fillColor: Theme.of(context).primaryColor, //tło wybranego
+                                        color: Color.fromARGB(255, 78, 78, 78), //napis niewybranego
+                                        constraints: const BoxConstraints(
+                                          minHeight: 33.0,
+                                          minWidth: 70.0,
+                                        ),
+                                        isSelected: _selectedZakresZasobow,
+                                        children: [ //napisy na przełącznikach
+                                          Text(AppLocalizations.of(context)!.thisOne),
+                                          Text(AppLocalizations.of(context)!.all),
+                                        ],  //lewa, obie, prawa
+                                      ),
+                                  // Column(
+                                  //   mainAxisAlignment: MainAxisAlignment.end,
+                                  //   crossAxisAlignment: CrossAxisAlignment.end,
+                                  //   children: [
+                                  //     SizedBox(height: 20),
+                                  //     SizedBox(width: 110,child:Text(AppLocalizations.of(context)!.fRameNumber + ': ', style: const TextStyle(
+                                  //             fontSize: 15,),textAlign:TextAlign.end,),),
                                     ],
                                   ),
+//zakres ramek                                 
                                 if(tryb == 'dodaj')                                               
                                   Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1710,6 +1771,70 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 
                                 ],
                               ),
+//przed - bez zmian - po
+                            SizedBox(height: 5),
+                            if(tryb == 'dodaj' && _selectedZakresRamek[1] == true )   
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: <Widget>[
+//wiele przed
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(AppLocalizations.of(context)!.fRameNumbersBeforeAndAfter),
+                                      ToggleButtons(
+                                        direction: Axis.horizontal, 
+                                        onPressed: (int index) {
+                                          setState(() {
+                                            // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
+                                            for (int i = 0; i < _selectedNumeryWieluRamek.length; i++) {
+                                              _selectedNumeryWieluRamek[i] = i == index;
+                                            }
+                                          });
+                                        },
+                                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                        borderColor: Color.fromARGB(255, 162, 103, 0),
+                                        selectedBorderColor: Color.fromARGB(255, 162, 103, 0), //obramowanie wybranego przycisku
+                                        selectedColor: Color.fromARGB(255, 0, 0, 0), //napis wybranego
+                                        fillColor: Theme.of(context).primaryColor, //tło wybranego
+                                        color: Color.fromARGB(255, 78, 78, 78), //napis niewybranego
+                                        constraints: const BoxConstraints(
+                                          minHeight: 33.0,
+                                          minWidth: 97.0,
+                                        ),
+                                        isSelected: _selectedNumeryWieluRamek,
+                                        children: [ //napisy na przełącznikach
+                                          Text ('xx/0'), //Text(AppLocalizations.of(context)!.left),
+                                          Text ('xx/xx'), //Text(AppLocalizations.of(context)!.both),
+                                          Text ('0/xx'), //Text(AppLocalizations.of(context)!.right)
+                                        ],  //lewa, obie, prawa
+                                      ),                                  
+                                  ]),
+  //chwilowa suma zasobów                                 
+                                //   SizedBox(width: 10),
+                                // if(tryb == 'dodaj')  
+                                //   Column(
+                                //     mainAxisAlignment: MainAxisAlignment.center,
+                                //     crossAxisAlignment: CrossAxisAlignment.center,
+                                //     children: [
+                                //       Text(AppLocalizations.of(context)!.rEsources),
+                                //       OutlinedButton(
+                                //           style: buttonSumaZasobow,
+                                //           onPressed: null,
+                                //           child: Text('$sumaZasobow'+'%',
+                                //             style: const TextStyle(
+                                //               fontWeight: FontWeight.bold,
+                                //               fontSize: 18,
+                                //               color: Color.fromARGB(255, 0, 0,0))),
+                                //   )]) ,  
+                              ]),  
+
+
+
+
+
 
 //korpus-półkorpus
                               SizedBox(height: 5),
@@ -2428,33 +2553,34 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                             MaterialButton(
                               shape: const StadiumBorder(),
                               onPressed: () {
-                                DBHelper.deleteFrame(ramka[0].id).then((_) {                                  
+                                DBHelper.deleteFrame(ramka[0].id).then((_) {  //kasowanie ramki bo będzie nowa                                
                                 
                                 if(nowyZasob! < 13) {  
-                                  zapisDoBazy(nowyZasob!, nowaWartosc, 'zmiana');                                   
+                                  zapisDoBazy(nowyZasob!, nowaWartosc, 'zmiana');   //zapis nowej ramki                                
                                 }
 
                                 if(nowyZasob == 13) {
-                                  if(_selectedToDo[0] == true){nowaWartosc = AppLocalizations.of(context)!.workFrame;}
-                                  if(_selectedToDo[1] == true){nowaWartosc = AppLocalizations.of(context)!.toExtraction;}
-                                  if(_selectedToDo[2] == true){nowaWartosc = AppLocalizations.of(context)!.toDelete;}
-                                  if(_selectedToDo[3] == true){nowaWartosc = AppLocalizations.of(context)!.toInsulate;}
+                                  if(_selectedToDo[0] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.workFrame;}
+                                  if(_selectedToDo[1] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.toExtraction;}
+                                  if(_selectedToDo[2] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.toDelete;}
+                                  if(_selectedToDo[3] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.toInsulate;}
                                   zapisDoBazy(nowyZasob!, nowaWartosc, 'dodaj');
                                  }
 
                                  if(nowyZasob == 14) {
-                                  if(_selectedIsDone[0] == true){nowaWartosc = AppLocalizations.of(context)!.deleted;}
-                                  if(_selectedIsDone[1] == true){nowaWartosc = AppLocalizations.of(context)!.inserted;}
-                                  if(_selectedIsDone[2] == true){nowaWartosc = AppLocalizations.of(context)!.insulated;}
-                                  if(_selectedIsDone[3] == true){nowaWartosc = AppLocalizations.of(context)!.movedLeft;}
-                                  if(_selectedIsDone[4] == true){nowaWartosc = AppLocalizations.of(context)!.movedRight;}
+                                  if(_selectedIsDone[0] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.deleted;}
+                                  if(_selectedIsDone[1] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.inserted;}
+                                  if(_selectedIsDone[2] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.insulated;}
+                                  if(_selectedIsDone[3] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.movedLeft;}
+                                  if(_selectedIsDone[4] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.movedRight;}
                                   zapisDoBazy(nowyZasob!, nowaWartosc, 'dodaj');
                                  }
                                   Provider.of<Frames>(context, listen: false)
                                     .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
                                     .then((_) {
-
-                                    if(nowyNrRamki != 0 && _selectedZakresRamek[0]){//zeby mogło  być kilka ramek nowych wstawianych do ula
+                                    
+                                    //jezeli edycja jednej ramki z numerem róznym od 0 i dla wszystkich zasobów
+                                    if(nowyNrRamki != 0 && _selectedZakresRamek[0] && _selectedZakresZasobow[1]){//!!! zeby mogło być kilka ramek nowych wstawianych do ula to mozna to robić tylko dla ramek gdzie "przed" jest rózne od 0
                                       //dla wszystkich zasobów dla ramki z numerem "nowyNrRamki" (innym niz 0) nalezy ustawić taką samą wartość "ramkaPo" zeby cała ramka z zasobami zmieniła pozycję jeśli ustawiono taką zmianę
                                       final framesData1 = Provider.of<Frames>(context, listen: false);
                                         //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
@@ -2463,7 +2589,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                       }).toList();
                                         //dla kazdego zasobu modyfikacja ramkaNrPo
                                       for (var i = 0; i < frames.length; i++) {
-                                        //print('ramka: ${frames[i].ramkaNr} zasób: ${frames[i].zasob}');
+                                        print(' id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
                                         DBHelper.updateRamkaNrPo(frames[i].id, nowyNrRamkiPo!);
                                       }
                                     } 
@@ -2505,19 +2631,19 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                  if(usunmatDod > 0){zapisDoBazy(12, usunmatDod.toString(), 'dodaj');}; 
 
                                  if(nowyZasob == 13) {
-                                  if(_selectedToDo[0] == true){nowaWartosc = AppLocalizations.of(context)!.workFrame;}
-                                  if(_selectedToDo[1] == true){nowaWartosc = AppLocalizations.of(context)!.toExtraction;}
-                                  if(_selectedToDo[2] == true){nowaWartosc = AppLocalizations.of(context)!.toDelete;}
-                                  if(_selectedToDo[3] == true){nowaWartosc = AppLocalizations.of(context)!.toInsulate;}
+                                  if(_selectedToDo[0] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.workFrame;}
+                                  if(_selectedToDo[1] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.toExtraction;}
+                                  if(_selectedToDo[2] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.toDelete;}
+                                  if(_selectedToDo[3] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.toInsulate;}
                                   zapisDoBazy(nowyZasob!, nowaWartosc, 'dodaj');
                                  }
 
                                  if(nowyZasob == 14) {
-                                  if(_selectedIsDone[0] == true){nowaWartosc = AppLocalizations.of(context)!.deleted;}
-                                  if(_selectedIsDone[1] == true){nowaWartosc = AppLocalizations.of(context)!.inserted;}
-                                  if(_selectedIsDone[2] == true){nowaWartosc = AppLocalizations.of(context)!.insulated;}
-                                  if(_selectedIsDone[3] == true){nowaWartosc = AppLocalizations.of(context)!.movedLeft;}
-                                  if(_selectedIsDone[4] == true){nowaWartosc = AppLocalizations.of(context)!.movedRight;}
+                                  if(_selectedIsDone[0] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.deleted;}
+                                  if(_selectedIsDone[1] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.inserted;}
+                                  if(_selectedIsDone[2] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.insulated;}
+                                  if(_selectedIsDone[3] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.movedLeft;}
+                                  if(_selectedIsDone[4] == true){_selectedStronaRamki[0] = true; nowaWartosc = AppLocalizations.of(context)!.movedRight;}
                                   zapisDoBazy(nowyZasob!, nowaWartosc, 'dodaj');
                                  }
                                   //zapisDoBazy(nowyZasob!, nowaWartosc, 'dodaj');

@@ -99,6 +99,15 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+     final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
+      backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+      fixedSize: Size(126.0, 35.0),
+      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
+    );
+
     return Scaffold(
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
@@ -121,33 +130,84 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
   //data
-                              TextField(
-                                  controller:
-                                      dateController, //editing controller of this TextField
-                                  decoration:  InputDecoration(
-                                      icon: Icon(Icons
-                                          .calendar_today), //icon of text field
-                                      labelText: AppLocalizations.of(context)!.noteDate
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+ //data 
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(AppLocalizations.of(context)!.noteDate),
+                                      OutlinedButton(
+                                        style: dataButtonStyle,
+                                        onPressed: () async {
+                                          DateTime? pickedDate =
+                                            await showDatePicker(
+                                              context: context,
+                                              initialDate: DateTime.parse(dateController.text),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime(2101),
+                                              builder:(context , child){
+                                                return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
+                                                  colorScheme: ColorScheme.light(
+                                                    primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
+                                                    onPrimary: Colors.white, // titles and 
+                                                    onSurface: Colors.black, // Month days , years 
+                                                  ),
+                                                  textButtonTheme: TextButtonThemeData(
+                                                    style: TextButton.styleFrom(
+                                                      foregroundColor: Colors.black, // ok , cancel    buttons
+                                                    ),
+                                                  ),
+                                                ),  child: child!   );  // pass child to this child
+                                              }
+                                            );
+                                          if (pickedDate != null) {
+                                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                                            setState(() {
+                                              dateController.text = formattedDate;
+                                             // globals.dataWpisu = formattedDate;
+                                            });
+                                          } else {print("Date is not selected");}
+                                        },
+  
+                                         child: Text(dateController.text ,
+                                          style: const TextStyle(
+                                            color: Color.fromARGB(255, 0, 0, 0),
+                                            fontSize: 15),),   
                                       ),
-                                  readOnly:
-                                      true, // when true user cannot edit text
-                                  onTap: () async {
-                                    DateTime? pickedDate = await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.parse(dateController.text),
-                                      firstDate: DateTime(2000), 
-                                      lastDate: DateTime(2101));
-                                    if (pickedDate != null) {
-                                      String formattedDate =
-                                          DateFormat('yyyy-MM-dd').format( pickedDate); 
+                                  ]),  
+                                ]),
+                             
+                             
+                              // TextField(
+                              //     controller:
+                              //         dateController, //editing controller of this TextField
+                              //     decoration:  InputDecoration(
+                              //         icon: Icon(Icons
+                              //             .calendar_today), //icon of text field
+                              //         labelText: AppLocalizations.of(context)!.noteDate
+                              //         ),
+                              //     readOnly:
+                              //         true, // when true user cannot edit text
+                              //     onTap: () async {
+                              //       DateTime? pickedDate = await showDatePicker(
+                              //         context: context,
+                              //         initialDate: DateTime.parse(dateController.text),
+                              //         firstDate: DateTime(2000), 
+                              //         lastDate: DateTime(2101));
+                              //       if (pickedDate != null) {
+                              //         String formattedDate =
+                              //             DateFormat('yyyy-MM-dd').format( pickedDate); 
 
-                                      setState(() {
-                                        dateController.text = formattedDate; 
-                                      });
-                                    } else {
-                                      print("Date is not selected");
-                                    }
-                                  }),
+                              //         setState(() {
+                              //           dateController.text = formattedDate; 
+                              //         });
+                              //       } else {
+                              //         print("Date is not selected");
+                              //       }
+                              //     }),
 
 
                               // Row(
@@ -305,53 +365,84 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                               //     ]),
 
 // nazwa
-                              Row(
-                                  //mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: <Widget>[
-                                    SizedBox(
-                                      width: 70,
-                                      child: Text(
-                                        AppLocalizations.of(context)!.nAme +
-                                            ':',
-                                        style: TextStyle(
-                                          //fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Colors.black,
-                                        ),
-                                        softWrap: true, //zawijanie tekstu
-                                        overflow: TextOverflow.fade,
-                                      ),
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: 180,
-                                      child: TextFormField(
-                                          initialValue: nowaNazwa,
-                                          keyboardType: TextInputType.text,
-                                          decoration: InputDecoration(
-                                            labelText: (''),
-                                            labelStyle:
-                                                TextStyle(color: Colors.black),
-                                            hintText:
-                                                (AppLocalizations.of(context)!
-                                                    .nAme),
-                                          ),
-                                          validator: (value) {
-                                            // if (value!.isEmpty) {
-                                            //   return (AppLocalizations.of(
-                                            //               context)!
-                                            //           .enter +
-                                            //       ' ' +
-                                            //       AppLocalizations.of(context)!
-                                            //           .nAme);
-                                            // }
-                                            nowaNazwa = value;
-                                            return null;
-                                          }),
-                                    ),
-                                  ]),
+                             SizedBox(
+                                height: 20,
+                              ),
+
+                              TextFormField(
+                                  minLines: 1,
+                                  maxLines: 5,
+                                  initialValue: nowaNazwa,
+                                  keyboardType: TextInputType.text,
+                                  decoration: InputDecoration(
+                                    enabledBorder: OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.grey)),
+                                    focusedBorder: OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.blue)),
+                                    labelText:
+                                        (AppLocalizations.of(context)!.nAme),
+                                    labelStyle: TextStyle(color: Colors.black),
+                                    hintText:
+                                        (AppLocalizations.of(context)!.nAme),
+                                  ),
+                                  validator: (value) {
+                                    // if (value!.isEmpty) {
+                                    //   return (AppLocalizations.of(context)!.enterNote);
+                                    // }
+                                    nowaNazwa = value;
+                                    return null;
+                                  }),
+                             
+                             
+                              // Row(
+                              //     //mainAxisAlignment: MainAxisAlignment.center,
+                              //     mainAxisAlignment: MainAxisAlignment.start,
+                              //     crossAxisAlignment: CrossAxisAlignment.end,
+                              //     children: <Widget>[
+                              //       SizedBox(
+                              //         width: 70,
+                              //         child: Text(
+                              //           AppLocalizations.of(context)!.nAme +
+                              //               ':',
+                              //           style: TextStyle(
+                              //             //fontWeight: FontWeight.bold,
+                              //             fontSize: 15,
+                              //             color: Colors.black,
+                              //           ),
+                              //           softWrap: true, //zawijanie tekstu
+                              //           overflow: TextOverflow.fade,
+                              //         ),
+                              //       ),
+                              //       SizedBox(width: 20),
+                              //       SizedBox(
+                              //         width: 180,
+                              //         child: TextFormField(
+                              //             initialValue: nowaNazwa,
+                              //             keyboardType: TextInputType.text,
+                              //             decoration: InputDecoration(
+                              //               labelText: (''),
+                              //               labelStyle:
+                              //                   TextStyle(color: Colors.black),
+                              //               hintText:
+                              //                   (AppLocalizations.of(context)!
+                              //                       .nAme),
+                              //             ),
+                              //             validator: (value) {
+                              //               // if (value!.isEmpty) {
+                              //               //   return (AppLocalizations.of(
+                              //               //               context)!
+                              //               //           .enter +
+                              //               //       ' ' +
+                              //               //       AppLocalizations.of(context)!
+                              //               //           .nAme);
+                              //               // }
+                              //               nowaNazwa = value;
+                              //               return null;
+                              //             }),
+                              //       ),
+                              //     ]),
 
 
 //kategoria

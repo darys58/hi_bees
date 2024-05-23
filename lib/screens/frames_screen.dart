@@ -43,6 +43,8 @@ class _FramesScreenState extends State<FramesScreen> {
   //String rhinoText = "";
   // PicovoiceManager? _picovoiceManager;
   var now = new DateTime.now();
+  DateTime dt1 = DateTime.now(); //data do porównania dla ustawiania przełącznika przed i po pod widokiem ula
+  DateTime dt2 = DateTime.now(); //jw.
   var formatter = new DateFormat('yyyy-MM-dd');
   List<Frames> frame = []; //wszystkie ramki z wybranego ula dla wszystkich dat przeglądów
   List<Frame> _daty = []; //unikalne daty
@@ -496,7 +498,17 @@ class _FramesScreenState extends State<FramesScreen> {
                               //width: MediaQuery.of(context).size.width * 0.6,
                               child: GestureDetector(
                                 onTap: () {
+                                  dt1 = DateTime.parse(wybranaData);
+                                  dt2 = DateTime.parse(_daty[index].data);
                                   setState(() {
+                                    //ustawianie widoku przd lub po w zaleznosci od tego czy wybrana data jest wczesniejsza czy późniejsza od poprzednio wybranej
+                                    if(dt1.compareTo(dt2) < 0){
+                                      _selectedPrzedPo = [true,false]; 
+                                      przedpo = 1; //print("DT1 jest przed DT2");
+                                    }else{_selectedPrzedPo = [false,true]; 
+                                      przedpo=2; //print("DT1 jest po DT2");
+                                    }
+
                                     wybranaData = _daty[index].data; //dla filtrowania po dacie
                                     getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
                                         .then((_) {});

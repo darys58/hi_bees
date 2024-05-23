@@ -235,7 +235,7 @@
     "versionApp": "Wersja aplikacji: ",
     "activationCode": "Kod aktywacyjny: ",
     "subscryptionTo": "Subskrypcja do: ",
-    "onlyNew": "wcześniej nie wysyłanych",
+    "onlyNew": "tylko wcześniej nie wysyłanych",
     "exportNewData": "Wysłane zostaną tylko dane, które nie były jeszcze wysyłane",
     "eXport": "Eksportuj",
     "noDataToSend": "Brak nowych danych do wysłania",
@@ -245,7 +245,8 @@
     "refreshActivation": "Odśwież aktywację",
     "inspectionDataSend": "Dane o przegladach zostały wysłane",
     "infoDataSend": "Dane informacyje zostały wysłane",
-    "exportAllData": "Wysłane zostaną wszystkie dane - dane w chmurze zostaną zastąpione danymi wysyłanymi",
+    "exportAllData": "Wysłane zostaną wszystkie dane - dane w chmurze zostaną zastąpione danymi wysyłanymi.",
+    "exportDataToCloud": "Dane w chmurze zostaną zastąpione danymi wysyłanymi",
     "exportAllToCloud": "Eksport wszystkich danych do chmury",
     "importEnd": "Zakończono import danych",
     "dataImport": "Import danych z chmury",
@@ -477,8 +478,22 @@
     "deleteQueenCellsN": "usunięte\nmateczniki",
     "waxCombN": "susz",
     "waxFundationN": "węza",
-    "queenCellsN": "mateczniki"
-
-                                   
+    "queenCellsN": "mateczniki",
+    "all": "wszystkie",
+    "aLl": "Wszystkie",
+    "thisOne": "tylko ten",
+    "rEsourceOnFrame": "Zasób na ramce",
+    "fRameNumbersBeforeAndAfter": "Numery wielu ramek przed i po",
+    "eXportNote": "Eksport wszystkich notatek do chmury",
+    "eXportHarvest": "Eksport wszystkich zbiorów do chmury",
+    "eXportPurchase": "Eksport wszystkich zakupów do chmury",
+    "eXportSale": "Eksport wszystkich sprzedaży do chmury",
+    "eXportInfo": "Eksport wszystkich pozostałych informacji do chmury",
+    "eXportFrame": "Eksport wszystkich danych o ramkach do chmury",
+    "fRames": "Ramki",
+    "iNfos": "Info",
+    "oNly": "Tylko",
+    "enterNote": "wpisz notatkę",
+    "enterTitleNote": "wpisz tytuł notatki"
 
 }

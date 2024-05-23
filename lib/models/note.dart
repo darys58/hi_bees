@@ -93,7 +93,7 @@ class Notes with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie danych do uruchomienia apki --> Zbiory <---');
+    print('wczytanie danych do uruchomienia apki --> Notatki <---');
     print(_items);
     notifyListeners();
   }
@@ -117,7 +117,7 @@ class Notes with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie danych do uruchomienia apki --> Zbiory <---');
+    print('wczytanie danych do uruchomienia apki --> Notatki ASC <---');
     print(_items);
     notifyListeners();
   }
@@ -141,7 +141,7 @@ class Notes with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich nowych zbiorów --> Zbiory <---');
+    print('wczytanie wszystkich nowych zbiorów --> NotatkiToArch <---');
     //print(_items);
     notifyListeners();
   }

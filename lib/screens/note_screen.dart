@@ -45,7 +45,7 @@ class _NoteScreenState extends State<NoteScreen> {
     //pobranie wszystkich notatek 
     final notatkiData = Provider.of<Notes>(context);
     List<Note> notatki = notatkiData.items.where((no) {
-      return no.data.startsWith(wybranaData);
+      return no.data.startsWith(wybranaData); //z datą zaczynajacą się od wybranego roku
     }).toList();
 
   
