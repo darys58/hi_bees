@@ -32,7 +32,7 @@ int nrRamkiDo = 5;
 int korpus = 2;
 int rozmiarRamki = 2;
 int stronaRamki = 2;
-
+int numeryWieluRamek = 1; //0- xx/0 , 1- xx/xx, 2- 0/xx  (przy dodawaniu/edycji wielu ramek)
 
 //z/do tabeli Memory
 //String id = '';

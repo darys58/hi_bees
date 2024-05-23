@@ -7,6 +7,7 @@ import 'package:hi_bees/helpers/db_helper.dart';
 // import 'orders_screen.dart';
 // import 'specials_screen.dart';
 // import 'settings_screen.dart';
+import 'package:wakelock/wakelock.dart'; //blokowanie ekranu
 import 'package:intl/intl.dart';
 import '../globals.dart' as globals;
 import 'package:http/http.dart' as http;
@@ -38,11 +39,24 @@ class _ImportScreenState extends State<ImportScreen> {
   bool isSwitched = false;
   var now = new DateTime.now();
   var formatter = new DateFormat('yyyy-MM-dd');
+  //int biezacyRok = int.parse(DateTime.now().toString().substring(0, 4));
+  String biezacyRok = DateTime.now().toString().substring(0, 4); //aktualny rok
   //var formatterHm = new DateFormat('H:mm');
   String formattedDate = '';
   int iloscDoWyslania = 0;
   //String komunikat = 'komunikat';
-
+  // bool wyborDanych = false;
+  // bool archNotatki = true;
+  // bool archZbiory = true;
+  // bool archZakupy = true;
+  // bool archSprzedaz = true;
+  // bool archInfo = true;
+  // bool archRamki = true;
+  // bool archOstatniRok = true;
+  String test = 'start';
+  double count = 0;
+  
+  
   @override
   void didChangeDependencies() {
     //print('import_screen - didChangeDependencies');
@@ -73,21 +87,36 @@ class _ImportScreenState extends State<ImportScreen> {
     super.didChangeDependencies();
   }
 
-  //dialog z ładowaniem importu
-  showLoaderDialog(BuildContext context, String text) {
+  //dialog z ładowaniem importu i eksportu
+  showLoaderDialog (BuildContext context, String text) async {
+    Wakelock.enable(); //blokada wyłaczania ekranu
     AlertDialog alert = AlertDialog(
       content: new Row(
         children: [
           CircularProgressIndicator(),
           Container(
-              margin: EdgeInsets.only(left: 7),
-              child:
-                  Text(text + '\n' + AppLocalizations.of(context)!.pleaseWait)),
+            margin: EdgeInsets.only(left: 7),
+            child: Text(text + '\n' + AppLocalizations.of(context)!.pleaseWait)),
         ],
       ),
     );
+    
+    
+    // AlertDialog(
+    //     key: ValueKey(count),
+    //     title: const Text("Loading..."),
+    //     content: LinearProgressIndicator(
+    //       value: count,
+    //       backgroundColor: Colors.grey,
+    //       color: Colors.green,
+    //       minHeight: 10,
+    //     ),
+    //   );
+    
+
+    //wyświetlenie okienka ładowania
     showDialog(
-      barrierDismissible: false,
+      barrierDismissible: false, //zablokowanie tła
       context: context,
       builder: (BuildContext context) {
         return alert;
@@ -125,8 +154,7 @@ class _ImportScreenState extends State<ImportScreen> {
           borderRadius: BorderRadius.circular(15.0),
         ),
       ),
-      barrierDismissible:
-          false, //zeby zaciemnione tło było zablokowane na kliknięcia
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
     );
   }
 
@@ -145,6 +173,7 @@ class _ImportScreenState extends State<ImportScreen> {
         actions: <Widget>[
           TextButton(
             onPressed: () {
+              Wakelock.disable(); //usunięcie blokowania wygaszania ekranu
               Navigator.of(context).pop();
               Navigator.of(context).pop();
               Navigator.of(context).pop();
@@ -228,8 +257,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   //         AppLocalizations.of(context)!.pleaseWait));
 
                   // Navigator.of(context).pop();
-                  showLoaderDialog(
-                      context, AppLocalizations.of(context)!.dataImport);
+                  showLoaderDialog( context, AppLocalizations.of(context)!.dataImport);
 
                   //import notatek
                   Notes.fetchNotatkiFromSerwer(
@@ -288,8 +316,8 @@ class _ImportScreenState extends State<ImportScreen> {
                       final framesAllData =
                           Provider.of<Frames>(context, listen: false);
                       final ramki = framesAllData.items;
-                      //print('ilość wpisów w tabeli ramka');
-                      // print(ramki.length);
+                      print('ilość wpisów w tabeli ramka');
+                      print(ramki.length);
                       int i = 0;
                       while (ramki.length > i) {
                         //wpis do tabeli ule na podstawie ramki
@@ -329,6 +357,7 @@ class _ImportScreenState extends State<ImportScreen> {
                           0, //aktualny - stan po wczytaniu z chmury
                         );
                         i++;
+                        //print('ramki w insertHive $i');
                       }
 
                       //import info
@@ -344,8 +373,8 @@ class _ImportScreenState extends State<ImportScreen> {
                           final infosAllData =
                               Provider.of<Infos>(context, listen: false);
                           final info = infosAllData.items;
-                          //print('ilość wpisów w tabeli info');
-                          //print(info.length);
+                          print('ilość wpisów w tabeli info');
+                          print(info.length);
                           int i = 0;
                           while (info.length > i) {
                             //wpis do tabeli ule na podstawie info
@@ -385,6 +414,7 @@ class _ImportScreenState extends State<ImportScreen> {
                               0, //aktualny - stan po wczytaniu z chmury
                             );
                             i++;
+                            //print('info w insertHive $i');
                           }
                         }); //pobranie info z z bazy lokalnej i wpis do uli
                       }); //pobranie info z internetu
@@ -477,7 +507,8 @@ class _ImportScreenState extends State<ImportScreen> {
     }
   }
 
-  void _showAlertExportAll(BuildContext context, String nazwa, String text) {
+  //eksport wszystkich danych Notatki
+  void _showAlertExportAllNotatki(BuildContext context, String nazwa, String text) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -490,352 +521,79 @@ class _ImportScreenState extends State<ImportScreen> {
         ),
         actions: <Widget>[
           TextButton(
-            onPressed: () {
+            onPressed: () async{
               //print('wysłanie wszystkich danych do chmury ========= ');
-              showLoaderDialog(
-                  context, AppLocalizations.of(context)!.eXportData);
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); //zeby pojawił sie wskaźnik wysyłania jak jest malo danych
+              iloscDoWyslania = 0;
 
               //uzyskanie dostępu do danych w pamięci
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
 
-              //BACKUP tabeli notatki - wszystkie
-              Provider.of<Notes>(context, listen: false)
-                  .fetchAndSetNotatki()
-                  .then((_) {
-                final notatkiArchData =
-                    Provider.of<Notes>(context, listen: false);
-                final notatki = notatkiArchData.items;
-                // print('ilość nowych wpisów w tabeli notatki');
-                // print(info.length);
-                iloscDoWyslania = notatki.length;
+              //BACKUP tabeli notatki - wszystkie 
+                Provider.of<Notes>(context, listen: false) //DBHelper - pobieranie notatek
+                    .fetchAndSetNotatki() //wczytanie danych do uruchomienia apki --> Notatki <---
+                    .then((_) {
+                  final notatkiArchData = Provider.of<Notes>(context, listen: false);
+                  final notatki = notatkiArchData.items;
+                  // print('ilość nowych wpisów w tabeli notatki');
+                  // print(info.length);
+                  iloscDoWyslania = notatki.length;
+                    
+                    if (iloscDoWyslania > 0)
+                      _showAlertOK(
+                          context,
+                          AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.dataToSend +
+                              ' = $iloscDoWyslania');
+                    else
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.noDataToSend);
+                  
+                  //przygotowanie notatek do wysyłki
+                  if (notatki.length > 0) {
+                    String jsonData = '{"notatki":[';
+                    int i = 0;
+                    while (notatki.length > i) {
+                      jsonData += '{"id": "${notatki[i].id}",';
+                      jsonData += '"data": "${notatki[i].data}",';
+                      jsonData += '"tytul": "${notatki[i].tytul}",';
+                      jsonData += '"pasiekaNr": ${notatki[i].pasiekaNr},';
+                      jsonData += '"ulNr": ${notatki[i].ulNr},';
+                      jsonData += '"notatka": "${notatki[i].notatka}",';
+                      jsonData += '"status": ${notatki[i].status},';
+                      jsonData += '"priorytet": "${notatki[i].priorytet}",';
+                      jsonData += '"uwagi": "${notatki[i].uwagi}",';
+                      jsonData += '"arch": ${notatki[i].arch}}';
+                      i++;
+                      if (notatki.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${notatki.length}, "tabela":"notatki_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
-                if (notatki.length > 0) {
-                  String jsonData = '{"notatki":[';
-                  int i = 0;
-                  while (notatki.length > i) {
-                    jsonData += '{"id": "${notatki[i].id}",';
-                    jsonData += '"data": "${notatki[i].data}",';
-                    jsonData += '"tytul": "${notatki[i].tytul}",';
-                    jsonData += '"pasiekaNr": ${notatki[i].pasiekaNr},';
-                    jsonData += '"ulNr": ${notatki[i].ulNr},';
-                    jsonData += '"notatka": "${notatki[i].notatka}",';
-                    jsonData += '"status": ${notatki[i].status},';
-                    jsonData += '"priorytet": "${notatki[i].priorytet}",';
-                    jsonData += '"uwagi": "${notatki[i].uwagi}",';
-                    jsonData += '"arch": ${notatki[i].arch}}';
-                    i++;
-                    if (notatki.length > i) jsonData += ',';
-                  }
-                  jsonData +=
-                      '],"total":${notatki.length}, "tabela":"notatki_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                    print(jsonData); //json przygotowany poprawnie
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupNotatki(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
 
-                  print(jsonData);
-                  _isInternet().then(
-                    (inter) {
-                      if (inter) {
-                        wyslijBackupNotatki(jsonData); //jsonData
-                      } else {
-                        print('braaaaaak internetu');
-                        Navigator.of(context).pop();
-
-                        _showAlertAnuluj(
+                          _showAlertAnuluj(
                             context,
                             AppLocalizations.of(context)!.alert,
                             AppLocalizations.of(context)!.noInternet);
-                      }
-                    },
-                  );
-                } else {
-                  // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
-                  //     AppLocalizations.of(context)!.noDataToSend);
-                } //jeśli sa ramki do archiwizacji
-              });
-
-              //BACKUP tabeli zakupy - wszystkie
-              Provider.of<Purchases>(context, listen: false)
-                  .fetchAndSetZakupy()
-                  .then((_) {
-                final zakupyArchData =
-                    Provider.of<Purchases>(context, listen: false);
-                final zakupy = zakupyArchData.items;
-                // print('ilość nowych wpisów w tabeli zakupy');
-                // print(info.length);
-                iloscDoWyslania = zakupy.length;
-
-                if (zakupy.length > 0) {
-                  String jsonData = '{"zakupy":[';
-                  int i = 0;
-                  while (zakupy.length > i) {
-                    jsonData += '{"id": "${zakupy[i].id}",';
-                    jsonData += '"data": "${zakupy[i].data}",';
-                    jsonData += '"pasiekaNr": ${zakupy[i].pasiekaNr},';
-                    jsonData += '"nazwa": "${zakupy[i].nazwa}",';
-                    jsonData += '"kategoriaId": ${zakupy[i].kategoriaId},';
-                    jsonData += '"ilosc": ${zakupy[i].ilosc},';
-                    jsonData += '"miara": ${zakupy[i].miara},';
-                    jsonData += '"cena": ${zakupy[i].cena},';
-                    jsonData += '"wartosc": ${zakupy[i].wartosc},';
-                    jsonData += '"waluta": ${zakupy[i].waluta},';
-                    jsonData += '"uwagi": "${zakupy[i].uwagi}",';
-                    jsonData += '"arch": ${zakupy[i].arch}}';
-                    i++;
-                    if (zakupy.length > i) jsonData += ',';
-                  }
-                  jsonData +=
-                      '],"total":${zakupy.length}, "tabela":"zakupy_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
-
-                  print(jsonData);
-                  _isInternet().then(
-                    (inter) {
-                      if (inter) {
-                        wyslijBackupZakupy(jsonData); //jsonData
-                      } else {
-                        print('braaaaaak internetu');
-                        Navigator.of(context).pop();
-
-                        _showAlertAnuluj(
-                            context,
-                            AppLocalizations.of(context)!.alert,
-                            AppLocalizations.of(context)!.noInternet);
-                      }
-                    },
-                  );
-                } else {
-                  // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
-                  //     AppLocalizations.of(context)!.noDataToSend);
-                } //jeśli sa ramki do archiwizacji
-              });
-
-              //BACKUP tabeli sprzedaz - wszystkie
-              Provider.of<Sales>(context, listen: false)
-                  .fetchAndSetSprzedaz()
-                  .then((_) {
-                final sprzedazArchData =
-                    Provider.of<Sales>(context, listen: false);
-                final sprzedaz = sprzedazArchData.items;
-                // print('ilość nowych wpisów w tabeli info');
-                // print(info.length);
-                iloscDoWyslania = sprzedaz.length;
-
-                if (sprzedaz.length > 0) {
-                  String jsonData = '{"sprzedaz":[';
-                  int i = 0;
-                  while (sprzedaz.length > i) {
-                    jsonData += '{"id": "${sprzedaz[i].id}",';
-                    jsonData += '"data": "${sprzedaz[i].data}",';
-                    jsonData += '"pasiekaNr": ${sprzedaz[i].pasiekaNr},';
-                    jsonData += '"nazwa": "${sprzedaz[i].nazwa}",';
-                    jsonData += '"kategoriaId": ${sprzedaz[i].kategoriaId},';
-                    jsonData += '"ilosc": ${sprzedaz[i].ilosc},';
-                    jsonData += '"miara": ${sprzedaz[i].miara},';
-                    jsonData += '"cena": ${sprzedaz[i].cena},';
-                    jsonData += '"wartosc": ${sprzedaz[i].wartosc},';
-                    jsonData += '"waluta": ${sprzedaz[i].waluta},';
-                    jsonData += '"uwagi": "${sprzedaz[i].uwagi}",';
-                    jsonData += '"arch": ${sprzedaz[i].arch}}';
-                    i++;
-                    if (sprzedaz.length > i) jsonData += ',';
-                  }
-                  jsonData +=
-                      '],"total":${sprzedaz.length}, "tabela":"sprzedaz_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
-
-                  print(jsonData);
-                  _isInternet().then(
-                    (inter) {
-                      if (inter) {
-                        wyslijBackupSprzedaz(jsonData); //jsonData
-                      } else {
-                        print('braaaaaak internetu');
-                        Navigator.of(context).pop();
-
-                        _showAlertAnuluj(
-                            context,
-                            AppLocalizations.of(context)!.alert,
-                            AppLocalizations.of(context)!.noInternet);
-                      }
-                    },
-                  );
-                } else {
-                  // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
-                  //     AppLocalizations.of(context)!.noDataToSend);
-                } //jeśli sa ramki do archiwizacji
-              });
-
-              //BACKUP tabeli zbiry - wszstkie
-              Provider.of<Harvests>(context, listen: false)
-                  .fetchAndSetZbiory()
-                  .then((_) {
-                final zbioryArchData =
-                    Provider.of<Harvests>(context, listen: false);
-                final zbiory = zbioryArchData.items;
-                // print('ilość nowych wpisów w tabeli info');
-                // print(info.length);
-                iloscDoWyslania = zbiory.length;
-
-                if (zbiory.length > 0) {
-                  String jsonData = '{"zbiory":[';
-                  int i = 0;
-                  while (zbiory.length > i) {
-                    jsonData += '{"id": "${zbiory[i].id}",';
-                    jsonData += '"data": "${zbiory[i].data}",';
-                    jsonData += '"pasiekaNr": ${zbiory[i].pasiekaNr},';
-                    jsonData += '"zasobId": ${zbiory[i].zasobId},';
-                    jsonData += '"ilosc": "${zbiory[i].ilosc}",';
-                    jsonData += '"miara": "${zbiory[i].miara}",';
-                    jsonData += '"uwagi": "${zbiory[i].uwagi}",';
-                    jsonData += '"g": "${zbiory[i].g}",';
-                    jsonData += '"h": "${zbiory[i].h}",';
-                    jsonData += '"arch": ${zbiory[i].arch}}';
-                    i++;
-                    if (zbiory.length > i) jsonData += ',';
-                  }
-                  jsonData +=
-                      '],"total":${zbiory.length}, "tabela":"zbiory_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
-
-                  print(jsonData);
-                  _isInternet().then(
-                    (inter) {
-                      if (inter) {
-                        wyslijBackupZbiory(jsonData); //jsonData
-                      } else {
-                        print('braaaaaak internetu');
-                        Navigator.of(context).pop();
-
-                        _showAlertAnuluj(
-                            context,
-                            AppLocalizations.of(context)!.alert,
-                            AppLocalizations.of(context)!.noInternet);
-                      }
-                    },
-                  );
-                } else {
-                  // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
-                  //     AppLocalizations.of(context)!.noDataToSend);
-                } //jeśli sa ramki do archiwizacji
-              });
-
-              //BACKUP tabeli info - wszystkie wpisy
-              Provider.of<Infos>(context, listen: false)
-                  .fetchAndSetInfos()
-                  .then((_) {
-                final infoAllData = Provider.of<Infos>(context, listen: false);
-                final info = infoAllData.items;
-                //print('ilość wszystkich wpisów w tabeli info');
-                print(info.length);
-                iloscDoWyslania = info.length;
-
-                if (info.length > 0) {
-                  String jsonData = '{"info":[';
-                  int i = 0;
-                  while (info.length > i) {
-                    jsonData += '{"id": "${info[i].id}",';
-                    jsonData += '"data": "${info[i].data}",';
-                    jsonData += '"pasiekaNr": ${info[i].pasiekaNr},';
-                    jsonData += '"ulNr": ${info[i].ulNr},';
-                    jsonData += '"kategoria": "${info[i].kategoria}",';
-                    jsonData += '"parametr": "${info[i].parametr}",';
-                    jsonData += '"wartosc": "${info[i].wartosc}",';
-                    jsonData += '"miara": "${info[i].miara}",';
-                    jsonData += '"miara": "${info[i].miara}",';
-                    jsonData += '"pogoda": "${info[i].pogoda}",';
-                    jsonData += '"temp": "${info[i].temp}",';
-                    jsonData += '"czas": "${info[i].czas}",';
-                    jsonData += '"arch": ${info[i].arch}}';
-                    i++;
-                    if (info.length > i) jsonData += ',';
-                  }
-                  jsonData +=
-                      '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
-
-                  print(jsonData);
-                  _isInternet().then(
-                    (inter) {
-                      if (inter) {
-                        wyslijBackupInfo(jsonData); //jsonData
-                      } else {
-                        print('braaaaaak internetu');
-                        Navigator.of(context).pop();
-                        _showAlertAnuluj(
-                            context,
-                            AppLocalizations.of(context)!.alert,
-                            AppLocalizations.of(context)!.noInternet);
-                      }
-                    },
-                  );
-                } else {
-                  // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
-                  //     AppLocalizations.of(context)!.noDataToSend);
-                } //jeśli sa ramki do archiwizacji
-              });
-
-              //BACKUP tabeli ramka - wszystkie wpisy
-              Provider.of<Frames>(context, listen: false)
-                  .fetchAndSetFrames()
-                  .then((_) {
-                final framesAllData =
-                    Provider.of<Frames>(context, listen: false);
-                final ramki = framesAllData.items;
-                // print('ilość wszystkich wpisów w tabeli ramka');
-                // print(ramki.length);
-
-                //informacja o ilości rekordów do wysłania
-                iloscDoWyslania += ramki.length;
-                if (iloscDoWyslania > 0)
-                  _showAlertOK(
-                      context,
-                      AppLocalizations.of(context)!.alert,
-                      AppLocalizations.of(context)!.dataToSend +
-                          ' = $iloscDoWyslania');
-                else
-                  _showAlertOK(context, AppLocalizations.of(context)!.alert,
-                      AppLocalizations.of(context)!.noDataToSend);
-
-                if (ramki.length > 0) {
-                  String jsonData = '{"ramka":[';
-                  int i = 0;
-                  while (ramki.length > i) {
-                    jsonData += '{"id": "${ramki[i].id}",';
-                    jsonData += '"data": "${ramki[i].data}",';
-                    jsonData += '"pasiekaNr": ${ramki[i].pasiekaNr},';
-                    jsonData += '"ulNr": ${ramki[i].ulNr},';
-                    jsonData += '"korpusNr": ${ramki[i].korpusNr},';
-                    jsonData += '"typ": ${ramki[i].typ},';
-                    jsonData += '"ramkaNr": ${ramki[i].ramkaNr},';
-                    jsonData += '"ramkaNrPo": ${ramki[i].ramkaNrPo},';
-                    jsonData += '"rozmiar": ${ramki[i].rozmiar},';
-                    jsonData += '"strona": ${ramki[i].strona},';
-                    jsonData += '"zasob": ${ramki[i].zasob},';
-                    jsonData += '"wartosc": "${ramki[i].wartosc}",';
-                    jsonData += '"arch": ${ramki[i].arch}}';
-                    i++;
-                    if (ramki.length > i) jsonData += ',';
-                  }
-                  jsonData +=
-                      '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
-
-                  print(jsonData);
-                  _isInternet().then(
-                    (inter) {
-                      if (inter) {
-                        print('$inter - jest internet');
-                        wyslijBackupRamka(jsonData); //jsonData
-                      } else {
-                        print('braaaaaak internetu');
-                        // _showAlertAnuluj(
-                        //     context,
-                        //     AppLocalizations.of(context)!.alert,
-                        //     AppLocalizations.of(context)!.noInternet);
-                      }
-                    },
-                  );
-                } else {
-                  // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
-                  //     AppLocalizations.of(context)!.noDataToSend);
-                } //jeśli ramki do archiwizacji
-              }); //od pobrania ramek
-
-             // Navigator.of(context).pop();
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+            
             },
             child: Text(AppLocalizations.of(context)!.eXport),
           ),
@@ -851,8 +609,1117 @@ class _ImportScreenState extends State<ImportScreen> {
           borderRadius: BorderRadius.circular(15.0),
         ),
       ),
-      barrierDismissible:
-          false, //zeby zaciemnione tło było zablokowane na kliknięcia
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
+  //eksport wszystkich danych Zakupy
+  void _showAlertExportAllZakupy(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+             
+              //BACKUP tabeli zakupy - wszystkie
+                Provider.of<Purchases>(context, listen: false)
+                    .fetchAndSetZakupy()
+                    .then((_) {
+                  final zakupyArchData =
+                      Provider.of<Purchases>(context, listen: false);
+                  final zakupy = zakupyArchData.items;
+                  // print('ilość nowych wpisów w tabeli zakupy');
+                  // print(info.length);
+                  iloscDoWyslania = zakupy.length;
+                     
+                    if (iloscDoWyslania > 0)
+                      _showAlertOK(
+                          context,
+                          AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.dataToSend +
+                              ' = $iloscDoWyslania');
+                    else
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.noDataToSend);
+                    
+                  if (zakupy.length > 0) {
+                    String jsonData = '{"zakupy":[';
+                    int i = 0;
+                    while (zakupy.length > i) {
+                      jsonData += '{"id": "${zakupy[i].id}",';
+                      jsonData += '"data": "${zakupy[i].data}",';
+                      jsonData += '"pasiekaNr": ${zakupy[i].pasiekaNr},';
+                      jsonData += '"nazwa": "${zakupy[i].nazwa}",';
+                      jsonData += '"kategoriaId": ${zakupy[i].kategoriaId},';
+                      jsonData += '"ilosc": ${zakupy[i].ilosc},';
+                      jsonData += '"miara": ${zakupy[i].miara},';
+                      jsonData += '"cena": ${zakupy[i].cena},';
+                      jsonData += '"wartosc": ${zakupy[i].wartosc},';
+                      jsonData += '"waluta": ${zakupy[i].waluta},';
+                      jsonData += '"uwagi": "${zakupy[i].uwagi}",';
+                      jsonData += '"arch": ${zakupy[i].arch}}';
+                      i++;
+                      if (zakupy.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${zakupy.length}, "tabela":"zakupy_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupZakupy(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });           
+            },
+            child: Text(AppLocalizations.of(context)!.eXport),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
+  //eksport wszystkich danych Sprzedaz
+  void _showAlertExportAllSprzedaz(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli sprzedaz - wszystkie
+                Provider.of<Sales>(context, listen: false)
+                    .fetchAndSetSprzedaz()
+                    .then((_) {
+                  final sprzedazArchData =
+                      Provider.of<Sales>(context, listen: false);
+                  final sprzedaz = sprzedazArchData.items;
+                  // print('ilość nowych wpisów w tabeli info');
+                  // print(info.length);
+                  iloscDoWyslania = sprzedaz.length;
+                  
+                    if (iloscDoWyslania > 0)
+                      _showAlertOK(
+                          context,
+                          AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.dataToSend +
+                              ' = $iloscDoWyslania');
+                    else
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.noDataToSend);
+                  
+                  if (sprzedaz.length > 0) {
+                    String jsonData = '{"sprzedaz":[';
+                    int i = 0;
+                    while (sprzedaz.length > i) {
+                      jsonData += '{"id": "${sprzedaz[i].id}",';
+                      jsonData += '"data": "${sprzedaz[i].data}",';
+                      jsonData += '"pasiekaNr": ${sprzedaz[i].pasiekaNr},';
+                      jsonData += '"nazwa": "${sprzedaz[i].nazwa}",';
+                      jsonData += '"kategoriaId": ${sprzedaz[i].kategoriaId},';
+                      jsonData += '"ilosc": ${sprzedaz[i].ilosc},';
+                      jsonData += '"miara": ${sprzedaz[i].miara},';
+                      jsonData += '"cena": ${sprzedaz[i].cena},';
+                      jsonData += '"wartosc": ${sprzedaz[i].wartosc},';
+                      jsonData += '"waluta": ${sprzedaz[i].waluta},';
+                      jsonData += '"uwagi": "${sprzedaz[i].uwagi}",';
+                      jsonData += '"arch": ${sprzedaz[i].arch}}';
+                      i++;
+                      if (sprzedaz.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${sprzedaz.length}, "tabela":"sprzedaz_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupSprzedaz(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+        
+            },
+            child: Text(AppLocalizations.of(context)!.eXport),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
+  //eksport wszystkich danych Zbiory
+  void _showAlertExportAllZbiory(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli zbiory - wszstkie
+                Provider.of<Harvests>(context, listen: false)
+                    .fetchAndSetZbiory()
+                    .then((_) {
+                  final zbioryArchData =
+                      Provider.of<Harvests>(context, listen: false);
+                  final zbiory = zbioryArchData.items;
+                  // print('ilość nowych wpisów w tabeli info');
+                  // print(info.length);
+                  iloscDoWyslania = zbiory.length;
+                  
+                    if (iloscDoWyslania > 0)
+                      _showAlertOK(
+                          context,
+                          AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.dataToSend +
+                              ' = $iloscDoWyslania');
+                    else
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.noDataToSend);
+                  
+                  if (zbiory.length > 0) {
+                    String jsonData = '{"zbiory":[';
+                    int i = 0;
+                    while (zbiory.length > i) {
+                      jsonData += '{"id": "${zbiory[i].id}",';
+                      jsonData += '"data": "${zbiory[i].data}",';
+                      jsonData += '"pasiekaNr": ${zbiory[i].pasiekaNr},';
+                      jsonData += '"zasobId": ${zbiory[i].zasobId},';
+                      jsonData += '"ilosc": "${zbiory[i].ilosc}",';
+                      jsonData += '"miara": "${zbiory[i].miara}",';
+                      jsonData += '"uwagi": "${zbiory[i].uwagi}",';
+                      jsonData += '"g": "${zbiory[i].g}",';
+                      jsonData += '"h": "${zbiory[i].h}",';
+                      jsonData += '"arch": ${zbiory[i].arch}}';
+                      i++;
+                      if (zbiory.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${zbiory.length}, "tabela":"zbiory_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupZbiory(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });    
+            
+            },
+            child: Text(AppLocalizations.of(context)!.eXport),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
+  //eksport wszystkich danych Info
+  void _showAlertExportAllInfo(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+//tylko z biezącego roku
+           TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli info - wszystkie wpisy
+                Provider.of<Infos>(context, listen: false)
+                    .fetchAndSetInfos()
+                    .then((_) {
+                  final infoAllData = Provider.of<Infos>(context, listen: false);
+                  //final info = infoAllData.items;
+                  final info  = infoAllData.items.where((inf) {
+                    return inf.data.startsWith(biezacyRok); //z datą zaczynajacą się od wybranego roku
+                  }).toList();
+                  //print('ilość wszystkich z biezącego roku wpisów w tabeli info');
+                  print(info.length);
+                  iloscDoWyslania = info.length;
+                  
+                    if (iloscDoWyslania > 0)
+                      _showAlertOK(
+                          context,
+                          AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.dataToSend +
+                              ' = $iloscDoWyslania');
+                    else
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.noDataToSend);
+
+                  if (info.length > 0) {
+                    String jsonData = '{"info":[';
+                    int i = 0;
+                    while (info.length > i) {
+                      jsonData += '{"id": "${info[i].id}",';
+                      jsonData += '"data": "${info[i].data}",';
+                      jsonData += '"pasiekaNr": ${info[i].pasiekaNr},';
+                      jsonData += '"ulNr": ${info[i].ulNr},';
+                      jsonData += '"kategoria": "${info[i].kategoria}",';
+                      jsonData += '"parametr": "${info[i].parametr}",';
+                      jsonData += '"wartosc": "${info[i].wartosc}",';
+                      jsonData += '"miara": "${info[i].miara}",';
+                      jsonData += '"miara": "${info[i].miara}",';
+                      jsonData += '"pogoda": "${info[i].pogoda}",';
+                      jsonData += '"temp": "${info[i].temp}",';
+                      jsonData += '"czas": "${info[i].czas}",';
+                      jsonData += '"arch": ${info[i].arch}}';
+                      i++;
+                      if (info.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupInfo(jsonData); //jsonData
+                        } else {
+                          print('braaaak internetu');
+                          Navigator.of(context).pop();
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+            
+            },
+            child: Text(AppLocalizations.of(context)!.oNly + ' $biezacyRok'),
+          ),
+
+//wszystkie informacje z wszystkich lat          
+          TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli info - wszystkie wpisy
+                Provider.of<Infos>(context, listen: false)
+                    .fetchAndSetInfos()
+                    .then((_) {
+                  final infoAllData = Provider.of<Infos>(context, listen: false);
+                  final info = infoAllData.items;
+                  //print('ilość wszystkich wpisów w tabeli info');
+                  print(info.length);
+                  iloscDoWyslania = info.length;
+                  
+                    if (iloscDoWyslania > 0)
+                      _showAlertOK(
+                          context,
+                          AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.dataToSend +
+                              ' = $iloscDoWyslania');
+                    else
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.noDataToSend);
+
+                  if (info.length > 0) {
+                    String jsonData = '{"info":[';
+                    int i = 0;
+                    while (info.length > i) {
+                      jsonData += '{"id": "${info[i].id}",';
+                      jsonData += '"data": "${info[i].data}",';
+                      jsonData += '"pasiekaNr": ${info[i].pasiekaNr},';
+                      jsonData += '"ulNr": ${info[i].ulNr},';
+                      jsonData += '"kategoria": "${info[i].kategoria}",';
+                      jsonData += '"parametr": "${info[i].parametr}",';
+                      jsonData += '"wartosc": "${info[i].wartosc}",';
+                      jsonData += '"miara": "${info[i].miara}",';
+                      jsonData += '"miara": "${info[i].miara}",';
+                      jsonData += '"pogoda": "${info[i].pogoda}",';
+                      jsonData += '"temp": "${info[i].temp}",';
+                      jsonData += '"czas": "${info[i].czas}",';
+                      jsonData += '"arch": ${info[i].arch}}';
+                      i++;
+                      print(i);
+                      
+                      // setState(() {
+                      //   count = i.toDouble();
+                      // print('test $count');
+                    // });
+                      
+                      if (info.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupInfo(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+            
+            },
+            child: Text(AppLocalizations.of(context)!.aLl),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+ 
+  //eksport wszystkich danych Ramki
+  void _showAlertExportAllRamki(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          //dane o ramkach tylko z tego roku
+          TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli ramka - wszystkie wpisy z tego roku
+                Provider.of<Frames>(context, listen: false)
+                    .fetchAndSetFrames()
+                    .then((_) {
+                  final framesAllData = Provider.of<Frames>(context, listen: false);
+                  //final ramki = framesAllData.items;
+                  final ramki  = framesAllData.items.where((ra) {
+                    return ra.data.startsWith(biezacyRok); //z datą zaczynajacą się od wybranego roku
+                  }).toList();
+                  // print('ilość wszystkich wpisów z biezącego roku w tabeli ramka');
+                  print(ramki.length);
+
+                  //informacja o ilości rekordów do wysłania
+                  iloscDoWyslania = ramki.length;
+                  
+                  //okno wyświetla się dopiero po wysłaniu danych
+                  if (iloscDoWyslania > 0)
+                    _showAlertOK(
+                        context,
+                        AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.dataToSend +
+                            ' = $iloscDoWyslania');
+                  else
+                    _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.noDataToSend);
+
+                  if (ramki.length > 0) {
+                    String jsonData = '{"ramka":[';
+                    int i = 0;
+                    while (ramki.length > i) {
+                      jsonData += '{"id": "${ramki[i].id}",';
+                      jsonData += '"data": "${ramki[i].data}",';
+                      jsonData += '"pasiekaNr": ${ramki[i].pasiekaNr},';
+                      jsonData += '"ulNr": ${ramki[i].ulNr},';
+                      jsonData += '"korpusNr": ${ramki[i].korpusNr},';
+                      jsonData += '"typ": ${ramki[i].typ},';
+                      jsonData += '"ramkaNr": ${ramki[i].ramkaNr},';
+                      jsonData += '"ramkaNrPo": ${ramki[i].ramkaNrPo},';
+                      jsonData += '"rozmiar": ${ramki[i].rozmiar},';
+                      jsonData += '"strona": ${ramki[i].strona},';
+                      jsonData += '"zasob": ${ramki[i].zasob},';
+                      jsonData += '"wartosc": "${ramki[i].wartosc}",';
+                      jsonData += '"arch": ${ramki[i].arch}}';
+                      i++;
+                      print(i);
+                      if (ramki.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                    print('utworzono jsonData');        
+                    //print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          print('$inter - jest internet');
+                          wyslijBackupRamka(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          // _showAlertAnuluj(
+                          //     context,
+                          //     AppLocalizations.of(context)!.alert,
+                          //     AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli ramki do archiwizacji
+                }); //od pobrania ramek
+
+               //Navigator.of(context).pop();
+              
+            
+            },
+            child: Text(AppLocalizations.of(context)!.oNly + ' $biezacyRok'), //AppLocalizations.of(context)!.eXport),
+          ),
+  
+  //Dane o ramkach z wszystkich lat        
+          TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli ramka - wszystkie wpisy
+                Provider.of<Frames>(context, listen: false)
+                    .fetchAndSetFrames()
+                    .then((_) {
+                  final framesAllData =
+                      Provider.of<Frames>(context, listen: false);
+                  final ramki = framesAllData.items;
+                  // print('ilość wszystkich wpisów w tabeli ramka');
+                  print(ramki.length);
+
+                  //informacja o ilości rekordów do wysłania
+                  iloscDoWyslania = ramki.length;
+                  
+                  if (iloscDoWyslania > 0)
+                    _showAlertOK(
+                        context,
+                        AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.dataToSend +
+                            ' = $iloscDoWyslania');
+                  else
+                    _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.noDataToSend);
+
+                  if (ramki.length > 0) {
+                    String jsonData = '{"ramka":[';
+                    int i = 0;
+                    while (ramki.length > i) {
+                      jsonData += '{"id": "${ramki[i].id}",';
+                      jsonData += '"data": "${ramki[i].data}",';
+                      jsonData += '"pasiekaNr": ${ramki[i].pasiekaNr},';
+                      jsonData += '"ulNr": ${ramki[i].ulNr},';
+                      jsonData += '"korpusNr": ${ramki[i].korpusNr},';
+                      jsonData += '"typ": ${ramki[i].typ},';
+                      jsonData += '"ramkaNr": ${ramki[i].ramkaNr},';
+                      jsonData += '"ramkaNrPo": ${ramki[i].ramkaNrPo},';
+                      jsonData += '"rozmiar": ${ramki[i].rozmiar},';
+                      jsonData += '"strona": ${ramki[i].strona},';
+                      jsonData += '"zasob": ${ramki[i].zasob},';
+                      jsonData += '"wartosc": "${ramki[i].wartosc}",';
+                      jsonData += '"arch": ${ramki[i].arch}}';
+                      i++;
+                      if (ramki.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          print('$inter - jest internet');
+                          wyslijBackupRamka(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          // _showAlertAnuluj(
+                          //     context,
+                          //     AppLocalizations.of(context)!.alert,
+                          //     AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli ramki do archiwizacji
+                }); //od pobrania ramek
+
+               //Navigator.of(context).pop();
+              
+            
+            },
+            child: Text(AppLocalizations.of(context)!.aLl),
+          ),
+          
+          
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+  
+  
+  //eksport wszystkich danych
+  void _showAlertExportAll(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli notatki - wszystkie
+                Provider.of<Notes>(context, listen: false) //DBHelper - pobieranie notatek
+                    .fetchAndSetNotatki() //wczytanie danych do uruchomienia apki --> Notatki <---
+                    .then((_) {
+                  final notatkiArchData = Provider.of<Notes>(context, listen: false);
+                  final notatki = notatkiArchData.items;
+                  // print('ilość nowych wpisów w tabeli notatki');
+                  // print(info.length);
+                  iloscDoWyslania = notatki.length;
+                     
+                  //przygotowanie notatek do wysyłki
+                  if (notatki.length > 0) {
+                    String jsonData = '{"notatki":[';
+                    int i = 0;
+                    while (notatki.length > i) {
+                      jsonData += '{"id": "${notatki[i].id}",';
+                      jsonData += '"data": "${notatki[i].data}",';
+                      jsonData += '"tytul": "${notatki[i].tytul}",';
+                      jsonData += '"pasiekaNr": ${notatki[i].pasiekaNr},';
+                      jsonData += '"ulNr": ${notatki[i].ulNr},';
+                      jsonData += '"notatka": "${notatki[i].notatka}",';
+                      jsonData += '"status": ${notatki[i].status},';
+                      jsonData += '"priorytet": "${notatki[i].priorytet}",';
+                      jsonData += '"uwagi": "${notatki[i].uwagi}",';
+                      jsonData += '"arch": ${notatki[i].arch}}';
+                      i++;
+                      if (notatki.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${notatki.length}, "tabela":"notatki_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+
+                    print(jsonData); //json przygotowany poprawnie
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupNotatki(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                            context,
+                            AppLocalizations.of(context)!.alert,
+                            AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+
+              
+              //BACKUP tabeli zakupy - wszystkie
+                Provider.of<Purchases>(context, listen: false)
+                    .fetchAndSetZakupy()
+                    .then((_) {
+                  final zakupyArchData =
+                      Provider.of<Purchases>(context, listen: false);
+                  final zakupy = zakupyArchData.items;
+                  // print('ilość nowych wpisów w tabeli zakupy');
+                  // print(info.length);
+                  iloscDoWyslania = zakupy.length;
+                     
+                  if (zakupy.length > 0) {
+                    String jsonData = '{"zakupy":[';
+                    int i = 0;
+                    while (zakupy.length > i) {
+                      jsonData += '{"id": "${zakupy[i].id}",';
+                      jsonData += '"data": "${zakupy[i].data}",';
+                      jsonData += '"pasiekaNr": ${zakupy[i].pasiekaNr},';
+                      jsonData += '"nazwa": "${zakupy[i].nazwa}",';
+                      jsonData += '"kategoriaId": ${zakupy[i].kategoriaId},';
+                      jsonData += '"ilosc": ${zakupy[i].ilosc},';
+                      jsonData += '"miara": ${zakupy[i].miara},';
+                      jsonData += '"cena": ${zakupy[i].cena},';
+                      jsonData += '"wartosc": ${zakupy[i].wartosc},';
+                      jsonData += '"waluta": ${zakupy[i].waluta},';
+                      jsonData += '"uwagi": "${zakupy[i].uwagi}",';
+                      jsonData += '"arch": ${zakupy[i].arch}}';
+                      i++;
+                      if (zakupy.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${zakupy.length}, "tabela":"zakupy_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupZakupy(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+
+              //BACKUP tabeli sprzedaz - wszystkie
+                Provider.of<Sales>(context, listen: false)
+                    .fetchAndSetSprzedaz()
+                    .then((_) {
+                  final sprzedazArchData =
+                      Provider.of<Sales>(context, listen: false);
+                  final sprzedaz = sprzedazArchData.items;
+                  // print('ilość nowych wpisów w tabeli info');
+                  // print(info.length);
+                  iloscDoWyslania = sprzedaz.length;
+                  
+                  if (sprzedaz.length > 0) {
+                    String jsonData = '{"sprzedaz":[';
+                    int i = 0;
+                    while (sprzedaz.length > i) {
+                      jsonData += '{"id": "${sprzedaz[i].id}",';
+                      jsonData += '"data": "${sprzedaz[i].data}",';
+                      jsonData += '"pasiekaNr": ${sprzedaz[i].pasiekaNr},';
+                      jsonData += '"nazwa": "${sprzedaz[i].nazwa}",';
+                      jsonData += '"kategoriaId": ${sprzedaz[i].kategoriaId},';
+                      jsonData += '"ilosc": ${sprzedaz[i].ilosc},';
+                      jsonData += '"miara": ${sprzedaz[i].miara},';
+                      jsonData += '"cena": ${sprzedaz[i].cena},';
+                      jsonData += '"wartosc": ${sprzedaz[i].wartosc},';
+                      jsonData += '"waluta": ${sprzedaz[i].waluta},';
+                      jsonData += '"uwagi": "${sprzedaz[i].uwagi}",';
+                      jsonData += '"arch": ${sprzedaz[i].arch}}';
+                      i++;
+                      if (sprzedaz.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${sprzedaz.length}, "tabela":"sprzedaz_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupSprzedaz(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+
+              //BACKUP tabeli zbiory - wszstkie
+                Provider.of<Harvests>(context, listen: false)
+                    .fetchAndSetZbiory()
+                    .then((_) {
+                  final zbioryArchData =
+                      Provider.of<Harvests>(context, listen: false);
+                  final zbiory = zbioryArchData.items;
+                  // print('ilość nowych wpisów w tabeli info');
+                  // print(info.length);
+                  iloscDoWyslania = zbiory.length;
+                                   
+                  if (zbiory.length > 0) {
+                    String jsonData = '{"zbiory":[';
+                    int i = 0;
+                    while (zbiory.length > i) {
+                      jsonData += '{"id": "${zbiory[i].id}",';
+                      jsonData += '"data": "${zbiory[i].data}",';
+                      jsonData += '"pasiekaNr": ${zbiory[i].pasiekaNr},';
+                      jsonData += '"zasobId": ${zbiory[i].zasobId},';
+                      jsonData += '"ilosc": "${zbiory[i].ilosc}",';
+                      jsonData += '"miara": "${zbiory[i].miara}",';
+                      jsonData += '"uwagi": "${zbiory[i].uwagi}",';
+                      jsonData += '"g": "${zbiory[i].g}",';
+                      jsonData += '"h": "${zbiory[i].h}",';
+                      jsonData += '"arch": ${zbiory[i].arch}}';
+                      i++;
+                      if (zbiory.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${zbiory.length}, "tabela":"zbiory_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupZbiory(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+
+              //BACKUP tabeli info - wszystkie wpisy
+                Provider.of<Infos>(context, listen: false)
+                    .fetchAndSetInfos()
+                    .then((_) {
+                  final infoAllData = Provider.of<Infos>(context, listen: false);
+                  final info = infoAllData.items;
+                  //print('ilość wszystkich wpisów w tabeli info');
+                  print(info.length);
+                  iloscDoWyslania += info.length;
+                  
+                  if (info.length > 0) {
+                    String jsonData = '{"info":[';
+                    int i = 0;
+                    while (info.length > i) {
+                      jsonData += '{"id": "${info[i].id}",';
+                      jsonData += '"data": "${info[i].data}",';
+                      jsonData += '"pasiekaNr": ${info[i].pasiekaNr},';
+                      jsonData += '"ulNr": ${info[i].ulNr},';
+                      jsonData += '"kategoria": "${info[i].kategoria}",';
+                      jsonData += '"parametr": "${info[i].parametr}",';
+                      jsonData += '"wartosc": "${info[i].wartosc}",';
+                      jsonData += '"miara": "${info[i].miara}",';
+                      jsonData += '"miara": "${info[i].miara}",';
+                      jsonData += '"pogoda": "${info[i].pogoda}",';
+                      jsonData += '"temp": "${info[i].temp}",';
+                      jsonData += '"czas": "${info[i].czas}",';
+                      jsonData += '"arch": ${info[i].arch}}';
+                      i++;
+                      if (info.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupInfo(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+
+              //BACKUP tabeli ramka - wszystkie wpisy
+                Provider.of<Frames>(context, listen: false)
+                    .fetchAndSetFrames()
+                    .then((_) {
+                  final framesAllData =
+                      Provider.of<Frames>(context, listen: false);
+                  final ramki = framesAllData.items;
+                  // print('ilość wszystkich wpisów w tabeli ramka');
+                  // print(ramki.length);
+
+                  //informacja o ilości rekordów do wysłania
+                  iloscDoWyslania += ramki.length;
+                  
+                  if (iloscDoWyslania > 0)
+                    _showAlertOK(
+                        context,
+                        AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.dataToSend +
+                            ' = $iloscDoWyslania');
+                  else
+                    _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.noDataToSend);
+
+                  if (ramki.length > 0) {
+                    String jsonData = '{"ramka":[';
+                    int i = 0;
+                    while (ramki.length > i) {
+                      jsonData += '{"id": "${ramki[i].id}",';
+                      jsonData += '"data": "${ramki[i].data}",';
+                      jsonData += '"pasiekaNr": ${ramki[i].pasiekaNr},';
+                      jsonData += '"ulNr": ${ramki[i].ulNr},';
+                      jsonData += '"korpusNr": ${ramki[i].korpusNr},';
+                      jsonData += '"typ": ${ramki[i].typ},';
+                      jsonData += '"ramkaNr": ${ramki[i].ramkaNr},';
+                      jsonData += '"ramkaNrPo": ${ramki[i].ramkaNrPo},';
+                      jsonData += '"rozmiar": ${ramki[i].rozmiar},';
+                      jsonData += '"strona": ${ramki[i].strona},';
+                      jsonData += '"zasob": ${ramki[i].zasob},';
+                      jsonData += '"wartosc": "${ramki[i].wartosc}",';
+                      jsonData += '"arch": ${ramki[i].arch}}';
+                      i++;
+                      if (ramki.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          print('$inter - jest internet');
+                          wyslijBackupRamka(jsonData); //jsonData
+                        } else {
+                          print('braaaaaak internetu');
+                          // _showAlertAnuluj(
+                          //     context,
+                          //     AppLocalizations.of(context)!.alert,
+                          //     AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli ramki do archiwizacji
+                }); //od pobrania ramek
+
+               //Navigator.of(context).pop();
+              
+            
+            },
+            child: Text(AppLocalizations.of(context)!.eXport),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
     );
   }
 
@@ -889,7 +1756,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 // print('ilość nowych wpisów w tabeli notatki');
                 // print(info.length);
                 iloscDoWyslania = notatki.length;
-
+                
                 if (notatki.length > 0) {
                   String jsonData = '{"notatki":[';
                   int i = 0;
@@ -941,7 +1808,16 @@ class _ImportScreenState extends State<ImportScreen> {
                 final zakupy = zakupyArchData.items;
                 // print('ilość nowych wpisów w tabeli zakupy');
                 // print(info.length);
-                iloscDoWyslania = zakupy.length;
+                // iloscDoWyslania = zakupy.length;
+                // if (iloscDoWyslania > 0)
+                //   _showAlertOK(
+                //       context,
+                //       AppLocalizations.of(context)!.alert,
+                //       AppLocalizations.of(context)!.dataToSend +
+                //           ' = $iloscDoWyslania');
+                // else
+                //   _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                //       AppLocalizations.of(context)!.noDataToSend);
 
                 if (zakupy.length > 0) {
                   String jsonData = '{"zakupy":[';
@@ -997,6 +1873,15 @@ class _ImportScreenState extends State<ImportScreen> {
                 // print('ilość nowych wpisów w tabeli info');
                 // print(info.length);
                 iloscDoWyslania = sprzedaz.length;
+                // if (iloscDoWyslania > 0)
+                //   _showAlertOK(
+                //       context,
+                //       AppLocalizations.of(context)!.alert,
+                //       AppLocalizations.of(context)!.dataToSend +
+                //           ' = $iloscDoWyslania');
+                // else
+                //   _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                //       AppLocalizations.of(context)!.noDataToSend);
 
                 if (sprzedaz.length > 0) {
                   String jsonData = '{"sprzedaz":[';
@@ -1104,6 +1989,15 @@ class _ImportScreenState extends State<ImportScreen> {
                 // print('ilość nowych wpisów w tabeli info');
                 // print(info.length);
                 iloscDoWyslania = info.length;
+                // if (iloscDoWyslania > 0)
+                //   _showAlertOK(
+                //       context,
+                //       AppLocalizations.of(context)!.alert,
+                //       AppLocalizations.of(context)!.dataToSend +
+                //           ' = $iloscDoWyslania');
+                // else
+                //   _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                //       AppLocalizations.of(context)!.noDataToSend);
 
                 if (info.length > 0) {
                   String jsonData = '{"info":[';
@@ -1324,19 +2218,20 @@ class _ImportScreenState extends State<ImportScreen> {
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
         Provider.of<Frames>(context, listen: false)
-            .fetchAndSetFramesToArch()
+            .fetchAndSetFramesToArch() //pobranie z bazy lokalnej ramki z arch=0 zeby zmianic na arch=1
             .then((_) {
           //dla tabeli RAMKI
           final framesAllData = Provider.of<Frames>(context, listen: false);
           final ramki = framesAllData.items;
-          //print('ilość potrzebnych wpisów arch = 1 w tabeli ramka');
-          //print(ramki.length);
+          print('ilość potrzebnych wpisów arch = 1 w tabeli ramka');
+          print(ramki.length);
           int i = 0;
           while (ramki.length > i) {
             DBHelper.updateRamkaArch(ramki[i].id); //zapis arch = 1
             i++;
+            print('po wysłaniu $i');
           }
-
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           //komunikat na dole ekranu
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1378,14 +2273,15 @@ class _ImportScreenState extends State<ImportScreen> {
           //dla tabeli INFO
           final infoArchData = Provider.of<Infos>(context, listen: false);
           final info = infoArchData.items;
-          //print('ilość potrzebnych wpisów arch = 1 w tabeli info');
-          //print(info.length);
+          print('ilość potrzebnych wpisów arch = 1 w tabeli info');
+          print(info.length);
           int i = 0;
           while (info.length > i) {
             DBHelper.updateInfoArch(info[i].id); //zapis arch = 1
             i++;
+            print(i);
           }
-
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.infoDataSend),
@@ -1433,7 +2329,7 @@ class _ImportScreenState extends State<ImportScreen> {
             DBHelper.updateZbioryArch(zbiory[i].id); //zapis arch = 1
             i++;
           }
-
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.harvestDataSend),
@@ -1481,7 +2377,7 @@ class _ImportScreenState extends State<ImportScreen> {
             DBHelper.updateSprzedazArch(sprzedaz[i].id); //zapis arch = 1
             i++;
           }
-
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.saleDataSend),
@@ -1529,7 +2425,7 @@ class _ImportScreenState extends State<ImportScreen> {
             DBHelper.updateZakupyArch(zakupy[i].id); //zapis arch = 1
             i++;
           }
-
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.purchaseDataSend),
@@ -1556,16 +2452,17 @@ class _ImportScreenState extends State<ImportScreen> {
       },
       body: jsonData1, //tabela info w postaci jsona
     );
-    print("response.body:");
+    print("notatki - response.body:");
     print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (odpPost['success'] == 'ok') { //jezeli wysyłka się powiodła
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
-        //zapis do bazy lokalnej
-        Provider.of<Notes>(context, listen: false)
-            .fetchAndSetNotatkiToArch()
+        
+        //zapis do bazy lokalnej informacji ze zarchiwizowano nowe notatki
+        Provider.of<Notes>(context, listen: false) //DBHelper - pobieranie z tabeli notatki do achiwizacji notatek z arch=0
+            .fetchAndSetNotatkiToArch() //wczytanie wszystkich nowych zbiorów --> NotatkiToArch <---
             .then((_) {
           //dla tabeli NOTATKI
           final notatkiArchData = Provider.of<Notes>(context, listen: false);
@@ -1577,7 +2474,7 @@ class _ImportScreenState extends State<ImportScreen> {
             DBHelper.updateNotatkiArch(notatki[i].id); //zapis arch = 1
             i++;
           }
-
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.noteDataSend),
@@ -1709,24 +2606,6 @@ class _ImportScreenState extends State<ImportScreen> {
               ),
             ),
 
-//eksport wszystkich danych teraz
-            GestureDetector(
-              onTap: () {
-                _showAlertExportAll(
-                    context,
-                    (AppLocalizations.of(context)!.alert),
-                    (AppLocalizations.of(context)!.exportAllData));
-                //Navigator.of(context).pushNamed(SettingsScreen.routeName);
-              },
-              child: Card(
-                child: ListTile(
-                  //leading: Icon(Icons.settings),
-                  title: Text(AppLocalizations.of(context)!.exportAllToCloud),
-                  //subtitle: Text(AppLocalizations.of(context)!.onlyNew),
-                ),
-              ),
-            ),
-
 //eksport danych automatycznie przy uruchamianiu aplikacji
             Card(
               child: ListTile(
@@ -1746,6 +2625,241 @@ class _ImportScreenState extends State<ImportScreen> {
                 ),
               ),
             ),
+                
+                // setState(() {
+                //   wyborDanych ? wyborDanych = false : wyborDanych = true;
+                //   //print(isSwitched);
+                // });
+
+//eksport wybranych danych Notatki
+            GestureDetector(
+              onTap: () {               
+                _showAlertExportAllNotatki(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.nOtes + '. ' + AppLocalizations.of(context)!.exportDataToCloud)); 
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.nOtes),
+                  subtitle: Text(AppLocalizations.of(context)!.eXportNote),
+                ),
+              ),
+            ),
+
+//eksport wybranych danych Zbiory
+            GestureDetector(
+              onTap: () {               
+                _showAlertExportAllZbiory(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.hArvests + '. ' + AppLocalizations.of(context)!.exportDataToCloud)); 
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.hArvests),//(AppLocalizations.of(context)!.exportAllToCloud),
+                  subtitle: Text(AppLocalizations.of(context)!.eXportHarvest),
+                ),
+              ),
+            ),          
+
+//eksport wybranych danych Zakupy
+            GestureDetector(
+              onTap: () {               
+                _showAlertExportAllZakupy(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.pUrchase + '. ' + AppLocalizations.of(context)!.exportDataToCloud)); 
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.pUrchase),//(AppLocalizations.of(context)!.exportAllToCloud),
+                  subtitle: Text(AppLocalizations.of(context)!.eXportPurchase),
+                ),
+              ),
+            ), 
+
+//eksport wybranych danych Sprzedaz
+            GestureDetector(
+              onTap: () {               
+                _showAlertExportAllSprzedaz(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.sAle + '. ' + AppLocalizations.of(context)!.exportDataToCloud)); 
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.sAle),//(AppLocalizations.of(context)!.exportAllToCloud),
+                  subtitle: Text(AppLocalizations.of(context)!.eXportSale),
+                ),
+              ),
+            ),  
+
+//eksport wybranych danych Ramki
+            GestureDetector(
+              onTap: () {               
+                _showAlertExportAllRamki(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.fRames + '. ' + AppLocalizations.of(context)!.exportDataToCloud)); 
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.fRames),//(AppLocalizations.of(context)!.exportAllToCloud),
+                  subtitle: Text(AppLocalizations.of(context)!.eXportFrame),
+                ),
+              ),
+            ),  
+
+//eksport wybranych danych Info
+            GestureDetector(
+              onTap: () {               
+                _showAlertExportAllInfo(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.iNfos + '. ' + AppLocalizations.of(context)!.exportDataToCloud)); 
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.iNfos),//(AppLocalizations.of(context)!.exportAllToCloud),
+                  subtitle: Text(AppLocalizations.of(context)!.eXportInfo),
+                ),
+              ),
+            ),
+
+
+          
+      /*    
+          if(wyborDanych)
+            Card(
+              child: ListTile(
+                title: Text('     Notatki'),
+                trailing: Switch.adaptive(
+                    value: archNotatki,
+                    onChanged: (value) {
+                      setState(() {
+                        archNotatki = value;
+                        print(archNotatki);
+                      });
+                    },
+                )  
+              ),
+            ),
+          if(wyborDanych)
+            Card(
+              child: ListTile(
+                title: Text('     Zbiory'),
+                trailing: Switch.adaptive(
+                    value: archZbiory,
+                    onChanged: (value) {
+                      setState(() {
+                        archZbiory = value;
+                        print(archZbiory);
+                      });
+                    },
+                )  
+              ),
+            ),
+          if(wyborDanych)
+            Card(
+              child: ListTile(
+                title: Text('     Zakupy'),
+                trailing: Switch.adaptive(
+                    value: archZakupy,
+                    onChanged: (value) {
+                      setState(() {
+                        archZakupy = value;
+                        print(archZakupy);
+                      });
+                    },
+                )  
+              ),
+            ),
+          if(wyborDanych)
+            Card(
+              child: ListTile(
+                title: Text('     Sprzedaz'),
+                trailing: Switch.adaptive(
+                    value: archSprzedaz,
+                    onChanged: (value) {
+                      setState(() {
+                        archSprzedaz = value;
+                        print(archSprzedaz);
+                      });
+                    },
+                )  
+              ),
+            ),
+            if(wyborDanych)
+            Card(
+              child: ListTile(
+                title: Text('     Przeglądy ramek'),
+                trailing: Switch.adaptive(
+                    value: archRamki,
+                    onChanged: (value) {
+                      setState(() {
+                        archRamki = value;
+                        print(archRamki);
+                      });
+                    },
+                )  
+              ),
+            ),
+            if(wyborDanych)
+            Card(
+              child: ListTile(
+                title: Text('     Pozostałe informacje'),
+                trailing: Switch.adaptive(
+                    value: archInfo,
+                    onChanged: (value) {
+                      setState(() {
+                        archInfo = value;
+                        print(archInfo);
+                      });
+                    },
+                )  
+              ),
+            ),
+            if(wyborDanych)
+            Card(
+              child: ListTile(
+                title: Text('     Tylko z biezącego roku'),
+                trailing: Switch.adaptive(
+                    value: archOstatniRok,
+                    onChanged: (value) {
+                      setState(() {
+                        archOstatniRok = value;
+                        print(archOstatniRok);
+                      });
+                    },
+                )  
+              ),
+            ),
+ */
+ //eksport wybranych danych teraz         
+            GestureDetector(
+              onTap: () {
+                _showAlertExportAll(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.exportAllData));
+                //Navigator.of(context).pushNamed(SettingsScreen.routeName);
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.exportAllToCloud),//wszystkich wybranych
+                  //subtitle: Text(AppLocalizations.of(context)!.onlyNew),
+                ),
+              ),
+            ),        
+
 
 //usunięcie wszystkich danych o przeglądach i info
             GestureDetector(

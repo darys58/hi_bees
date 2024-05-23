@@ -467,7 +467,7 @@ class DBHelper {
     return db.rawQuery('SELECT * FROM zbiory ORDER BY data DESC');
   }
 
-  //odczyt z tabeli notatki - dla note_screen
+  //odczyt/pobranie wszystkich danych z tabeli notatki - dla note_screen
   static Future<List<Map<String, dynamic>>> getNotatki() async {
     final db = await DBHelper.database();
     print('DBHelper - pobieranie notatek');
