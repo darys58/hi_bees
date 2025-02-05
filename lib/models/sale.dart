@@ -48,9 +48,9 @@ class Sales with ChangeNotifier {
       print(json.decode(response.body));
 
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      if (extractedData == null) {
-        return;
-      }
+      // if (extractedData == null) {
+      //   return;
+      // }
       
       extractedData.forEach((sprzedazId, sprzedazData) {
         if (sprzedazId != 'brak') {//jezeli są wpisy a tabeli sprzedaz_xxxx

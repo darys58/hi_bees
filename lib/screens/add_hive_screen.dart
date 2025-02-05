@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:hi_bees/globals.dart';
+//import 'package:hi_bees/globals.dart';
 import 'package:hi_bees/models/infos.dart';
 import 'package:provider/provider.dart';
 //import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 //import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
-import '../helpers/db_helper.dart';
+//import '../helpers/db_helper.dart';
  import '../models/apiarys.dart';
 // import '../models/frame.dart';
  import '../models/hives.dart';
@@ -90,6 +90,15 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
+      backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+      fixedSize: Size(150.0, 35.0),
+      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
+    );
+
     return Scaffold(
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
@@ -111,34 +120,86 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-  //data
-                              TextField(
-                                  controller:
-                                      dateController, //editing controller of this TextField
-                                  decoration:  InputDecoration(
-                                      icon: Icon(Icons
-                                          .calendar_today), //icon of text field
-                                      labelText: AppLocalizations.of(context)!.noteDate
+  //data 
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [     
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                
+                                      Text(AppLocalizations.of(context)!.noteDate),
+                                      OutlinedButton(
+                                        style: dataButtonStyle,
+                                        onPressed: () async {
+                                          DateTime? pickedDate =
+                                            await showDatePicker(
+                                              context: context,
+                                              initialDate: DateTime.parse(dateController.text),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime(2101),
+                                              builder:(context , child){
+                                                return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
+                                                  colorScheme: ColorScheme.light(
+                                                    primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
+                                                    onPrimary: Colors.white, // titles and 
+                                                    onSurface: Colors.black, // Month days , years 
+                                                  ),
+                                                  textButtonTheme: TextButtonThemeData(
+                                                    style: TextButton.styleFrom(
+                                                      foregroundColor: Colors.black, // ok , cancel    buttons
+                                                    ),
+                                                  ),
+                                                ),  child: child!   );  // pass child to this child
+                                              }
+                                            );
+                                          if (pickedDate != null) {
+                                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                                            setState(() {
+                                              dateController.text = formattedDate;
+                                              print(dateController.text );
+                                             // globals.dataWpisu = formattedDate;
+                                            });
+                                          } else {print("Date is not selected");}
+                                        },
+  
+                                         child: Text(dateController.text ,
+                                          style: const TextStyle(
+                                            color: Color.fromARGB(255, 0, 0, 0),
+                                            fontSize: 15),),   
                                       ),
-                                  readOnly:
-                                      true, // when true user cannot edit text
-                                  onTap: () async {
-                                    DateTime? pickedDate = await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.parse(dateController.text),
-                                      firstDate: DateTime(2000), 
-                                      lastDate: DateTime(2101));
-                                    if (pickedDate != null) {
-                                      String formattedDate =
-                                          DateFormat('yyyy-MM-dd').format( pickedDate); 
+                                  ]),  
+                                ]),
+  
+  //data
+                              // TextField(
+                              //     controller:
+                              //         dateController, //editing controller of this TextField
+                              //     decoration:  InputDecoration(
+                              //         icon: Icon(Icons
+                              //             .calendar_today), //icon of text field
+                              //         labelText: AppLocalizations.of(context)!.noteDate
+                              //         ),
+                              //     readOnly:
+                              //         true, // when true user cannot edit text
+                              //     onTap: () async {
+                              //       DateTime? pickedDate = await showDatePicker(
+                              //         context: context,
+                              //         initialDate: DateTime.parse(dateController.text),
+                              //         firstDate: DateTime(2000), 
+                              //         lastDate: DateTime(2101));
+                              //       if (pickedDate != null) {
+                              //         String formattedDate =
+                              //             DateFormat('yyyy-MM-dd').format( pickedDate); 
 
-                                      setState(() {
-                                        dateController.text = formattedDate; 
-                                      });
-                                    } else {
-                                      print("Date is not selected");
-                                    }
-                                  }),                           
+                              //         setState(() {
+                              //           dateController.text = formattedDate; 
+                              //         });
+                              //       } else {
+                              //         print("Date is not selected");
+                              //       }
+                              //     }),                           
 
 // // pasieka
 //                               Row(
@@ -367,6 +428,7 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                           children: <Widget>[
                             //zmień
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {

@@ -56,7 +56,7 @@ class Hives with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich!!!!!!! danych o ulach --> Hives <---');
+    //print('wczytanie wszystkich!!!!!!! danych o ulach z wszystkich pasiek --> Hives <---');
     //print(_items);
     notifyListeners();
   }
@@ -106,7 +106,7 @@ class Hives with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich!!!!!!! danych o ulach z pasieki nr --> Hives <---');
+    //print('wczytanie wszystkich!!!!!!! danych o ulach z pasieki nr $nrPasieki --> Hives <---');
     //print(_items);
     notifyListeners();
   }

@@ -21,7 +21,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
   //final _formKey2 = GlobalKey<FormState>();
   //var now = new DateTime.now();
   //var formatterY = new DateFormat('yyyy-MM-dd');
-
+  bool _isInit = true;
   String nowyRok = '0';
   String nowyMiesiac = '0';
   String nowyDzien = '0';
@@ -40,60 +40,62 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
   TextEditingController dateController = TextEditingController();
 
   @override
+  
   void didChangeDependencies() {
-    if (globals.jezyk == 'pl_PL')
-      nowaWaluta = 1;
-    else if (globals.jezyk == 'en_US')
-      nowaWaluta = 2;
-    else
-      nowaWaluta = 3;
+    if (_isInit) {
+      if (globals.jezyk == 'pl_PL')
+        nowaWaluta = 1;
+      else if (globals.jezyk == 'en_US')
+        nowaWaluta = 2;
+      else
+        nowaWaluta = 3;
 
-    final routeArgs =
-        ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
-    final idZakupy = routeArgs['idZakupy'];
-    final temp =
-        routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
+      final routeArgs =
+          ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
+      final idZakupy = routeArgs['idZakupy'];
+      //final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
-    print('idZakupy= $idZakupy');
+      print('idZakupy= $idZakupy');
 
-    if (idZakupy != null) {
-      edycja = true;
-      //jezeli edycja istniejącego wpisu
-      final zakupyData = Provider.of<Purchases>(context, listen: false);
-      zakupy = zakupyData.items.where((element) {
-        //to wczytanie danych zakupyu
-        return element.id.toString().contains('$idZakupy');
-      }).toList();
-      dateController.text = zakupy[0].data;
-      nowyRok = zakupy[0].data.substring(0, 4);
-      nowyMiesiac = zakupy[0].data.substring(5, 7);
-      nowyDzien = zakupy[0].data.substring(8);
-      nowyNrPasieki = zakupy[0].pasiekaNr;
-      nowaNazwa = zakupy[0].nazwa;
-      nowaKategoriaId = zakupy[0].kategoriaId;
-      nowyIlosc = zakupy[0].ilosc.toInt();
-      nowaCena = zakupy[0].cena;
-      nowaWartosc = zakupy[0].wartosc;
-      nowyMiara = zakupy[0].miara;
-      nowaWaluta = zakupy[0].waluta;
-      nowyUwagi = zakupy[0].uwagi;
-      tytulEkranu = AppLocalizations.of(context)!.editingPurchase;
-    } else {
-      edycja = false;
-      //jezeli dodanie nowego zakupyu
-      dateController.text = DateTime.now().toString().substring(0, 10);
-      nowyRok = DateFormat('yyyy').format(DateTime.now());
-      nowyMiesiac = DateFormat('MM').format(DateTime.now());
-      nowyDzien = DateFormat('dd').format(DateTime.now());
-      nowyNrPasieki = 1;
-      nowaKategoriaId = 1;
-      nowyIlosc = 0;
-      nowaCena = 0;
-      nowyMiara = 1;
-      nowyUwagi = '';
-      tytulEkranu = AppLocalizations.of(context)!.addPurchase;
-    }
-
+      if (idZakupy != null) {
+        edycja = true;
+        //jezeli edycja istniejącego wpisu
+        final zakupyData = Provider.of<Purchases>(context, listen: false);
+        zakupy = zakupyData.items.where((element) {
+          //to wczytanie danych zakupyu
+          return element.id.toString().contains('$idZakupy');
+        }).toList();
+        dateController.text = zakupy[0].data;
+        nowyRok = zakupy[0].data.substring(0, 4);
+        nowyMiesiac = zakupy[0].data.substring(5, 7);
+        nowyDzien = zakupy[0].data.substring(8);
+        nowyNrPasieki = zakupy[0].pasiekaNr;
+        nowaNazwa = zakupy[0].nazwa;
+        nowaKategoriaId = zakupy[0].kategoriaId;
+        nowyIlosc = zakupy[0].ilosc.toInt();
+        nowaCena = zakupy[0].cena;
+        nowaWartosc = zakupy[0].wartosc;
+        nowyMiara = zakupy[0].miara;
+        nowaWaluta = zakupy[0].waluta;
+        nowyUwagi = zakupy[0].uwagi;
+        tytulEkranu = AppLocalizations.of(context)!.editingPurchase;
+      } else {
+        edycja = false;
+        //jezeli dodanie nowego zakupyu
+        dateController.text = DateTime.now().toString().substring(0, 10);
+        nowyRok = DateFormat('yyyy').format(DateTime.now());
+        nowyMiesiac = DateFormat('MM').format(DateTime.now());
+        nowyDzien = DateFormat('dd').format(DateTime.now());
+        nowyNrPasieki = 1;
+        nowaKategoriaId = 1;
+        nowyIlosc = 0;
+        nowaCena = 0;
+        nowyMiara = 1;
+        nowyUwagi = '';
+        tytulEkranu = AppLocalizations.of(context)!.addPurchase;
+      }
+    } //od if (_isInit) {
+    _isInit = false;
     super.didChangeDependencies();
   }
 
@@ -104,7 +106,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
       backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(126.0, 35.0),
+      fixedSize: Size(150.0, 35.0),
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
 
@@ -138,7 +140,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(AppLocalizations.of(context)!.noteDate),
+                                      Text(AppLocalizations.of(context)!.purchaseData),
                                       OutlinedButton(
                                         style: dataButtonStyle,
                                         onPressed: () async {
@@ -452,7 +454,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: <Widget>[
                                     SizedBox(
-                                      width: 73,
+                                      width: 75,
                                       child: Text(
                                         AppLocalizations.of(context)!.cAtegory +
                                             ':',
@@ -752,6 +754,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                           children: <Widget>[
                             //zmień
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {

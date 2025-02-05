@@ -6,7 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 // import '../models/apiarys.dart';
 // import '../models/info.dart';
 import '../helpers/db_helper.dart';
-import '../screens/note_edit_screen.dart';
+// import '../screens/note_edit_screen.dart';
 import '../globals.dart' as globals;
 //import '../models/frames.dart';
 import '../models/note.dart';
@@ -136,6 +136,9 @@ class _NotePriorytetItemState extends State<NotePriorytetItem> {
         );
       },
       child: Card(
+         shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
         color: Colors.yellow,
         margin: const EdgeInsets.symmetric(
           horizontal: 15,
@@ -144,6 +147,7 @@ class _NotePriorytetItemState extends State<NotePriorytetItem> {
         child: Padding(
             padding: const EdgeInsets.all(1),
             child: ListTile(
+              tileColor: notatki.priorytet == 'true'  ? Colors.yellow : null,
               // onTap: () {
               //   //_showAlert(context, 'Edycja', '${frame.id}');
               //   // globals.dataInspekcji = frame.data;

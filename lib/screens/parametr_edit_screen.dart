@@ -190,6 +190,7 @@ class _ParametrEditScreenState extends State<ParametrEditScreen> {
                           children: <Widget>[
                             //zmień
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {

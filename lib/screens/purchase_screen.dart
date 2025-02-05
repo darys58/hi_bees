@@ -5,7 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/purchase.dart';
 import '../widgets/purchase_item.dart';
 import '../screens/purchase_edit_screen.dart';
-import '../globals.dart' as globals;
+//import '../globals.dart' as globals;
 
 class PurchaseScreen extends StatefulWidget {
   const PurchaseScreen({super.key});

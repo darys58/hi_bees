@@ -6,14 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../helpers/db_helper.dart';
 import 'package:flutter/services.dart';
-// import '../models/apiarys.dart';
-// import '../models/frame.dart';
-// import '../models/hives.dart';
-// import '../models/infos.dart';
-// import '../screens/activation_screen.dart';
-// import '../models/frames.dart';
-// import '../models/hive.dart';
-// import 'frames_detail_screen.dart';
+
 import '../models/harvest.dart';
 
 class HarvestEditScreen extends StatefulWidget {
@@ -28,7 +21,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
   //final _formKey2 = GlobalKey<FormState>();
   //var now = new DateTime.now();
   //var formatterY = new DateFormat('yyyy-MM-dd');
-
+  bool _isInit = true;
   String nowyRok = '0';
   String nowyMiesiac = '0';
   String nowyDzien = '0';
@@ -44,13 +37,15 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
 
   @override
   void didChangeDependencies() {
+  if (_isInit) {
+   // print('wlazł do didChangeDependencies');
+    //print('na początek didChangeDependencies: nowyZasobId  = ${dateController.text}');
     final routeArgs =
-        ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
+       ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
     final idZbioru = routeArgs['idZbioru'];
-    final temp =
-        routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
+    //final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
-    print('idZbioru= $idZbioru');
+   //print('idZbioru= $idZbioru');
 
     if (idZbioru != null) {
       edycja = true;
@@ -58,7 +53,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
       final zbiorData = Provider.of<Harvests>(context, listen: false);
       zbior = zbiorData.items.where((element) {
         //to wczytanie danych zbioru
-        return element.id.toString().contains('$idZbioru');
+        return element.id.toString() == '$idZbioru';
       }).toList();
       dateController.text = zbior[0].data;
       nowyRok = zbior[0].data.substring(0, 4);
@@ -83,8 +78,11 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
       nowyMiara = 1;
       nowyUwagi = '';
       tytulEkranu = AppLocalizations.of(context)!.addHarvest;
-    }
-
+   }
+   //print('zbior = ${zbior[0].data}');
+  } //od if (_isInit
+    _isInit = false;
+//print('na koniec didChangeDependencies: nowyZasobId  = ${dateController.text}');
     super.didChangeDependencies();
   }
 
@@ -95,7 +93,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
       backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(126.0, 35.0),
+      fixedSize: Size(150.0, 35.0),
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
 
@@ -129,7 +127,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(AppLocalizations.of(context)!.noteDate),
+                                      Text(AppLocalizations.of(context)!.harvestDate),
                                       OutlinedButton(
                                         style: dataButtonStyle,
                                         onPressed: () async {
@@ -313,7 +311,8 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                   minLines: 1,
                                   maxLines: 5,
                                   initialValue: nowyNrPasieki.toString(),
-                                  keyboardType: TextInputType.text,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                   decoration: InputDecoration(
                                     enabledBorder: OutlineInputBorder(
                                         borderSide:
@@ -568,6 +567,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                           children: <Widget>[
                             //zmień
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
@@ -589,8 +589,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                           '',
                                           0)
                                         .then((_) {
-                                      print(
-                                          '$nowyNrPasieki, $nowyZasobId, $nowyIlosc, $nowyMiara, $nowyUwagi');
+                                      //print( '$nowyNrPasieki, $nowyZasobId, $nowyIlosc, $nowyMiara, $nowyUwagi');
                                        
                                       Provider.of<Harvests>(context,
                                               listen: false)

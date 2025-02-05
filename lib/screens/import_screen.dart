@@ -7,7 +7,7 @@ import 'package:hi_bees/helpers/db_helper.dart';
 // import 'orders_screen.dart';
 // import 'specials_screen.dart';
 // import 'settings_screen.dart';
-import 'package:wakelock/wakelock.dart'; //blokowanie ekranu
+import 'package:wakelock_plus/wakelock_plus.dart'; //blokowanie ekranu
 import 'package:intl/intl.dart';
 import '../globals.dart' as globals;
 import 'package:http/http.dart' as http;
@@ -89,7 +89,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
   //dialog z ładowaniem importu i eksportu
   showLoaderDialog (BuildContext context, String text) async {
-    Wakelock.enable(); //blokada wyłaczania ekranu
+    WakelockPlus.enable(); //blokada wyłaczania ekranu
     AlertDialog alert = AlertDialog(
       content: new Row(
         children: [
@@ -124,39 +124,39 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
-  void _showAlert(BuildContext context, String nazwa, String text) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(nazwa),
-        content: Column(
-          //zeby tekst był wyśrodkowany w poziomie
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(text),
+  // void _showAlert(BuildContext context, String nazwa, String text) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text(nazwa),
+  //       content: Column(
+  //         //zeby tekst był wyśrodkowany w poziomie
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: <Widget>[
+  //           Text(text),
 
-            //progress bar
-            // Container(
-            //     alignment: Alignment.topCenter,
-            //     margin: EdgeInsets.all(20),
-            //     child: LinearProgressIndicator(
-            //       value: 0.7,
-            //       valueColor:
-            //           new AlwaysStoppedAnimation<Color>(Colors.deepOrange),
-            //       backgroundColor: Colors.grey,
-            //     )),
+  //           //progress bar
+  //           // Container(
+  //           //     alignment: Alignment.topCenter,
+  //           //     margin: EdgeInsets.all(20),
+  //           //     child: LinearProgressIndicator(
+  //           //       value: 0.7,
+  //           //       valueColor:
+  //           //           new AlwaysStoppedAnimation<Color>(Colors.deepOrange),
+  //           //       backgroundColor: Colors.grey,
+  //           //     )),
 
-            //Text(komunikat),
-          ],
-        ),
-        elevation: 24.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
-        ),
-      ),
-      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
-    );
-  }
+  //           //Text(komunikat),
+  //         ],
+  //       ),
+  //       elevation: 24.0,
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(15.0),
+  //       ),
+  //     ),
+  //     barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
+  //   );
+  // }
 
   void _showAlertOK(BuildContext context, String nazwa, String text) {
     showDialog(
@@ -173,7 +173,7 @@ class _ImportScreenState extends State<ImportScreen> {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              Wakelock.disable(); //usunięcie blokowania wygaszania ekranu
+              WakelockPlus.disable(); //usunięcie blokowania wygaszania ekranu
               Navigator.of(context).pop();
               Navigator.of(context).pop();
               Navigator.of(context).pop();
@@ -244,7 +244,7 @@ class _ImportScreenState extends State<ImportScreen> {
             onPressed: () {
               //czy jest internet
               _isInternet().then((inter) {
-                if (inter != null && inter) {
+                if (inter) {
                   //print('jest internet');
 
                   // Navigator.of(context).pop();
@@ -261,7 +261,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import notatek
                   Notes.fetchNotatkiFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=notatki_${globals.kod.substring(0, 4)}')
+                          'https://hibees.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_notatki')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import notatek';
@@ -272,7 +272,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import zakupów
                   Purchases.fetchZakupyFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=zakupy_${globals.kod.substring(0, 4)}')
+                          'https://hibees.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zakupy')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import zakupów';
@@ -283,7 +283,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import sprzedazy
                   Sales.fetchSprzedazFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=sprzedaz_${globals.kod.substring(0, 4)}')
+                          'https://hibees.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_sprzedaz')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import sprzedazy';
@@ -294,7 +294,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import zbiorów
                   Harvests.fetchZbioryFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=zbiory_${globals.kod.substring(0, 4)}')
+                          'https://hibees.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zbiory')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import zbiorów';
@@ -305,7 +305,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import ramek
                   Frames.fetchFramesFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=ramka_${globals.kod.substring(0, 4)}')
+                          'https://hibees.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_ramka')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import zawartości ramek';
@@ -362,7 +362,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                       //import info
                       Infos.fetchInfosFromSerwer(
-                              'https://hibees.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=info_${globals.kod.substring(0, 4)}')
+                              'https://hibees.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_info')
                           .then((_) {
                         // setState(() {
                         //   komunikat = 'Import informacji o ulu';
@@ -423,8 +423,8 @@ class _ImportScreenState extends State<ImportScreen> {
                       Provider.of<Hives>(context, listen: false)
                           .fetchAndSetHivesAll()
                           .then((_) {
-                        print(
-                            '-------------> wszystkie ule z wszystkich pasiek - wpis 0 uli');
+                        //print(
+                         //   '-------------> wszystkie ule z wszystkich pasiek - wpis 0 uli');
                         final hivesData =
                             Provider.of<Hives>(context, listen: false);
                         final hives = hivesData.items;
@@ -442,6 +442,7 @@ class _ImportScreenState extends State<ImportScreen> {
                           );
                           i++;
                         }
+                        globals.odswiezBelkiUli = true;
                         //pobranie danych o pasiekach (jeszcze jest zła ilość uli w pasiece)
                         Provider.of<Apiarys>(context, listen: false)
                             .fetchAndSetApiarys()
@@ -457,7 +458,7 @@ class _ImportScreenState extends State<ImportScreen> {
                                   Text(AppLocalizations.of(context)!.importEnd),
                             ),
                           );
-                          print('koniec importu');
+                          //print('koniec importu');
                         });
                       }); //pobranie uli z lokalnej i wpis do pasieki
                     }); //pobranie ramek z loklnej i wpis do uli
@@ -493,18 +494,25 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.mobile) {
-      print("Connected to Mobile Network");
+  Future<bool> _isInternet() async { 
+    final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult.contains(ConnectivityResult.mobile)) {
+      // Mobile network available.
       return true;
-    } else if (connectivityResult == ConnectivityResult.wifi) {
-      print("Connected to WiFi");
+    } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+      // Wi-fi is available.
+      // Note for Android: When both mobile and Wi-Fi are turned on system will return Wi-Fi only as active network type
       return true;
-    } else {
-      print("Unable to connect. Please Check Internet Connection");
+    } else if (connectivityResult.contains(ConnectivityResult.bluetooth)) {
+      // Bluetooth connection available.
+      return true;
+    } else if (connectivityResult.contains(ConnectivityResult.other)) {
+      // Connected to a network which is not in the above mentioned networks.
       return false;
-    }
+    } else if (connectivityResult.contains(ConnectivityResult.none)) {
+      // No available network types
+      return false;
+    }else return false;
   }
 
   //eksport wszystkich danych Notatki
@@ -570,9 +578,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (notatki.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${notatki.length}, "tabela":"notatki_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                        '],"total":${notatki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_notatki"}'; //pierwsze cztery cyfry kodu XXXX_zakupy
 
-                    print(jsonData); //json przygotowany poprawnie
+                    //print(jsonData); //json przygotowany poprawnie
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -678,9 +686,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (zakupy.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${zakupy.length}, "tabela":"zakupy_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                        '],"total":${zakupy.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zakupy"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -785,9 +793,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (sprzedaz.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${sprzedaz.length}, "tabela":"sprzedaz_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${sprzedaz.length}, "tabela":"${mem[0].kod.substring(0, 4)}_sprzedaz"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -891,9 +899,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (zbiory.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${zbiory.length}, "tabela":"zbiory_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${zbiory.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zbiory"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -969,7 +977,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     return inf.data.startsWith(biezacyRok); //z datą zaczynajacą się od wybranego roku
                   }).toList();
                   //print('ilość wszystkich z biezącego roku wpisów w tabeli info');
-                  print(info.length);
+                  //print(info.length);
                   iloscDoWyslania = info.length;
                   
                     if (iloscDoWyslania > 0)
@@ -1003,9 +1011,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (info.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1049,7 +1057,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   final infoAllData = Provider.of<Infos>(context, listen: false);
                   final info = infoAllData.items;
                   //print('ilość wszystkich wpisów w tabeli info');
-                  print(info.length);
+                  //print(info.length);
                   iloscDoWyslania = info.length;
                   
                     if (iloscDoWyslania > 0)
@@ -1080,7 +1088,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       jsonData += '"czas": "${info[i].czas}",';
                       jsonData += '"arch": ${info[i].arch}}';
                       i++;
-                      print(i);
+                      //print(i);
                       
                       // setState(() {
                       //   count = i.toDouble();
@@ -1090,9 +1098,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (info.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1167,7 +1175,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     return ra.data.startsWith(biezacyRok); //z datą zaczynajacą się od wybranego roku
                   }).toList();
                   // print('ilość wszystkich wpisów z biezącego roku w tabeli ramka');
-                  print(ramki.length);
+                  //print(ramki.length);
 
                   //informacja o ilości rekordów do wysłania
                   iloscDoWyslania = ramki.length;
@@ -1201,12 +1209,12 @@ class _ImportScreenState extends State<ImportScreen> {
                       jsonData += '"wartosc": "${ramki[i].wartosc}",';
                       jsonData += '"arch": ${ramki[i].arch}}';
                       i++;
-                      print(i);
+                      //print(i);
                       if (ramki.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
-                    print('utworzono jsonData');        
+                        '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                    //print('utworzono jsonData');        
                     //print(jsonData);
                     _isInternet().then(
                       (inter) {
@@ -1255,7 +1263,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       Provider.of<Frames>(context, listen: false);
                   final ramki = framesAllData.items;
                   // print('ilość wszystkich wpisów w tabeli ramka');
-                  print(ramki.length);
+                  //(ramki.length);
 
                   //informacja o ilości rekordów do wysłania
                   iloscDoWyslania = ramki.length;
@@ -1291,9 +1299,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (ramki.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1392,9 +1400,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (notatki.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${notatki.length}, "tabela":"notatki_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                        '],"total":${notatki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_notatki"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
-                    print(jsonData); //json przygotowany poprawnie
+                    //print(jsonData); //json przygotowany poprawnie
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1448,9 +1456,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (zakupy.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${zakupy.length}, "tabela":"zakupy_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                        '],"total":${zakupy.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zakupy"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1503,9 +1511,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (sprzedaz.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${sprzedaz.length}, "tabela":"sprzedaz_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${sprzedaz.length}, "tabela":"${mem[0].kod.substring(0, 4)}_sprzedaz"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1556,9 +1564,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (zbiory.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${zbiory.length}, "tabela":"zbiory_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${zbiory.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zbiory"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1587,7 +1595,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   final infoAllData = Provider.of<Infos>(context, listen: false);
                   final info = infoAllData.items;
                   //print('ilość wszystkich wpisów w tabeli info');
-                  print(info.length);
+                  //print(info.length);
                   iloscDoWyslania += info.length;
                   
                   if (info.length > 0) {
@@ -1611,9 +1619,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (info.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1678,9 +1686,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (ramki.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                    print(jsonData);
+                    //print(jsonData);
                     _isInternet().then(
                       (inter) {
                         if (inter) {
@@ -1775,9 +1783,9 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (notatki.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${notatki.length}, "tabela":"notatki_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                      '],"total":${notatki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_notatki"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
-                  print(jsonData);
+                  //print(jsonData);
                   _isInternet().then(
                     (inter) {
                       if (inter) {
@@ -1839,9 +1847,9 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (zakupy.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${zakupy.length}, "tabela":"zakupy_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                      '],"total":${zakupy.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zakupy"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
-                  print(jsonData);
+                  //print(jsonData);
                   _isInternet().then(
                     (inter) {
                       if (inter) {
@@ -1903,9 +1911,9 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (sprzedaz.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${sprzedaz.length}, "tabela":"sprzedaz_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${sprzedaz.length}, "tabela":"${mem[0].kod.substring(0, 4)}_sprzedaz"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                  print(jsonData);
+                  //print(jsonData);
                   _isInternet().then(
                     (inter) {
                       if (inter) {
@@ -1956,9 +1964,9 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (zbiory.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${zbiory.length}, "tabela":"zbiory_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${zbiory.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zbiory"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                  print(jsonData);
+                  //print(jsonData);
                   _isInternet().then(
                     (inter) {
                       if (inter) {
@@ -2020,9 +2028,9 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (info.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                  print(jsonData);
+                  //print(jsonData);
                   _isInternet().then(
                     (inter) {
                       if (inter) {
@@ -2087,9 +2095,9 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (ramki.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
-                  print(jsonData);
+                  //print(jsonData);
                   _isInternet().then(
                     (inter) {
                       if (inter) {
@@ -2203,14 +2211,14 @@ class _ImportScreenState extends State<ImportScreen> {
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonData1, //tabela ramka w postaci jsona
     );
-    print("response.body:");
-    print(response.body);
+    //print("response.body:");
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'ok') {
@@ -2223,13 +2231,13 @@ class _ImportScreenState extends State<ImportScreen> {
           //dla tabeli RAMKI
           final framesAllData = Provider.of<Frames>(context, listen: false);
           final ramki = framesAllData.items;
-          print('ilość potrzebnych wpisów arch = 1 w tabeli ramka');
-          print(ramki.length);
+          //print('ilość potrzebnych wpisów arch = 1 w tabeli ramka');
+          //print(ramki.length);
           int i = 0;
           while (ramki.length > i) {
             DBHelper.updateRamkaArch(ramki[i].id); //zapis arch = 1
             i++;
-            print('po wysłaniu $i');
+            //print('po wysłaniu $i');
           }
 //Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           //komunikat na dole ekranu
@@ -2253,14 +2261,14 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupInfo(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonData1, //tabela info w postaci jsona
     );
-    print("response.body:");
-    print(response.body);
+    //print("response.body:");
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'ok') {
@@ -2273,13 +2281,13 @@ class _ImportScreenState extends State<ImportScreen> {
           //dla tabeli INFO
           final infoArchData = Provider.of<Infos>(context, listen: false);
           final info = infoArchData.items;
-          print('ilość potrzebnych wpisów arch = 1 w tabeli info');
-          print(info.length);
+          //print('ilość potrzebnych wpisów arch = 1 w tabeli info');
+          //print(info.length);
           int i = 0;
           while (info.length > i) {
             DBHelper.updateInfoArch(info[i].id); //zapis arch = 1
             i++;
-            print(i);
+            //print(i);
           }
 //Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           ScaffoldMessenger.of(context).showSnackBar(
@@ -2302,14 +2310,14 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupZbiory(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonData1, //tabela info w postaci jsona
     );
-    print("response.body:");
-    print(response.body);
+    //print("response.body:");
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'ok') {
@@ -2350,14 +2358,14 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupSprzedaz(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonData1, //tabela info w postaci jsona
     );
-    print("response.body:");
-    print(response.body);
+    //print("response.body:");
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'ok') {
@@ -2398,14 +2406,14 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupZakupy(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonData1, //tabela info w postaci jsona
     );
-    print("response.body:");
-    print(response.body);
+    //print("response.body:");
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'ok') {
@@ -2446,14 +2454,14 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupNotatki(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonData1, //tabela info w postaci jsona
     );
-    print("notatki - response.body:");
-    print(response.body);
+    //print("notatki - response.body:");
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'ok') { //jezeli wysyłka się powiodła
@@ -2619,7 +2627,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     DBHelper.updateDodatki1('a', '$value');
                     setState(() {
                       isSwitched = value;
-                      print(isSwitched);
+                      //print(isSwitched);
                     });
                   },
                 ),
@@ -2874,7 +2882,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 child: ListTile(
                   //leading: Icon(Icons.settings),
                   title: Text(AppLocalizations.of(context)!.deleteAllData),
-                  //subtitle: Text(AppLocalizations.of(context)!.aboutHiveApiary),
+                  subtitle: Text(AppLocalizations.of(context)!.onlyInLocalDatabase),
                 ),
               ),
             ),

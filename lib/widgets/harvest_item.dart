@@ -144,6 +144,9 @@ class _HarvestItemState extends State<HarvestItem> {
         );
       },
       child: Card(
+         shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
         margin: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 4,

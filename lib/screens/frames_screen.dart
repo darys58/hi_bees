@@ -5,7 +5,7 @@ import 'package:hi_bees/models/hive.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 //import 'package:rhino_flutter/rhino.dart';
 //import 'package:picovoice_flutter/picovoice_manager.dart';
@@ -50,8 +50,8 @@ class _FramesScreenState extends State<FramesScreen> {
   List<Frame> _daty = []; //unikalne daty
   String wybranaData = '';
   List<Frame> _korpusy = []; //unikalne korpusy
-  int przedpo = 1; //wyświetlanie ramek przed (1) albo po (2) przeglądzie
-  List<bool> _selectedPrzedPo = <bool>[true, false];
+  int przedpo = 2; //wyświetlanie ramek przed (1) albo po (2) przeglądzie
+  List<bool> _selectedPrzedPo = <bool>[false, true];
 
   bool readyApiary = false; //ustalony numer pasieki
   bool readyHive = false; //ustalony numer ula
@@ -78,6 +78,7 @@ class _FramesScreenState extends State<FramesScreen> {
   int nrXXFrame = 0;
   int nrXXFrameTemp = 0;
   String siteOfFrame = 'both'; //whole, cała
+  
   //store
   int honey = 0;
   int honeySeald = 0;
@@ -97,7 +98,7 @@ class _FramesScreenState extends State<FramesScreen> {
   @override
   void initState() {
     super.initState();
-    Wakelock.enable(); //blokada wyłaczania ekranu
+    WakelockPlus.enable(); //blokada wyłaczania ekranu
   }
 
   @override
@@ -158,7 +159,7 @@ class _FramesScreenState extends State<FramesScreen> {
   //pobranie listy ramek z unikalnymi datami dla wybranego ula i pasieki z bazy lokalnej
   Future<List<Frame>> getDaty(pasieka, ul) async {
     final dataList = await DBHelper.getDate(pasieka, ul); //numer wybranego ula
-    print('getDaty: pasieka $pasieka ul $ul');
+    //print('getDaty: pasieka $pasieka ul $ul');
     _daty = dataList
         .map(
           (item) => Frame(
@@ -305,6 +306,8 @@ class _FramesScreenState extends State<FramesScreen> {
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.selectEntryType),
         content: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           //zeby tekst był wyśrodkowany w poziomie
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -325,6 +328,15 @@ class _FramesScreenState extends State<FramesScreen> {
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
                 );
             }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18))
+            ),
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameEditScreen2.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+                );
+            }, child: Text((AppLocalizations.of(context)!.resourceOnFramePlus),style: TextStyle(fontSize: 18))
             ),  
             
             TextButton(onPressed: (){
@@ -435,7 +447,7 @@ class _FramesScreenState extends State<FramesScreen> {
             icon: const Icon(Icons.arrow_back_ios,
                 color: Color.fromARGB(255, 0, 0, 0)),
             onPressed: () => {
-                  Wakelock.disable(), //usunięcie blokowania wygaszania ekranu
+                  WakelockPlus.disable(), //usunięcie blokowania wygaszania ekranu
                   Navigator.of(context).pop(),
                 }),
         actions: <Widget>[
@@ -466,6 +478,7 @@ class _FramesScreenState extends State<FramesScreen> {
               child: Column(
                 children: <Widget>[
                   Container(
+                    color:Colors.white,
                     padding: const EdgeInsets.only(top: 50),
                     child: Text(
                       AppLocalizations.of(context)!.noInspectionYet,
@@ -500,18 +513,20 @@ class _FramesScreenState extends State<FramesScreen> {
                                 onTap: () {
                                   dt1 = DateTime.parse(wybranaData);
                                   dt2 = DateTime.parse(_daty[index].data);
-                                  setState(() {
-                                    //ustawianie widoku przd lub po w zaleznosci od tego czy wybrana data jest wczesniejsza czy późniejsza od poprzednio wybranej
-                                    if(dt1.compareTo(dt2) < 0){
-                                      _selectedPrzedPo = [true,false]; 
-                                      przedpo = 1; //print("DT1 jest przed DT2");
-                                    }else{_selectedPrzedPo = [false,true]; 
-                                      przedpo=2; //print("DT1 jest po DT2");
-                                    }
-
-                                    wybranaData = _daty[index].data; //dla filtrowania po dacie
-                                    getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
-                                        .then((_) {});
+                                  
+                                  getKorpusy(globals.pasiekaID, globals.ulID, _daty[index].data)
+                                        .then((_) {
+                                    setState(() {
+                                      //ustawianie widoku przd lub po w zaleznosci od tego czy wybrana data jest wczesniejsza czy późniejsza od poprzednio wybranej
+                                      if(dt1.compareTo(dt2) < 0){
+                                        _selectedPrzedPo = [true,false]; 
+                                        przedpo = 1; //print("DT1 jest przed DT2");
+                                      }else{_selectedPrzedPo = [false,true]; 
+                                        przedpo=2; //print("DT1 jest po DT2");
+                                      }
+                                      
+                                      wybranaData = _daty[index].data; //dla filtrowania po dacie
+                                    });
                                   });
                                 },
                                 child: wybranaData == _daty[index].data
@@ -793,7 +808,7 @@ class MyHive extends CustomPainter {
       fontSize: 15,
     );
 
-    //text
+    //text numery ramek
     final textStyle1 = TextStyle(
       color: Color.fromARGB(255, 170, 170, 170),
       fontSize: 12,

@@ -61,7 +61,7 @@ class ApiarysItem extends StatelessWidget {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Color.fromARGB(255, 115, 115, 115).withOpacity(0.5),
+              color: Color.fromARGB(255, 115, 115, 115).withValues(alpha:0.5),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(1, 3), // changes position of shadow
@@ -69,7 +69,7 @@ class ApiarysItem extends StatelessWidget {
           ],
           gradient: LinearGradient(
             colors: [
-              colory[kolor - 1].withOpacity(0.7),
+              colory[kolor - 1].withValues(alpha:0.7),
               colory[kolor - 1],
             ],
             begin: Alignment.topLeft,
@@ -97,7 +97,7 @@ class ApiarysItem extends StatelessWidget {
                         Text(
                           AppLocalizations.of(context)!.aPiary +
                               " ${apiary.id}",
-                          style: Theme.of(context).textTheme.headline6,
+                          style: Theme.of(context).textTheme.titleLarge,
 
 //nazwa pasieki
 

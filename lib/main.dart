@@ -10,10 +10,10 @@ import 'package:intl/date_symbol_data_local.dart'; //do formatowania daty - dzie
 import './screens/frames_screen.dart';
 import './screens/hives_screen.dart';
 import './screens/apiarys_screen.dart';
-import './screens/voice_screen.dart';
+import './screens/voice_screen.dart'; //blokowanie działania Picovoce  - usunięto: picovoice_flutter: ^3.0.1
 import './screens/infos_screen.dart';
 import './screens/frames_detail_screen.dart';
-import './screens/subscription_screen.dart';
+//import './screens/subscription_screen.dart';
 import './screens/settings_screen.dart';
 import './screens/import_screen.dart';
 import './screens/about_screen.dart';
@@ -33,6 +33,8 @@ import './screens/note_screen.dart';
 import './screens/note_edit_screen.dart';
 import './screens/add_hive_screen.dart';
 import './screens/apiary_weather_5days.dart';
+import './screens/raport_screen.dart';
+import './screens/raport2_screen.dart';
 //import './screens/languages_screen.dart';
 
 import './models/apiarys.dart';
@@ -155,29 +157,34 @@ class _MyAppState extends State<MyApp> {
           //definiowanie danych decydujących o wyglądzie (kolory, style, czcionki)
           //appBarTheme: AppBarTheme(color: Color.fromRGBO(55, 125, 255, 1),),
           scaffoldBackgroundColor: const Color(0xFFFFFFFF),
+          dialogBackgroundColor: const Color(0xFFFFFFFF),
+          listTileTheme: ListTileThemeData(
+            tileColor: Color.fromARGB(255, 255, 255, 255), // Ustawienie koloru tła dla elementów listy
+          ),
           primaryColor: Color.fromARGB(255, 255, 183, 75), //kolor podstawowy
-          primaryColorLight: const Color.fromRGBO(255, 118, 122, 1),
-          primaryColorDark:
-              const Color.fromRGBO(160, 0, 38, 1), //kolor wyrózniający
-          canvasColor: const Color.fromRGBO(
-              255, 255, 255, 1), //kolor płótna 255, 254, 229, 1
-          fontFamily: 'Raleway', //domyślna czcionka
-          textTheme: ThemeData.light().textTheme.copyWith(
-                //domyślny motyw tektu
-                headline1: const TextStyle(
-                  color: Color.fromRGBO(20, 51, 51, 1),
-                ),
-                headline2: const TextStyle(
-                  color: Color.fromRGBO(20, 51, 51, 1),
-                ),
-                headline6: const TextStyle(
-                  fontSize: 20,
-                  fontFamily: 'RobotoCondensed',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          colorScheme: ColorScheme.fromSwatch().copyWith(
-              secondary: Color.fromRGBO(0, 0, 0, 1)), //po nowemu akcentColor
+          //primaryColorLight: const Color.fromRGBO(255, 118, 122, 1),
+          //primaryColorDark: const Color.fromRGBO(160, 0, 38, 1), //kolor wyrózniający
+          canvasColor: Color.fromARGB(255, 255, 255, 255), //kolor płótna 255, 254, 229, 1
+          //fontFamily: 'Raleway', //domyślna czcionka
+          // textTheme: ThemeData.light().textTheme.copyWith(
+          //       //domyślny motyw tektu
+          //       headline1: const TextStyle(
+          //         color: Color.fromRGBO(20, 51, 51, 1),
+          //       ),
+          //       headline2: const TextStyle(
+          //         color: Color.fromRGBO(20, 51, 51, 1),
+          //       ),
+          //       headline6: const TextStyle(
+          //         fontSize: 20,
+          //         fontFamily: 'RobotoCondensed',
+          //         fontWeight: FontWeight.bold,
+          //       ),
+          //     ),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.orange
+          ), //po nowemu akcentColor
+          // colorScheme: ColorScheme.fromSwatch().copyWith(
+          //     secondary: Color.fromRGBO(0, 0, 0, 1)), //po nowemu akcentColor
         ),
 
         //home: CategoriesScreen(), //MyHomePage(), //ekran startowy apki
@@ -189,9 +196,9 @@ class _MyAppState extends State<MyApp> {
           '/': (ctx) => ApiarysScreen(), //zastępuje home: (kurs 162)
           FramesScreen.routeName: (ctx) => FramesScreen(),
           HivesScreen.routeName: (ctx) => HivesScreen(),
-          VoiceScreen.routeName: (ctx) => VoiceScreen(),
+          VoiceScreen.routeName: (ctx) => VoiceScreen(), //blokowanie działania Picovoce
           InfoScreen.routeName: (ctx) => InfoScreen(),
-          SubsScreen.routeName: (ctx) => SubsScreen(),
+          // SubsScreen.routeName: (ctx) => SubsScreen(), //blokowanie subskrypcji bo błedy kompilacji androida
           FramesDetailScreen.routeName: (ctx) => FramesDetailScreen(),
           SettingsScreen.routeName: (ctx) => SettingsScreen(),
           ImportScreen.routeName: (ctx) => ImportScreen(),
@@ -213,6 +220,8 @@ class _MyAppState extends State<MyApp> {
           NoteEditScreen.routeName: (ctx) => NoteEditScreen(),
           AddHiveScreen.routeName: (ctx) => AddHiveScreen(),
           Weather5DaysScreen.routeName: (ctx) => Weather5DaysScreen(),
+          RaportScreen.routeName: (ctx) => RaportScreen(),
+          Raport2Screen.routeName: (ctx) => Raport2Screen(),
          // LanguagesScreen.routeName: (ctx) => LanguagesScreen(),
           //FiltersScreen.routeName: (ctx) => FiltersScreen(_filters, _setFilters),
         },

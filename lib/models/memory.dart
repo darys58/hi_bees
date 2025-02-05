@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert'; //obsługa json'a
+//import 'package:http/http.dart' as http;
+//import 'dart:convert'; //obsługa json'a
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
 
-import '../globals.dart' as globals;
+//import '../globals.dart' as globals;
 
 class MemoryItem with ChangeNotifier {
   final String id; //be_id: String

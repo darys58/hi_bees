@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
+//import 'package:provider/provider.dart';
+// import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 //import '../globals.dart' as globals;
 
 import '../screens/import_screen.dart';
 import '../screens/about_screen.dart';
 import '../screens/parametr_screen.dart';
-import '../screens/languages_screen.dart';
-import '../models/memory.dart';
+//import '../screens/languages_screen.dart';
+//import '../models/memory.dart';
 
 class SettingsScreen extends StatelessWidget {
   static const routeName = '/settings';
@@ -21,57 +21,57 @@ class SettingsScreen extends StatelessWidget {
   //   }
   // }
 
-  void _showAlertAnuluj(BuildContext context, String nazwa, String text) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(nazwa),
-        content: Column(
-          //zeby tekst był wyśrodkowany w poziomie
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(text),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-        ],
-        elevation: 24.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
-        ),
-      ),
-      barrierDismissible:
-          false, //zeby zaciemnione tło było zablokowane na kliknięcia
-    );
-  }
+  // void _showAlertAnuluj(BuildContext context, String nazwa, String text) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text(nazwa),
+  //       content: Column(
+  //         //zeby tekst był wyśrodkowany w poziomie
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: <Widget>[
+  //           Text(text),
+  //         ],
+  //       ),
+  //       actions: <Widget>[
+  //         TextButton(
+  //           onPressed: () {
+  //             Navigator.of(context).pop();
+  //           },
+  //           child: Text(AppLocalizations.of(context)!.cancel),
+  //         ),
+  //       ],
+  //       elevation: 24.0,
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(15.0),
+  //       ),
+  //     ),
+  //     barrierDismissible:
+  //         false, //zeby zaciemnione tło było zablokowane na kliknięcia
+  //   );
+  // }
 
   //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.mobile) {
-      print("Connected to Mobile Network");
-      return true;
-    } else if (connectivityResult == ConnectivityResult.wifi) {
-      print("Connected to WiFi");
-      return true;
-    } else {
-      print("Unable to connect. Please Check Internet Connection");
-      return false;
-    }
-  }
+  // Future<bool> _isInternet() async {
+  //   var connectivityResult = await (Connectivity().checkConnectivity());
+  //   if (connectivityResult == ConnectivityResult.mobile) {
+  //     print("Connected to Mobile Network");
+  //     return true;
+  //   } else if (connectivityResult == ConnectivityResult.wifi) {
+  //     print("Connected to WiFi");
+  //     return true;
+  //   } else {
+  //     print("Unable to connect. Please Check Internet Connection");
+  //     return false;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
    
     //uzyskanie dostępu do danych w pamięci
-    final memData = Provider.of<Memory>(context, listen: false);
-    final mem = memData.items;
+    // final memData = Provider.of<Memory>(context, listen: false);
+    // final mem = memData.items;
 
    
 

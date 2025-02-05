@@ -29,7 +29,7 @@ class _SaleEditScreenState extends State<SaleEditScreen> {
   //final _formKey2 = GlobalKey<FormState>();
   //var now = new DateTime.now();
   //var formatterY = new DateFormat('yyyy-MM-dd');
-
+  bool _isInit = true;
   String nowyRok = '0';
   String nowyMiesiac = '0';
   String nowyDzien = '0';
@@ -49,59 +49,60 @@ class _SaleEditScreenState extends State<SaleEditScreen> {
 
   @override
   void didChangeDependencies() {
-    if (globals.jezyk == 'pl_PL')
-      nowaWaluta = 1;
-    else if (globals.jezyk == 'en_US')
-      nowaWaluta = 2;
-    else
-      nowaWaluta = 3;
+    if (_isInit) {
+      if (globals.jezyk == 'pl_PL')
+        nowaWaluta = 1;
+      else if (globals.jezyk == 'en_US')
+        nowaWaluta = 2;
+      else
+        nowaWaluta = 3;
 
-    final routeArgs =
-        ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
-    final idSprzedazy = routeArgs['idSprzedazy'];
-    final temp =
-        routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
+      final routeArgs =
+          ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
+      final idSprzedazy = routeArgs['idSprzedazy'];
+      //final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
-    print('idSprzedazy= $idSprzedazy');
+      print('idSprzedazy= $idSprzedazy');
 
-    if (idSprzedazy != null) {
-      edycja = true;
-      //jezeli edycja istniejącego wpisu
-      final zbiorData = Provider.of<Sales>(context, listen: false);
-      zbior = zbiorData.items.where((element) {
-        //to wczytanie danych zbioru
-        return element.id.toString().contains('$idSprzedazy');
-      }).toList();
-      dateController.text = zbior[0].data;
-      nowyRok = zbior[0].data.substring(0, 4);
-      nowyMiesiac = zbior[0].data.substring(5, 7);
-      nowyDzien = zbior[0].data.substring(8);
-      nowyNrPasieki = zbior[0].pasiekaNr;
-      nowaNazwa = zbior[0].nazwa;
-      nowaKategoriaId = zbior[0].kategoriaId;
-      nowyIlosc = zbior[0].ilosc.toInt();
-      nowaCena = zbior[0].cena;
-      nowaWartosc = zbior[0].wartosc;
-      nowyMiara = zbior[0].miara;
-      nowaWaluta = zbior[0].waluta;
-      nowyUwagi = zbior[0].uwagi;
-      tytulEkranu = AppLocalizations.of(context)!.editingSale;
-    } else {
-      edycja = false;
-      //jezeli dodanie nowego zbioru
-      dateController.text = DateTime.now().toString().substring(0, 10);
-      nowyRok = DateFormat('yyyy').format(DateTime.now());
-      nowyMiesiac = DateFormat('MM').format(DateTime.now());
-      nowyDzien = DateFormat('dd').format(DateTime.now());
-      nowyNrPasieki = 1;
-      nowaKategoriaId = 1;
-      nowyIlosc = 0;
-      nowaCena = 0;
-      nowyMiara = 1;
-      nowyUwagi = '';
-      tytulEkranu = AppLocalizations.of(context)!.addSale;
-    }
-
+      if (idSprzedazy != null) {
+        edycja = true;
+        //jezeli edycja istniejącego wpisu
+        final zbiorData = Provider.of<Sales>(context, listen: false);
+        zbior = zbiorData.items.where((element) {
+          //to wczytanie danych zbioru
+          return element.id.toString().contains('$idSprzedazy');
+        }).toList();
+        dateController.text = zbior[0].data;
+        nowyRok = zbior[0].data.substring(0, 4);
+        nowyMiesiac = zbior[0].data.substring(5, 7);
+        nowyDzien = zbior[0].data.substring(8);
+        nowyNrPasieki = zbior[0].pasiekaNr;
+        nowaNazwa = zbior[0].nazwa;
+        nowaKategoriaId = zbior[0].kategoriaId;
+        nowyIlosc = zbior[0].ilosc.toInt();
+        nowaCena = zbior[0].cena;
+        nowaWartosc = zbior[0].wartosc;
+        nowyMiara = zbior[0].miara;
+        nowaWaluta = zbior[0].waluta;
+        nowyUwagi = zbior[0].uwagi;
+        tytulEkranu = AppLocalizations.of(context)!.editingSale;
+      } else {
+        edycja = false;
+        //jezeli dodanie nowego zbioru
+        dateController.text = DateTime.now().toString().substring(0, 10);
+        nowyRok = DateFormat('yyyy').format(DateTime.now());
+        nowyMiesiac = DateFormat('MM').format(DateTime.now());
+        nowyDzien = DateFormat('dd').format(DateTime.now());
+        nowyNrPasieki = 1;
+        nowaKategoriaId = 1;
+        nowyIlosc = 0;
+        nowaCena = 0;
+        nowyMiara = 1;
+        nowyUwagi = '';
+        tytulEkranu = AppLocalizations.of(context)!.addSale;
+      }
+    } //od if (_isInit) {
+    _isInit = false;
     super.didChangeDependencies();
   }
 
@@ -112,7 +113,7 @@ class _SaleEditScreenState extends State<SaleEditScreen> {
       backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(126.0, 35.0),
+      fixedSize: Size(150.0, 35.0),
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
 
@@ -146,7 +147,7 @@ class _SaleEditScreenState extends State<SaleEditScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(AppLocalizations.of(context)!.noteDate),
+                                      Text(AppLocalizations.of(context)!.saleDate),
                                       OutlinedButton(
                                         style: dataButtonStyle,
                                         onPressed: () async {
@@ -756,6 +757,7 @@ class _SaleEditScreenState extends State<SaleEditScreen> {
                           children: <Widget>[
                             //zmień
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {

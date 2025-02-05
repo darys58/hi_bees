@@ -189,6 +189,9 @@ class _SaleItemState extends State<SaleItem> {
         );
       },
       child: Card(
+         shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
         margin: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 4,

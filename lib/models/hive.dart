@@ -6,7 +6,7 @@ class Hive with ChangeNotifier {
   final int ulNr;
   final String przeglad; //ostatnia data przelądu
   final String
-      ikona; //1-zielona(ok), 2-zółta(przeznaczenie), 3-czerwona (brak matki ?)
+      ikona; //1-zielona(ok), 2-zółta(przeznaczenie ?), 3-czerwona (brak matki ?)
   final int ramek; // ilość ramek
   final int korpusNr;
   final int trut;

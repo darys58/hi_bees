@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+//import 'package:provider/provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
-import 'dart:io';
+//import 'dart:io';
 //import '../screens/import_screen.dart';
-import '../screens/subscription_screen.dart';
+//import '../screens/subscription_screen.dart';
 import '../screens/apiarys_screen.dart';
 import '../models/memory.dart';
 import '../helpers/db_helper.dart';
@@ -84,18 +84,25 @@ class _ActivationScreenState extends State<ActivationScreen> {
   }
 
   //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.mobile) {
-      print("Connected to Mobile Network");
+  Future<bool> _isInternet() async { 
+    final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult.contains(ConnectivityResult.mobile)) {
+      // Mobile network available.
       return true;
-    } else if (connectivityResult == ConnectivityResult.wifi) {
-      print("Connected to WiFi");
+    } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+      // Wi-fi is available.
+      // Note for Android: When both mobile and Wi-Fi are turned on system will return Wi-Fi only as active network type
       return true;
-    } else {
-      print("Unable to connect. Please Check Internet Connection");
+    } else if (connectivityResult.contains(ConnectivityResult.bluetooth)) {
+      // Bluetooth connection available.
+      return true;
+    } else if (connectivityResult.contains(ConnectivityResult.other)) {
+      // Connected to a network which is not in the above mentioned networks.
       return false;
-    }
+    } else if (connectivityResult.contains(ConnectivityResult.none)) {
+      // No available network types
+      return false;
+    }else return false;
   }
 
   void _showAlertOK(BuildContext context, String nazwa, String text) {
@@ -136,8 +143,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
   @override
   Widget build(BuildContext context) {
     //uzyskanie dostępu do danych w pamięci
-    final memData = Provider.of<Memory>(context, listen: false);
-    final mem = memData.items;
+    //final memData = Provider.of<Memory>(context, listen: false);
+    //final mem = memData.items;
 
     return Scaffold(
         appBar: AppBar(
@@ -189,6 +196,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
                 children: <Widget>[
                   //Aktywuj
                   MaterialButton(
+                    height: 50,
                     shape: const StadiumBorder(),
                     onPressed: () {
                       if (_formKey3.currentState!.validate()) {

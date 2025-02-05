@@ -85,7 +85,7 @@ class InfoItem extends StatelessWidget {
                         DBHelper.deleteInspection(
                                 info.data, globals.pasiekaID, globals.ulID)
                             .then((_) {
-                          print('1... kasowanie inspekcji');
+                          //print('1... kasowanie inspekcji');
 
                           //kasowanie belki jezeli zgadza się id i data
                           final hiveData =
@@ -143,14 +143,14 @@ class InfoItem extends StatelessWidget {
                               .fetchAndSetFramesForHive(
                                   globals.pasiekaID, globals.ulID)
                               .then((_) {
-                            print('2...wczytanie ramek z ula');
+                            //print('2...wczytanie ramek z ula');
                             final framesData =
                                 Provider.of<Frames>(context, listen: false);
                             final frames = framesData.items;
                             int ileRamek = frames.length;
-                            print('3... info_item - ilość ramek w ulu =');
+                            //print('3... info_item - ilość ramek w ulu =');
                             //print(hives.length);
-                            print(ileRamek);
+                            //print(ileRamek);
 
                             if (ileRamek == 0) {
                               //jezeli nie ma ramek to czy są info?
@@ -158,14 +158,14 @@ class InfoItem extends StatelessWidget {
                                   .fetchAndSetInfosForHive(
                                       globals.pasiekaID, globals.ulID)
                                   .then((_) {
-                                print('4...wczytanie info dla ula');
+                                //print('4...wczytanie info dla ula');
                                 final infosData =
                                     Provider.of<Infos>(context, listen: false);
                                 final infos = infosData.items;
                                 int ileInfo = infos.length;
-                                print('5... info_item - ilość info dla ula =');
+                                //print('5... info_item - ilość info dla ula =');
                                 //print(hives.length);
-                                print(ileInfo);
+                                //print(ileInfo);
                                 //jezeli nie ma info
                                 if (ileInfo ==
                                     0) //usuwanie ula bo wszystkie przeglady/ramki usunieto
@@ -175,27 +175,25 @@ class InfoItem extends StatelessWidget {
                                     Provider.of<Hives>(context, listen: false)
                                         .fetchAndSetHives(globals.pasiekaID)
                                         .then((_) {
-                                      print('6..wczytanie uli ');
+                                      //print('6..wczytanie uli ');
                                       final hivesData = Provider.of<Hives>(
                                           context,
                                           listen: false);
                                       final hives = hivesData.items;
                                       int ileUli = hives.length;
-                                      print('7... info_item - ilość uli =');
+                                     // print('7... info_item - ilość uli =');
                                       //print(hives.length);
-                                      print(ileRamek);
+                                      //print(ileRamek);
                                       if (ileUli > 0) {
                                         DBHelper.updateIleUli(
                                                 globals.pasiekaID, ileUli)
                                             .then((_) {
-                                          print(
-                                              '8...info_item: upgrade ilość uli w pasiece');
+                                          //print('8...info_item: upgrade ilość uli w pasiece');
                                           Provider.of<Apiarys>(context,
                                                   listen: false)
                                               .fetchAndSetApiarys()
                                               .then((_) {
-                                            print(
-                                                '9...info_item: aktualizacja Apiarys_items bo ileUli>0');
+                                            //print('9...info_item: aktualizacja Apiarys_items bo ileUli>0');
                                             Navigator.of(context).pop();
                                           });
                                         });
@@ -203,13 +201,12 @@ class InfoItem extends StatelessWidget {
                                         DBHelper.deletePasieki(
                                                 globals.pasiekaID)
                                             .then((_) {
-                                          print('10... usuwanie pasieki');
+                                          //print('10... usuwanie pasieki');
                                           Provider.of<Apiarys>(context,
                                                   listen: false)
                                               .fetchAndSetApiarys()
                                               .then((_) {
-                                            print(
-                                                '11...info_item: aktualizacja Apiarys_items bo ileUli=0');
+                                            //print('11...info_item: aktualizacja Apiarys_items bo ileUli=0');
                                             Navigator.of(context).pop();
                                           });
                                         });
@@ -221,7 +218,7 @@ class InfoItem extends StatelessWidget {
                           });
                           //kasowanie wpisu o inspekcji w bazie info
                           DBHelper.deleteInfo(info.id).then((_) {
-                            print('10...kasowanie info w bazie');
+                            //print('10...kasowanie info w bazie');
 
                             Provider.of<Infos>(context, listen: false)
                                 .fetchAndSetInfosForHive(
@@ -248,7 +245,7 @@ class InfoItem extends StatelessWidget {
                       {
                         //usuwanie info dla pozostałych kategorii - dla pasieki i ula
                         DBHelper.deleteInfo(info.id).then((_) {
-                          print('1.1... kasowanie info');
+                          //print('1.1... kasowanie info');
 
                           //kasowanie info w belce ula jezeli zgadza się id i data
                           final hiveData =
@@ -311,23 +308,23 @@ class InfoItem extends StatelessWidget {
                                 Provider.of<Infos>(context, listen: false);
                             final infos = infosData.items;
                             int ileInfo = infos.length;
-                            print('2.1... info_item - ilość info dla ula =');
+                            //print('2.1... info_item - ilość info dla ula =');
                             //print(hives.length);
-                            print(ileInfo);
+                            //print(ileInfo);
                             if (ileInfo == 0) {
                               //jezeli nie ma info to czy są ramki?
                               Provider.of<Frames>(context, listen: false)
                                   .fetchAndSetFramesForHive(
                                       globals.pasiekaID, globals.ulID)
                                   .then((_) {
-                                print('3.1...wczytanie ramek z ula');
+                                //print('3.1...wczytanie ramek z ula');
                                 final framesData =
                                     Provider.of<Frames>(context, listen: false);
                                 final frames = framesData.items;
                                 int ileRamek = frames.length;
-                                print('4.1... info_item - ilość ramek w ulu =');
+                                //print('4.1... info_item - ilość ramek w ulu =');
                                 //print(hives.length);
-                                print(ileRamek);
+                                //print(ileRamek);
                                 //jezeli nie ma ramek
                                 if (ileRamek ==
                                     0) //usuwanie ula bo wszystkie przeglady/ramki usunieto
@@ -337,27 +334,25 @@ class InfoItem extends StatelessWidget {
                                     Provider.of<Hives>(context, listen: false)
                                         .fetchAndSetHives(globals.pasiekaID)
                                         .then((_) {
-                                      print('5.1...wczytanie uli ');
+                                      //print('5.1...wczytanie uli ');
                                       final hivesData = Provider.of<Hives>(
                                           context,
                                           listen: false);
                                       final hives = hivesData.items;
                                       int ileUli = hives.length;
-                                      print('6.1... info_item - ilość uli =');
+                                      //print('6.1... info_item - ilość uli =');
                                       //print(hives.length);
-                                      print(ileRamek);
+                                      //print(ileRamek);
                                       if (ileUli > 0) {
                                         DBHelper.updateIleUli(
                                                 globals.pasiekaID, ileUli)
                                             .then((_) {
-                                          print(
-                                              '7.1...info_item: upgrade ilość uli w pasiece');
+                                          //print('7.1...info_item: upgrade ilość uli w pasiece');
                                           Provider.of<Apiarys>(context,
                                                   listen: false)
                                               .fetchAndSetApiarys()
                                               .then((_) {
-                                            print(
-                                                '8.1...info_item: aktualizacja Apiarys_items bo ileUli>0');
+                                            //print('8.1...info_item: aktualizacja Apiarys_items bo ileUli>0');
                                             Navigator.of(context).pop();
                                           });
                                         });
@@ -365,13 +360,12 @@ class InfoItem extends StatelessWidget {
                                         DBHelper.deletePasieki(
                                                 globals.pasiekaID)
                                             .then((_) {
-                                          print('9.1... usuwanie pasieki');
+                                          //print('9.1... usuwanie pasieki');
                                           Provider.of<Apiarys>(context,
                                                   listen: false)
                                               .fetchAndSetApiarys()
                                               .then((_) {
-                                            print(
-                                                '10.1...info_item: aktualizacja Apiarys_items bo ileUli=0');
+                                            //print( '10.1...info_item: aktualizacja Apiarys_items bo ileUli=0');
                                             Navigator.of(context).pop();
                                           });
                                         });
@@ -412,6 +406,9 @@ class InfoItem extends StatelessWidget {
         );
       },
       child: Card(
+         shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
         margin: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 4,
@@ -420,6 +417,8 @@ class InfoItem extends StatelessWidget {
             padding: const EdgeInsets.all(1),
             child: info.kategoria == 'inspection' //przeglądy
                 ? ListTile(
+                  //rokStatystyk = DateTime.now().toString().substring(0, 4)
+                  tileColor: info.data.substring(0, 4) == globals.rokStatystyk ? null : Colors.grey[200], 
                     onTap: () {
                       globals.dataInspekcji = info.data;
                       Navigator.of(context).pushNamed(
@@ -428,7 +427,7 @@ class InfoItem extends StatelessWidget {
                       );
                     },
                     leading: CircleAvatar(
-                      backgroundColor: Colors.white,
+                      backgroundColor: info.data.substring(0, 4) == globals.rokStatystyk ? Colors.white : Colors.grey[200],
                       child: Image.asset('assets/image/hi_bees.png'),
                     ),
                     title: globals.jezyk == 'pl_PL'
@@ -478,6 +477,7 @@ class InfoItem extends StatelessWidget {
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios))
                 : ListTile(
+                  tileColor: info.data.substring(0, 4) == globals.rokStatystyk ? null : Colors.grey[200],
                     onTap: () {
                       //_showAlert(context, 'Edycja', '${frame.id}');
                       // globals.dataInspekcji = frame.data;
@@ -487,7 +487,7 @@ class InfoItem extends StatelessWidget {
                       );
                     },
                     leading: CircleAvatar(
-                        backgroundColor: Colors.white,
+                        backgroundColor: info.data.substring(0, 4) == globals.rokStatystyk ? Colors.white : Colors.grey[200],
                         child: info.kategoria == 'feeding'
                             ? Image.asset('assets/image/invert.png')
                             : info.kategoria == 'treatment'

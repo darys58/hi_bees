@@ -162,6 +162,9 @@ class _PurchaseItemState extends State<PurchaseItem> {
         );
       },
       child: Card(
+         shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
         margin: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 4,

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:path/path.dart';
 import 'package:sqflite/sqlite_api.dart';
@@ -41,7 +41,7 @@ class DBHelper {
 
 //print('openDatabase !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     return sql.openDatabase(path, onCreate: (db, version) async {
-      print('DBHelper - tworzenie tabeli');
+      //print('DBHelper - tworzenie tabeli');
       await db.execute(
           'CREATE TABLE ramka(id TEXT PRIMARY KEY, data TEXT, pasiekaNr INTEGER, ulNr INTEGER, korpusNr INTEGER, typ INTEGER, ramkaNr INTEGER, ramkaNrPo INTEGER, rozmiar INTEGER, strona INTEGER, zasob INTEGER, wartosc TEXT, arch INTEGER)');
       // 'CREATE TABLE ramka(id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT, pasiekaId TEXT, ulId TEXT, korpusNr TEXT, polkorpusNr TEXT, ramkaNr TEXT, rozmiar TEXT, miodL TEXT, miodP TEXT, zasklepL TEXT, zasklepP TEXT, pierzgaL TEXT, pierzgaP TEXT, czerwL TEXT, czerwP TEXT, larwyL TEXT, larwyP TEXT, jajaL TEXT, jajaP TEXT, trutL TEXT, trutP TEXT, wezaL TEXT, wezaP TEXT, suszL TEXT, suszP TEXT, matecznikiL TEXT, matecznikiP TEXT, delMatL TEXT, delMatP TEXT, matkaL TEXT, matkaP TEXT, przeznaczenie TEXT, akcja TEXT)');
@@ -117,11 +117,32 @@ class DBHelper {
     db.update('ramka', {'arch': 1}, where: 'id = ?', whereArgs: [id]);
   }
 
-  //update tabeli ramki - ustawienie "ramkaNrPo" - dla frame_edit_screen
+  //update tabeli ramki - przeniesienie ramki do innego korpusa - dla voice_screen
+  static Future<void> moveRamkaToBody(String id, int ul, int korpus, int ramka) async {
+    final db = await DBHelper.database();
+    //print('db_helpers: przenieś ramka - id=$id, ulNr=$ul, korpusNr=$korpus, ramkaNr = $ramka');
+    db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 2, 'ramkaNr': 0, 'ramkaNrPo': ramka}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  //update tabeli ramki - przeniesienie ramki do innego półkorpusa - dla voice_screen
+  static Future<void> moveRamkaToHalfBody(String id, int ul, int korpus, int ramka) async {
+    final db = await DBHelper.database();
+    //print('db_helpers: przenieś ramka - id=$id, ulNr=$ul, korpusNr=$korpus, ramkaNr = $ramka');
+    db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 1, 'ramkaNr': 0, 'ramkaNrPo': ramka}, where: 'id = ?', whereArgs: [id]);
+  }
+  
+  //update tabeli ramki - ustawienie "ramkaNrPo" - dla frame_edit_screen i voice_screen
   static Future<void> updateRamkaNrPo(String id, int ramkaNrPo) async {
     final db = await DBHelper.database();
-    print('db_helpers: update ramkaNrPo - id=$id, ramkaNrPo = $ramkaNrPo');
+    //print('db_helpers: update ramkaNrPo - id=$id, ramkaNrPo = $ramkaNrPo');
     db.update('ramka', {'ramkaNrPo': ramkaNrPo}, where: 'id = ?', whereArgs: [id]);
+  }
+
+   //update tabeli ramki - ustawienie "ramkaNr" - dla frame_edit_screen? i voice_screen
+  static Future<void> updateRamkaNr(String id, int ramkaNr) async {
+    final db = await DBHelper.database();
+    //print('db_helpers: update ramkaNr - id=$id, ramkaNr = $ramkaNr');
+    db.update('ramka', {'ramkaNr': ramkaNr}, where: 'id = ?', whereArgs: [id]);
   }
 
   //update tabeli info - rekord zarchiwizowany - dla import_screen
@@ -169,7 +190,7 @@ class DBHelper {
   //update pasieki- ilość uli w pasiece - dla voice_screen
   static Future<void> updateIleUli(int pasieka, int ile) async {
     final db = await DBHelper.database();
-    print('db_helpers: update pasieki - ile uli w pasiece $pasieka ile=$ile');
+    //print('db_helpers: update pasieki - ile uli w pasiece $pasieka ile=$ile');
     db.update('pasieki', {'ileUli': ile},
         where: 'pasiekaNr = ?', whereArgs: [pasieka]);
   }
@@ -177,7 +198,7 @@ class DBHelper {
   //update pasieki- ikona pasieki - dla voice_screen
   static Future<void> updateIkonaPasieki(int pasieka, String ikona) async {
     final db = await DBHelper.database();
-    print('db_helpers: update pasieki - ikona pasieki $pasieka ikona=$ikona');
+    //print('db_helpers: update pasieki - ikona pasieki $pasieka ikona=$ikona');
     db.update('pasieki', {'ikona': ikona},
         where: 'pasiekaNr = ?', whereArgs: [pasieka]);
   }
@@ -200,9 +221,45 @@ class DBHelper {
   static Future<void> updateDodatki1(String pole, String wartosc) async {
     final db = await DBHelper.database();
     print('db_helpers: update dodatki1 - pole = $pole , wartość = $wartosc ');
-    db.update('dodatki1', {'$pole': wartosc},
-        where: 'id = ?', whereArgs: ['1']);
+    db.update('dodatki1', {'$pole': wartosc}, where: 'id = ?', whereArgs: ['1']);
   }
+
+  
+  //update ula w tabeli ule - info o matce1 - dla hives_screen
+  static Future<void> updateUleMatka1(String id, String wartosc) async {
+    final db = await DBHelper.database();
+    print('db_helpers: update ule - id=$id, matka1 = $wartosc');
+    db.update('ule', {'matka1': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
+  
+  //update ula w tabeli ule - info o matce2 - dla hives_screen
+  static Future<void> updateUleMatka2(String id, String wartosc) async {
+    final db = await DBHelper.database();
+    print('db_helpers: update ule - id=$id, matka2 = $wartosc');
+    db.update('ule', {'matka2': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
+  
+  //update ula w tabeli ule - info o matce3 - dla hives_screen
+  static Future<void> updateUleMatka3(String id, String wartosc) async {
+    final db = await DBHelper.database();
+    print('db_helpers: update ule - id=$id, matka3 = $wartosc');
+    db.update('ule', {'matka3': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  //update ula w tabeli ule - info o matce4 - dla hives_screen
+  static Future<void> updateUleMatka4(String id, String wartosc) async {
+    final db = await DBHelper.database();
+    print('db_helpers: update ule - id=$id, matka4 = $wartosc');
+    db.update('ule', {'matka4': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  //update ula w tabeli ule - info o matce5 - dla hives_screen
+  static Future<void> updateUleMatka5(String id, String wartosc) async {
+    final db = await DBHelper.database();
+    print('db_helpers: update ule - id=$id, matka5 = $wartosc');
+    db.update('ule', {'matka5': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
+  
 
   //update zakupy - dla purchase_edit_screen
   static Future<void> updateZakupy(
@@ -342,8 +399,7 @@ class DBHelper {
   static Future<void> updatePogoda(
       String id, String pobranie, double temp, String icon) async {
     final db = await DBHelper.database();
-    print(
-        'db_helpers: update pogoda - id = $id, pobrane = $pobranie, temp = $temp, icon = $icon');
+   // print( 'db_helpers: update pogoda - id = $id, pobrane = $pobranie, temp = $temp, icon = $icon');
     db.update('pogoda', {'pobranie': pobranie, 'temp': temp, 'icon': icon},
         where: 'id = ?', whereArgs: [id]);
   }
@@ -351,7 +407,7 @@ class DBHelper {
   //odczyt z tabeli ule - ule z wybranej pasieki - dla hives_screen
   static Future<List<Map<String, dynamic>>> getHives(nrPasieki) async {
     final db = await DBHelper.database();
-    print('DBHelper - pobieranie uli z pasieki $nrPasieki');
+    //print('DBHelper - pobieranie uli z pasieki $nrPasieki');
     return db.rawQuery(
         'SELECT * FROM ule WHERE  pasiekaNr = ? ORDER BY ulNr ASC',
         [nrPasieki]);
@@ -364,6 +420,24 @@ class DBHelper {
     return db.rawQuery(
         'SELECT DISTINCT data FROM ramka WHERE pasiekaNr=? and ulNr = ? ORDER BY data DESC',
         [pasieka, ul]);
+  }
+
+  //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki, kategorii, parametru - dla hives_screen
+  static Future<List<Map<String, dynamic>>> getDateInfo(int pasieka, int ul, String kategoria, String parametr) async {
+    final db = await DBHelper.database();
+    print('DBHelper - pobieranie dat info dla ula nr $ul');
+    return db.rawQuery(
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr = ? ORDER BY data DESC',
+        [pasieka, ul, kategoria, parametr]);
+  }
+
+  //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii feeding lub treatment - dla hives_screen
+  static Future<List<Map<String, dynamic>>> getDateInfoDL(int pasieka, int ul) async {
+    final db = await DBHelper.database();
+    print('DBHelper - pobieranie dat infoDL dla ula nr $ul');
+    return db.rawQuery(
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and (kategoria = ? or kategoria = ?) ORDER BY data DESC',
+        [pasieka, ul,'feeding','treatment']);
   }
 
   //pobieranie ramek dla danego ula i pasieki - dla frames
@@ -554,8 +628,7 @@ class DBHelper {
   //usuniecie rekordów z tabeli ramka dla danej daty, pasieki i ula - dla frame_detail_screen
   static Future<void> deleteInspection(String data, int pasieka, int ul) async {
     final db = await DBHelper.database();
-    print(
-        'DBhelper: delete ramki dla: data = $data, pasieka = $pasieka, ul = $ul');
+    print('DBhelper: delete ramki dla: data = $data, pasieka = $pasieka, ul = $ul');
     db.delete('ramka',
         where: 'data=? and pasiekaNr=? and ulNr =?',
         whereArgs: [data, pasieka, ul]);

@@ -34,7 +34,7 @@ class Weathers with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich!!!!!!! informacji o pogodzie--> pogoda <---');
+    //print('wczytanie wszystkich!!!!!!! informacji o pogodzie--> pogoda <---');
     //print(_items);
     notifyListeners();
   }

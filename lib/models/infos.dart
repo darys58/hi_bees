@@ -19,12 +19,12 @@ class Infos with ChangeNotifier {
     //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
-      print('response od info');
-      print(json.decode(response.body));
+      // print('response od info');
+      // print(json.decode(response.body));
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      if (extractedData == null) {
-        return;
-      }
+      // if (extractedData == null) {
+      //   return;
+      // }
       extractedData.forEach((infoId, infoData) {
         if (infoId != 'brak') {//jezeli są wpisy a tabeli info_xxxx
           //zapis info do bazy
@@ -73,7 +73,7 @@ class Infos with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich!!!!!!! informacji --> Infos <---');
+    //print('wczytanie wszystkich!!!!!!! informacji --> Infos <---');
     //print(_items);
     notifyListeners();
   }
@@ -101,12 +101,12 @@ class Infos with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich nowych informacji --> Infos <---');
+    //print('wczytanie wszystkich nowych informacji --> Infos <---');
     //print(_items);
     notifyListeners();
   }
 
-  //pobranie wpisów o info z bazy lokalnej
+  //pobranie wpisów o info dla jednego ula z bazy lokalnej
   Future<void> fetchAndSetInfosForHive(pasieka, ul) async {
     final dataList = await DBHelper.getInfosOfHive(pasieka, ul);
     _items = dataList
@@ -128,13 +128,13 @@ class Infos with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie info dla podanego ula i pasieki ---> Infos <---');
+    //print('wczytanie info dla podanego ula i pasieki ---> Infos <---');
     //print(_items);
     notifyListeners();
   }
 
 
-  //zapisanie ramki do bazy lokalnej
+  //zapisanie info do bazy lokalnej
   static Future<void> insertInfo(
       String id,
       String data,

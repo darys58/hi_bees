@@ -136,7 +136,9 @@ class _NoteItemState extends State<NoteItem> {
         );
       },
       child: Card(
-        
+         shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
         color: 
           notatki.priorytet == 'true'
            ? Colors.yellow
@@ -148,6 +150,7 @@ class _NoteItemState extends State<NoteItem> {
         child: Padding(
             padding: const EdgeInsets.all(1),
             child: ListTile(
+              tileColor: notatki.priorytet == 'true'  ? Colors.yellow : null, 
               onTap: () {
                 //_showAlert(context, 'Edycja', '${frame.id}');
                 // globals.dataInspekcji = frame.data;

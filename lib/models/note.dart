@@ -44,12 +44,12 @@ class Notes with ChangeNotifier {
     //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
-      print(json.decode(response.body));
+      //print(json.decode(response.body));
 
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      if (extractedData == null) {
-        return;
-      }
+      // if (extractedData == null) {
+      //   return;
+      // }
 
       extractedData.forEach((notatkiId, notatkiData) {
         if (notatkiId != 'brak') {  //jezeli są wpisy a tabeli notatki_xxxx
@@ -93,8 +93,8 @@ class Notes with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie danych do uruchomienia apki --> Notatki <---');
-    print(_items);
+    //print('wczytanie danych do uruchomienia apki --> Notatki <---');
+    //print(_items);
     notifyListeners();
   }
 
@@ -117,8 +117,8 @@ class Notes with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie danych do uruchomienia apki --> Notatki ASC <---');
-    print(_items);
+    //print('wczytanie danych do uruchomienia apki --> Notatki ASC <---');
+    //print(_items);
     notifyListeners();
   }
 
@@ -141,7 +141,7 @@ class Notes with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich nowych zbiorów --> NotatkiToArch <---');
+    //('wczytanie wszystkich nowych zbiorów --> NotatkiToArch <---');
     //print(_items);
     notifyListeners();
   }

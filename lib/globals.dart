@@ -13,8 +13,7 @@ String stopnie = '\u2103'; //nazwa jednostki temperatury
 
 String kod = ''; //kod do pobrania klucza picovoice z bazy www
 String key = ''; //kaccessKey picovoice
-String keyMemory =
-    ''; //kaccessKey picovoice - gdyby wycofanie sie z aktywacji i powrót do tego co było
+String keyMemory = ''; //kaccessKey picovoice - gdyby wycofanie sie z aktywacji i powrót do tego co było
 String deviceId = ''; //Id telefonu - identyfikator apki/uzytkownika
 String wersja = ''; //wersja apki
 String jezyk = ''; //język obsługiwany przez aplikację
@@ -22,6 +21,7 @@ String jezyk = ''; //język obsługiwany przez aplikację
 String ikonaUla = 'green'; //
 String ikonaPasieki = 'green'; //
 
+var nieaktualnaPogoda = DateTime(2024,6,1,0,0,0); //czas kiedy wyświetlił się ostatni komunikat o braku aktualnej pogody
 String dataWpisu = DateTime.now().toString().substring(0, 10);
 int nowyNrKorpusu = 1;
 int nowyNrRamki = 1;
@@ -33,6 +33,12 @@ int korpus = 2;
 int rozmiarRamki = 2;
 int stronaRamki = 2;
 int numeryWieluRamek = 1; //0- xx/0 , 1- xx/xx, 2- 0/xx  (przy dodawaniu/edycji wielu ramek)
+
+bool odswiezBelkiUli = false;//czy odswiezyć belki po imporcie danych lub ręcznie ikoną odswiezania
+bool odswiezBelkiUliDL = false;//czy odswiezyć ręcznie ikoną odswiezania
+
+String wykresZbiory = 'miod'; //wyświetlany wykres "miod" lub "pylek"
+
 
 //z/do tabeli Memory
 //String id = '';

@@ -31,7 +31,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   //var now = new DateTime.now();
   //var formatterY = new DateFormat('yyyy-MM-dd');
   var formatterHm = new DateFormat('H:mm');
-
+  bool _isInit = true;
   int nowaPasieka = 0;
   int nowyUl = 0;
   String nowaKategoria = '0';
@@ -44,9 +44,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   List<Info> info = [];
   TextEditingController dateController = TextEditingController();
   //int _nowaIloscRamek = 0; //zmieniana nowym wpisem
+  List<bool> _selectedZakresUli = <bool>[true, false]; //tylko ten | wszystkie
+  
+
+
 
   @override
   void didChangeDependencies() {
+  if (_isInit) {
     final routeArgs =
         ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
     final idInfo = routeArgs['idInfo'];
@@ -55,7 +60,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     final wartosc = routeArgs['wartosc'];
     final idPasieki = routeArgs['idPasieki'];
     final idUla = routeArgs['idUla'];
-    final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
+    //final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
     print('idInfo= $idInfo||');
    
@@ -104,20 +109,37 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     // print('idInfo === $idInfo|');
     // print('id === ${info[0].id}|');
     // print('nowyParametr === $nowyParametr');
-
+    } //od if (_isInit) {
+    _isInit = false;
     super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
-     final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
+    final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
       backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(126.0, 35.0),
+      fixedSize: Size(150.0, 35.0),
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
-    
+    // final ButtonStyle buttonStyle = OutlinedButton.styleFrom(
+    //   padding: const EdgeInsets.all(2.0),
+    //   backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+    //   shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+    //   side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+    //   fixedSize: Size(66.0, 35.0),
+    //   //textStyle: const TextStyle(color: Color.fromARGB(255, 162, 103, 0),)
+    // );
+     final ButtonStyle buttonSumaZasobow = OutlinedButton.styleFrom(
+      padding: const EdgeInsets.all(2.0),
+      backgroundColor: Color.fromARGB(255, 211, 211, 211),
+      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+      fixedSize: Size(85.0, 35.0),
+      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
+    );
+
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
@@ -129,7 +151,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.only(left: 20.0,right: 20.0, bottom: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -139,86 +161,149 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    //** */ data
-                   
-                   Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if(nowaKategoria == 'equipment')
+                          Text(
+                              AppLocalizations.of(context)!.oWyposazeniu,
+                              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                            ),
+                        if(nowaKategoria == 'colony')
+                          Text(
+                              AppLocalizations.of(context)!.oRodzinie,
+                              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                            ),
+                        if(nowaKategoria == 'queen')
+                          Text(
+                              AppLocalizations.of(context)!.oMatce,
+                              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                            ),
+                        if(nowaKategoria == 'harvest')
+                          Text(
+                              AppLocalizations.of(context)!.oZbiorach,
+                              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                            ),
+                        if(nowaKategoria == 'feeding')
+                          Text(
+                              AppLocalizations.of(context)!.oDokarmianiu,
+                              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                            ),
+                        if(nowaKategoria == 'treatment')
+                          Text(
+                              AppLocalizations.of(context)!.oLeczeniu,
+                              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                            ),   
+                
+                        
+                                          
+                    ]),
+                    SizedBox(height: 20.0,),
+  //** */ data                
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
  //data przeglądu  
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text(AppLocalizations.of(context)!.noteDate),
-                                      OutlinedButton(
-                                        style: dataButtonStyle,
-                                        onPressed: () async {
-                                          DateTime? pickedDate =
-                                            await showDatePicker(
-                                              context: context,
-                                              initialDate: DateTime.parse(dateController.text),
-                                              firstDate: DateTime(2000),
-                                              lastDate: DateTime(2101),
-                                              builder:(context , child){
-                                                return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
-                                                  colorScheme: ColorScheme.light(
-                                                    primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
-                                                    onPrimary: Colors.white, // titles and 
-                                                    onSurface: Colors.black, // Month days , years 
-                                                  ),
-                                                  textButtonTheme: TextButtonThemeData(
-                                                    style: TextButton.styleFrom(
-                                                      foregroundColor: Colors.black, // ok , cancel    buttons
-                                                    ),
-                                                  ),
-                                                ),  child: child!   );  // pass child to this child
-                                              }
-                                            );
-                                          if (pickedDate != null) {
-                                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-                                            setState(() {
-                                              dateController.text = formattedDate;
-                                             // globals.dataWpisu = formattedDate;
-                                            });
-                                          } else {print("Date is not selected");}
-                                        },
-  
-                                         child: Text(dateController.text ,
-                                          style: const TextStyle(
-                                            color: Color.fromARGB(255, 0, 0, 0),
-                                            fontSize: 15),),   
-                                      ),
-                                  ]),  
-                                ]),
-                   
-                    
-                    
-                    
-                    
-                    
-                    
-                    // TextField(
-                    //   controller: dateController, //editing controller of this TextField
-                    //   decoration: InputDecoration(
-                    //     icon: Icon(Icons.calendar_today), //icon of text field
-                    //     labelText: AppLocalizations.of(context)!.noteDate),
-                    //   readOnly: true, // when true user cannot edit text
-                    //     onTap: () async {
-                    //       DateTime? pickedDate = await showDatePicker(
-                    //         context: context,
-                    //         initialDate: DateTime.parse(dateController.text),
-                    //         firstDate: DateTime(2000),
-                    //         lastDate: DateTime(2101));
-                    //       if (pickedDate != null) {
-                    //         String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-                    //         setState(() {
-                    //           dateController.text = formattedDate;
-                    //         });
-                    //       } else {
-                    //         print("Date is not selected");
-                    //       }
-                    //     }),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(AppLocalizations.of(context)!.noteDate),
+                            OutlinedButton(
+                              style: dataButtonStyle,
+                              onPressed: () async {
+                                DateTime? pickedDate =
+                                  await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.parse(dateController.text),
+                                    firstDate: DateTime(2000),
+                                    lastDate: DateTime(2101),
+                                    builder:(context , child){
+                                      return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
+                                        colorScheme: ColorScheme.light(
+                                          primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
+                                          onPrimary: Colors.white, // titles and 
+                                          onSurface: Colors.black, // Month days , years 
+                                        ),
+                                        textButtonTheme: TextButtonThemeData(
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.black, // ok , cancel    buttons
+                                          ),
+                                        ),
+                                      ),  child: child!   );  // pass child to this child
+                                    }
+                                  );
+                                if (pickedDate != null) {
+                                  String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                                  setState(() {
+                                    dateController.text = formattedDate;
+                                    globals.dataWpisu = formattedDate;
+                                  });
+                                } else {print("Date is not selected");}
+                              },
 
+                                child: Text(dateController.text ,
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 0, 0, 0),
+                                  fontSize: 15),),   
+                            ),
+                        ]),  
+                        SizedBox(width: 10),
+//ten ul czy wszystkie - dla ddawaia dokarmiania lub leczenia
+                        if(edycja == false && (nowaKategoria == 'feeding' || nowaKategoria == 'treatment')) //jezeli dodawanie dokarmiania lub leczenia
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(AppLocalizations.of(context)!.hIveNr),
+                              ToggleButtons(
+                                direction: Axis.horizontal, 
+                                onPressed: (int index) {
+                                  setState(() {
+                                    // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
+                                    for (int i = 0; i < _selectedZakresUli.length; i++) {
+                                      _selectedZakresUli[i] = i == index;
+                                    }
+                                  });
+                                },
+                                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                borderColor: Color.fromARGB(255, 162, 103, 0),
+                                selectedBorderColor: Color.fromARGB(255, 162, 103, 0), //obramowanie wybranego przycisku
+                                selectedColor: Color.fromARGB(255, 0, 0, 0), //napis wybranego
+                                fillColor: Theme.of(context).primaryColor, //tło wybranego
+                                color: Color.fromARGB(255, 78, 78, 78), //napis niewybranego
+                                constraints: const BoxConstraints(
+                                  minHeight: 38.0,
+                                  minWidth: 60.0,
+                                ),
+                                isSelected: _selectedZakresUli,
+                                children: [ //napisy na przełącznikach
+                                  Text(nowyUl.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                  Text(' ' + AppLocalizations.of(context)!.all + '  ', textAlign: TextAlign.center),
+                                ],  //lewa, obie, prawa
+                              ),
+                            ],
+                          ),
+//dla edycji i dodawania bez dokarmiania i leczenia                              
+                          if(edycja == true || (edycja == false && (nowaKategoria != 'feeding' && nowaKategoria != 'treatment'))) //jezeli nie jest to dodawanie dokarmiania lub leczenia
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(AppLocalizations.of(context)!.hIveNr),
+                                OutlinedButton(
+                                    style: buttonSumaZasobow,
+                                    onPressed: null,
+                                    child: Text(nowyUl.toString(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                        color: Color.fromARGB(255, 0, 0,0))),
+                            )]) ,  
+                        
+                          
+                    ]),
 
                     SizedBox(
                       height: 20,
@@ -1353,12 +1438,33 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                   //     nowyParametr !=  AppLocalizations.of(context)!.removedFood &&
                   //     nowyParametr !=  AppLocalizations.of(context)!.leftFood)
 
-                  if (nowyParametr ==  AppLocalizations.of(context)!.excluder || //numer korpusu na którym jest krata odgrodowa
-                      nowyParametr ==  " " + AppLocalizations.of(context)!.queen) 
+                  if (nowyParametr ==  AppLocalizations.of(context)!.excluder)  //numer korpusu na którym jest krata odgrodowa
                     TextFormField(
                       initialValue: nowyMiara,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                        focusedBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.blue)),
+                        labelText:(AppLocalizations.of(context)!.nUmber), //Numer zamiast Miara
+                        labelStyle: TextStyle(color: Colors.black),
+                          // hintText:
+                          //     (AppLocalizations.of(context)!
+                          //         .mEasure),
+                        ),
+                      validator: (value) {
+                        // if (value!.isEmpty) {
+                        //   return ('uwagi');
+                        // }
+                        nowyMiara = value;
+                        return null;
+                      }
+                    ),
+                    if (nowyParametr ==  " " + AppLocalizations.of(context)!.queen) 
+                    TextFormField(
+                      initialValue: nowyMiara,
+                      keyboardType: TextInputType.name,
+                      //inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
                         enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
                         focusedBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.blue)),
@@ -1424,8 +1530,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   
-                  //** */ zmień
+    //** */ zmień
                   MaterialButton(
+                    height: 50,
                     shape: const StadiumBorder(),
                     onPressed: () {
                       if (_formKey1.currentState!.validate()) {
@@ -1453,26 +1560,57 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             });
                           });
                         }else{
-                          Infos.insertInfo(
-                            '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
-                            dateController.text,
-                            nowaPasieka,
-                            nowyUl,
-                            nowaKategoria,
-                            nowyParametr,
-                            nowyWartosc,
-                            nowyMiara!,
-                            '',//info[0].pogoda,
-                            '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
-                            formatterHm.format(DateTime.now()),
-                            nowyUwagi!,
-                            0, //info[0].arch,
-                          ).then((_) {
-                            Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
-                              .then((_) {
-                              Navigator.of(context).pop();
+                          if(_selectedZakresUli[0] == true){ //dodawanie info tylko dla tego ula
+                            Infos.insertInfo(
+                              '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
+                              dateController.text,
+                              nowaPasieka,
+                              nowyUl,
+                              nowaKategoria,
+                              nowyParametr,
+                              nowyWartosc,
+                              nowyMiara!,
+                              '',//info[0].pogoda,
+                              '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                              formatterHm.format(DateTime.now()),
+                              nowyUwagi!,
+                              0, //info[0].arch,
+                            ).then((_) {
+                              Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                                .then((_) {
+                                Navigator.of(context).pop();
+                              });
                             });
-                          });
+                          }else{ //dodawanie tego samego info dla wszystkich uli
+                            //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
+                            Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowaPasieka,)
+                              .then((_) {
+                                final hivesDataDL = Provider.of<Hives>(context,listen: false);
+                                final hivesDL = hivesDataDL.items;
+                                for (var i = 0; i < hivesDL.length; i++) {
+                                  Infos.insertInfo(
+                                    '${dateController.text}.$nowaPasieka.${hivesDL[i].ulNr}.$nowaKategoria.$nowyParametr',
+                                    dateController.text,
+                                    nowaPasieka,
+                                    hivesDL[i].ulNr,
+                                    nowaKategoria,
+                                    nowyParametr,
+                                    nowyWartosc,
+                                    nowyMiara!,
+                                    '',//info[0].pogoda,
+                                    '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                    formatterHm.format(DateTime.now()),
+                                    nowyUwagi!,
+                                    0, //info[0].arch,
+                                  );
+                                };
+                                 Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                                .then((_) {
+                                globals.odswiezBelkiUliDL = true; //odświezenie belek uli
+                                Navigator.of(context).pop();
+                              });
+                              });
+                          }
                         }
 
                         //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki
@@ -1526,7 +1664,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           //jezeli info jest o matce to zmiana parametrów matki w belce
                           if (nowaKategoria == 'queen') {                                          
                           
-                            //** */ Quality - matka1
+  //** */ Quality - matka1
                             if (nowyParametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) 
                               if (nowyWartosc == 'mała' || nowyWartosc == 'słaba' || nowyWartosc == 'zła' || nowyWartosc == 'stara' ||
                                   nowyWartosc == 'small' || nowyWartosc == 'to exchange' || nowyWartosc == 'canceled' || nowyWartosc == 'weak' ) {
@@ -1544,7 +1682,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 }
                                 if (matka2 == 'brak') matka2 = '';
                               }
-                            //** */ Mark + Number matka2
+ //** */ Mark + Number matka2
                             if (nowyParametr == " " + AppLocalizations.of(context)!.queen)
                               switch (nowyWartosc) {
                                 case 'nie ma znak': matka2 = 'niez'; //nieznaczona
@@ -1588,7 +1726,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   //globals.ikonaPasieki = 'red';
                                   break;
                               }
-                            //** */ State matka3 - czy unasienniona?
+//** */ State matka3 - czy unasienniona?
                             if (nowyParametr == AppLocalizations.of(context)!.queen + " -") //State
                               if (nowyWartosc == 'dziewica' || nowyWartosc == 'virgin') {
                                 matka3 = 'nieunasienniona';
@@ -1605,7 +1743,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 }
                                 if (matka2 == 'brak') matka2 = '';
                               }
-                            //** */ Start matka4  - czy ograniczona?
+    //** */ Start matka4  - czy ograniczona?
                             if (nowyParametr == AppLocalizations.of(context)!.queenIs) //Start
                               if (nowyWartosc == 'wolna' || nowyWartosc == 'freed'){
                                 matka4 = 'wolna';
@@ -1622,7 +1760,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 }
                                 if (matka2 == 'brak') matka2 = '';
                               }
-                            //** */ Born matka5  - rocznik
+     //** */ Born matka5  - rocznik
                             if (nowyParametr == AppLocalizations.of(context)!.queenWasBornIn){ //Born
                               matka5 = nowyWartosc;
                               if (ikona == 'red') {
@@ -1686,8 +1824,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 //ustawienie ikony dla pasieki
                                 globals.ikonaPasieki = 'green';
                                 for (var i = 0; i < hives.length; i++) {
-                                  print('i=$i');
-                                  print( 'hives[i].ikona = ${hives[i].ikona}');
+                                  //print('i=$i');
+                                  //print( 'hives[i].ikona = ${hives[i].ikona}');
                                   switch (hives[i].ikona){
                                     case 'red': globals.ikonaPasieki = 'red';
                                     break;
@@ -1696,7 +1834,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                     case 'yellow': if(globals.ikonaPasieki == 'green') globals.ikonaPasieki = 'yellow';
                                     break;
                                   }
-                                  print('============== globals.ikonaPasieki ===== ${globals.ikonaPasieki}');
+                                  //print('============== globals.ikonaPasieki ===== ${globals.ikonaPasieki}');
                                   // print(
                                   //     '${hives[i].id},${hives[i].pasiekaNr},${hives[i].ulNr},${hives[i].przeglad},${hives[i].ikona},${hives[i].ramek}');
                                   // print('*****');

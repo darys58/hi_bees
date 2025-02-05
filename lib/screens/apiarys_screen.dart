@@ -77,13 +77,26 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.4.0.32 15.02.2024 - dodano 3 pola w tabeli memory (na zapas), ustawianie domyślnego języka na "en" (zmiany w main i Info.plist) jezeli jest nieobsługiwany język
   //1.5.0.33 04.04.2024 - dodano pole w tabeli "ramka" ramkaNrPo, mozliwość pokazywania zasobów ramki przed i po przeglądzie, brak odpowiednich poprawek w voice_screen
   //1.5.1.34 05.04.2024 - poprawka bo nie mozna było aktywować apki - w tym pliku brakowało ramkaNrPo
-  //1.5.2.36 06.04.2024 - dodawane zasobów ramek z pozycji widoku ramek w ulu, mozliwość dodawania kilku nowych ramek (z "ramkaNr" == 0) czyli dodanie do id ramek "ramkaNrPo", pamietanie daty w info_edit_screen 
+  //1.5.2.36 06.04.2024 - dodawane zasobów ramek z pozycji widoku ramek w ulu, mozliwość dodawania kilku nowych ramek (z "ramkaNr" == 0) czyli dodanie do id ramek "ramkaNrPo", pamietanie daty w info_edit_screen
   //1.6.0.37 28.04.2024 - numery ramek w widoku ula, nowy interfejs dodawania i edycji zasobów na ramkach, dodatkowe pola w tabeli "ule" (niewykorzystane jeszcze)
   //1.6.1.38 02.05.2024 - poprawki działania nowego interfejsu dodawania zasobów na ramkach (przeglądy)
   //1.6.2.39 17.05.2024 - rozbudowa dodawania/edycji zasobów dla wielu ramek jednoczesnie - numery wielu ramek przed i po, zasób na ramce "tylko ten" lub "wszystkie"
   //1.6.3.40 20.05.2024 - mozliwość eksportu wybranych danych, poprawka wygladu edycji notatek, zakupów, zbiorów i sprzedazy, problem z podpisaniem a play.googlecom
-  final wersja = '1.6.3.40'; //wersja aplikacji
-  final dataWersji = '2024-05-20';
+  //1.6.4.41 25.05.2024 - wersja na nowy XCode 15 (i nowy MacBook) poprawki - kolor tła elementów ListTail, padding w dataButton, sumaZasob itp.
+  //1.6.5.42 01.06.2024 - poprawki - dodanie isInit do skryptów edycyjnych, formatowanie pola data
+  //1.6.6.43 14.06.2024 - zmiana na iosDeviceInfo.name i androidDeviceInfo.device bo Id telefonów nie są niezmienne, zmiana nazwy tabel www - XXXX_ramka itd., ograniczenie komunikatów o braku internetu
+  //1.6.7.44 27.09.2024 - zapamietanie daty info w globals, pierwszy widok ramek - po przeglądzie, odświezanie belek: zasoby i matki (po imporcie danych i recznie) oraz dokarmianie lub leczenie, dodawanie info dla wszystkich uli przy dokarmianiu i leczeniu
+  //1.6.9.47 02.10.2024 - ununięto Picovoice bo błąd w XCode: obecny kod binarny w bibliotekach porcupino i rhuino, usunieto subskrypcję bo błedy przy kompilacji androida
+  //1.6.10.48 14.10.2024 - dodano statystyki zbioru miodu, pyłku i varrozy, poprawa statystyki dokarmiania ciastem, chyba poprawa wyświetlania szczegółów ramek przy zmianie daty przegladu
+  //1.6.11.49 27.10.2024 - dodano raporty zbiorów i raporty leczenia,
+  //1.6.12.50 02.11.2024 - dodano "frame_edit_screen2" - ekran dodawania zasobów na ramkach w wersji dla obu stron ramki naraz i automatycznego zwiększania numeru ramki
+  //1.7.0.51 11.11.2024 - zaktualizowano wszystkie pakiety (biblioteki) - apka nie działa z picovoice_flutter: ^3.0.3 !!!
+  //1.7.0.51 06.12.2024 - Picovoice naprawił rhino_flutter 3.0.4 i działa juz picovoice_flutter: ^3.0.3, pliki .rhn v.3_0_0, model: ang1, pol1, poprawki w wersji angielskiej (PlayGoogle)
+  //1.7.1.52 05.01.2025 - usunięcie błędnego działania vioce_screen, modyfikacja voice_screen: wstaw/usuń ramka, numer ramki przed i po przeglądzie np. przed 3/8 po, isDone dla zakresu ramek - wstaw/usuń wiele ramek (AppStore tylko bo android nie działa po flutter upgrade)
+  //1.8.0.53 17.01.2025 - zmiana nazwy i ikony apki na "Hey Maya", nowy ekran powitalny, poprawki i nowe słowa w modelu Rhiuno, statystyki do 2030 roku, literowe oznaczenia matek,
+  //1.8.1.54 25.01.2025 - poprawka niedziałajacej funkcji _isInternet() po zmianie biblioteki connectivity_plus
+  final wersja = '1.8.1.54'; //wersja aplikacji
+  final dataWersji = '2025-01-27';
   final now = DateTime.now();
   int aktywnosc = 0;
 
@@ -95,53 +108,58 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     if (_isInit) {
       setState(() {
         _isLoading = true; //uruchomienie wskaznika ładowania danych
-      });     
+      });
 //DBHelper.deleteBase().then((_) {
       _getId().then((_) {
         //pobranie Id telefonu i zapisanie w globals.deviceId - do identyfikacji uzytkownika apki
         //pobranie z bazy lokalnej Memory dla tego smartfona
-        //print('globals.deviceId = ${globals.deviceId}');
-        Provider.of<Memory>(context, listen: false).fetchAndSetMemory(globals.deviceId).then((_) {
+        print('globals.deviceId = ${globals.deviceId}');
+        Provider.of<Memory>(context, listen: false)
+            .fetchAndSetMemory(globals.deviceId)
+            .then((_) {
+          //memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT, od TEXT, do TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT)');
           //uzyskanie dostępu do danych
           final memData = Provider.of<Memory>(context, listen: false);
           final mem = memData.items;
-          //print('**************** globals.memJezyk przed pobraniem z bazy = /${globals.memJezyk}/ ');         
+          //print('**************** globals.memJezyk przed pobraniem z bazy = /${globals.memJezyk}/ ');
           // if (mem.isNotEmpty && mem[0].memjezyk != '') globals.memJezyk = mem[0].memjezyk;
           // else globals.memJezyk = 'system';
           // print('**************** memjezyk po pobraniu z bazy = /${mem[0].memjezyk}/ ');
           // print('**************** globals.memJezyk = /${globals.memJezyk}/ ');
-          //odczytanie ustawień języka (pl_PL, en_US) 
+          //odczytanie ustawień języka (pl_PL, en_US)
           Locale myLocale = Localizations.localeOf(context);
           String jezykSmartfona = myLocale.toString(); //zapamiętanie aktualnego języka
-        //  print('================pobranie jezyka smartona = ${jezykSmartfona}');
-         // print('================globals.jezyk przed switchem = ${globals.jezyk}');
+          //  print('================pobranie jezyka smartona = ${jezykSmartfona}');
+          // print('================globals.jezyk przed switchem = ${globals.jezyk}');
           //if (globals.memJezyk == 'system')
-            switch (jezykSmartfona) {
-              case 'pl_PL':
-                globals.jezyk = 'pl_PL';
-                break;
-              case 'en_US':
-                globals.jezyk = 'en_US';
-                break;
-              default:
-                globals.jezyk = 'en_US'; //i to nie działa nie wiadomo czemu !!!
-                break;
-            }
-         // else globals.jezyk = mem[0].memjezyk;
+          switch (jezykSmartfona) {
+            case 'pl_PL':
+              globals.jezyk = 'pl_PL';
+              break;
+            case 'en_US':
+              globals.jezyk = 'en_US';
+              break;
+            default:
+              globals.jezyk = 'en_US'; //i to nie działa nie wiadomo czemu !!!
+              break;
+          }
+          // else globals.jezyk = mem[0].memjezyk;
 
-        //  print('================globals.jezyk po switchu = ${globals.jezyk}');
+          //  print('================globals.jezyk po switchu = ${globals.jezyk}');
           globals.wersja = wersja;
 
           //uaktualnienie wersji apki na serwerze www po np. aktualizacji apki
           if (mem.isNotEmpty && mem[0].wer != wersja) wyslijKod(mem[0].kod);
 
           //czy jest wpis w bazie dla tego deviceId? - (wpis moze być ale accessKey niekoniecznie!!!)
-          if (mem.isNotEmpty && mem[0].dod != 'bez aktywacji' && mem[0].dod != '') {
+          if (mem.isNotEmpty &&
+              mem[0].dod != 'bez aktywacji' &&
+              mem[0].dod != '') {
             //jezeli jest i data "od" ma normalny format
             globals.key = mem[0].key; //pobranie klucza
-            globals.keyMemory = mem[0].key; //potrzebne gdyby była rezygnacja z aktywacji
+            globals.keyMemory =  mem[0].key; //potrzebne gdyby była rezygnacja z aktywacji
             globals.kod = mem[0].kod; //kod do aktywacji, kod tworzy nazwę tabeli do archiwizacji
-          
+
             //sprawdzenie daty do której apka jest aktywna
             final data = DateTime.parse(mem[0].ddo);
             aktywnosc = daysBetween(now, data); //ile dni wazności apki
@@ -219,19 +237,20 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           } else {
             //jezeli uzytkownik chce aktywować bo wybrał "Aktywuj"
             if (mem.isNotEmpty)
-              globals.key = mem[0].dod;
-            else  {//dla testu AppStore
+              globals.key = mem[0].dod; //???
+            else {
+              //dla testu AppStore
               //globals.key = '';
               Provider.of<Memory>(context, listen: false)
-                .fetchAndSetMemory('test')
-                .then((_) {
+                  .fetchAndSetMemory('test')
+                  .then((_) {
                 //uzyskanie dostępu do danych
                 final memData = Provider.of<Memory>(context, listen: false);
                 final mem = memData.items;
-                if (mem.isNotEmpty && mem[0].dev == 'test'){
+                if (mem.isNotEmpty && mem[0].dev == 'test') {
                   globals.key = 'bez_klucza';
-                }else globals.key = '';
-            
+                } else
+                  globals.key = '';
               });
             }
             //jezeli nie ma accessKey
@@ -252,7 +271,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             if (dod1.length == 0) {
               //jezeli nie ma tabeli dodatki1
               Dodatki1.insertDodatki1(
-                  '1', 'true', '0', '0', '0', '1000', '2100', '100', '1500');
+                  '1', 'true', '0', '0', '0', '900', '1900', '100', '1500');
             } else {
               //jezeli jest tabela dodatki1
               if (dod1[0].a == 'true') {
@@ -264,7 +283,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                   Provider.of<Frames>(context, listen: false)
                       .fetchAndSetFramesToArch()
                       .then((_) {
-                    final framesAllData = Provider.of<Frames>(context, listen: false);
+                    final framesAllData =
+                        Provider.of<Frames>(context, listen: false);
                     final ramki = framesAllData.items;
                     //print('ilość wpisów w tabeli ramka');
                     //print(ramki.length);
@@ -293,9 +313,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                         if (ramki.length > i) jsonData += ',';
                       }
                       jsonData +=
-                          '],"total":${ramki.length}, "tabela":"ramka_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                          '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu XXXX_ramka
 
-                      print(jsonData);
+                      //print(jsonData);
                       _isInternet().then(
                         (inter) {
                           if (inter) {
@@ -317,7 +337,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                   Provider.of<Infos>(context, listen: false)
                       .fetchAndSetInfosToArch()
                       .then((_) {
-                    final infoArchData = Provider.of<Infos>(context, listen: false);
+                    final infoArchData =
+                        Provider.of<Infos>(context, listen: false);
                     final info = infoArchData.items;
                     //print('ilość wpisów w tabeli info');
                     //print(info.length);
@@ -343,15 +364,15 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                         if (info.length > i) jsonData += ',';
                       }
                       jsonData +=
-                          '],"total":${info.length}, "tabela":"info_${mem[0].kod.substring(0, 4)}"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                          '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu XXXX_ramka
 
-                      print(jsonData);
+                      //print(jsonData);
                       _isInternet().then(
                         (inter) {
                           if (inter) {
                             wyslijBackupInfo(jsonData); //jsonData
                           } else {
-                            print('braaaaaak internetu');
+                            //print('braaaaaak internetu');
                             //komunikat na dole ekranu
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -384,7 +405,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             _isLoading = false; //zatrzymanie wskaznika ładowania danych
           });
 //   }); //kasowanie bazy
-        });
+        }); //od pobrania danych z tabeli memory
       });
     }
 
@@ -394,20 +415,42 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   }
 
   //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.mobile) {
-      print("Connected to Mobile Network");
+  // Future<bool> _isInternet() async {
+  //   var connectivityResult = await (Connectivity().checkConnectivity());
+  //   if (connectivityResult == ConnectivityResult.mobile) {
+  //     print("Connected to Mobile Network");
+  //     return true;
+  //   } else if (connectivityResult == ConnectivityResult.wifi) {
+  //     print("Connected to WiFi");
+  //     return true;
+  //   } else {
+  //     print("Unable to connect. Please Check Internet Connection");
+  //     return false;
+  //   }
+  // }
+  
+  //sprawdzenie czy jest internet
+  Future<bool> _isInternet() async { 
+    final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult.contains(ConnectivityResult.mobile)) {
+      // Mobile network available.
       return true;
-    } else if (connectivityResult == ConnectivityResult.wifi) {
-      print("Connected to WiFi");
+    } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+      // Wi-fi is available.
+      // Note for Android: When both mobile and Wi-Fi are turned on system will return Wi-Fi only as active network type
       return true;
-    } else {
-      print("Unable to connect. Please Check Internet Connection");
+    } else if (connectivityResult.contains(ConnectivityResult.bluetooth)) {
+      // Bluetooth connection available.
+      return true;
+    } else if (connectivityResult.contains(ConnectivityResult.other)) {
+      // Connected to a network which is not in the above mentioned networks.
       return false;
-    }
-  }
-
+    } else if (connectivityResult.contains(ConnectivityResult.none)) {
+      // No available network types
+      return false;
+    }else return false;
+  } 
+                    
   //obliczanie róznicy miedzy dwoma datami
   int daysBetween(DateTime from, DateTime to) {
     from = DateTime(from.year, from.month, from.day);
@@ -420,14 +463,13 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Theme.of(context).platform == TargetPlatform.iOS) {
       IosDeviceInfo iosDeviceInfo = await deviceInfo.iosInfo;
-      globals.deviceId = 'ios_' +
-          iosDeviceInfo
-              .identifierForVendor!; // + '_' + iosDeviceInfo.model; // +'_' + wersja[0] + wersja[1] + wersja[2] + wersja[3]; // + '_' + iosDeviceInfo.model
+      globals.deviceId = 'ios_' + iosDeviceInfo.name;
+      //.identifierForVendor!; // + '_' + iosDeviceInfo.model; // +'_' + wersja[0] + wersja[1] + wersja[2] + wersja[3]; // + '_' + iosDeviceInfo.model
       //return iosDeviceInfo.identifierForVendor; // unique ID on iOS
     } else {
       AndroidDeviceInfo androidDeviceInfo = await deviceInfo.androidInfo;
       globals.deviceId = 'and_' +
-          androidDeviceInfo.androidId!; // + '_' + androidDeviceInfo.model;
+          androidDeviceInfo.device; //androidId!; // + '_' + androidDeviceInfo.model;
       //wersja[0] + wersja[1] + wersja[2] + wersja[3]; //androidDeviceInfo.model
       //return androidDeviceInfo.androidId; // unique ID on Android
     }
@@ -438,7 +480,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -475,7 +517,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       } else {
         // _showAlertOK(context, AppLocalizations.of(context)!.alert,
         //    AppLocalizations.of(context)!.errorWhileActivating);
-        print('niepowodzenie - $odpPost["success"]');
+       // print('niepowodzenie - $odpPost["success"]');
       }
     } else {
       throw Exception('Failed to create OdpPost.');
@@ -486,14 +528,14 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   Future<void> wyslijBackupInfo(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup5.php'),
+      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonData1, //tabela ramka w postaci jsona
     );
-    print("response.body:");
-    print(response.body);
+    //print("response.body:");
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'ok') {
@@ -522,7 +564,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       } else {
         // _showAlertOK(context, AppLocalizations.of(context)!.alert,
         //    AppLocalizations.of(context)!.errorWhileActivating);
-        print('niepowodzenie - $odpPost["success"]');
+        //print('niepowodzenie - $odpPost["success"]');
       }
     } else {
       throw Exception('Failed to create OdpPost.');
@@ -543,8 +585,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
         "jezyk": globals.jezyk,
       }),
     );
-    print('$kod ${globals.deviceId} $wersja ${globals.jezyk}');
-    print(response.body);
+    //print('$kod ${globals.deviceId} $wersja ${globals.jezyk}');
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'email') {
@@ -564,7 +606,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           Memory.insertMemory(
             odpPost['be_id'], //id
             odpPost['be_email'],
-            //ponizej wtawone wartosci deviceId i wersja a apki, bo www nie zdązy ich zapisać i nie ma ich po pobraniu
+            //ponizej wstawone wartosci deviceId i wersja a apki, bo www nie zdązy ich zapisać i nie ma ich po pobraniu
             //globals.deviceId, //
             odpPost['be_dev'], //deviceId
             //wersja, //
@@ -667,7 +709,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           false, //zeby zaciemnione tło było zablokowane na kliknięcia
     );
   }
-  //wywoływanie przeglądarki stron www 
+
+  //wywoływanie przeglądarki stron www
   Future<void> _launchInBrowser(Uri url) async {
     if (!await launchUrl(
       url,
@@ -676,9 +719,6 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       throw Exception('Could not launch $url');
     }
   }
-
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -720,7 +760,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
 
     //print('widzet główny - globals.key = ${globals.key}');
 
-    Locale myLocale = Localizations.localeOf(context);
+    // Locale myLocale = Localizations.localeOf(context);
     //print(myLocale);
 
     List<String> gridItems = [
@@ -730,12 +770,14 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       AppLocalizations.of(context)!.sAle,
     ];
 
-    double heightScreen = MediaQuery.of(context).size.height;
+    //double heightScreen = MediaQuery.of(context).size.height;
     // print('wysokość ekranu');
     // print(heightScreen);
 
-    final Uri toLaunchPl = Uri(scheme: 'https', host: 'www.hibees.pl', path: '/index.php/przewodnik');
-    final Uri toLaunchEn = Uri(scheme: 'https', host: 'www.hibees.pl', path: '/index.php/guide');
+    final Uri toLaunchPl = Uri(
+        scheme: 'https', host: 'www.hibees.pl', path: '/index.php/przewodnik');
+    final Uri toLaunchEn =
+        Uri(scheme: 'https', host: 'www.hibees.pl', path: '/index.php/guide');
 
 // print('globals.deviceId = ${globals.deviceId}');
 // print('globals.key = ${globals.key}');
@@ -746,25 +788,25 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       appBar: AppBar(
         iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         title: const Text(
-          'Hi Bees',
+          'Hey Maya',
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
         backgroundColor: Color.fromARGB(
             255, 255, 255, 255), //Color.fromARGB(255, 233, 140, 0),
         actions: <Widget>[
-          IconButton(
-//dodawanie ula (z pasieką)
-            icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => Navigator.of(context)
-                .pushNamed(AddHiveScreen.routeName),
-               
-          ),
-//pomoc w przeglądarce          
+//dodawanie ula (z pasieką) 
+          if(globals.key != '')
+            IconButton(
+              icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(AddHiveScreen.routeName),
+            ),
+//pomoc w przeglądarce
           IconButton(
             icon: Icon(Icons.help_rounded, color: Color.fromARGB(255, 0, 0, 0)),
             onPressed: () => globals.jezyk == 'pl_PL'
                 ? _isInternet().then((inter) {
-                    if (inter != null && inter) {
+                    if (inter) {
                       _launchInBrowser(toLaunchPl);
                       //'https://www.cobytu.com/index.php?d=polityka&mobile=1');
                       // Navigator.of(context).pushNamed(LanguagesScreen.routeName);
@@ -785,7 +827,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                 // ),
 
                 : _isInternet().then((inter) {
-                    if (inter != null && inter) {
+                    if (inter) { //inter != null && 
                       _launchInBrowser(toLaunchEn);
                     } else {
                       print('braaaaaak internetu');
@@ -794,15 +836,16 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                     }
                   }),
           ),
- //ustawienia         
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () => Navigator.of(context)
-                .pushNamed(SettingsScreen.routeName), //arguments: {
-            //   'ul': globals.ulID,
-            //   'data': wybranaData,
-            // }),
-          )
+//ustawienia
+          if(globals.key != '') 
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () => Navigator.of(context)
+                  .pushNamed(SettingsScreen.routeName), //arguments: {
+              //   'ul': globals.ulID,
+              //   'data': wybranaData,
+              // }),
+            )
         ],
       ),
 
@@ -819,16 +862,14 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                         padding: const EdgeInsets.all(20),
                         child: mem1.isEmpty
                             ? Text(
-                                (AppLocalizations.of(context)!
-                                    .enterYourActivationCode),
+                                (AppLocalizations.of(context)!.enterYourActivationCode),
                                 style: TextStyle(
                                   fontSize: 15,
                                   //color: Colors.grey,
                                 ),
                               )
                             : Text(
-                                (AppLocalizations.of(context)!
-                                    .enterYourActivationCode), //jezeli jest tylko bezpłatnie
+                                (AppLocalizations.of(context)!.enterYourActivationCode), //jezeli jest tylko bezpłatnie
                                 // (AppLocalizations.of(context)!
                                 //     .activationCodeAfterPaying), //jezeli będzie wersja płatna
                                 style: TextStyle(
@@ -845,30 +886,29 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                             //initialValue: globals.numer,
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              labelText:
-                                  (AppLocalizations.of(context)!.codeOrEmail),
+                              labelText: (AppLocalizations.of(context)!.codeOrEmail),
                               labelStyle: TextStyle(color: Colors.black),
                               //hintText: allTranslations
                               //.text('L_WPISZ_KOD_POLACZ'),
                             ),
                             validator: (value) {
                               if (value!.isEmpty) {
-                                return (AppLocalizations.of(context)!
-                                    .enterCodeOrEmail);
+                                return (AppLocalizations.of(context)!.enterCodeOrEmail);
                               }
                               globals.kod = value;
                               return null;
                             }),
                       ),
                     ),
-  //Przyciski
+                    //Przyciski
                     Container(
                       height: 90,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
- //Aktywuj
+                          //Aktywuj
                           MaterialButton(
+                            height: 50,
                             shape: const StadiumBorder(),
                             onPressed: () {
                               if (_formKey2.currentState!.validate()) {
@@ -900,9 +940,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                             disabledTextColor: Colors.white,
                           ),
                           SizedBox(width: 10),
-      //Bez aktywacji
+                          //Bez aktywacji
                           if (mem1.isNotEmpty)
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
                                 DBHelper.updateActivate(globals.deviceId,
@@ -948,7 +989,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                     //     ),
                     //   ),
 
-  //Powrót bez zmian
+//Powrót bez zmian
                     if (aktywnosc < 30 &&
                         aktywnosc >= 0 &&
                         globals.keyMemory != '')
@@ -958,14 +999,13 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
-                                DBHelper.updateActivate(globals.deviceId,
-                                    '${globals.keyMemory}'); //powtórne zapisanie key
+                                DBHelper.updateActivate(globals.deviceId,'${globals.keyMemory}'); //powtórne zapisanie key
                                 Navigator.of(context).pushNamedAndRemoveUntil(
                                     ApiarysScreen.routeName,
-                                    ModalRoute.withName(ApiarysScreen
-                                        .routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
+                                    ModalRoute.withName(ApiarysScreen.routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
                               },
                               child: Text('   ' +
                                   (AppLocalizations.of(context)!
@@ -995,14 +1035,16 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                   style: TextStyle(color: Colors.black),
                                   children: [
                                     TextSpan(
-                                      text: (AppLocalizations.of(context)!.noApiaries), //brak pasiek
+                                      text: (AppLocalizations.of(context)!
+                                          .noApiaries), //brak pasiek
                                       style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.grey),
                                     ),
                                     TextSpan(
-                                      text: (AppLocalizations.of(context)!.introA),
+                                      text: (AppLocalizations.of(context)!
+                                          .introA),
                                       style: TextStyle(
                                           fontSize: 16,
                                           //fontWeight: FontWeight.bold,
@@ -1045,7 +1087,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
 //przyciski Zbiory, Zakupy, Sprzedaz, Notes
                       Container(
                           height:
-                              ((MediaQuery.of(context).size.width + 30) / 5) * 2, //połowa szerokości
+                              ((MediaQuery.of(context).size.width + 30) / 5) *
+                                  2, //połowa szerokości
                           child: Column(children: [
                             Expanded(
                               child: GridView.count(
@@ -1054,7 +1097,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                 padding: const EdgeInsets.all(15.0),
                                 //shrinkWrap: true,
                                 crossAxisCount: 2, //ilość kolumn
-                                childAspectRatio: (5 / 2), //proporcje boków kafli
+                                childAspectRatio:
+                                    (5 / 2), //proporcje boków kafli
                                 crossAxisSpacing: 20,
                                 mainAxisSpacing: 10,
                                 children: gridItems
@@ -1094,7 +1138,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                                 BoxShadow(
                                                   color: Color.fromARGB(
                                                           255, 115, 115, 115)
-                                                      .withOpacity(0.5),
+                                                      .withValues(alpha:0.5),
                                                   spreadRadius: 1,
                                                   blurRadius: 4,
                                                   offset: const Offset(1,
@@ -1105,7 +1149,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                                 colors: [
                                                   Theme.of(context)
                                                       .primaryColor
-                                                      .withOpacity(0.7),
+                                                      .withValues(alpha:0.7),
                                                   Theme.of(context)
                                                       .primaryColor,
                                                 ],
@@ -1169,7 +1213,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       Container(
                         margin: EdgeInsets.only(top: 5),
                         // height: MediaQuery.of(context).size.height - (350 + (MediaQuery.of(context).size.width/2)),//150,
-                        height: 105 * notatkiOdwrotnie.length.toDouble(),
+                        height: 135 * notatkiOdwrotnie.length.toDouble(),
                         child: ListView.builder(
                           physics:
                               NeverScrollableScrollPhysics(), //zeby sie nie przewijał
@@ -1183,58 +1227,59 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       SizedBox(height: 100),
                     ])),
       //=== stopka
-      // bottomSheet: globals.key == ''
-      //     ? null
-      //     : Container(
-      //         //margin:  EdgeInsets.only(bottom:15),
-      //         height: 100,
-      //         color: Colors.white,
-      //         //width: MediaQuery.of(context).size.width,
-      //         child: Row(
-      //           mainAxisAlignment: MainAxisAlignment.center,
-      //           children: <Widget>[
-      //             Row(
-      //               children: <Widget>[
-      //                 // ElevatedButton(
-      //                 //   child: Text('English'),
-      //                 //   onPressed: () => _changeLanguage(Locale('en')),
-      //                 // ),
-      //                 // ElevatedButton(
-      //                 //   child: Text('Polski'),
-      //                 //   onPressed: () => _changeLanguage(Locale('pl')),
-      //                 // ),
-      //                 const SizedBox(
-      //                   width: 9,
-      //                 ),
-      //                 SizedBox(
-      //                     width: 200,
-      //                     height: 50,
-      //                     child: ElevatedButton(
-      //                       style: buttonStyle,
-      //                       onPressed: () {
-      //                         globals.key == '' //jezeli brak accessKey
-      //                             ? null
-      //                             : {
-      //                                 //_isInit = true,
-      //                                 Navigator.of(context).pushNamed(
-      //                                   VoiceScreen.routeName,
-      //                                 ),
-      //                               };
-      //                       },
-      //                       child: Text(
-      //                           AppLocalizations.of(context)!.voiceControl,
-      //                           style: TextStyle(
-      //                               fontSize: 14,
-      //                               color: Color.fromARGB(255, 0, 0, 0))),
-      //                     )),
-      //                 const SizedBox(
-      //                   width: 15,
-      //                 ), //interpolacja ciągu znaków
-      //               ],
-      //             )
-      //           ],
-      //         ),
-      //       ),
+      bottomSheet: globals.key == '' || globals.key == "bez_klucza"
+          ? null
+          : Container(
+              //margin:  EdgeInsets.only(bottom:15),
+              height: 100,
+              color: Colors.white,
+              //width: MediaQuery.of(context).size.width,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      // ElevatedButton(
+                      //   child: Text('English'),
+                      //   onPressed: () => _changeLanguage(Locale('en')),
+                      // ),
+                      // ElevatedButton(
+                      //   child: Text('Polski'),
+                      //   onPressed: () => _changeLanguage(Locale('pl')),
+                      // ),
+                      const SizedBox(
+                        width: 9,
+                      ),
+                      SizedBox(
+                          width: 220,
+                          height: 50,
+                          child: ElevatedButton(
+                            style: buttonStyle,
+                            onPressed: () {
+                              globals.key == '' || globals.key == "bez_klucza"//jezeli brak accessKey
+                                  ? null
+                                  : {
+                                      //_isInit = true,
+                                      Navigator.of(context).pushNamed(
+                                        VoiceScreen.routeName,
+                                      ),
+                                    };
+                            },
+                            child: Text(
+                                AppLocalizations.of(context)!.voiceControl,
+                                style: TextStyle(
+                                    height: 1.0,
+                                    fontSize: 14,
+                                    color: Color.fromARGB(255, 0, 0, 0))),
+                          )),
+                      const SizedBox(
+                        width: 15,
+                      ), //interpolacja ciągu znaków
+                    ],
+                  )
+                ],
+              ),
+            ),
     );
   }
 }

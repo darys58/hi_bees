@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
+// import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 
@@ -43,19 +43,19 @@ class AboutScreen extends StatelessWidget {
   // }
 
   //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.mobile) {
-      print("Connected to Mobile Network");
-      return true;
-    } else if (connectivityResult == ConnectivityResult.wifi) {
-      print("Connected to WiFi");
-      return true;
-    } else {
-      print("Unable to connect. Please Check Internet Connection");
-      return false;
-    }
-  }
+  // Future<bool> _isInternet() async {
+  //   var connectivityResult = await (Connectivity().checkConnectivity());
+  //   if (connectivityResult == ConnectivityResult.mobile) {
+  //     print("Connected to Mobile Network");
+  //     return true;
+  //   } else if (connectivityResult == ConnectivityResult.wifi) {
+  //     print("Connected to WiFi");
+  //     return true;
+  //   } else {
+  //     print("Unable to connect. Please Check Internet Connection");
+  //     return false;
+  //   }
+  // }
 
   String zmienDate(String data) {
     String rok = data.substring(0, 4);

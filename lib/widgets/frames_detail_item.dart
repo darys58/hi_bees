@@ -7,7 +7,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 // import '../models/info.dart';
 import '../helpers/db_helper.dart';
 import '../screens/frame_edit_screen.dart';
-import '../screens/frame_edit_screen2.dart';
+//import '../screens/frame_edit_screen2.dart';
 import '../globals.dart' as globals;
 import '../models/frames.dart';
 import '../models/frame.dart';
@@ -21,8 +21,8 @@ class FramesDetailItem extends StatefulWidget {
 }
 
 class _FramesDetailItemState extends State<FramesDetailItem> {
-  final _formKey1 = GlobalKey<FormState>();
-  final _formKey2 = GlobalKey<FormState>();
+  //final _formKey1 = GlobalKey<FormState>();
+  //final _formKey2 = GlobalKey<FormState>();
   //int rozmiarRamki = 0;
   String nowaData = '0';
   String nowuNrPasieki = '0';
@@ -819,6 +819,9 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
         );
       },
       child: Card(
+        shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
         margin: const EdgeInsets.symmetric(
           horizontal: 5,//było 15
           vertical: 4,
@@ -835,6 +838,7 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                   );
                 },
                 leading: CircleAvatar(
+                  radius: 30,
                   backgroundColor: Colors.white,
                   child: //Image.asset('assets/image/hi_bees.png'),
                       Text('${frame.korpusNr}\n${frame.ramkaNr}/${frame.ramkaNrPo}',

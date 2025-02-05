@@ -14,7 +14,7 @@ import '../models/infos.dart';
 //import '../screens/activation_screen.dart';
 import '../models/frames.dart';
 import '../models/hive.dart';
-import 'package:flutter/services.dart';
+// import 'package:flutter/services.dart';
 //import 'frames_detail_screen.dart';
 
 class FrameEditScreen extends StatefulWidget {
@@ -29,6 +29,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   final _formKey1 = GlobalKey<FormState>();
   //var now = new DateTime.now();
   //var formatterY = new DateFormat('yyyy-MM-dd');
+  bool _isInit = true;
   var formatterHm = new DateFormat('H:mm');
   int? nowyNrPasieki;
   int? nowyNrUla;
@@ -112,163 +113,167 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   
   @override
   void didChangeDependencies() {
-   
-    final routeArgs = ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
-    final idRamki = routeArgs['idRamki']; //pobiera z frames_detail_item.dart
-    final idPasieki = routeArgs['idPasieki'];
-    final idUla = routeArgs['idUla'];
-    final idZasobu = routeArgs['idZasobu'];
-    //print('ramka = $idRamki, pasieka = $idPasieki , ul = $idUla');
+    if (_isInit) {
+      //print('na poczatek didChangeDependencies: nowyZasobId  = ${dateController.text}');
+      final routeArgs = ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
+      final idRamki = routeArgs['idRamki']; //pobiera z frames_detail_item.dart
+      final idPasieki = routeArgs['idPasieki'];
+      final idUla = routeArgs['idUla'];
+      final idZasobu = routeArgs['idZasobu'];
+      //print('ramka = $idRamki, pasieka = $idPasieki , ul = $idUla');
 
-    if (idRamki != null) {
-      //jezeli edycja istniejącego wpisu
-      final frameData = Provider.of<Frames>(context, listen: false);
-      ramka = frameData.items.where((element) {
-        //to wczytanie danych ramki
-        return element.id.contains('$idRamki');
-      }).toList();
-      dateController.text = ramka[0].data;
-      // nowyRok = ramka[0].data.substring(0, 4);
-      // nowyMiesiac = ramka[0].data.substring(5, 7);
-      // nowyDzien = ramka[0].data.substring(8);
-      nowyNrPasieki = ramka[0].pasiekaNr;
-      nowyNrUla = ramka[0].ulNr;
-      nowyNrKorpusu = ramka[0].korpusNr;
-      nowyNrRamki = ramka[0].ramkaNr;
-      nowyNrRamkiPo = ramka[0].ramkaNrPo;
-      korpus = ramka[0].typ;
-      korpus == 1 ? _selectedKorpus[0] = true : _selectedKorpus[0] = false;
-      korpus == 2 ? _selectedKorpus[1] = true : _selectedKorpus[1] = false;
-      rozmiarRamki = ramka[0].rozmiar;
-      rozmiarRamki == 1 ? _selectedRozmiarRamki[0] = true : _selectedRozmiarRamki[0] = false;
-      rozmiarRamki == 2 ? _selectedRozmiarRamki[1] = true : _selectedRozmiarRamki[1] = false;
-      nowyZasob = ramka[0].zasob; //id edytowanego zasobu 
-      nowaWartosc = ramka[0].wartosc.replaceAll(RegExp('%'), '');
-      switch (nowyZasob) {
-        case 1: trutDod = int.parse(nowaWartosc);break;
-        case 2: czerwDod = int.parse(nowaWartosc);break;
-        case 3: larwyDod = int.parse(nowaWartosc);break;
-        case 4: jajaDod = int.parse(nowaWartosc);break;
-        case 5: pierzgaDod = int.parse(nowaWartosc);break;
-        case 6: miodDod = int.parse(nowaWartosc);break;
-        case 7: dojrzalyDod = int.parse(nowaWartosc);break;
-        case 8: wezaDod = int.parse(nowaWartosc);break;
-        case 9: suszDod = int.parse(nowaWartosc);break;
-        case 10: matkaDod = int.parse(nowaWartosc);
-                  switch(matkaDod){
-                    case 1: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);break;
-                    case 2: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);break;
-                    case 3: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);break;
-                    case 4: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);break;
-                    case 5: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);break;
-                    case 6: matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);break;
-                    case 6: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);break;
-                    default:
-                  }
-          break;
-        case 11: matecznikiDod = int.parse(nowaWartosc);break;
-        case 12: usunmatDod = int.parse(nowaWartosc);break;
-        case 13: switch (nowaWartosc) {
-                  case 'ramka pracy': _selectedToDo = [true, false, false, false];break; // ramka pracy | trzeba wirować | trzeba usunać | mozna izolować
-                  case 'trzeba wirować': _selectedToDo = [false, true, false, false];break;
-                  case 'trzeba usunąć': _selectedToDo = [false, false, true, false];break;
-                  case 'można izolować': _selectedToDo = [false, false, false, true];break;
-                  case 'work frame': _selectedToDo = [true, false, false, false];break; // ramka pracy | trzeba wirować | trzeba usunać | mozna izolować
-                  case 'to extraction': _selectedToDo = [false, true, false, false];break;
-                  case 'to delete': _selectedToDo = [false, false, true, false];break;
-                  case 'to insulate': _selectedToDo = [false, false, false, true];break;
-                default: _selectedToDo = [true, false, false, false];
-                }break;
-        case 14: switch (nowaWartosc) {
-                  case 'usuń ramka': _selectedIsDone = <bool>[true, false, false, false, false];break; //usuń ramka | wstaw ramka | izolacja | przesuń w lewo | przesuń w prawo
-                  case 'wstaw ramka': _selectedIsDone = <bool>[false, true, false, false, false];break;
-                  case 'izolacja': _selectedIsDone = <bool>[false, false, true, false, false];break;
-                  case 'przesuń w lewo': _selectedIsDone = <bool>[false, false, false, true, false];break;
-                  case 'przesuń w prawo': _selectedIsDone = <bool>[false, false, false, false, true];break;
-                  case 'deleted': _selectedIsDone = <bool>[true, false, false, false, false];break; //usuń ramka | wstaw ramka | izolacja | przesuń w lewo | przesuń w prawo
-                  case 'inserted': _selectedIsDone = <bool>[false, true, false, false, false];break;
-                  case 'insulated': _selectedIsDone = <bool>[false, false, true, false, false];break;
-                  case 'moved left': _selectedIsDone = <bool>[false, false, false, true, false];break;
-                  case 'moved right': _selectedIsDone = <bool>[false, false, false, false, true];break;
-                default: _selectedIsDone = <bool>[true, false, false, false, false];
-                }break;
-        default:
+      if (idRamki != null) {
+        //jezeli edycja istniejącego wpisu
+        final frameData = Provider.of<Frames>(context, listen: false);
+        ramka = frameData.items.where((element) {
+          //to wczytanie danych ramki
+          return element.id.contains('$idRamki');
+        }).toList();
+        dateController.text = ramka[0].data;
+        // nowyRok = ramka[0].data.substring(0, 4);
+        // nowyMiesiac = ramka[0].data.substring(5, 7);
+        // nowyDzien = ramka[0].data.substring(8);
+        nowyNrPasieki = ramka[0].pasiekaNr;
+        nowyNrUla = ramka[0].ulNr;
+        nowyNrKorpusu = ramka[0].korpusNr;
+        nowyNrRamki = ramka[0].ramkaNr;
+        nowyNrRamkiPo = ramka[0].ramkaNrPo;
+        korpus = ramka[0].typ;
+        korpus == 1 ? _selectedKorpus[0] = true : _selectedKorpus[0] = false;
+        korpus == 2 ? _selectedKorpus[1] = true : _selectedKorpus[1] = false;
+        rozmiarRamki = ramka[0].rozmiar;
+        rozmiarRamki == 1 ? _selectedRozmiarRamki[0] = true : _selectedRozmiarRamki[0] = false;
+        rozmiarRamki == 2 ? _selectedRozmiarRamki[1] = true : _selectedRozmiarRamki[1] = false;
+        nowyZasob = ramka[0].zasob; //id edytowanego zasobu 
+        nowaWartosc = ramka[0].wartosc.replaceAll(RegExp('%'), '');
+        switch (nowyZasob) {
+          case 1: trutDod = int.parse(nowaWartosc);break;
+          case 2: czerwDod = int.parse(nowaWartosc);break;
+          case 3: larwyDod = int.parse(nowaWartosc);break;
+          case 4: jajaDod = int.parse(nowaWartosc);break;
+          case 5: pierzgaDod = int.parse(nowaWartosc);break;
+          case 6: miodDod = int.parse(nowaWartosc);break;
+          case 7: dojrzalyDod = int.parse(nowaWartosc);break;
+          case 8: wezaDod = int.parse(nowaWartosc);break;
+          case 9: suszDod = int.parse(nowaWartosc);break;
+          case 10: matkaDod = int.parse(nowaWartosc);
+                    switch(matkaDod){
+                      case 1: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);break;
+                      case 2: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);break;
+                      case 3: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);break;
+                      case 4: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);break;
+                      case 5: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);break;
+                      case 6: matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);break;
+                      case 6: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);break;
+                      default:
+                    }
+            break;
+          case 11: matecznikiDod = int.parse(nowaWartosc);break;
+          case 12: usunmatDod = int.parse(nowaWartosc);break;
+          case 13: switch (nowaWartosc) {
+                    case 'ramka pracy': _selectedToDo = [true, false, false, false];break; // ramka pracy | trzeba wirować | trzeba usunać | mozna izolować
+                    case 'trzeba wirować': _selectedToDo = [false, true, false, false];break;
+                    case 'trzeba usunąć': _selectedToDo = [false, false, true, false];break;
+                    case 'można izolować': _selectedToDo = [false, false, false, true];break;
+                    case 'work frame': _selectedToDo = [true, false, false, false];break; // ramka pracy | trzeba wirować | trzeba usunać | mozna izolować
+                    case 'to extraction': _selectedToDo = [false, true, false, false];break;
+                    case 'to delete': _selectedToDo = [false, false, true, false];break;
+                    case 'to insulate': _selectedToDo = [false, false, false, true];break;
+                  default: _selectedToDo = [true, false, false, false];
+                  }break;
+          case 14: switch (nowaWartosc) {
+                    case 'usuń ramka': _selectedIsDone = <bool>[true, false, false, false, false];break; //usuń ramka | wstaw ramka | izolacja | przesuń w lewo | przesuń w prawo
+                    case 'wstaw ramka': _selectedIsDone = <bool>[false, true, false, false, false];break;
+                    case 'izolacja': _selectedIsDone = <bool>[false, false, true, false, false];break;
+                    case 'przesuń w lewo': _selectedIsDone = <bool>[false, false, false, true, false];break;
+                    case 'przesuń w prawo': _selectedIsDone = <bool>[false, false, false, false, true];break;
+                    case 'deleted': _selectedIsDone = <bool>[true, false, false, false, false];break; //usuń ramka | wstaw ramka | izolacja | przesuń w lewo | przesuń w prawo
+                    case 'inserted': _selectedIsDone = <bool>[false, true, false, false, false];break;
+                    case 'insulated': _selectedIsDone = <bool>[false, false, true, false, false];break;
+                    case 'moved left': _selectedIsDone = <bool>[false, false, false, true, false];break;
+                    case 'moved right': _selectedIsDone = <bool>[false, false, false, false, true];break;
+                  default: _selectedIsDone = <bool>[true, false, false, false, false];
+                  }break;
+          default:
+        }
+        stronaRamki = ramka[0].strona; //1-lewa, 2-prawa
+        stronaRamki == 1 ? _selectedStronaRamki[0] = true : _selectedStronaRamki[0] = false;
+        stronaRamki == 2 ? _selectedStronaRamki[2] = true : _selectedStronaRamki[2] = false;                                  
+        tryb = 'edycja';
+        tytulEkranu = AppLocalizations.of(context)!.editingFrame; //edycja zasobu
+      } else {
+        //jezeli dodanie nowego wpisu (tylko dla aktualnie wybranej pasieki i ula)
+        dateController.text = globals.dataWpisu; //DateTime.now().toString().substring(0, 10);
+        // nowyRok = DateFormat('yyyy').format(DateTime.now());
+        // nowyMiesiac = DateFormat('MM').format(DateTime.now());
+        // nowyDzien = DateFormat('dd').format(DateTime.now());
+        nowyNrPasieki = int.parse('$idPasieki');
+        nowyNrUla = int.parse('$idUla');
+        nowyNrKorpusu = globals.nowyNrKorpusu; //zapamiętany ostatni wybór
+        nowyNrRamki = globals.nowyNrRamki;
+        nowyNrRamkiPo = globals.nowyNrRamkiPo;
+        korpus = globals.korpus;
+        korpus == 1 ? _selectedKorpus[0] = true : _selectedKorpus[0] = false;
+        korpus == 2 ? _selectedKorpus[1] = true : _selectedKorpus[1] = false;
+        rozmiarRamki = globals.rozmiarRamki;
+        rozmiarRamki == 1 ? _selectedRozmiarRamki[0] = true : _selectedRozmiarRamki[0] = false;
+        rozmiarRamki == 2 ? _selectedRozmiarRamki[1] = true : _selectedRozmiarRamki[1] = false;
+        stronaRamki = globals.stronaRamki;
+        stronaRamki == 0 ? _selectedStronaRamki[1] = true : _selectedStronaRamki[1] = false;
+        stronaRamki == 1 ? _selectedStronaRamki[0] = true : _selectedStronaRamki[0] = false;
+        stronaRamki == 2 ? _selectedStronaRamki[2] = true : _selectedStronaRamki[2] = false;
+        nrRamkiOd = globals.nrRamkiOd;
+        nrRamkiDo = globals.nrRamkiDo;
+        zakresRamek = globals.zakresRamek;
+        zakresRamek == 0 ? _selectedZakresRamek[0] = true : _selectedZakresRamek[0] = false;
+        zakresRamek == 1 ? _selectedZakresRamek[1] = true : _selectedZakresRamek[1] = false;
+        nowyZasob = int.parse('$idZasobu'); //id zasobu z pola dialogowego "Wybierz rodzaj wpisu" (po przycisnięciu "+" u góry ekranu) - decyduje o rodzaju wpisu (zasób na ramce, toDo czy isDone)
+        //tempZasob = nowyZasob;
+        nowaWartosc = '1'; //wartość dla toDo i isDone ustawiana dalej...
+        //tempNowaWartosc = nowaWartosc;
+        tryb = 'dodaj';
+        tytulEkranu = AppLocalizations.of(context)!.addFrame;
+        if (nowyZasob == 13) nowaWartosc = AppLocalizations.of(context)!.workFrame;
+        if (nowyZasob == 14) nowaWartosc = AppLocalizations.of(context)!.deleted; 
       }
-      stronaRamki = ramka[0].strona; //1-lewa, 2-prawa
-      stronaRamki == 1 ? _selectedStronaRamki[0] = true : _selectedStronaRamki[0] = false;
-      stronaRamki == 2 ? _selectedStronaRamki[2] = true : _selectedStronaRamki[2] = false;                                  
-      tryb = 'edycja';
-      tytulEkranu = AppLocalizations.of(context)!.editingFrame; //edycja zasobu
-    } else {
-      //jezeli dodanie nowego wpisu (tylko dla aktualnie wybranej pasieki i ula)
-      dateController.text = globals.dataWpisu; //DateTime.now().toString().substring(0, 10);
-      // nowyRok = DateFormat('yyyy').format(DateTime.now());
-      // nowyMiesiac = DateFormat('MM').format(DateTime.now());
-      // nowyDzien = DateFormat('dd').format(DateTime.now());
-      nowyNrPasieki = int.parse('$idPasieki');
-      nowyNrUla = int.parse('$idUla');
-      nowyNrKorpusu = globals.nowyNrKorpusu; //zapamiętany ostatni wybór
-      nowyNrRamki = globals.nowyNrRamki;
-      nowyNrRamkiPo = globals.nowyNrRamkiPo;
-      korpus = globals.korpus;
-      korpus == 1 ? _selectedKorpus[0] = true : _selectedKorpus[0] = false;
-      korpus == 2 ? _selectedKorpus[1] = true : _selectedKorpus[1] = false;
-      rozmiarRamki = globals.rozmiarRamki;
-      rozmiarRamki == 1 ? _selectedRozmiarRamki[0] = true : _selectedRozmiarRamki[0] = false;
-      rozmiarRamki == 2 ? _selectedRozmiarRamki[1] = true : _selectedRozmiarRamki[1] = false;
-      stronaRamki = globals.stronaRamki;
-      stronaRamki == 0 ? _selectedStronaRamki[1] = true : _selectedStronaRamki[1] = false;
-      stronaRamki == 1 ? _selectedStronaRamki[0] = true : _selectedStronaRamki[0] = false;
-      stronaRamki == 2 ? _selectedStronaRamki[2] = true : _selectedStronaRamki[2] = false;
-      nrRamkiOd = globals.nrRamkiOd;
-      nrRamkiDo = globals.nrRamkiDo;
-      zakresRamek = globals.zakresRamek;
-      zakresRamek == 0 ? _selectedZakresRamek[0] = true : _selectedZakresRamek[0] = false;
-      zakresRamek == 1 ? _selectedZakresRamek[1] = true : _selectedZakresRamek[1] = false;
-      nowyZasob = int.parse('$idZasobu'); //id zasobu z pola dialogowego "Wybierz rodzaj wpisu" (po przycisnięciu "+" u góry ekranu) - decyduje o rodzaju wpisu (zasób na ramce, toDo czy isDone)
-      //tempZasob = nowyZasob;
-      nowaWartosc = '1'; //wartość dla toDo i isDone ustawiana dalej...
-      //tempNowaWartosc = nowaWartosc;
-      tryb = 'dodaj';
-      tytulEkranu = AppLocalizations.of(context)!.addFrame;
-      if (nowyZasob == 13) nowaWartosc = AppLocalizations.of(context)!.workFrame;
-      if (nowyZasob == 14) nowaWartosc = AppLocalizations.of(context)!.deleted; 
-    }
-    //pobranie danych 0 ulu
-    Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowyNrPasieki)
-          .then((_) {
-      final hiveData = Provider.of<Hives>(context, listen: false);
-      hive = hiveData.items.where((element) {
-        //to wczytanie danych edytowanego ula
-        return element.id.contains('$nowyNrPasieki.$nowyNrUla');
-      }).toList();
+      //pobranie danych 0 ulu
+      Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowyNrPasieki)
+            .then((_) {
+        final hiveData = Provider.of<Hives>(context, listen: false);
+        hive = hiveData.items.where((element) {
+          //to wczytanie danych edytowanego ula
+          return element.id.contains('$nowyNrPasieki.$nowyNrUla');
+        }).toList();
+        
+        ramek = hive[0].ramek; //liczba ramek w ulu
+        
+        //utworzenie klwiatury wyboru numeru ramki
+        gridItems=[];
+        for(int i = 0; i <= ramek; i++){
+          gridItems.add(i);
+        // print('i = ${gridItems}');
+        } 
+      });
       
-      ramek = hive[0].ramek; //liczba ramek w ulu
-      
-      //utworzenie klwiatury wyboru numeru ramki
-      gridItems=[];
-      for(int i = 0; i <= ramek; i++){
-        gridItems.add(i);
-        print('i = ${gridItems}');
-      } 
-     });
-    
-    //ustawienie numerów wielu ramek
-    if(globals.numeryWieluRamek == 1) _selectedNumeryWieluRamek=<bool>[false, true, false];
-    else if(globals.numeryWieluRamek == 0) _selectedNumeryWieluRamek=<bool>[true, false, false];
-    else if(globals.numeryWieluRamek == 2) _selectedNumeryWieluRamek=<bool>[false, false, true];
+      //ustawienie numerów wielu ramek
+      if(globals.numeryWieluRamek == 1) _selectedNumeryWieluRamek=<bool>[false, true, false];
+      else if(globals.numeryWieluRamek == 0) _selectedNumeryWieluRamek=<bool>[true, false, false];
+      else if(globals.numeryWieluRamek == 2) _selectedNumeryWieluRamek=<bool>[false, false, true];
 
-    globals.jezyk == 'pl_PL'
-      ? gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych']
-      : gridItemsKolor = ['black','yellow','red','green','blue','white','no\ndata'];
+      globals.jezyk == 'pl_PL'
+        ? gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych']
+        : gridItemsKolor = ['black','yellow','red','green','blue','white','no\ndata'];
+      
+      double heightScreen = MediaQuery.of(context).size.height;
+      // print('wysokość ekranu');
+      // print(heightScreen);
+      if (heightScreen < 590) {
+        dzielnik = 3; //zeby proporcje klawiszy klawiatur numerów ramek i zasobów był 1:1 (kwadraty dla małych ekranów)
+      }
     
-    double heightScreen = MediaQuery.of(context).size.height;
-    // print('wysokość ekranu');
-    // print(heightScreen);
-    if (heightScreen < 590) {
-      dzielnik = 3; //zeby proporcje klawiszy klawiatur numerów ramek i zasobów był 1:1 (kwadraty dla małych ekranów)
-    }
-    
+    } //od if (_isInit) {
+    _isInit = false;
+   // print('na koniec didChangeDependencies: nowyZasobId  = ${dateController.text}'); 
     super.didChangeDependencies();
   }
 
@@ -369,7 +374,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                       decoration: BoxDecoration(                        
                         gradient: LinearGradient(
                           colors: [
-                            Theme.of(context).primaryColor.withOpacity(0.7),
+                            Theme.of(context).primaryColor.withValues(alpha:0.7),
                             Theme.of(context).primaryColor,
                           ],
                           begin: Alignment.topLeft,
@@ -447,7 +452,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                       decoration: BoxDecoration(                        
                         gradient: LinearGradient(
                           colors: [
-                            Theme.of(context).primaryColor.withOpacity(0.7),
+                            Theme.of(context).primaryColor.withValues(alpha:0.7),
                             Theme.of(context).primaryColor,
                           ],
                           begin: Alignment.topLeft,
@@ -671,7 +676,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                       decoration: BoxDecoration(                        
                         gradient: LinearGradient(
                           colors: [
-                            Theme.of(context).primaryColor.withOpacity(0.7),
+                            Theme.of(context).primaryColor.withValues(alpha:0.7),
                             Theme.of(context).primaryColor,
                           ],
                           begin: Alignment.topLeft,
@@ -730,7 +735,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                 shrinkWrap: true,
                 padding: const EdgeInsets.all(15.0),
                 crossAxisCount: 2, //ilość kolumn
-                childAspectRatio: (3 / 2), //proporcje boków kafli
+                childAspectRatio: (3 / 1.8), //proporcje boków kafli
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
                 children: gridItemsKolor
@@ -935,7 +940,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                       decoration: BoxDecoration(                        
                         gradient: LinearGradient(
                           colors: [
-                            Theme.of(context).primaryColor.withOpacity(0.7),
+                            Theme.of(context).primaryColor.withValues(alpha:0.7),
                             Theme.of(context).primaryColor,
                           ],
                           begin: Alignment.topLeft,
@@ -1197,8 +1202,8 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
     matka4 = hive[0].matka4;
     matka5 = hive[0].matka5;
 
-    print('nowyNrPasieki = $nowyNrPasieki, nowyNrUla = $nowyNrUla, id wpisu w "ule" = ${hive[0].id}, data wybranego przeglądu = $formattedDate, data ostatniego przeglądu =  ${hive[0].przeglad}');
-    print('nowyZasob = $nowyZasob, korpusNr = $korpusNr, nowyNrKorpusu = $nowyNrKorpusu');
+    //print('nowyNrPasieki = $nowyNrPasieki, nowyNrUla = $nowyNrUla, id wpisu w "ule" = ${hive[0].id}, data wybranego przeglądu = $formattedDate, data ostatniego przeglądu =  ${hive[0].przeglad}');
+    //print('nowyZasob = $nowyZasob, korpusNr = $korpusNr, nowyNrKorpusu = $nowyNrKorpusu');
     
     //===== Jezeli data dodawanego lub modyfikowanego przegladu jest nowsza lub taka sama jak data ostatniego przegladu
     //===== to modyfikacja belki bo jest zmiana zasobu
@@ -1441,6 +1446,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   Widget build(BuildContext context) {
     
     final ButtonStyle buttonStyle = OutlinedButton.styleFrom(
+      padding: const EdgeInsets.all(2.0),
       backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
@@ -1448,6 +1454,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       //textStyle: const TextStyle(color: Color.fromARGB(255, 162, 103, 0),)
     );
     final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
+      padding: const EdgeInsets.all(2.0),
       backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
@@ -1455,6 +1462,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
     final ButtonStyle buttonPasiekaUlStyle = OutlinedButton.styleFrom(
+      padding: const EdgeInsets.all(2.0),
       backgroundColor: Color.fromARGB(255, 211, 211, 211),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
@@ -1462,13 +1470,14 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
     final ButtonStyle buttonSumaZasobow = OutlinedButton.styleFrom(
+      padding: const EdgeInsets.all(2.0),
       backgroundColor: Color.fromARGB(255, 211, 211, 211),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
       fixedSize: Size(85.0, 35.0),
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
-
+//print(dateController.text );
     return Scaffold(
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
@@ -1663,7 +1672,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(AppLocalizations.of(context)!.beforee),
+                                      Text(AppLocalizations.of(context)!.before),
                                       OutlinedButton(
                                           style: buttonStyle,
                                           onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberBefore,1);},
@@ -1679,7 +1688,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(AppLocalizations.of(context)!.beforee),
+                                      Text(AppLocalizations.of(context)!.before),
                                       OutlinedButton(
                                           style: buttonStyle,
                                           onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberBefore,1);},
@@ -2551,6 +2560,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
 //zmień
                           if(tryb == 'edycja')
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
                                 DBHelper.deleteFrame(ramka[0].id).then((_) {  //kasowanie ramki bo będzie nowa                                
@@ -2589,7 +2599,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                       }).toList();
                                         //dla kazdego zasobu modyfikacja ramkaNrPo
                                       for (var i = 0; i < frames.length; i++) {
-                                        print(' id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                                        //(' id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
                                         DBHelper.updateRamkaNrPo(frames[i].id, nowyNrRamkiPo!);
                                       }
                                     } 
@@ -2613,6 +2623,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
 //zapisz
                           if(tryb == 'dodaj')
                             MaterialButton(
+                              height: 50,
                               shape: const StadiumBorder(),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {

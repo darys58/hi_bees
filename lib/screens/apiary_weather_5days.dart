@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
 import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
-import '../helpers/db_helper.dart';
+//import '../helpers/db_helper.dart';
 import '../models/weather.dart';
 import '../models/weathers.dart';
 
@@ -61,7 +61,7 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
       // print('nnnnnnnnnnn = ${pogoda}');
       if (pogoda.length == 0) {
         //jezeli nie ma danych dla wybranej pasieki
-        print('brak danych o lokalizacji pasieki');
+        //print('brak danych o lokalizacji pasieki');
         miasto = '';
         latitude = '';
         longitude = '';
@@ -74,7 +74,7 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
         longitude = pogoda[0].longitude;
         units_number = pogoda[0].units;
         lang = pogoda[0].lang;
-        print('${pogoda[0].id}, ${pogoda[0].miasto}, ${pogoda[0].latitude},${pogoda[0].longitude}, ${pogoda[0].pobranie},${pogoda[0].temp},${pogoda[0].units},${pogoda[0].icon}');
+        //print('${pogoda[0].id}, ${pogoda[0].miasto}, ${pogoda[0].latitude},${pogoda[0].longitude}, ${pogoda[0].pobranie},${pogoda[0].temp},${pogoda[0].units},${pogoda[0].icon}');
       }
       
       //jezeli są jakieś dane dla pasieki
@@ -139,19 +139,26 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
     super.didChangeDependencies();
   }
 
-  //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.mobile) {
-      print("Connected to Mobile Network");
+  ///sprawdzenie czy jest internet
+  Future<bool> _isInternet() async { 
+    final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult.contains(ConnectivityResult.mobile)) {
+      // Mobile network available.
       return true;
-    } else if (connectivityResult == ConnectivityResult.wifi) {
-      print("Connected to WiFi");
+    } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+      // Wi-fi is available.
+      // Note for Android: When both mobile and Wi-Fi are turned on system will return Wi-Fi only as active network type
       return true;
-    } else {
-      print("Unable to connect. Please Check Internet Connection");
+    } else if (connectivityResult.contains(ConnectivityResult.bluetooth)) {
+      // Bluetooth connection available.
+      return true;
+    } else if (connectivityResult.contains(ConnectivityResult.other)) {
+      // Connected to a network which is not in the above mentioned networks.
       return false;
-    }
+    } else if (connectivityResult.contains(ConnectivityResult.none)) {
+      // No available network types
+      return false;
+    }else return false;
   }
 
   //pobranie pogody z www dla miasta i aktualizacja wpisu w bazie

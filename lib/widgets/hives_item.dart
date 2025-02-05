@@ -20,8 +20,7 @@ class HivesItem extends StatelessWidget {
     while (kolor > 10) {
       kolor = kolor - 10;
     }
-    print(
-        '${hive.ulNr}: korp=${hive.korpusNr} - t${hive.trut}, c${hive.czerw}, l${hive.larwy}, j${hive.jaja}, p${hive.pierzga}, m${hive.miod}, d${hive.dojrzaly},w${hive.weza}, s${hive.susz}, m${hive.matka}, mt${hive.mateczniki}, dm${hive.usunmat} , td${hive.todo} m1${hive.matka1} m2${hive.matka2} m3${hive.matka3} m4${hive.matka4} m5${hive.matka5}');
+    //print( '${hive.ulNr}: korp=${hive.korpusNr} - t${hive.trut}, c${hive.czerw}, l${hive.larwy}, j${hive.jaja}, p${hive.pierzga}, m${hive.miod}, d${hive.dojrzaly},w${hive.weza}, s${hive.susz}, m${hive.matka}, mt${hive.mateczniki}, dm${hive.usunmat} , td${hive.todo} m1${hive.matka1} m2${hive.matka2} m3${hive.matka3} m4${hive.matka4} m5${hive.matka5}');
     
     //final cart = Provider.of<Cart>(context, listen: false); //dostęp do cart.addItem(
     //var color = Colors.orange;
@@ -84,6 +83,9 @@ class HivesItem extends StatelessWidget {
 
     return Container(
       child: Card(
+         shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
         margin: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 4,
@@ -484,7 +486,7 @@ class MyHiveToDo extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
-    Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
+    //Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
     // Paint obrysPaint = Paint()
     //   ..strokeWidth = 1
     //   ..color = Color.fromARGB(255, 122, 122, 122); //obrys
@@ -532,7 +534,7 @@ class MyHiveToDo extends CustomPainter {
     if (ul.todo == 'można izolować' || ul.todo == 'to insulate') {
       sides = 4;
       radians = math.pi / 4;
-      var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+      //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
       canvas.drawLine(
           Offset(1, 8), Offset(7, 8), linePaint); // - (kreska pozioma)
@@ -602,8 +604,8 @@ class MyHiveQueen extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
-    Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
+    //Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
+    //Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
 
     Paint matka = Paint()
       ..color = Color.fromARGB(255, 59, 59, 59)
@@ -645,7 +647,7 @@ class MyHiveRow extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
-    Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
+    //Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
     // Paint obrysPaint = Paint()
     //   ..strokeWidth = 1
     //   ..color = Color.fromARGB(255, 122, 122, 122); //obrys
@@ -679,23 +681,23 @@ class MyHiveRow extends CustomPainter {
       ..strokeWidth = 11
       ..color = Color.fromARGB(
           255, 255, 255, 0); //(9) comb, wax comb / susz, woszczyna
-    Paint matka = Paint()
-      ..color = Color.fromARGB(255, 59, 59, 59)
-      ..style = PaintingStyle.fill; //matka
-    Paint matecznik = Paint()
-      ..color = Color.fromARGB(255, 255, 17, 0)
-      ..style = PaintingStyle.fill
-      ..strokeWidth = 1; //matecznik
-    Paint delMat = Paint()
-      ..color = Color.fromARGB(255, 153, 125, 125)
-      ..style = PaintingStyle.fill //stroke
-      ..strokeWidth = 1; //mateczniki usuniete
+    // Paint matka = Paint()
+    //   ..color = Color.fromARGB(255, 59, 59, 59)
+    //   ..style = PaintingStyle.fill; //matka
+    // Paint matecznik = Paint()
+    //   ..color = Color.fromARGB(255, 255, 17, 0)
+    //   ..style = PaintingStyle.fill
+    //   ..strokeWidth = 1; //matecznik
+    // Paint delMat = Paint()
+    //   ..color = Color.fromARGB(255, 153, 125, 125)
+    //   ..style = PaintingStyle.fill //stroke
+    //   ..strokeWidth = 1; //mateczniki usuniete
 
-    Paint paintStroke = Paint()
-      ..color = Color.fromARGB(255, 0, 0, 0)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke //fill
-      ..strokeCap = StrokeCap.round;
+    // Paint paintStroke = Paint()
+    //   ..color = Color.fromARGB(255, 0, 0, 0)
+    //   ..strokeWidth = 1
+    //   ..style = PaintingStyle.stroke //fill
+    //   ..strokeCap = StrokeCap.round;
     // Paint paintStroke = Paint()
     //   ..color = Color.fromARGB(255, 0, 0, 0)
     //   ..strokeWidth = 1
@@ -703,18 +705,18 @@ class MyHiveRow extends CustomPainter {
     //   ..strokeCap = StrokeCap.round;
 
     //wielokąty
-    double sides = 3;
-    double radius = 5;
-    double radians = 0; //kąt - początek rysowania
+    // double sides = 3;
+    // double radius = 5;
+    // double radians = 0; //kąt - początek rysowania
     //3.14 - trójkąt w lewo, //1,57(/2) - w dół //(/6) - w górę, 0 - w prawo
     //double wDol = math.pi/2; //1,57 - trójkąt w dół
-    var path = Path();
+    // var path = Path();
 
     //text
-    final textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 15,
-    );
+    // final textStyle = TextStyle(
+    //   color: Colors.black,
+    //   fontSize: 15,
+    // );
     double mnoznik = size.width / 100; //1.5 dla 150 długości belki, 1 dla 100
 
     canvas.drawLine(Offset(0, 1), Offset(size.width, 1), linePaint);

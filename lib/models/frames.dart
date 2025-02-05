@@ -69,15 +69,15 @@ class Frames with ChangeNotifier {
     //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
-      print(json.decode(response.body));
+      //print(json.decode(response.body));
 
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      if (extractedData == null) {
-        return;
-      }
+      // if (extractedData == null) {
+      //   return;
+      // }
 
       extractedData.forEach((ramkaId, ramkaData) {
-        if (ramkaId != 'brak') {//jezeli są wpisy a tabeli ramka_xxxx
+        if (ramkaId != 'brak') {//jezeli są wpisy a tabeli xxxx_ramka
           //zapis ramki do bazy
           DBHelper.insert('ramka', {
             'id': ramkaId,
@@ -123,7 +123,7 @@ class Frames with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich!!!!!!! danych o ramkach --> Frames <---');
+    //print('wczytanie wszystkich!!!!!!! danych o ramkach --> Frames <---');
     //print(_items);
     notifyListeners();
   }
@@ -150,8 +150,7 @@ class Frames with ChangeNotifier {
           ),
         )
         .toList();
-    print(
-        'wczytanie danych o ramkach dla podanego ula i pasieki ---> Frames <---');
+    //print('wczytanie danych o ramkach dla podanego ula i pasieki ---> Frames <---');
     //print(_items);
     notifyListeners();
   }
@@ -178,8 +177,7 @@ class Frames with ChangeNotifier {
           ),
         )
         .toList();
-    print(
-        'wczytanie nowych danych o ramkach do archiwizacji ---> Frames <---');
+    //print('wczytanie nowych danych o ramkach do archiwizacji ---> Frames <---');
     //print(_items);
     notifyListeners();
   }
@@ -206,8 +204,7 @@ class Frames with ChangeNotifier {
           ),
         )
         .toList();
-    print(
-        'wczytanie ramki dla podanego id ---> Frame <---');
+    //print('wczytanie ramki dla podanego id ---> Frame <---');
     //print(_items);
     notifyListeners();
   }

@@ -8,7 +8,7 @@
 // an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 //
-
+  //usunąć zeby aktywować cały skrypt !!!!!!!!!!!!!!!!!!!!!!!!!!!
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -16,7 +16,7 @@ import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:hi_bees/helpers/db_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_beep/flutter_beep.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:rhino_flutter/rhino.dart';
 import 'package:picovoice_flutter/picovoice_error.dart';
@@ -68,6 +68,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   String? contextInfo;
   PicovoiceManager? _picovoiceManager;
   double heightScreen = 601;
+  bool czyJesWidget = false;
   // String rhinoModelPath = 'assets/models/rhino_params_pl.pv';
   // String porcupineModelPath = 'assets/models/porcupine_params_pl.pv';
   var now = new DateTime.now();
@@ -113,14 +114,17 @@ class _VoiceScreenState extends State<VoiceScreen> {
   String? allHivesState;
   String? hiveState;
   int nrXXOfHive = 0;
-  int nrXXOfHiveTemp =
-      0; //tymczasowy numer ula potrzebny przy resecie bo inna kolejność pól w slocie
+  int nrXXOfHiveTemp = 0; //tymczasowy numer ula potrzebny przy resecie bo inna kolejność pól w slocie
+  int nrXXOfHiveH = 0;
+  int nrTempHive = 0; //numer ula do którego przenoszona jest ramka
   String? bodyState;
   int nrXOfBody = 0;
   int nrXOfBodyTemp = 0;
   String? halfBodyState;
   int nrXOfHalfBody = 0;
   int nrXOfHalfBodyTemp = 0;
+  int nrTempBody = 0; //numer korpusu do którego przenoszona jest ramka
+  int nrTempHalfBody = 0;//j.w.
   String? frameState; //ramka
   String? framesState; //ramki
   int nrXXOdFrame = 0;
@@ -130,6 +134,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   int nrXXOfFrame = 0;
   int nrXXOfFramePo = 0;
   int nrXXOfFrameTemp = 0;
+  int nrTempFrame = 0; //numer ramki który otrzymuje przeniesiona ramka do innego korpusu
   String siteOfFrame = '0'; //both, whole, left, right, obie
   String sizeOfFrame = '0'; //big, small   2-duza, 1-mała
   String? site; //left, right  - dla moved
@@ -180,6 +185,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   int _typ = 0; //2-korpus, 1-półkorpus
   int _rozmiar = 0; //2-big, 1-small
   int _nowaIloscRamek = 0; //zmieniana poleceniem głosowym
+  bool _ulPo = true; //true="Po", false="przed" - ul wyświetlany w "ul pomóz mi"
   //int _strona = 0;
 
   String syrup1to1I = '0';
@@ -193,6 +199,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
   String removedFood = '0';
   String leftFood = '0';
   String queenNumber = '';
+  String queenAlpha1 = '';
+  String queenAlpha2 = '';
   String queenMark = '';
   String biovarState = '';
   String biovarBelts = '';
@@ -231,17 +239,35 @@ class _VoiceScreenState extends State<VoiceScreen> {
     setState(() {
       isButtonDisabled = true;
       rhinoText = "";
-      Wakelock.enable(); //blokada wyłaczania ekranu
+      WakelockPlus.enable(); //blokada wyłaczania ekranu
     });
+
+    //DANE DO TESTOWANIA TEGO EKRANU
+    // readyApiary = true; //ustalony numer pasieki
+    // readyAllHives = false; //polecenia dla wszy
+    // readyHive = true; //ustalony numer ula
+    // readyBody = true; //ustalony numer korpusu
+    // readyHalfBody = false; //ustalony numer półkorpusu
+    // readyFrame = true; //ustalony numer ramki
+    // readyStory = true; //gotowość do zapisu w bazie poszczególnych produktów
+    // readyInfo = false; //gotowość do zapisu info
+    // readyFrames = false; //ustalony zakres kilku ramek
+    
+    // nrXXOfApiary = 1; //numer pasieki
+    // nrXXOfHive = 666;
+    // nrXOfBody = 1;
+    // nrXXOdFrame = 0;
+    // nrXXDoFrame = 0;
+    // nrXXOfFrame = 10;
+    // nrXXOfFramePo = 10;
+
 
     initPicovoice();
   }
 
   @override
   void didChangeDependencies() {
-    print('voice_screen: wejscie do Dependencies ms 1');
 
-    print('voice_screen: _isInit = $_isInit');
     if (_isInit) {
       formattedDate = formatter.format(now);
 
@@ -264,19 +290,26 @@ class _VoiceScreenState extends State<VoiceScreen> {
     super.didChangeDependencies();
   }
 
-  //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.mobile) {
-      print("Connected to Mobile Network");
+ //sprawdzenie czy jest internet
+  Future<bool> _isInternet() async { 
+    final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult.contains(ConnectivityResult.mobile)) {
+      // Mobile network available.
       return true;
-    } else if (connectivityResult == ConnectivityResult.wifi) {
-      print("Connected to WiFi");
+    } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+      // Wi-fi is available.
+      // Note for Android: When both mobile and Wi-Fi are turned on system will return Wi-Fi only as active network type
       return true;
-    } else {
-      print("Unable to connect. Please Check Internet Connection");
+    } else if (connectivityResult.contains(ConnectivityResult.bluetooth)) {
+      // Bluetooth connection available.
+      return true;
+    } else if (connectivityResult.contains(ConnectivityResult.other)) {
+      // Connected to a network which is not in the above mentioned networks.
       return false;
-    }
+    } else if (connectivityResult.contains(ConnectivityResult.none)) {
+      // No available network types
+      return false;
+    }else return false;
   }
 
   //inicjacja środowiska i zasobow -----------
@@ -315,19 +348,6 @@ class _VoiceScreenState extends State<VoiceScreen> {
   // }
 
   Future<void> initPicovoice() async {
-    // String language = "";
-    // try {
-    //   final paramsString =
-    //       await DefaultAssetBundle.of(context).loadString('assets/params.json');
-    //   final params = json.decode(paramsString);
-
-    //   language = params["language"];
-    //   contextName = params["context"];
-    //   wakeWordName = params["wakeWord"];
-    // } catch (_) {
-    //   errorCallback(PicovoiceException(
-    //       "Could not find `params.json`. Ensure 'prepare_demo.dart' script was run before launching the demo."));
-    // }
 
     String platform = Platform.isAndroid
         ? "android"
@@ -376,71 +396,77 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
   //zdekodowano słowo wybudzenia - wybudzono słowem - czekanie na polecenie
   void wakeWordCallback() {
-    print('2 wakeWordCallback oczekiwanie na intencje ...................');
-    //if (mounted) {
-    print('_picovoiceManager  = $_picovoiceManager');
+    //print('2 wakeWordCallback - słowo wybudzania zdekodowani i jest oczekiwanie na intencje ...................');
 
-    // if (this.mounted) setState(() {
-    //     user = getUser;
-    //   });
-
-    if (this.mounted)
+    if (this.mounted)//{
       setState(() {
-        //tu sie wywala !!!!!!!!!11
+        //print('wywołanie setState w wakeWordCallback  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        //czyJesWidget = false;
         wakeWordDetected = true;
         rhinoText = AppLocalizations.of(context)!.hiBeesDetected;
         //"\"Hi Bees!\" detected!\nListening for intent...\n\nWant help - say \"Help me!\""; //po słowie wybudzenia
+        platform == 'android'
+          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
+          : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);//hiBeesDetected
       });
-    // }
-    //czekanie na polecenie (po wybudzeniu)
-    platform == 'android'
-        ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
-        : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
-    print('beep - BeginRecording');
+   
+      //  platform == 'android'
+      //   ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
+      //   : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
+      //print('beep - BeginRecording - sygnał ze jest wybudzenie');
+ //   } else beep('error');
   }
 
 //funkcja wywołania zwrotnego przyjmuje parametr RhinoInterface z parametrami: isUnderstood - czy Rhino zrozumiał na podstawie kontekstu, intent - nazwa intencji jeśli zrozumiał, slots - klucz i wartość wnioskowania
   void inferenceCallback(RhinoInference inference) {
-    print(
-        '3 inferenceCallback wywołanie zwrotne czy zrozumiał i co zrozumiał............');
-
+    //print('3 inferenceCallback wywołanie zwrotne czy zrozumiał i co zrozumiał............');
+    //print(' !!!!!!!!!! wyołanie setState w inferenceCallback  - tu sie wywala bo nie ma widgetu "build"');
+    if (this.mounted)
     setState(() {
+      //print('3 11111 wywołanie setState w inferenceCallback - wywołanie funkcji obsługi polecenia głosowego  - tworzenie tekstów');
       rhinoText = prettyPrintInference(inference);
       wakeWordDetected = false;
-      // if (Platform.isAndroid) test = 'inferenceCallback'; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     });
 
-    //print('zmienn apiaryState = $apiaryState');
-    print(' finkcja delayed zwłoka ======== $zwloka');
+    //print('!!!!!!!!!!! zakończenie tworzenia tekstów i wpisów do bazy ?????? !!!!!!!!!!!!1');
+    //print(' funkcja delayed zwłoka ======== $zwloka' opóznienie zeby wykonały sie wszystkie operacje );
     Future.delayed(Duration(milliseconds: zwloka), () {
       if (isProcessing) {
         if (wakeWordDetected) {
-          print('111-3 delayed - jest wybudzenie');
+          //print('3 2222222 isProcessing delayed - jest wybudzenie - usłyszano hej Maja');
           rhinoText = AppLocalizations.of(context)!.hiBeesDetected;
+          platform == 'android'
+            ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
+            : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);//hiBeesDetected
           //FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
           //FlutterBeep.playSysSound(iOSSoundIDs.Headset_StartCall);
         } else {
-          print('111-3 delayed - nie ma wybudzenia');
+          // print('3 3333333  isProcessing delayed - nie ma wybudzenia - czekanie na hej Maja');
+          // print(' tu tez sie wywala bo chce wywołać setState');
+          if (this.mounted)
           setState(() {
             rhinoText = AppLocalizations.of(context)!.listeningForHiBees;
             // "Listening for \"Hi Bees!\""; //po zakończeniu wnioskowania
             //if (Platform.isAndroid) test = 'delayed';//!!!!!!!!!!!!!!!!!!!!!!!!!!
+            platform == 'android'
+              ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_PROMPT)
+              : FlutterBeep.playSysSound(iOSSoundIDs.JBL_Begin);
           });
           //rhinoText += "\"Hi Bees\"";
           //wykonanie polecenia - realizacja intencji i powrót do oczekiwania na wybudzenie
-          platform == 'android'
-              ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_PROMPT)
-              : FlutterBeep.playSysSound(iOSSoundIDs.JBL_Begin);
+          // platform == 'android'
+          //     ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_PROMPT)
+          //     : FlutterBeep.playSysSound(iOSSoundIDs.JBL_Begin);
           //: FlutterBeep.playSysSound(iOSSoundIDs.ConnectedToPower); //nie działa na iPhone
-          print('beep - ConnectedToPower');
+          // print('beep - ConnectedToPower - wykonanie polecenia - realizacja intencji i powrót do oczekiwania na wybudzenie');
+          // print('3  444444444  na końcu inferenceCallback ??????????????? czyJesWidget = $czyJesWidget');
         }
       } else {
-        print('111-3 delayed - nieaktywny isProcesing, ');
-        //if (mounted) {
+        //debugPrint('333-3 isProcessing delayed - nieaktywny isProcesing, ');       
+        if (this.mounted)
         setState(() {
           rhinoText = "";
         });
-        // }
       }
     });
   }
@@ -463,8 +489,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
     if (sizeOfFrame == '0') sizeOfFrame = AppLocalizations.of(context)!.big;
     String printText = ""; //ogólny - intent
     String printText1 = ""; //dla części State
-    print(
-        '5 prettyPrintInference tworzenie tekstów...........................');
+    //print( '5 prettyPrintInference tworzenie tekstów i przetwarzanie komend głosowych na działania apki...........................');
+    
     if (inference.isUnderstood!) {
       //printText += "5  I uderstood :)\n";
     } else {
@@ -473,137 +499,3344 @@ class _VoiceScreenState extends State<VoiceScreen> {
       beep('error');
     }
 
-    //printText += " - ${inference.isUnderstood}\n\n";
-    // "{\n    \"isUnderstood\" : \"${inference.isUnderstood}\",\n";
+//***** OBSŁUGA MODELU GŁOSOWEGO  ******/
+//**************************************/
+
     if (inference.isUnderstood!) {
-      //printText += "5  intent: ${inference.intent}\n\n";
-      //printText += "    \"intent\" : \"${inference.intent}\",\n";
       switch (inference.intent) {
+
+//setStore - zasoby na ramce        
         case 'setStore':
           printText += AppLocalizations.of(context)!.store; //" Store:";
-          intention = 'setStore';
+          //intention = 'setStore';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              //print('key ------ $key');
+              switch (key) { 
+                case 'siteOfFrame':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    beep('open');
+                    printText1 += AppLocalizations.of(context)!.siteOfFrame;
+                    //"\n Site of frame =";
+                    printText1 += " ${slots[key]}";
+                    siteOfFrame = '${slots[key]}';
+                    resetInfo();
+                    readyInfo = false;
+                  }
+                  break;
+                case 'drone':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.drone + " =";
+                    printText1 += " ${slots[key]}";
+                    drone = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis =
+                        AppLocalizations.of(context)!.drone + " = ${slots[key]}";
+                    zapisZas = 1;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(1, '${slots[key]}'); //
+                  }
+                  break;
+                case 'brood':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.broodCovered + " =";
+                    printText1 += " ${slots[key]}";
+                    brood = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis = AppLocalizations.of(context)!.broodCovered +
+                        " = ${slots[key]}";
+                    zapisZas = 2;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(2, '${slots[key]}'); //
+                  }
+                  break;
+                case 'larvae':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.larvae + " =";
+                    printText1 += " ${slots[key]}";
+                    larvae = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis =
+                        AppLocalizations.of(context)!.larvae + " = ${slots[key]}";
+                    zapisZas = 3;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(3, '${slots[key]}'); //
+                  }
+                  break;
+                case 'eggs':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.eggs + " =";
+                    printText1 += " ${slots[key]}";
+                    eggs = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis = AppLocalizations.of(context)!.eggs + " = ${slots[key]}";
+                    zapisZas = 4;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(4, '${slots[key]}'); //
+                  }
+                  break;
+                case 'pollen':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.pollen + " =";
+                    printText1 += " ${slots[key]}";
+                    pollen = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis =
+                        AppLocalizations.of(context)!.pollen + " = ${slots[key]}";
+                    zapisZas = 5;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(5, '${slots[key]}');
+                  }
+                  break;
+                case 'food':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.food + " =";
+                    printText1 += " ${slots[key]}";
+                    honey = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis = AppLocalizations.of(context)!.food + " = ${slots[key]}";
+                    zapisZas = 6;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(6, '${slots[key]}'); //2-honey
+                  }
+                  break;
+                case 'honey':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.honey + " =";
+                    printText1 += " ${slots[key]}";
+                    honey = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis =
+                        AppLocalizations.of(context)!.honey + " = ${slots[key]}";
+                    zapisZas = 6;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(6, '${slots[key]}'); //2-honey
+                  }
+                  break;
+                case 'honeySealed':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.honeySealed + " =";
+                    printText1 += " ${slots[key]}";
+                    honeySeald = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis = AppLocalizations.of(context)!.honeySealed +
+                        " = ${slots[key]}";
+                    zapisZas = 7;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(7, '${slots[key]}'); //1-honeySealed
+                  }
+                  break;
+                case 'wax':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.waxFundation + " =";
+                    printText1 += " ${slots[key]}";
+                    wax = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis = AppLocalizations.of(context)!.waxFundation +
+                        " = ${slots[key]}";
+                    zapisZas = 8;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(8, '${slots[key]}'); //
+                  }
+                  break;
+                case 'waxComb':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.waxComb + " =";
+                    printText1 += " ${slots[key]}";
+                    waxComb = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis =
+                        AppLocalizations.of(context)!.waxComb + " = ${slots[key]}";
+                    zapisZas = 9;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(8, '${slots[key]}'); //
+                  }
+                  break;
+                case 'queen':
+                  if (readyApiary == true &&
+                      readyHive == true &&
+                      (readyBody == true || readyHalfBody == true) &&
+                      readyFrame == true) {
+                    printText1 += "\n" +
+                        AppLocalizations.of(context)!.queen +
+                        " = ${slots[key]}";
+                    if (globals.jezyk == "pl_PL") {
+                      switch (slots[key]) {
+                        //zawiera kolor znacznika
+                        case 'czarna':
+                          queen = '1';
+                          break;
+                        case 'żółta':
+                          queen = '2';
+                          break;
+                        case 'czerwona':
+                          queen = '3';
+                          break;
+                        case 'zielona':
+                          queen = '4';
+                          break;
+                        case 'niebieska':
+                          queen = '5';
+                          break;
+                        case 'biała':
+                          queen = '6';
+                          break;
+                        default:
+                          queen = '1';
+                      }
+                    } else {
+                      switch (slots[key]) {
+                        //zawiera kolor znacznika
+                        case 'black':
+                          queen = '1';
+                          break;
+                        case 'yellow':
+                          queen = '2';
+                          break;
+                        case 'red':
+                          queen = '3';
+                          break;
+                        case 'green':
+                          queen = '4';
+                          break;
+                        case 'blue':
+                          queen = '5';
+                          break;
+                        case 'white':
+                          queen = '6';
+                          break;
+                        default:
+                          queen = '1';
+                      }
+                    }
+                    //queen = '1'; //'${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis =
+                        AppLocalizations.of(context)!.queen + " = ${slots[key]}";
+                    zapisZas = 10;
+                    zapisWart = queen;
+                    //zapisDoBazy(10, '1'); //'${slots[key]}'
+                  }
+                  break;
+                case 'queenCells':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.queenCells + " =";
+                    printText1 += " ${slots[key]}";
+                    queenCells = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis = AppLocalizations.of(context)!.queenCells +
+                        " = ${slots[key]}";
+                    zapisZas = 11;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(11, '${slots[key]}'); //
+                  }
+                  break;
+                case 'delQCells':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 += "\n" +
+                        AppLocalizations.of(context)!.deleteQueenCells +
+                        " =";
+                    printText1 += " ${slots[key]}";
+                    delQCells = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis = AppLocalizations.of(context)!.deleteQueenCells +
+                        " = ${slots[key]}";
+                    zapisZas = 12;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(12, '${slots[key]}'); //
+                  }
+                  break;
+                case 'toDo':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.toDo + " =";
+                    printText1 += " ${slots[key]}";
+                    toDo = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis = AppLocalizations.of(context)!.toDo + " = ${slots[key]}";
+                    zapisZas = 13;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(13, '${slots[key]}'); //
+                  }
+                  break;
+                case 'isDone':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.isDone + " =";
+                    printText1 += " ${slots[key]}";
+                    isDone = '${slots[key]}';
+                    readyStory = true;
+                    resetInfo();
+                    readyInfo = false;
+                    zapis =
+                        AppLocalizations.of(context)!.isDone + " = ${slots[key]}";
+                    zapisZas = 14;
+                    zapisWart = '${slots[key]}';
+                    //zapisDoBazy(14, '${slots[key]}'); //
+                  }
+                  break;
+              }
+            }
+            //oprócz znaczka "isDone" pod ramką zmianiany jest równiez "numerPo" ramki
+            String zapisWartTemp = zapisWart; //pamięć tymczasowa wartości zapisWart bo zapisDoBazy go kasuje
+            //zapis do tabeli "ramka" jezeli jest jakiś zasób
+            if (zapisZas > 0) zapisDoBazy(zapisZas, zapisWart);
+
+            //dla "wstaw ramka" nie ma tutaj zmian bo wstawiana jest tu jedna ramka której nie było - czyli komendą "wstaw ramka numer X"
+            
+            //dla jednej ramki !!! (dla wielu ramek jest robione podczas "zapisDoBazy" dla "readyFrames")
+            //dla "usuń ramka"
+            if(readyFrames == false && (zapisWartTemp == 'usuń ramka' || zapisWartTemp == 'deleted')){
+              nrXXOfFramePo = 0;    
+              //ustalenie numeru korpusu dla pobrania wpisów do zmiany dla ramki po
+              if (nrXOfBody != 0) {
+                  _korpusNr = nrXOfBody;
+                } else {
+                  _korpusNr = nrXOfHalfBody;
+                }
+              //zmiana istniejących wpisów bo zmiana numeru ramki po przeglądzie
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+                .then((_) {  
+                  //dla wszystkich zasobów dla ramki z numerem "przed" (innym niz 0) nalezy ustawić taką samą wartość "ramkaPo" zeby cała ramka z zasobami zmieniła pozycję jeśli ustawiono taką zmianę
+                  final framesData1 = Provider.of<Frames>(context, listen: false);
+                    //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
+                  List<Frame> frames = framesData1.items.where((fr) {
+                    return fr.ramkaNr == nrXXOfFrame && fr.data == formattedDate && fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                  }).toList();
+                  //print('frames.length = ${frames.length}');
+                    //dla kazdego zasobu modyfikacja ramkaNrPo
+                  for (var i = 0; i < frames.length; i++) {
+                    //print('w pętli id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                    DBHelper.updateRamkaNrPo(frames[i].id, 0); //ramkaPo = 0 czyli usunięta
+                  }
+                Provider.of<Frames>(context, listen: false)
+                  .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                  .then((_) {
+                  //Navigator.of(context).pop();
+                });
+              }); 
+            } 
+
+            //dla "przesuń w lewo"
+            if(readyFrames == false && (zapisWartTemp == 'przesuń w lewo' || zapisWartTemp == 'moved left')){
+              nrXXOfFramePo = nrXXOfFramePo - 1;    
+              //ustalenie numeru korpusu dla pobrania wpisów do zmiany dla ramki po
+              if (nrXOfBody != 0) {
+                  _korpusNr = nrXOfBody;
+                } else {
+                  _korpusNr = nrXOfHalfBody;
+                }
+              //zmiana istniejących wpisów bo zmiana numeru ramki po przeglądzie
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+                .then((_) {  
+                  //dla wszystkich zasobów dla ramki z numerem "przed" (innym niz 0) nalezy ustawić taką samą wartość "ramkaPo" zeby cała ramka z zasobami zmieniła pozycję jeśli ustawiono taką zmianę
+                  final framesData1 = Provider.of<Frames>(context, listen: false);
+                    //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
+                  List<Frame> frames = framesData1.items.where((fr) {
+                    return fr.ramkaNr == nrXXOfFrame && fr.data == formattedDate && fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                  }).toList();
+                  //print('frames.length = ${frames.length}');
+                    //dla kazdego zasobu modyfikacja ramkaNrPo
+                  for (var i = 0; i < frames.length; i++) {
+                    //print('w pętli id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                    DBHelper.updateRamkaNrPo(frames[i].id, nrXXOfFramePo); //nrXXOfFramePo ma wartośc o 1 mniejszą
+                  }
+                Provider.of<Frames>(context, listen: false)
+                  .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                  .then((_) {
+                  //Navigator.of(context).pop();
+                });
+              }); 
+            } 
+
+            //dla "przesuń w prawo"
+            if(readyFrames == false && (zapisWartTemp == 'przesuń w prawo' || zapisWartTemp == 'moved right')){
+              // print('przesuń w prawo jedna ramkę !!!!!');
+              // print('readyFrames = $readyFrames');
+              nrXXOfFramePo = nrXXOfFramePo + 1; 
+              //ustalenie numeru korpusu dla pobrania wpisów do zmiany dla ramki po
+              if (nrXOfBody != 0) {
+                  _korpusNr = nrXOfBody;
+                } else {
+                  _korpusNr = nrXOfHalfBody;
+                }
+              //zmiana istniejących wpisów bo zmiana numeru ramki po przeglądzie
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+                .then((_) {  
+                  //dla wszystkich zasobów dla ramki z numerem "przed" (innym niz 0) nalezy ustawić taką samą wartość "ramkaPo" zeby cała ramka z zasobami zmieniła pozycję jeśli ustawiono taką zmianę
+                  final framesData1 = Provider.of<Frames>(context, listen: false);
+                    //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
+                  List<Frame> frames = framesData1.items.where((fr) {
+                    return fr.ramkaNr == nrXXOfFrame && fr.data == formattedDate && fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                  }).toList();
+                    //  print('nrXXOfHive = $nrXXOfHive');
+                    //  print('frames.length = ${frames.length}');
+                    //dla kazdego zasobu modyfikacja ramkaNrPo
+                  for (var i = 0; i < frames.length; i++) {
+                    //print('w pętli id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                    DBHelper.updateRamkaNrPo(frames[i].id, nrXXOfFramePo); //nrXXOfFramePo ma wartośc o 1 większą
+                  }
+                Provider.of<Frames>(context, listen: false)
+                  .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                  .then((_) {
+                  //Navigator.of(context).pop();
+                });
+              }); 
+            } 
+
+            zapisWartTemp = '';
+
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+
+//setFrame - ustawienie numeru ramki          
         case 'setFrame':
           printText += AppLocalizations.of(context)!.frame; //" frame";
-          intention = 'setFrame';
+          //intention = 'setFrame';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) {      
+                case 'frameState':
+                  frameState = '${slots[key]}';
+                  if (frameState == AppLocalizations.of(context)!.close) {
+                    beep('close');
+                    printText1 += " ${slots[key]}";
+                    readyFrame = false;
+                    nrXXOfFrame = 0;
+                    nrXXOfFramePo = 0;
+                    nrXXOfFrameTemp = 0;
+                    resetStory();
+                  } else if ((frameState == AppLocalizations.of(context)!.open ||
+                        frameState == AppLocalizations.of(context)!.set) && (readyApiary == true &&
+                        readyHive == true && (readyBody == true || readyHalfBody == true))) {
+                      printText1 += " ${slots[key]}";
+                      nrXXOfFrame = nrXXOfFrameTemp;
+                      nrXXOfFramePo = nrXXOfFrameTemp;  
+                      nrXXOfFrameTemp = 0;
+                      readyFrame = true;
+                      readyFrames = false;
+                      beep('open');
+                      resetStory();
+                      //wstaw ramkę numer 3 - numer ramki 0/3 (decyduje słowo "wstaw" lub "insert")
+                  } else if(frameState == AppLocalizations.of(context)!.insert && (readyApiary == true &&
+                        readyHive == true && (readyBody == true || readyHalfBody == true))){
+                      printText1 += " ${slots[key]}";
+                      nrXXOfFrame = 0;
+                      nrXXOfFramePo = nrXXOfFrameTemp;  
+                      nrXXOfFrameTemp = 0;
+                      readyFrame = true;
+                      readyFrames = false;
+                      beep('open');
+                      resetStory();
+                  }
+                  break;
+                case 'nrXXOfFrame':
+                  nrXXOfFrame = int.parse('${slots[key]}');
+                  if ((frameState == AppLocalizations.of(context)!.open ||
+                          frameState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true))) {
+                    beep('open');
+                    printText1 += " ${slots[key]}";
+                    readyFrame = true;
+                    readyFrames = false;
+                    nrXXOfFrameTemp = nrXXOfFrame;
+                    nrXXOfFramePo = nrXXOfFrame;
+                    resetStory(); //kasowanie zmiennych przechowujących biezace zasoby ramki (bo nowa ramka)
+                  } else if (frameState == AppLocalizations.of(context)!.insert  && (readyApiary == true &&
+                        readyHive == true && (readyBody == true || readyHalfBody == true))) {
+                      printText1 += " ${slots[key]}";
+                      nrXXOfFramePo = nrXXOfFrame;  
+                      nrXXOfFrame = 0;
+                      nrXXOfFrameTemp = 0;
+                      readyFrame = true;
+                      readyFrames = false;
+                      beep('open');
+                      resetStory();
+                  } else {
+                    if (readyApiary == true &&
+                        readyHive == true &&
+                        (readyBody == true || readyHalfBody == true)) {
+                      printText1 += " ${slots[key]}";
+                      nrXXOfFrameTemp = nrXXOfFrame;
+                      nrXXOfFrame = 0;
+                      nrXXOfFramePo = 0;
+                      readyFrame = false;
+                      resetStory();
+                    }
+                  }
+                  break;
+                case 'sizeOfFrame': //OfFrame
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    beep('open');
+                    printText1 += AppLocalizations.of(context)!.sizeOfFrame;
+                    //"\n Size of frame =";
+                    printText1 += " ${slots[key]}";
+                    sizeOfFrame = '${slots[key]}';
+                    resetInfo();
+                    readyInfo = false;
+                  }
+                  break;
+                case 'siteOfFrame':
+                  if (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true) &&
+                          readyFrame == true ||
+                      readyFrames == true) {
+                    beep('open');
+                    printText1 += AppLocalizations.of(context)!.siteOfFrame;
+                    //"\n Site of frame =";
+                    printText1 += " ${slots[key]}";
+                    siteOfFrame = '${slots[key]}';
+                    resetInfo();
+                    readyInfo = false;
+                  }
+                  break;
+              }
+            }
+            //jezeli polecenie: "wstaw ramkę numer XX" - zapis oznaczenia "trójkątem" pod ramką
+            if(frameState == AppLocalizations.of(context)!.insert){
+              zapisZas = 14;
+              zapisWart = AppLocalizations.of(context)!.insert + ' ' + AppLocalizations.of(context)!.frame;
+              //zapis "trójkąta - wstaw ramka" do tabeli "ramka" 
+              zapisDoBazy(zapisZas, zapisWart);
+              frameState = AppLocalizations.of(context)!.open; //zmiana insert na open zeby następne komendy miały otwarte ramki              
+            }
+          
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+
+//setChange - zmiana numeru ramki po przegladzie          
+        case 'setChange':
+          printText += AppLocalizations.of(context)!.changeFrame; //" frame";
+          intention = 'setChange';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            // print('ZMIANA RAMEK');
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              //print('key ------ $key');
+              switch (key) {
+                case 'nrXXOfFrame':
+                  nrXXOfFrame = int.parse('${slots[key]}');
+                  if ((frameState == AppLocalizations.of(context)!.open ||
+                          frameState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true))) {
+                    beep('open');
+                    printText1 += " ${slots[key]}";
+                    readyFrame = true;
+                    readyFrames = false;
+                    // nrXXOfFrameTemp = nrXXOfFrame;
+                    // nrXXOfFramePo = nrXXOfFrame;
+                    resetStory(); //kasowanie zmiennych przechowujących biezace zasoby ramki (bo nowa ramka)
+                  } else {
+                    if (readyApiary == true &&
+                        readyHive == true &&
+                        (readyBody == true || readyHalfBody == true)) {
+                      printText1 += " ${slots[key]}";
+                      // nrXXOfFrameTemp = nrXXOfFrame;
+                      nrXXOfFrame = 0;
+                      // nrXXOfFramePo = 0;
+                      readyFrame = false;
+                      resetStory();
+                    }
+                  }
+                  break;
+                case 'nrXXOfFramePo':
+                  nrXXOfFramePo = int.parse('${slots[key]}');
+                  if ((frameState == AppLocalizations.of(context)!.open ||
+                          frameState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true))) {
+                    beep('open');
+                    printText1 += " ${slots[key]}";
+                    readyFrame = true;
+                    readyFrames = false;
+                    //??? nrXXOfFrameTemp = nrXXOfFrame;
+                    resetStory(); //kasowanie zmiennych przechowujących biezace zasoby ramki (bo nowa ramka)
+                  } else {
+                    if (readyApiary == true &&
+                        readyHive == true &&
+                        (readyBody == true || readyHalfBody == true)) {
+                      printText1 += " ${slots[key]}";
+                      //??? nrXXOfFrameTemp = nrXXOfFrame;
+                      nrXXOfFramePo = 0;
+                      readyFrame = false;
+                      resetStory();
+                    }
+                  }
+                break;
+              }
+            };
+            //ustalenie numeru korpusu dla pobrania wpisów do zmiany dla ramki po
+            if (nrXOfBody != 0) {
+                _korpusNr = nrXOfBody;
+              } else {
+                _korpusNr = nrXOfHalfBody;
+              }
+            //zmiana istniejących wpisów bo zmiana numeru ramki po przeglądzie
+            Provider.of<Frames>(context, listen: false)
+              .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+              .then((_) {  
+                //dla wszystkich zasobów dla ramki z numerem "przed" (innym niz 0) nalezy ustawić taką samą wartość "ramkaPo" zeby cała ramka z zasobami zmieniła pozycję jeśli ustawiono taką zmianę
+                final framesData1 = Provider.of<Frames>(context, listen: false);
+                  //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
+                List<Frame> frames = framesData1.items.where((fr) {
+                  return fr.ramkaNr == nrXXOfFrame && fr.data == formattedDate && fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                }).toList();
+                  //dla kazdego zasobu modyfikacja ramkaNrPo
+                for (var i = 0; i < frames.length; i++) {
+                  //print(' id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                  DBHelper.updateRamkaNrPo(frames[i].id, nrXXOfFramePo);
+                }
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                .then((_) {
+                //Navigator.of(context).pop();
+              });
+            });  
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
+          break;
+//setTempBody - przeniesienie ramki do innego korpusu
+        case 'setMoveBody':
+        print('setMoveBody');
+        printText += AppLocalizations.of(context)!.moveFrame; 
+          intention = 'setMoveBody';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            // print('Przeniesienie RAMEK');
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              //print('key ------ $key');
+              switch (key) {
+                case 'nrTempHive':
+                  nrTempHive = int.parse('${slots[key]}');
+                  if ((frameState == AppLocalizations.of(context)!.open ||
+                          frameState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true))) {
+                    beep('open');
+                    printText1 += " ul ${slots[key]}";
+                    readyFrame = true;
+                    readyFrames = false;
+                    // nrXXOfFrameTemp = nrXXOfFrame;
+                    // nrXXOfFramePo = nrXXOfFrame;
+                    //resetStory(); //kasowanie zmiennych przechowujących biezace zasoby ramki (bo nowa ramka)
+                  } else {
+                    if (readyApiary == true &&
+                        readyHive == true &&
+                        (readyBody == true || readyHalfBody == true)) {
+                      printText1 += " ul ${slots[key]}";
+                      // nrXXOfFrameTemp = nrXXOfFrame;
+                      //nrXXOfFrame = 0;
+                      // nrXXOfFramePo = 0;
+                      readyFrame = false;
+                      //resetStory();
+                    }
+                  }
+                  break;
+                case 'nrTempBody':
+                  nrTempBody = int.parse('${slots[key]}');
+                  if ((frameState == AppLocalizations.of(context)!.open ||
+                          frameState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true))) {
+                    beep('open');
+                    printText1 += " korpus ${slots[key]}";
+                    readyFrame = true;
+                    readyFrames = false;
+                    // nrXXOfFrameTemp = nrXXOfFrame;
+                    // nrXXOfFramePo = nrXXOfFrame;
+                    //resetStory(); //kasowanie zmiennych przechowujących biezace zasoby ramki (bo nowa ramka)
+                  } else {
+                    if (readyApiary == true &&
+                        readyHive == true &&
+                        (readyBody == true || readyHalfBody == true)) {
+                      printText1 += " korpus ${slots[key]}";
+                      // nrXXOfFrameTemp = nrXXOfFrame;
+                      //nrXXOfFrame = 0;
+                      // nrXXOfFramePo = 0;
+                      readyFrame = false;
+                     // resetStory();
+                    }
+                  }
+                  break;
+                case 'nrTempHalfBody':
+                print('nrTempHalfBody');
+                  nrTempHalfBody = int.parse('${slots[key]}');
+                  if ((frameState == AppLocalizations.of(context)!.open ||
+                          frameState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true))) {
+                    beep('open');
+                    printText1 += " półkorpus ${slots[key]}";
+                    readyFrame = true;
+                    readyFrames = false;
+                    // nrXXOfFrameTemp = nrXXOfFrame;
+                    // nrXXOfFramePo = nrXXOfFrame;
+                    //resetStory(); //kasowanie zmiennych przechowujących biezace zasoby ramki (bo nowa ramka)
+                  } else {
+                    if (readyApiary == true &&
+                        readyHive == true &&
+                        (readyBody == true || readyHalfBody == true)) {
+                      printText1 += " polkorpus ${slots[key]}";
+                      // nrXXOfFrameTemp = nrXXOfFrame;
+                      //nrXXOfFrame = 0;
+                      // nrXXOfFramePo = 0;
+                      readyFrame = false;
+                      //resetStory();
+                    }
+                  }
+                  break;
+                case 'nrTempFrame':
+                print('nrTempFrame');
+                  nrTempFrame = int.parse('${slots[key]}');
+                  if ((frameState == AppLocalizations.of(context)!.open ||
+                          frameState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true &&
+                          readyHive == true &&
+                          (readyBody == true || readyHalfBody == true))) {
+                    beep('open');
+                    printText1 += " ramka ${slots[key]}";
+                    readyFrame = true;
+                    readyFrames = false;
+                    //nrXXOfFrameTemp = nrXXOfFrame;
+                    //nrXXOfFramePo = nrXXOfFrame;
+                    resetStory(); //kasowanie zmiennych przechowujących biezace zasoby ramki (bo nowa ramka)
+                  } else {
+                    if (readyApiary == true &&
+                        readyHive == true &&
+                        (readyBody == true || readyHalfBody == true)) {
+                      printText1 += " ramka ${slots[key]}";
+                      //nrXXOfFrameTemp = nrXXOfFrame;
+                      //nrXXOfFrame = 0;
+                      //nrXXOfFramePo = 0;
+                      readyFrame = false;
+                      resetStory();
+                    }
+                  }
+                  break;
+              }; 
+            }; 
+              int typ;
+              if(nrTempHive == 0) nrTempHive = nrXXOfHive; //przenoszenie w tym samym ulu
+              if(nrTempBody != 0) { typ = 2;} 
+              else {nrTempBody = nrTempHalfBody; typ = 1;}
+              // print('nrTempBody = $nrTempBody');
+              // print('typ = $typ');
+              //ustalenie numeru korpusu dla pobrania wpisów do zmiany dla ramki po
+              if (nrXOfBody != 0) {
+                _korpusNr = nrXOfBody;
+              } else {
+                _korpusNr = nrXOfHalfBody;
+              }
+              //przeniesienie ramki do innego korpusu
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+                .then((_) {  
+                  //dla wszystkich zasobów wykonanie kopii ramki i zmiana "przed", "po", korpusu i ewentualnie ula
+                  final framesData1 = Provider.of<Frames>(context, listen: false);
+                    //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
+                  List<Frame> frames = framesData1.items.where((fr) {
+                    return fr.ramkaNr == nrXXOfFrame && fr.data == formattedDate && fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                  }).toList();
+                    print('frames.length = ${frames.length}');
+                    //dla kazdego zasobu - zapis z innym id oraz modyfikacja ramkaNr, ramkaNrPo, korpusNr i ewentualnie ulNr
+                  for (var i = 0; i < frames.length; i++) {
+                    //print ('przeniesiona do ul = $nrTempHive, korpus = $nrTempBody, ramka = $nrTempFrame');
+                    //DBHelper.moveRamkaToBody(frames[i].id, nrTempHave, nrTempBody, nrTempFrame);
+                    //print('frames[i].zasob = ${frames[i].zasob}');
+                    if(frames[i].zasob != 14) //jezeli jest rózne od "isDone" czyli prawdopodobnie jest = "usuń ramka"
+                      Frames.insertFrame(
+                        '$formattedDate.$nrXXOfApiary.$nrTempHive.$nrTempBody.0.$nrTempFrame.${frames[i].strona}.${frames[i].zasob}',
+                        formattedDate,
+                        nrXXOfApiary,
+                        nrTempHive,
+                        nrTempBody,
+                        typ,//2-korpus, 1-półkorpus
+                        0,//ramkaNr
+                        nrTempFrame, //ramkaNrPo 
+                        frames[i].rozmiar,
+                        frames[i].strona,
+                        frames[i].zasob,
+                        frames[i].wartosc,
+                        0);
+                    else //więc jezeli jest "usuń ramka" to zamień na "wstaw ramka"
+                      Frames.insertFrame(
+                          '$formattedDate.$nrXXOfApiary.$nrTempHive.$nrTempBody.0.$nrTempFrame.${frames[i].strona}.${frames[i].zasob}',
+                          formattedDate,
+                          nrXXOfApiary,
+                          nrTempHive,
+                          nrTempBody,
+                          typ,//2-korpus, 1-półkorpus
+                          0,//ramkaNr
+                          nrTempFrame, //ramkaNrPo 
+                          frames[i].rozmiar,
+                          frames[i].strona,
+                          frames[i].zasob,
+                          AppLocalizations.of(context)!.inserted, //wstaw ramka
+                          0);
+                  }
+                Provider.of<Frames>(context, listen: false)
+                  .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                  .then((_) {
+                  //Navigator.of(context).pop();
+                });
+              }); 
+            } else {
+                //jezeli nie zdekodowano slotu czyli parametrów intencji
+                printText = AppLocalizations.of(context)!.error;
+                beep('error');
+              }
+              printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+                  ? {
+                      printText = AppLocalizations.of(context)!.wrongCommand,
+                      beep('error'),
+                    }
+                  : printText += printText1;
+              break;
+//setHive - ustawienie numeru ula        
         case 'setHive':
           printText += AppLocalizations.of(context)!.hive; //" Hive"
           intention = 'setHive';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              //print('key ------ $key');
+              switch (key) { 
+                case 'hiveState':
+                  hiveState = '${slots[key]}';
+                  if (hiveState == AppLocalizations.of(context)!.close) {
+                    beep('close');
+                    printText1 += " ${slots[key]}";
+                    readyHive = false;
+                    nrXXOfHive = 0;
+                    nrXXOfHiveTemp = 0;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyBody = false;
+                    readyInfo = false;
+                    globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                  } else {
+                    if (readyApiary == true ||
+                        (readyApiary == false && nrXXOfApiary == 0)) {
+                      //otwieranie Hive jezeli otwarto Apiary lub jest tylko jedna (lub pierwsza) pasieka
+                      printText1 += " ${slots[key]}";
+                      nrXXOfHive =
+                          nrXXOfHiveTemp; //bo inna kolejnośc wartości w slocie (patrz wydruk)- zmienić kolejność case???
+                      nrXXOfHiveTemp = 0;
+                      readyHive = true;
+                      readyAllHives = false;
+                      globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+                      allHivesState = AppLocalizations.of(context)!.close;
+                      beep('open');
+                      if (readyApiary == false && nrXXOfApiary == 0) {
+                        readyApiary = true;
+                        nrXXOfApiary = 1;
+                      } //bo tylko jedna (lub pierwsza) pasieka
+                      if (nrXXOfApiary != 0) {
+                        //wpis do tabeli 'pogoda'
+                        aktualizacjaPogody(nrXXOfApiary);
+                      }
+                    }
+                  }
+                  break;
+                case 'nrXXOfHive':
+                  nrXXOfHive = int.parse('${slots[key]}'); 
+                  if(nrXXOfHiveH > 0){ //jezeli były setki
+                    nrXXOfHive = nrXXOfHive + nrXXOfHiveH; //dodaj do dziesiatek
+                    nrXXOfHiveH = 0;//zerój setki zeby sie znów nie dodawały
+                  }
+                  if ((hiveState == AppLocalizations.of(context)!.open ||
+                          hiveState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true ||
+                          (readyApiary == false && nrXXOfApiary == 0))) {
+                    //numer Hive jezeli otwarto Apiary
+                    
+                    printText1 += " " + nrXXOfHive.toString();
+                    if (readyApiary == false && nrXXOfApiary == 0) {
+                      readyApiary = true;
+                      nrXXOfApiary = 1;
+                    }
+                    readyHive = true;
+                    readyAllHives = false;
+                    allHivesState = AppLocalizations.of(context)!.close;
+                    beep('open');
+                    nrXXOfHiveTemp = nrXXOfHive;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyBody = false;
+                    readyInfo = false;
+                    globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                  } else {
+                    printText1 += " " + nrXXOfHive.toString();
+                    nrXXOfHiveTemp = nrXXOfHive;
+                    nrXXOfHive = 0;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyHive = false;
+                    readyBody = false;
+                    readyInfo = false;
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                  }
+                  break;
+
+                case 'nrXXOfHiveH':             
+                    if (globals.jezyk == "pl_PL") {
+                      switch (slots[key]) {
+                        case 'sto':
+                          nrXXOfHiveH = 100;
+                          break;
+                        case 'dwieście':
+                          nrXXOfHiveH = 200;
+                          break;
+                        case 'trzysta':
+                          nrXXOfHiveH = 300;
+                          break;
+                        case 'czterysta':
+                          nrXXOfHiveH = 400;
+                          break;
+                        case 'pięćset':
+                          nrXXOfHiveH = 500;
+                          break;
+                        case 'sześćset':
+                          nrXXOfHiveH = 600;
+                          break;
+                        case 'siedemset':
+                          nrXXOfHiveH = 700;
+                          break;
+                        case 'osiemset':
+                          nrXXOfHiveH = 800;
+                          break;
+                        case 'dziewięćset':
+                          nrXXOfHiveH = 900;
+                          break;
+                        default:
+                          nrXXOfHiveH = 0;
+                      }
+                    } else {
+                      switch (slots[key]) {
+                        case 'one hundred':
+                          nrXXOfHiveH = 100;
+                          break;
+                        case 'two hundred':
+                          nrXXOfHiveH = 200;
+                          break;
+                        case 'three hundred':
+                          nrXXOfHiveH = 300;
+                          break;
+                        case 'four hundred':
+                          nrXXOfHiveH = 400;
+                          break;
+                        case 'five hundred':
+                          nrXXOfHiveH = 500;
+                          break;
+                        case 'six hundred':
+                          nrXXOfHiveH = 600;
+                          break;
+                        case 'seven hundred':
+                          nrXXOfHiveH = 700;
+                          break;
+                        case 'eight hundred':
+                          nrXXOfHiveH = 800;
+                          break;
+                        case 'nine hundred':
+                          nrXXOfHiveH = 900;
+                          break;
+                        default:
+                          nrXXOfHiveH = 0;
+                      }
+                    }
+                    //jezeli są tylko setki to wykonanie czynności takich jak przy dziesiątkach
+                    if (slots.length == 2){
+                      nrXXOfHive = nrXXOfHiveH; 
+                      nrXXOfHiveH = 0;//zerój setki zeby sie znów nie dodawały
+                      
+                      if ((hiveState == AppLocalizations.of(context)!.open ||
+                              hiveState == AppLocalizations.of(context)!.set) &&
+                          (readyApiary == true ||
+                              (readyApiary == false && nrXXOfApiary == 0))) {
+                        //numer Hive jezeli otwarto Apiary                   
+                        printText1 += " " + nrXXOfHive.toString();
+                        if (readyApiary == false && nrXXOfApiary == 0) {
+                          readyApiary = true;
+                          nrXXOfApiary = 1;
+                        }
+                        readyHive = true;
+                        readyAllHives = false;
+                        allHivesState = AppLocalizations.of(context)!.close;
+                        beep('open');
+                        nrXXOfHiveTemp = nrXXOfHive;
+                        bodyState = AppLocalizations.of(context)!.close;
+                        readyBody = false;
+                        readyInfo = false;
+                        globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+                        resetSumowania();
+                        resetBody();
+                        resetStory();
+                      } else {
+                        printText1 += " " + nrXXOfHive.toString();
+                        nrXXOfHiveTemp = nrXXOfHive;
+                        nrXXOfHive = 0;
+                        bodyState = AppLocalizations.of(context)!.close;
+                        readyHive = false;
+                        readyBody = false;
+                        readyInfo = false;
+                        resetSumowania();
+                        resetBody();
+                        resetStory();
+                      }
+                    }                 
+                    // nrXXOfHive = nrXXOfHiveH + nrXXOfHive; //dodanie setek do numeru ula
+                    // nrXXOfHiveH = 0; //zerowanie setek zeby się znowu nie dodało
+                        
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setBody - ustawienie numeru korpusa
         case 'setBody':
           printText += AppLocalizations.of(context)!.body; //" Body";
-          intention = 'setBody';
+          //intention = 'setBody';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              //print('key ------ $key');
+              switch (key) { 
+                case 'bodyState':
+                  bodyState = '${slots[key]}';
+                  if (bodyState == AppLocalizations.of(context)!.close) {
+                    printText1 += " ${slots[key]}";
+                    readyBody = false;
+                    beep('close');
+                    halfBodyState = AppLocalizations.of(context)!.close;
+                    readyFrame = false;
+                    nrXOfBodyTemp = 0;
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                  } else {
+                    if (readyApiary == true && readyHive == true) {
+                      //otwieranie Body jezeli otwarto Apiary i Hive
+                      printText1 += " ${slots[key]}";
+                      if (nrXOfBodyTemp != 0) {
+                        nrXOfBody = nrXOfBodyTemp;
+                        sizeOfFrame = AppLocalizations.of(context)!.big;
+                      }
+                      // if (nrXOfHalfBodyTemp != 0) {
+                      //   nrXOfHalfBody = nrXOfHalfBodyTemp;
+                      //   sizeOfFrame = 'small';
+                      // }
+                      readyAllHives = false;
+                      allHivesState = AppLocalizations.of(context)!.close;
+                      halfBodyState = AppLocalizations.of(context)!.close;
+                      readyHalfBody = false;
+                      nrXOfBodyTemp = 0;
+                      nrXOfHalfBodyTemp = 0;
+                      readyBody = true;
+                      beep('open');
+                      resetSumowania();
+                      resetFrame();
+                      resetStory();
+                    }
+                  }
+                  break;
+                case 'nrXOfBody':
+                  nrXOfBody = int.parse('${slots[key]}');
+                  if ((bodyState == AppLocalizations.of(context)!.open ||
+                          bodyState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true && readyHive == true)) {
+                    printText1 += " ${slots[key]}";
+                    readyBody = true;
+                    beep('open');
+                    nrXOfBodyTemp = nrXOfBody;
+                    nrXOfHalfBody = 0;
+                    nrXOfHalfBodyTemp = 0;
+                    readyHalfBody = false;
+                    readyAllHives = false;
+                    allHivesState = AppLocalizations.of(context)!.close;
+                    sizeOfFrame = AppLocalizations.of(context)!.big; //bo korpus
+                    resetSumowania();
+                    resetFrame();
+                    resetStory();
+                  } else {
+                    printText1 += " ${slots[key]}";
+                    nrXOfBodyTemp = nrXOfBody;
+                    nrXOfBody = 0;
+                    nrXOfHalfBody = 0;
+                    readyBody = false;
+                    //beep('close');
+                    resetSumowania();
+                    resetFrame();
+                    resetStory();
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setHalfBody - ustawienie numeru półkorpusa        
         case 'setHalfBody':
           printText += AppLocalizations.of(context)!.halfBody; //" Half body";
-          intention = 'setHalfBody';
+          //intention = 'setHalfBody';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'halfBodyState':
+                  halfBodyState = '${slots[key]}';
+                  if (halfBodyState == AppLocalizations.of(context)!.close) {
+                    printText1 += " ${slots[key]}";
+                    readyHalfBody = false;
+                    beep('close');
+                    nrXOfHalfBodyTemp = 0;
+                    resetSumowania();
+                    resetBody();
+                    resetFrame();
+                    resetStory();
+                  } else {
+                    if (readyApiary == true && readyHive == true) {
+                      //otwieranie Body jezeli otwarto Apiary i Hive
+                      printText1 += " ${slots[key]}";
+                      if (nrXOfHalfBodyTemp != 0) {
+                        nrXOfHalfBody = nrXOfHalfBodyTemp;
+                        sizeOfFrame = AppLocalizations.of(context)!.small;
+                      }
+                      readyAllHives = false;
+                      allHivesState = AppLocalizations.of(context)!.close;
+                      nrXOfHalfBodyTemp = 0;
+                      readyHalfBody = true;
+                      readyBody = false;
+                      bodyState = AppLocalizations.of(context)!.close;
+                      nrXOfBody = 0;
+                      beep('open');
+                      resetSumowania();
+                      resetFrame();
+                      resetStory();
+                    }
+                  }
+                  break;
+                case 'nrXOfHalfBody':
+                  nrXOfHalfBody = int.parse('${slots[key]}');
+                  if ((halfBodyState == AppLocalizations.of(context)!.open ||
+                          halfBodyState == AppLocalizations.of(context)!.set) &&
+                      (readyApiary == true && readyHive == true)) {
+                    printText1 += " ${slots[key]}";
+                    readyHalfBody = true;
+                    readyBody = false;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    nrXOfBody = 0;
+                    beep('open');
+                    //nrXOfHalfBodyTemp = nrXOfHalfBody;
+                    //nrXOfHalfBody = 0;
+                    nrXOfHalfBodyTemp = 0;
+                    sizeOfFrame =
+                        AppLocalizations.of(context)!.small; //bo półkorpus
+                    readyAllHives = false;
+                    allHivesState = AppLocalizations.of(context)!.close;
+                    resetSumowania();
+                    resetFrame();
+                    resetStory();
+                  } else {
+                    printText1 += " ${slots[key]}";
+                    nrXOfHalfBodyTemp = nrXOfHalfBody;
+                    nrXOfHalfBody = 0;
+                    readyBody = false;
+                    nrXOfBody = 0;
+                    resetSumowania();
+                    resetFrame();
+                    resetStory();
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setQueen - ustawiania parametrów matki w info        
         case 'setQueen':
           printText += AppLocalizations.of(context)!.queen; //" Queen:";
-          intention = 'setQueen';
+          //intention = 'setQueen';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'queenState': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
+                    printText1 += "  ${slots[key]}";
+                    zapis =
+                        AppLocalizations.of(context)!.queen + " - ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'queen',
+                        AppLocalizations.of(context)!.queen + " -",
+                        '${slots[key]}',
+                        ''); //
+                  }
+                  break;
+                case 'queenStart': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
+                    printText1 += "  ${slots[key]}";
+                    zapis =
+                        AppLocalizations.of(context)!.queenIs + " ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy('queen', AppLocalizations.of(context)!.queenIs,
+                        '${slots[key]}', ''); //
+                  }
+                  break;
+                case 'queenMark': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
+                    printText1 += "  ${slots[key]}";
+                    queenMark = '${slots[key]}';
+                    if (slots.length == 2) { queenAlpha1 = '';queenAlpha2 = '';}
+                    else queenNumber = ''; //bo pamięta poprzednie ustawienia numeru
+                    zapis = AppLocalizations.of(context)!.queen +
+                        " $queenMark " +
+                        " $queenNumber$queenAlpha1$queenAlpha2";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'queen',
+                        ' ' + AppLocalizations.of(context)!.queen,
+                        '${slots[key]}',
+                        '$queenNumber$queenAlpha1$queenAlpha2'); //
+                  }
+                  break;
+                case 'queenNumber': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
+                    printText1 += "  ${slots[key]}";
+                    queenNumber = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.queen + 
+                        " $queenMark " +
+                        " ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'queen',
+                        " " + AppLocalizations.of(context)!.queen,
+                        '$queenMark',
+                        '${slots[key]}'); //numer matki tu bo potrzebne do info zamiast belki
+                  }
+                  break;
+                case 'queenAlpha1': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
+                    printText1 += "  ${slots[key]}";
+                    queenAlpha1 = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.queen + 
+                        " $queenMark " +
+                        " $queenAlpha1$queenAlpha2";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'queen',
+                        " " + AppLocalizations.of(context)!.queen,
+                        '$queenMark',
+                        '$queenAlpha1$queenAlpha2'); //numer matki tu bo potrzebne do info zamiast belki
+                  }
+                  break;
+                   case 'queenAlpha2': //
+                    if (readyApiary == true && readyHive == true) {
+                      printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
+                      printText1 += "  ${slots[key]}";
+                      queenAlpha2 = '${slots[key]}';
+                      zapis = AppLocalizations.of(context)!.queen +
+                        " $queenMark " +
+                         " $queenAlpha1$queenAlpha2";
+                      readyInfo = true;
+                      zapisInfoDoBazy(
+                        'queen',
+                        " " + AppLocalizations.of(context)!.queen,
+                        '$queenMark',
+                        '$queenAlpha1$queenAlpha2'); //numer matki tu bo potrzebne do info zamiast belki
+                  }
+                  break;
+                case 'queenQuality': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
+                    printText1 += "  ${slots[key]}";
+                    zapis =
+                        AppLocalizations.of(context)!.queenIs + " ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'queen',
+                        AppLocalizations.of(context)!.queen +
+                            '  ' +
+                            AppLocalizations.of(context)!.isIs,
+                        '${slots[key]}',
+                        ''); //
+                  }
+                  break;
+                case 'queenBorn': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.queenWasBornIn20;
+                    printText1 += "${slots[key]}";
+                    zapis = AppLocalizations.of(context)!.queenWasBornIn20 +
+                        "${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'queen',
+                        AppLocalizations.of(context)!.queenWasBornIn,
+                        '20${slots[key]}',
+                        ''); //
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setEquipment - ustawienia parametrów wyposarzenia w info        
         case 'setEquipment':
           printText += AppLocalizations.of(context)!.equipment; //" Equipment:";
-          intention = 'setEquipment';
+          //intention = 'setEquipment';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'numberOfFrame':
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.numberOfFrame + " =";
+                    printText1 += " ${slots[key]}";
+                    _nowaIloscRamek  = int.parse('${slots[key]}');
+                    zapis = AppLocalizations.of(context)!.numberOfFrame +
+                        " = ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'equipment',
+                        AppLocalizations.of(context)!.numberOfFrame + " = ",
+                        '${slots[key]}',
+                        ''); //
+                  }
+                  break;
+                case 'excluder': //krata odgrodowa
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.excluder + " = ";
+                    printText1 += AppLocalizations.of(context)!.on +
+                        " ${slots[key]} " +
+                        AppLocalizations.of(context)!.body;
+                    zapis = AppLocalizations.of(context)!.excluder +
+                        " " +
+                        AppLocalizations.of(context)!.on +
+                        " ${slots[key]} " +
+                        AppLocalizations.of(context)!.body;
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'equipment',
+                        AppLocalizations.of(context)!.excluder,
+                        AppLocalizations.of(context)!.onBodyNumber,
+                        '${slots[key]}'); //
+                  }
+                  break;
+                case 'excluderDel': //krata odgrodowa
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.excluder + " =";
+                    printText1 += " ${slots[key]}";
+                    zapis =
+                        AppLocalizations.of(context)!.excluder + " ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'equipment',
+                        " " + AppLocalizations.of(context)!.excluder + " -",
+                        '', //${slots[key]} //nic zeby lepiej wyglądało. Bo wyświetla się '0'
+                        '0'); //remove
+                  }
+                  break;
+                case 'bottomBoard': //dennica
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.bottomBoard + " =";
+                    printText1 += " ${slots[key]}";
+                    zapis = AppLocalizations.of(context)!.bottomBoard +
+                        " " +
+                        AppLocalizations.of(context)!.isIs +
+                        " ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'equipment',
+                        AppLocalizations.of(context)!.bottomBoard +  " " + AppLocalizations.of(context)!.isIs,
+                        '${slots[key]}',
+                        '');
+                  }
+                  break;
+                case 'beePolenTrap': //poławiacz pyłku
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.beePollenTrap + " =";
+                    printText1 += " ${slots[key]}";
+                    zapis = AppLocalizations.of(context)!.beePollenTrap +
+                        " " +
+                        AppLocalizations.of(context)!.isIs +
+                        " ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'equipment',
+                        AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs,
+                        '${slots[key]}',
+                        '');
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
-        case 'feeding':
+//setFeeding - ustawienie parametrów dokarmiania w info
+        case 'setFeeding':
           printText += AppLocalizations.of(context)!.feeding; //" Feeding:";
-          intention = 'feeding';
+          //intention = 'feeding';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'syrup1to1I': //syrop 1 do 1 część całkowita w litrach
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.syrup + " 1:1 =";
+                    printText1 += "  ${slots[key]} l";
+                    syrup1to1I = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.syrup +
+                        " 1:1 = $syrup1to1I" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$syrup1to1D l";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'feeding',
+                        AppLocalizations.of(context)!.syrup + " 1:1",
+                        "$syrup1to1I" + '.' + "$syrup1to1D",
+                        "l"); //
+                  }
+                  break;
+                case 'syrup1to1D': //syrop 1 do 1 część dziesiętna
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.syrup + " 1:1 =";
+                    printText1 += "  0.${slots[key]} l";
+                    syrup1to1D = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.syrup +
+                        " 1:1 = $syrup1to1I" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$syrup1to1D l";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'feeding',
+                        AppLocalizations.of(context)!.syrup + " 1:1",
+                        "$syrup1to1I" + '.' + "$syrup1to1D",
+                        "l"); //
+                  }
+                  break;
+                case 'syrup3to2I': //syrop 3 do 2 część całkowita w litrach
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.syrup + " 3:2 =";
+                    printText1 += "  ${slots[key]} l";
+                    syrup3to2I = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.syrup +
+                        " 3:2 = $syrup3to2I" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$syrup3to2D l";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'feeding',
+                        AppLocalizations.of(context)!.syrup + " 3:2",
+                        "$syrup3to2I" + '.' + "$syrup3to2D",
+                        "l"); //
+                  }
+                  break;
+                case 'syrup3to2D': //syrop 3 do 2 część dziesiętna
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.syrup + " 3:2 =";
+                    printText1 += "  0.${slots[key]} l";
+                    syrup3to2D = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.syrup +
+                        " 3:2 = $syrup3to2I" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$syrup3to2D l";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'feeding',
+                        AppLocalizations.of(context)!.syrup + " 3:2",
+                        "$syrup3to2I" + '.' + "$syrup3to2D",
+                        "l"); //
+                  }
+                  break;
+                case 'candyI': //candy część całkowita w litrach
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.candy + " =";
+                    printText1 += "  ${slots[key]} kg";
+                    candyI = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.candy +
+                        " = $candyI" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$candyD kg";
+                    readyInfo = true;
+                    zapisInfoDoBazy('feeding', AppLocalizations.of(context)!.candy,
+                        "$candyI" + '.' + "$candyD", "kg"); //
+                  }
+                  break;
+                case 'candyD': //candy część dziesiętna
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 += "\n" + AppLocalizations.of(context)!.candy + " =";
+                    printText1 += "  ${slots[key]} kg";
+                    candyD = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.candy +
+                        " = $candyI" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$candyD kg";
+                    readyInfo = true;
+                    zapisInfoDoBazy('feeding', AppLocalizations.of(context)!.candy,
+                        "$candyI" + '.' + "$candyD", "kg"); //
+                  }
+                  break;
+                case 'invertI': //invert część całkowita w litrach
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.invert + " =";
+                    printText1 += "  ${slots[key]}";
+                    invertI = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.invert +
+                        " = $invertI" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$invertD l";
+                    readyInfo = true;
+                    zapisInfoDoBazy('feeding', AppLocalizations.of(context)!.invert,
+                        "$invertI" + '.' + "$invertD", "l"); //
+                  }
+                  break;
+                case 'invertD': //invert część dziesiętna
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.invert + " =";
+                    printText1 += "  ${slots[key]}";
+                    invertD = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.invert +
+                        " = $invertI" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$invertD l";
+                    readyInfo = true;
+                    zapisInfoDoBazy('feeding', AppLocalizations.of(context)!.invert,
+                        "$invertI" + '.' + "$invertD", "l"); //
+                  }
+                  break;
+                case 'removedFood': //usunięto pokarm
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.removedFood + " =";
+                    printText1 += "  ${slots[key]}";
+                    removedFood = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.removedFood +
+                        " = ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'feeding',
+                        AppLocalizations.of(context)!.removedFood,
+                        removedFood,
+                        ''); //
+                  }
+                  break;
+                case 'leftFood': //pozostał (niezjedzony) pokarm
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.leftFood + " =";
+                    printText1 += "  ${slots[key]}";
+                    leftFood = '${slots[key]}';
+                    zapis =
+                        AppLocalizations.of(context)!.leftFood + " = ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy('feeding',
+                        AppLocalizations.of(context)!.leftFood, leftFood, ''); //
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
-        case 'treatment':
+//setTreatment - ustawienie parametrów leczenia w info
+        case 'setTreatment':
           printText += AppLocalizations.of(context)!.treatment; //" Treatment:";
-          intention = 'treatment';
+         // intention = 'treatment';
+         if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'apivarol': //
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 += "\n Apiwarol =";
+                    printText1 +=
+                        "  ${slots[key]} " + AppLocalizations.of(context)!.dose;
+                    zapis = 'Apiwarol = ${slots[key]} ' +
+                        AppLocalizations.of(context)!.dose;
+                    readyInfo = true;
+                    zapisInfoDoBazy('treatment', 'apivarol', '${slots[key]}',
+                        AppLocalizations.of(context)!.dose); //
+                  }
+                  break;
+                case 'biovar': //
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 += "\n Biowar =";
+                    printText1 += "  ${slots[key]} " +
+                        '$biovarBelts ' +
+                        AppLocalizations.of(context)!.belts;
+                    biovarState = '${slots[key]}';
+                    zapis = 'Biowar = ${slots[key]} ' +
+                        '$biovarBelts ' +
+                        AppLocalizations.of(context)!.belts;
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'treatment',
+                        'biovar',
+                        '${slots[key]}' + ' $biovarBelts',
+                        AppLocalizations.of(context)!.belts); //
+                  }
+                  break;
+                case 'biovarBelts': //
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    printText1 += "\n Biowar =";
+                    printText1 += '$biovarState ' +
+                        "${slots[key]} " +
+                        AppLocalizations.of(context)!.belts;
+                    biovarBelts = '${slots[key]}';
+                    zapis = 'Biowar = ' +
+                        '$biovarState ' +
+                        ' ${slots[key]} ' +
+                        AppLocalizations.of(context)!.belts;
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'treatment',
+                        'biovar',
+                        '$biovarState' + ' ${slots[key]}',
+                        AppLocalizations.of(context)!.belts); //
+                  }
+                  break;
+                case 'acid': //
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    acidXX = '${slots[key]}';
+                    if (slots.length == 1)
+                      acidH = ''; //zerowanie setek bo sa tylko dwie cyfry
+                    printText1 += '\n' + AppLocalizations.of(context)!.acid + ' =';
+                    printText1 += " $acidH$acidXX " +
+                        AppLocalizations.of(context)!.milliliter;
+                    zapis = AppLocalizations.of(context)!.acid +
+                        ' = $acidH$acidXX ' +
+                        AppLocalizations.of(context)!.milliliter;
+                    readyInfo = true;
+                    zapisInfoDoBazy('treatment', AppLocalizations.of(context)!.acid,
+                        '$acidH$acidXX', 'ml'); //
+                  }
+                  break;
+                case 'acidH':
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    if (globals.jezyk == "pl_PL") {
+                      switch (slots[key]) {
+                        case 'sto':
+                          acidH = '1';
+                          break;
+                        case 'dwieście':
+                          acidH = '2';
+                          break;
+                        case 'trzysta':
+                          acidH = '3';
+                          break;
+                        case 'czterysta':
+                          acidH = '4';
+                          break;
+                        case 'pięćset':
+                          acidH = '5';
+                          break;
+                        case 'sześćset':
+                          acidH = '6';
+                          break;
+                        case 'siedemset':
+                          acidH = '7';
+                          break;
+                        case 'osiemset':
+                          acidH = '8';
+                          break;
+                        case 'dziewięćset':
+                          acidH = '9';
+                          break;
+                        default:
+                          acidH = '9';
+                      }
+                    } else {
+                      switch (slots[key]) {
+                        case 'one hundred':
+                          acidH = '1';
+                          break;
+                        case 'two hundred':
+                          acidH = '2';
+                          break;
+                        case 'three hundred':
+                          acidH = '3';
+                          break;
+                        case 'four hundred':
+                          acidH = '4';
+                          break;
+                        case 'five hundred':
+                          acidH = '5';
+                          break;
+                        case 'six hundred':
+                          acidH = '6';
+                          break;
+                        case 'seven hundred':
+                          acidH = '7';
+                          break;
+                        case 'eight hundred':
+                          acidH = '8';
+                          break;
+                        case 'nine hundred':
+                          acidH = '9';
+                          break;
+                        default:
+                          acidH = '9';
+                      }
+                    }
+                    if (slots.length == 1)
+                      acidXX = '00'; //dwa zera bo jest tylko cyfra setek
+                    printText1 += "\n" + AppLocalizations.of(context)!.acid + " =";
+                    printText1 += " $acidH" +
+                        '$acidXX ' +
+                        AppLocalizations.of(context)!.milliliter;
+                    zapis = AppLocalizations.of(context)!.acid +
+                        " = $acidH" +
+                        '$acidXX ' +
+                        AppLocalizations.of(context)!.milliliter;
+                    readyInfo = true;
+                    zapisInfoDoBazy('treatment', AppLocalizations.of(context)!.acid,
+                        '$acidH$acidXX', 'ml'); //
+                  }
+                  break;
+                case 'varroa': //
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    varroaXX = '${slots[key]}';
+                    if (slots.length == 1)
+                      varroaH = ''; //zerowanie setek bo sa tylko dwie cyfry
+                    printText1 +=
+                        '\n' + AppLocalizations.of(context)!.vArroa + ' =';
+                    printText1 +=
+                        " $varroaH$varroaXX " + AppLocalizations.of(context)!.mites;
+                    zapis = AppLocalizations.of(context)!.vArroa +
+                        ' = $varroaH$varroaXX ' +
+                        AppLocalizations.of(context)!.mites;
+                    readyInfo = true;
+                    zapisInfoDoBazy('treatment', 'varroa', '$varroaH$varroaXX',
+                        AppLocalizations.of(context)!.mites); //
+                  }
+                  break;
+                case 'varroaH':
+                  if (readyApiary == true &&
+                      (readyHive == true || readyAllHives == true)) {
+                    if (globals.jezyk == "pl_PL") {
+                      switch (slots[key]) {
+                        case 'sto':
+                          varroaH = '1';
+                          break;
+                        case 'dwieście':
+                          varroaH = '2';
+                          break;
+                        case 'trzysta':
+                          varroaH = '3';
+                          break;
+                        case 'czterysta':
+                          varroaH = '4';
+                          break;
+                        default:
+                          varroaH = '5';
+                      }
+                    } else {
+                      switch (slots[key]) {
+                        case 'one hundred':
+                          varroaH = '1';
+                          break;
+                        case 'two hundred':
+                          varroaH = '2';
+                          break;
+                        case 'three hundred':
+                          varroaH = '3';
+                          break;
+                        case 'four hundred':
+                          varroaH = '4';
+                          break;
+                        default:
+                          varroaH = '5';
+                      }
+                    }
+                    if (slots.length == 1)
+                      varroaXX = '00'; //dwa zera bo jest tylko cyfra setek
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.vArroa + " =";
+                    printText1 += " $varroaH" +
+                        '$varroaXX ' +
+                        AppLocalizations.of(context)!.mites;
+                    zapis = AppLocalizations.of(context)!.vArroa +
+                        " = $varroaH" +
+                        '$varroaXX ' +
+                        AppLocalizations.of(context)!.mites;
+                    readyInfo = true;
+                    zapisInfoDoBazy('treatment', 'varroa', '$varroaH$varroaXX',
+                        AppLocalizations.of(context)!.mites); //
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setColony - ustawianie parametrów rodziny w info
         case 'setColony':
           printText += AppLocalizations.of(context)!.setColony; //" Colony:";
-          intention = 'setColony';
+          //intention = 'setColony';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'colonyForce': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.colony + " =";
+                    printText1 += " ${slots[key]}";
+                    zapis = AppLocalizations.of(context)!.colony +
+                        " " +
+                        AppLocalizations.of(context)!.isIs +
+                        " ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'colony',
+                        " " +
+                            AppLocalizations.of(context)!.colony +
+                            " " +
+                            AppLocalizations.of(context)!.isIs,
+                        '${slots[key]}',
+                        '');
+                  }
+                  break;
+                case 'colonyState': //
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.colony + " =";
+                    printText1 += " ${slots[key]}";
+                    zapis = AppLocalizations.of(context)!.colony +
+                        " " +
+                        AppLocalizations.of(context)!.isIs +
+                        " ${slots[key]}";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'colony',
+                        AppLocalizations.of(context)!.colony +
+                            " " +
+                            AppLocalizations.of(context)!.isIs,
+                        '${slots[key]}',
+                        '');
+                  }
+                  break;
+                case 'deadBeeML': //
+                  if (readyApiary == true && readyHive == true) {
+                    deadBeeML = '${slots[key]}';
+                    if (slots.length == 1)
+                      deadBeeHML = ''; //zerowanie setek bo sa tylko dwie cyfry
+                    printText1 +=
+                        '\n' + AppLocalizations.of(context)!.deadBees + ' =';
+                    printText1 += " $deadBeeHML$deadBeeML " +
+                        AppLocalizations.of(context)!.milliliter;
+                    zapis = AppLocalizations.of(context)!.deadBees +
+                        ' = $deadBeeHML$deadBeeML ' +
+                        AppLocalizations.of(context)!.milliliter;
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'colony',
+                        AppLocalizations.of(context)!.deadBees,
+                        '$deadBeeHML$deadBeeML',
+                        'ml'); //
+                  }
+                  break;
+                case 'deadBeeHML':
+                  if (readyApiary == true && readyHive == true) {
+                    if (globals.jezyk == "pl_PL") {
+                      switch (slots[key]) {
+                        case 'sto':
+                          deadBeeHML = '1';
+                          break;
+                        case 'dwieście':
+                          deadBeeHML = '2';
+                          break;
+                        case 'trzysta':
+                          deadBeeHML = '3';
+                          break;
+                        case 'czterysta':
+                          deadBeeHML = '4';
+                          break;
+                        case 'pięćset':
+                          deadBeeHML = '5';
+                          break;
+                        case 'sześćset':
+                          deadBeeHML = '6';
+                          break;
+                        case 'siedemset':
+                          deadBeeHML = '7';
+                          break;
+                        case 'osiemset':
+                          deadBeeHML = '8';
+                          break;
+                        case 'dziewięćset':
+                          deadBeeHML = '9';
+                          break;
+                        default:
+                          deadBeeHML = '9';
+                      }
+                    } else {
+                      switch (slots[key]) {
+                        case 'one hundred':
+                          deadBeeHML = '1';
+                          break;
+                        case 'two hundred':
+                          deadBeeHML = '2';
+                          break;
+                        case 'three hundred':
+                          deadBeeHML = '3';
+                          break;
+                        case 'four hundred':
+                          deadBeeHML = '4';
+                          break;
+                        case 'five hundred':
+                          deadBeeHML = '5';
+                          break;
+                        case 'six hundred':
+                          deadBeeHML = '6';
+                          break;
+                        case 'seven hundred':
+                          deadBeeHML = '7';
+                          break;
+                        case 'eight hundred':
+                          deadBeeHML = '8';
+                          break;
+                        case 'nine hundred':
+                          deadBeeHML = '9';
+                          break;
+                        default:
+                          deadBeeHML = '9';
+                      }
+                    }
+                    if (slots.length == 1)
+                      deadBeeML = '00'; //dwa zera bo jest tylko cyfra setek
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.deadBees + " =";
+                    printText1 += " $deadBeeHML" +
+                        '$deadBeeML ' +
+                        AppLocalizations.of(context)!.milliliter;
+                    zapis = AppLocalizations.of(context)!.deadBees +
+                        " = $deadBeeHML" +
+                        '$deadBeeML ' +
+                        AppLocalizations.of(context)!.milliliter;
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'colony',
+                        AppLocalizations.of(context)!.deadBees,
+                        '$deadBeeHML$deadBeeML',
+                        'ml'); //
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setHelp - sekcja pomocy
         case 'setHelp':
           printText += AppLocalizations.of(context)!.helpMe; //" Help me:";
-          intention = 'setHelp';
+          //intention = 'setHelp';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'help':
+                  help = '${slots[key]}';
+                  if (globals.jezyk == "pl_PL") {
+                    switch (help) {
+                      case 'pomóż mi':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderHelp(context);
+                        beep('open');
+                        openDialog = true;
+                        break;
+                      case 'zamknij pomoc':
+                        if (openDialog) {
+                          printText1 = ' ${slots[key]}';
+                          Navigator.pop(context);
+                          openDialog = false;
+                          beep('close');
+                        }
+                        break;
+                    }
+                  } else {
+                    switch (help) {
+                      case 'help me':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderHelp(context);
+                        beep('open');
+                        openDialog = true;
+                        break;
+                      case 'close help':
+                        if (openDialog) {
+                          printText1 = ' ${slots[key]}';
+                          Navigator.pop(context);
+                          openDialog = false;
+                          beep('close');
+                        }
+                        break;
+                    }
+                  }
+                  break;
+
+                case 'helpMe':
+                  helpMe = '${slots[key]}';
+                  if (globals.jezyk == "pl_PL") {
+                    switch (helpMe) {
+                      case 'lokacja':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderLocation(context);
+                        beep('open');
+                        openDialog = true;
+                        break;
+                      case 'przegląd':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderInspection(context);
+                        beep('open');
+                        openDialog = true;
+                        break;
+                      case 'wyposażenie':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderEquipment(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'pokarm':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderFeeding(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'leczenie':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderTreatement(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'matka':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderQueen(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'rodzina':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderColony(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'zbiór':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderHarvest(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'data':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderDate(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'ul': //to samo co "ul po"
+                        if (readyApiary == true && readyHive == true) {
+                          _ulPo = true; //wyswitlany jest ul po przegladzie
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          getDaty(nrXXOfApiary, nrXXOfHive).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      nrXXOfApiary, nrXXOfHive)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        nrXXOfApiary, nrXXOfHive)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(nrXXOfApiary)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                      case 'ul po': //to samo co "ul"
+                        if (readyApiary == true && readyHive == true) {
+                          _ulPo = true; //wyswitlany jest ul po przegladzie
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          getDaty(nrXXOfApiary, nrXXOfHive).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      nrXXOfApiary, nrXXOfHive)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        nrXXOfApiary, nrXXOfHive)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(nrXXOfApiary)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                      case 'ul przed':
+                        if (readyApiary == true && readyHive == true) {
+                          _ulPo = false; //wyswitlany jest ul przed przeglądem
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          getDaty(nrXXOfApiary, nrXXOfHive).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      nrXXOfApiary, nrXXOfHive)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        nrXXOfApiary, nrXXOfHive)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(nrXXOfApiary)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                      case 'ul wcześniej':
+                        if (readyApiary == true && readyHive == true) {
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          indexDaty = indexDaty + 1;
+                          getDaty(nrXXOfApiary, nrXXOfHive).then((_) {
+                            //pobranie dat z bazy
+                            if (indexDaty == _daty.length)
+                              indexDaty = indexDaty - 1;
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      nrXXOfApiary, nrXXOfHive)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        nrXXOfApiary, nrXXOfHive)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(nrXXOfApiary)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    //final hives = hivesData.items;
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                      case 'ul później':
+                        if (readyApiary == true && readyHive == true) {
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          indexDaty = indexDaty - 1;
+                          if (indexDaty < 0) indexDaty = 0;
+                          getDaty(nrXXOfApiary, nrXXOfHive).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      nrXXOfApiary, nrXXOfHive)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        nrXXOfApiary, nrXXOfHive)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(nrXXOfApiary)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                    }
+                  } else {
+                    switch (helpMe) {
+                      case 'location':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderLocation(context);
+                        beep('open');
+                        openDialog = true;
+                        break;
+                      case 'inspection':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderInspection(context);
+                        beep('open');
+                        openDialog = true;
+                        break;
+                      case 'equipment':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderEquipment(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'feeding':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderFeeding(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'treatment':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderTreatement(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'queen':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderQueen(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'colony':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderColony(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'harvest':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderHarvest(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'date':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        _dialogBuilderDate(context);
+                        openDialog = true;
+                        beep('open');
+                        break;
+                      case 'hive': //to samo co "after"
+                        _ulPo = true; //wyswitlany jest ul po przegladzie
+                        if (readyApiary == true && readyHive == true) {
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          getDaty(globals.pasiekaID, globals.ulID).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      globals.pasiekaID, globals.ulID)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        globals.pasiekaID, globals.ulID)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(globals.pasiekaID)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                      case 'hive after':
+                        _ulPo = true; //wyswitlany jest ul po przegladzie
+                        if (readyApiary == true && readyHive == true) {
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          getDaty(globals.pasiekaID, globals.ulID).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      globals.pasiekaID, globals.ulID)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        globals.pasiekaID, globals.ulID)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(globals.pasiekaID)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                      case 'hive before':
+                        _ulPo = false; //wyswitlany jest ul przed przeglądem
+                        if (readyApiary == true && readyHive == true) {
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          getDaty(globals.pasiekaID, globals.ulID).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      globals.pasiekaID, globals.ulID)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        globals.pasiekaID, globals.ulID)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(globals.pasiekaID)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                      case 'hive earlier':
+                        if (readyApiary == true && readyHive == true) {
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          indexDaty = indexDaty + 1;
+                          getDaty(globals.pasiekaID, globals.ulID).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      globals.pasiekaID, globals.ulID)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        globals.pasiekaID, globals.ulID)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(globals.pasiekaID)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    //final hives = hivesData.items;
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                      case 'hive later':
+                        if (readyApiary == true && readyHive == true) {
+                          if (openDialog) Navigator.pop(context); //zamknij okno
+                          printText1 = ' ${slots[key]}';
+                          indexDaty = indexDaty - 1;
+                          if (indexDaty < 0) indexDaty = 0;
+                          getDaty(globals.pasiekaID, globals.ulID).then((_) {
+                            //pobranie dat z bazy
+                            if (_daty.isNotEmpty) {
+                              //print('wybrana = $wybranaData');
+                              wybranaData = _daty[indexDaty].data;
+                            } //najwcześniejsza data pobrana z bazy
+
+                            //pobranie informacji o korpusach w wybranym ulu
+                            getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
+                                .then((_) {
+                              //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
+
+                              Provider.of<Frames>(context, listen: false)
+                                  .fetchAndSetFramesForHive(
+                                      globals.pasiekaID, globals.ulID)
+                                  .then((_) {
+                                //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
+                                Provider.of<Infos>(context, listen: false)
+                                    .fetchAndSetInfosForHive(
+                                        globals.pasiekaID, globals.ulID)
+                                    .then((_) {
+                                  //wszystkie informacje dla wybranego pasieki i ula
+
+                                  Provider.of<Hives>(context, listen: false)
+                                      .fetchAndSetHives(globals.pasiekaID)
+                                      .then((_) {
+                                    //wszystkie ule z tabeli ule z bazy lokalnej
+
+                                    //obliczane wielkości płótna dla wszystkich korpusów w ulu
+                                    widthCanvas = 0; //szerokość płótna
+                                    highCanvas = 0; //wysokość płótna
+                                    for (var i = 0; i < _korpusy.length; i++) {
+                                      highCanvas += _korpusy[i].typ * 75 +
+                                          30; //wysokość półkorpusa + 2 po 15 na padding
+                                    }
+                                    final hivesData =
+                                        Provider.of<Hives>(context, listen: false);
+                                    List<Hive> hive = hivesData.items.where((hv) {
+                                      return hv.ulNr ==
+                                          nrXXOfHive; // jest ==  a było contain ale dla typu String
+                                    }).toList();
+                                    widthCanvas = hive[0].ramek * 20 +
+                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+
+                                    _dialogBuilderHive(context);
+                                    openDialog = true;
+                                    beep('open');
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        }
+                        break;
+                    }
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setDate - zmiana daty 
         case 'setDate':
           printText += AppLocalizations.of(context)!.date; //" Date:"
-          intention = 'setDate';
+          //intention = 'setDate';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'dateDay':
+                  printText1 += "\n" + AppLocalizations.of(context)!.day + " =";
+                  printText1 += " ${slots[key]}";
+                  if (ustawianaData == '') {
+                    ustawianaData = formatter.format(now);
+                    String a = ustawianaData.substring(0, 8);
+                    String b = slots[key]
+                        .toString()
+                        .padLeft(2, '0'); //i.toString().padLeft(2, '0');
+                    ustawianaData = a + b;
+                    formattedDate = ustawianaData;
+                  } else {
+                    String a = ustawianaData.substring(0, 8);
+                    String b = slots[key]
+                        .toString()
+                        .padLeft(2, '0'); //i.toString().padLeft(2, '0');
+                    ustawianaData = a + b;
+                    formattedDate = ustawianaData;
+                  }
+                  beep('open');
+                  break;
+                case 'dateMonth':
+                  printText1 += "\n" + AppLocalizations.of(context)!.month + " =";
+                  printText1 += " ${slots[key]}";
+                  if (ustawianaData == '') {
+                    ustawianaData = formatter.format(now);
+                    String a = ustawianaData.substring(0, 5);
+                    String b = slots[key]
+                        .toString()
+                        .padLeft(2, '0'); //i.toString().padLeft(2, '0');
+                    String c = ustawianaData.substring(7);
+                    ustawianaData = a + b + c;
+                    formattedDate = ustawianaData;
+                  } else {
+                    String a = ustawianaData.substring(0, 5);
+                    String b = slots[key]
+                        .toString()
+                        .padLeft(2, '0'); //i.toString().padLeft(2, '0');
+                    String c = ustawianaData.substring(7);
+                    ustawianaData = a + b + c;
+                    formattedDate = ustawianaData;
+                  }
+                  beep('open');
+                  break;
+                case 'dateYear':
+                  printText1 += "\n" + AppLocalizations.of(context)!.year + " =";
+                  printText1 += " ${slots[key]}";
+                  if (ustawianaData == '') {
+                    ustawianaData = formatter.format(now);
+                    String a = ustawianaData.substring(0, 2);
+                    String b = slots[key]
+                        .toString()
+                        .padLeft(2, '0'); //i.toString().padLeft(2, '0');
+                    String c = ustawianaData.substring(4);
+                    ustawianaData = a + b + c;
+                    formattedDate = ustawianaData;
+                  } else {
+                    String a = ustawianaData.substring(0, 2);
+                    String b = slots[key]
+                        .toString()
+                        .padLeft(2, '0'); //i.toString().padLeft(2, '0');
+                    String c = ustawianaData.substring(4);
+                    ustawianaData = a + b + c;
+                    formattedDate = ustawianaData;
+                  }
+                  beep('open');
+                  break;
+                case 'currentDate':
+                  printText1 += "\n" + AppLocalizations.of(context)!.date;
+                  printText1 += " ${slots[key]}";
+                  ustawianaData = '';
+                  formattedDate = formatter.format(now);
+                  beep('open');
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setHarvest - zbiory w sekcji info
         case 'setHarvest':
           printText += AppLocalizations.of(context)!.harvest; //" harvest:";
-          intention = 'setHarvest';
+          //intention = 'setHarvest';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'honeySmallHarvest': //zbiory miodu ilość małych ramek
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.honey + " = ";
+                    printText1 += " ${slots[key]} " +
+                        AppLocalizations.of(context)!.small +
+                        " " +
+                        AppLocalizations.of(context)!.frame;
+                    zapis = AppLocalizations.of(context)!.harvest +
+                        ": " +
+                        AppLocalizations.of(context)!.honey +
+                        " ${slots[key]} x " +
+                        AppLocalizations.of(context)!.small +
+                        " " +
+                        AppLocalizations.of(context)!.frame;
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'harvest',
+                        AppLocalizations.of(context)!.honey +
+                            " = " +
+                            AppLocalizations.of(context)!.small +
+                            " " +
+                            AppLocalizations.of(context)!.frame +
+                            " x",
+                        '${slots[key]}',
+                        '');
+                  }
+                  break;
+                case 'honeyBigHarvest': //zbiory miodu ilość duzych ramek
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.honey + " = ";
+                    printText1 += " ${slots[key]} " +
+                        AppLocalizations.of(context)!.big +
+                        " " +
+                        AppLocalizations.of(context)!.frame;
+                    zapis = AppLocalizations.of(context)!.harvest +
+                        ": " +
+                        AppLocalizations.of(context)!.honey +
+                        " ${slots[key]} x " +
+                        AppLocalizations.of(context)!.big +
+                        " " +
+                        AppLocalizations.of(context)!.frame;
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'harvest',
+                        AppLocalizations.of(context)!.honey +
+                            " = " +
+                            AppLocalizations.of(context)!.big +
+                            " " +
+                            AppLocalizations.of(context)!.frame +
+                            " x",
+                        '${slots[key]}',
+                        '');
+                  }
+                  break;
+                case 'beePollenHarvestML': //zbiory pyłku w mililitrach - część dziesiątki/jedności
+                  if (readyApiary == true && readyHive == true) {
+                    beePollenHarvestML = '${slots[key]}';
+                    if (slots.length == 1)
+                      beePollenHarvestHML =
+                          ''; //zerowanie setek bo sa tylko dwie cyfry
+                    printText1 +=
+                        '\n' + AppLocalizations.of(context)!.beePollen + ' =';
+                    printText1 += " $beePollenHarvestHML$beePollenHarvestML ml";
+                    zapis = AppLocalizations.of(context)!.beePollen +
+                        ' = $beePollenHarvestHML$beePollenHarvestML ml';
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'harvest',
+                        AppLocalizations.of(context)!.beePollen + " = ",
+                        '$beePollenHarvestHML$beePollenHarvestML',
+                        "ml"); //
+                  }
+                  break;
+                case 'beePollenHarvestHML': //zbiory pyłku w mililitrach - setki
+                  if (readyApiary == true && readyHive == true) {
+                    if (globals.jezyk == "pl_PL") {
+                      switch (slots[key]) {
+                        case 'sto':
+                          beePollenHarvestHML = '1';
+                          break;
+                        case 'dwieście':
+                          beePollenHarvestHML = '2';
+                          break;
+                        case 'trzysta':
+                          beePollenHarvestHML = '3';
+                          break;
+                        case 'czterysta':
+                          beePollenHarvestHML = '4';
+                          break;
+                        case 'pięćset':
+                          beePollenHarvestHML = '5';
+                          break;
+                        case 'sześćset':
+                          beePollenHarvestHML = '6';
+                          break;
+                        case 'siedemset':
+                          beePollenHarvestHML = '7';
+                          break;
+                        case 'osiemset':
+                          beePollenHarvestHML = '8';
+                          break;
+                        case 'dziewięćset':
+                          beePollenHarvestHML = '9';
+                          break;
+                        default:
+                          beePollenHarvestHML = '0';
+                      }
+                    } else {
+                      switch (slots[key]) {
+                        case 'one hundred':
+                          beePollenHarvestHML = '1';
+                          break;
+                        case 'two hundred':
+                          beePollenHarvestHML = '2';
+                          break;
+                        case 'three hundred':
+                          beePollenHarvestHML = '3';
+                          break;
+                        case 'four hundred':
+                          beePollenHarvestHML = '4';
+                          break;
+                        case 'five hundred':
+                          beePollenHarvestHML = '5';
+                          break;
+                        case 'six hundred':
+                          beePollenHarvestHML = '6';
+                          break;
+                        case 'seven hundred':
+                          beePollenHarvestHML = '7';
+                          break;
+                        case 'eight hundred':
+                          beePollenHarvestHML = '8';
+                          break;
+                        case 'nine hundred':
+                          beePollenHarvestHML = '9';
+                          break;
+                        default:
+                          beePollenHarvestHML = '0';
+                      }
+                    }
+                    if (slots.length == 1)
+                      beePollenHarvestML =
+                          '00'; //dwa zera bo jest tylko cyfra setek
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.beePollen + " =";
+                    printText1 +=
+                        " $beePollenHarvestHML" + '$beePollenHarvestML ml';
+                    zapis = AppLocalizations.of(context)!.beePollen +
+                        " = $beePollenHarvestHML" +
+                        '$beePollenHarvestML ml';
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'harvest',
+                        AppLocalizations.of(context)!.beePollen + " = ",
+                        '$beePollenHarvestHML$beePollenHarvestML',
+                        "ml"); //
+                  }
+                  break;
+
+                case 'beePollenHarvest': //zbiory pyłku w miarce
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.beePollen + " = ";
+                    printText1 +=
+                        " ${slots[key]} " + AppLocalizations.of(context)!.miarka;
+                    zapis = AppLocalizations.of(context)!.harvest +
+                        ": " +
+                        AppLocalizations.of(context)!.beePollen +
+                        " ${slots[key]} x " +
+                        AppLocalizations.of(context)!.miarka;
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'harvest',
+                        AppLocalizations.of(context)!.beePollen +
+                            "  = " +
+                            AppLocalizations.of(context)!.miarka +
+                            " x",
+                        '${slots[key]}',
+                        '');
+                  }
+                  break;
+                case 'beePollenHarvestI': //zbiory pyłku częśc całkowita w litrach
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.beePollen + " = ";
+                    printText1 += "  ${slots[key]} l";
+                    beePollenHarvestI = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.beePollen +
+                        "  = $beePollenHarvestI" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$beePollenHarvestD l";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'harvest',
+                        " " + AppLocalizations.of(context)!.beePollen + " =  ",
+                        "$beePollenHarvestI" + '.' + "$beePollenHarvestD",
+                        "l"); //
+                  }
+                  break;
+                case 'beePollenHarvestD': //zbiory pyłku częśc dziesiętna w litrach
+                  if (readyApiary == true && readyHive == true) {
+                    printText1 +=
+                        "\n" + AppLocalizations.of(context)!.beePollen + " = ";
+                    printText1 += "  ${slots[key]} l";
+                    beePollenHarvestD = '${slots[key]}';
+                    zapis = AppLocalizations.of(context)!.beePollen +
+                        "  = $beePollenHarvestI" +
+                        AppLocalizations.of(context)!.kropka +
+                        "$beePollenHarvestD l";
+                    readyInfo = true;
+                    zapisInfoDoBazy(
+                        'harvest',
+                        " " + AppLocalizations.of(context)!.beePollen + " =  ",
+                        "$beePollenHarvestI" + '.' + "$beePollenHarvestD",
+                        "l"); //
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
           break;
+//setFrames - ustawienie zakresu ramek od - do
         case 'setFrames':
           printText += AppLocalizations.of(context)!.frames; //" frames:";
-          intention = 'setFrames';
-          break;
-        case 'setAllHives':
-          printText += AppLocalizations.of(context)!.allHives; //" All Hives";
-          intention = 'setAllHives';
-          break;
-        case 'setApiary':
-          printText += AppLocalizations.of(context)!.apiary; //" Apiary";
-          intention = 'setApiary';
-          break;
-      }
-
-      if (inference.slots!.isNotEmpty) {
-        //printText += '    "slots" : {\n';
-        Map<String, String> slots = inference.slots!;
-        print('5 slots ==============================');
-        // print(slots.length);
-        //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
-        for (String key in slots.keys) {
-          //printText += "   $key: ${slots[key]},\n";
-          //  printText += "        \"$key\" : \"${slots[key]}\",\n";
-          switch (key) {
-            case 'frameState':
-              frameState = '${slots[key]}';
-              if (frameState == AppLocalizations.of(context)!.close) {
-                beep('close');
-                printText1 += " ${slots[key]}";
-                readyFrame = false;
-                nrXXOfFrame = 0;
-                nrXXOfFrameTemp = 0;
-                resetStory();
-              } else {
-                if (readyApiary == true &&
-                    readyHive == true &&
-                    (readyBody == true || readyHalfBody == true)) {
-                  printText1 += " ${slots[key]}";
-                  nrXXOfFrame = nrXXOfFrameTemp;
-                  nrXXOfFrameTemp = 0;
-                  readyFrame = true;
-                  readyFrames = false;
-                  beep('open');
-                  resetStory();
-                }
-              }
-              break;
-            case 'nrXXOfFrame':
-              nrXXOfFrame = int.parse('${slots[key]}');
-              if ((frameState == AppLocalizations.of(context)!.open ||
-                      frameState == AppLocalizations.of(context)!.set) &&
-                  (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true))) {
-                beep('open');
-                printText1 += " ${slots[key]}";
-                readyFrame = true;
-                readyFrames = false;
-                nrXXOfFrameTemp = nrXXOfFrame;
-                resetStory(); //kasowanie zmiennych przechowujących biezace zasoby ramki (bo nowa ramka)
-              } else {
-                if (readyApiary == true &&
-                    readyHive == true &&
-                    (readyBody == true || readyHalfBody == true)) {
-                  printText1 += " ${slots[key]}";
-                  nrXXOfFrameTemp = nrXXOfFrame;
-                  nrXXOfFrame = 0;
-                  readyFrame = false;
-                  resetStory();
-                }
-              }
-              break;
-            case 'framesState': //zakres ramek od do
+          //intention = 'setFrames';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'framesState': //zakres ramek od do
               framesState = '${slots[key]}';
               if (framesState == AppLocalizations.of(context)!.close) {
                 beep('close');
@@ -680,2328 +3913,196 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 }
               }
               break;
-            case 'siteOfFrame':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                beep('open');
-                printText1 += AppLocalizations.of(context)!.siteOfFrame;
-                //"\n Site of frame =";
-                printText1 += " ${slots[key]}";
-                siteOfFrame = '${slots[key]}';
-                resetInfo();
-                readyInfo = false;
               }
-              break;
-            case 'sizeOfFrame': //OfFrame
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                beep('open');
-                printText1 += AppLocalizations.of(context)!.sizeOfFrame;
-                //"\n Size of frame =";
-                printText1 += " ${slots[key]}";
-                sizeOfFrame = '${slots[key]}';
-                resetInfo();
-                readyInfo = false;
-              }
-              break;
-            case 'drone':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.drone + " =";
-                printText1 += " ${slots[key]}";
-                drone = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis =
-                    AppLocalizations.of(context)!.drone + " = ${slots[key]}";
-                zapisZas = 1;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(1, '${slots[key]}'); //
-              }
-              break;
-            case 'brood':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.broodCovered + " =";
-                printText1 += " ${slots[key]}";
-                brood = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis = AppLocalizations.of(context)!.broodCovered +
-                    " = ${slots[key]}";
-                zapisZas = 2;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(2, '${slots[key]}'); //
-              }
-              break;
-            case 'larvae':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.larvae + " =";
-                printText1 += " ${slots[key]}";
-                larvae = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis =
-                    AppLocalizations.of(context)!.larvae + " = ${slots[key]}";
-                zapisZas = 3;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(3, '${slots[key]}'); //
-              }
-              break;
-            case 'eggs':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.eggs + " =";
-                printText1 += " ${slots[key]}";
-                eggs = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis = AppLocalizations.of(context)!.eggs + " = ${slots[key]}";
-                zapisZas = 4;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(4, '${slots[key]}'); //
-              }
-              break;
-            case 'pollen':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.pollen + " =";
-                printText1 += " ${slots[key]}";
-                pollen = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis =
-                    AppLocalizations.of(context)!.pollen + " = ${slots[key]}";
-                zapisZas = 5;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(5, '${slots[key]}');
-              }
-              break;
-            case 'food':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.food + " =";
-                printText1 += " ${slots[key]}";
-                honey = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis = AppLocalizations.of(context)!.food + " = ${slots[key]}";
-                zapisZas = 6;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(6, '${slots[key]}'); //2-honey
-              }
-              break;
-            case 'honey':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.honey + " =";
-                printText1 += " ${slots[key]}";
-                honey = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis =
-                    AppLocalizations.of(context)!.honey + " = ${slots[key]}";
-                zapisZas = 6;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(6, '${slots[key]}'); //2-honey
-              }
-              break;
-            case 'honeySealed':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.honeySealed + " =";
-                printText1 += " ${slots[key]}";
-                honeySeald = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis = AppLocalizations.of(context)!.honeySealed +
-                    " = ${slots[key]}";
-                zapisZas = 7;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(7, '${slots[key]}'); //1-honeySealed
-              }
-              break;
-            case 'wax':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.waxFundation + " =";
-                printText1 += " ${slots[key]}";
-                wax = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis = AppLocalizations.of(context)!.waxFundation +
-                    " = ${slots[key]}";
-                zapisZas = 8;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(8, '${slots[key]}'); //
-              }
-              break;
-            case 'waxComb':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.waxComb + " =";
-                printText1 += " ${slots[key]}";
-                waxComb = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis =
-                    AppLocalizations.of(context)!.waxComb + " = ${slots[key]}";
-                zapisZas = 9;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(8, '${slots[key]}'); //
-              }
-              break;
-
-            case 'hiveState':
-              hiveState = '${slots[key]}';
-              if (hiveState == AppLocalizations.of(context)!.close) {
-                beep('close');
-                printText1 += " ${slots[key]}";
-                readyHive = false;
-                nrXXOfHive = 0;
-                nrXXOfHiveTemp = 0;
-                bodyState = AppLocalizations.of(context)!.close;
-                readyBody = false;
-                readyInfo = false;
-                globals.ikonaUla = 'green'; //"zerowanie" ikony ula
-                resetSumowania();
-                resetBody();
-                resetStory();
-              } else {
-                if (readyApiary == true ||
-                    (readyApiary == false && nrXXOfApiary == 0)) {
-                  //otwieranie Hive jezeli otwarto Apiary lub jest tylko jedna (lub pierwsza) pasieka
-                  printText1 += " ${slots[key]}";
-                  nrXXOfHive =
-                      nrXXOfHiveTemp; //bo inna kolejnośc wartości w slocie (patrz wydruk)- zmienić kolejność case???
-                  nrXXOfHiveTemp = 0;
-                  readyHive = true;
-                  readyAllHives = false;
-                  globals.ikonaUla = 'green'; //"zerowanie" ikony ula
-                  allHivesState = AppLocalizations.of(context)!.close;
-                  beep('open');
-                  if (readyApiary == false && nrXXOfApiary == 0) {
-                    readyApiary = true;
-                    nrXXOfApiary = 1;
-                  } //bo tylko jedna (lub pierwsza) pasieka
-                  if (nrXXOfApiary != 0) {
-                    //wpis do tabeli 'pogoda'
-                    aktualizacjaPogody(nrXXOfApiary);
-                  }
-                }
-              }
-              break;
-            case 'nrXXOfHive':
-              nrXXOfHive = int.parse('${slots[key]}');
-              if ((hiveState == AppLocalizations.of(context)!.open ||
-                      hiveState == AppLocalizations.of(context)!.set) &&
-                  (readyApiary == true ||
-                      (readyApiary == false && nrXXOfApiary == 0))) {
-                //numer Hive jezeli otwarto Apiary
-                printText1 += " ${slots[key]}";
-                if (readyApiary == false && nrXXOfApiary == 0) {
-                  readyApiary = true;
-                  nrXXOfApiary = 1;
-                }
-                readyHive = true;
-                readyAllHives = false;
-                allHivesState = AppLocalizations.of(context)!.close;
-                beep('open');
-                nrXXOfHiveTemp = nrXXOfHive;
-                bodyState = AppLocalizations.of(context)!.close;
-                readyBody = false;
-                readyInfo = false;
-                globals.ikonaUla = 'green'; //"zerowanie" ikony ula
-                resetSumowania();
-                resetBody();
-                resetStory();
-              } else {
-                printText1 += " ${slots[key]}";
-                nrXXOfHiveTemp = nrXXOfHive;
-                nrXXOfHive = 0;
-                bodyState = AppLocalizations.of(context)!.close;
-                readyHive = false;
-                readyBody = false;
-                readyInfo = false;
-                resetSumowania();
-                resetBody();
-                resetStory();
-              }
-              break;
-            case 'bodyState':
-              bodyState = '${slots[key]}';
-              if (bodyState == AppLocalizations.of(context)!.close) {
-                printText1 += " ${slots[key]}";
-                readyBody = false;
-                beep('close');
-                halfBodyState = AppLocalizations.of(context)!.close;
-                readyFrame = false;
-                nrXOfBodyTemp = 0;
-                resetSumowania();
-                resetBody();
-                resetStory();
-              } else {
-                if (readyApiary == true && readyHive == true) {
-                  //otwieranie Body jezeli otwarto Apiary i Hive
-                  printText1 += " ${slots[key]}";
-                  if (nrXOfBodyTemp != 0) {
-                    nrXOfBody = nrXOfBodyTemp;
-                    sizeOfFrame = AppLocalizations.of(context)!.big;
-                  }
-                  // if (nrXOfHalfBodyTemp != 0) {
-                  //   nrXOfHalfBody = nrXOfHalfBodyTemp;
-                  //   sizeOfFrame = 'small';
-                  // }
-                  readyAllHives = false;
-                  allHivesState = AppLocalizations.of(context)!.close;
-                  halfBodyState = AppLocalizations.of(context)!.close;
-                  readyHalfBody = false;
-                  nrXOfBodyTemp = 0;
-                  nrXOfHalfBodyTemp = 0;
-                  readyBody = true;
-                  beep('open');
-                  resetSumowania();
-                  resetFrame();
-                  resetStory();
-                }
-              }
-              break;
-            case 'nrXOfBody':
-              nrXOfBody = int.parse('${slots[key]}');
-              if ((bodyState == AppLocalizations.of(context)!.open ||
-                      bodyState == AppLocalizations.of(context)!.set) &&
-                  (readyApiary == true && readyHive == true)) {
-                printText1 += " ${slots[key]}";
-                readyBody = true;
-                beep('open');
-                nrXOfBodyTemp = nrXOfBody;
-                nrXOfHalfBody = 0;
-                nrXOfHalfBodyTemp = 0;
-                readyHalfBody = false;
-                readyAllHives = false;
-                allHivesState = AppLocalizations.of(context)!.close;
-                sizeOfFrame = AppLocalizations.of(context)!.big; //bo korpus
-                resetSumowania();
-                resetFrame();
-                resetStory();
-              } else {
-                printText1 += " ${slots[key]}";
-                nrXOfBodyTemp = nrXOfBody;
-                nrXOfBody = 0;
-                nrXOfHalfBody = 0;
-                readyBody = false;
-                //beep('close');
-                resetSumowania();
-                resetFrame();
-                resetStory();
-              }
-              break;
-            case 'halfBodyState':
-              halfBodyState = '${slots[key]}';
-              if (halfBodyState == AppLocalizations.of(context)!.close) {
-                printText1 += " ${slots[key]}";
-                readyHalfBody = false;
-                beep('close');
-                nrXOfHalfBodyTemp = 0;
-                resetSumowania();
-                resetBody();
-                resetFrame();
-                resetStory();
-              } else {
-                if (readyApiary == true && readyHive == true) {
-                  //otwieranie Body jezeli otwarto Apiary i Hive
-                  printText1 += " ${slots[key]}";
-                  if (nrXOfHalfBodyTemp != 0) {
-                    nrXOfHalfBody = nrXOfHalfBodyTemp;
-                    sizeOfFrame = AppLocalizations.of(context)!.small;
-                  }
-                  readyAllHives = false;
-                  allHivesState = AppLocalizations.of(context)!.close;
-                  nrXOfHalfBodyTemp = 0;
-                  readyHalfBody = true;
-                  readyBody = false;
-                  bodyState = AppLocalizations.of(context)!.close;
-                  nrXOfBody = 0;
-                  beep('open');
-                  resetSumowania();
-                  resetFrame();
-                  resetStory();
-                }
-              }
-              break;
-            case 'nrXOfHalfBody':
-              nrXOfHalfBody = int.parse('${slots[key]}');
-              if ((halfBodyState == AppLocalizations.of(context)!.open ||
-                      halfBodyState == AppLocalizations.of(context)!.set) &&
-                  (readyApiary == true && readyHive == true)) {
-                printText1 += " ${slots[key]}";
-                readyHalfBody = true;
-                readyBody = false;
-                bodyState = AppLocalizations.of(context)!.close;
-                nrXOfBody = 0;
-                beep('open');
-                //nrXOfHalfBodyTemp = nrXOfHalfBody;
-                //nrXOfHalfBody = 0;
-                nrXOfHalfBodyTemp = 0;
-                sizeOfFrame =
-                    AppLocalizations.of(context)!.small; //bo półkorpus
-                readyAllHives = false;
-                allHivesState = AppLocalizations.of(context)!.close;
-                resetSumowania();
-                resetFrame();
-                resetStory();
-              } else {
-                printText1 += " ${slots[key]}";
-                nrXOfHalfBodyTemp = nrXOfHalfBody;
-                nrXOfHalfBody = 0;
-                readyBody = false;
-                nrXOfBody = 0;
-                resetSumowania();
-                resetFrame();
-                resetStory();
-              }
-              break;
-            case 'queen':
-              if (readyApiary == true &&
-                  readyHive == true &&
-                  (readyBody == true || readyHalfBody == true) &&
-                  readyFrame == true) {
-                printText1 += "\n" +
-                    AppLocalizations.of(context)!.queen +
-                    " = ${slots[key]}";
-                if (globals.jezyk == "pl_PL") {
-                  switch (slots[key]) {
-                    //zawiera kolor znacznika
-                    case 'czarna':
-                      queen = '1';
-                      break;
-                    case 'żółta':
-                      queen = '2';
-                      break;
-                    case 'czerwona':
-                      queen = '3';
-                      break;
-                    case 'zielona':
-                      queen = '4';
-                      break;
-                    case 'niebieska':
-                      queen = '5';
-                      break;
-                    case 'biała':
-                      queen = '6';
-                      break;
-                    default:
-                      queen = '1';
-                  }
-                } else {
-                  switch (slots[key]) {
-                    //zawiera kolor znacznika
-                    case 'black':
-                      queen = '1';
-                      break;
-                    case 'yellow':
-                      queen = '2';
-                      break;
-                    case 'red':
-                      queen = '3';
-                      break;
-                    case 'green':
-                      queen = '4';
-                      break;
-                    case 'blue':
-                      queen = '5';
-                      break;
-                    case 'white':
-                      queen = '6';
-                      break;
-                    default:
-                      queen = '1';
-                  }
-                }
-                //queen = '1'; //'${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis =
-                    AppLocalizations.of(context)!.queen + " = ${slots[key]}";
-                zapisZas = 10;
-                zapisWart = queen;
-                //zapisDoBazy(10, '1'); //'${slots[key]}'
-              }
-              break;
-            case 'queenCells':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.queenCells + " =";
-                printText1 += " ${slots[key]}";
-                queenCells = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis = AppLocalizations.of(context)!.queenCells +
-                    " = ${slots[key]}";
-                zapisZas = 11;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(11, '${slots[key]}'); //
-              }
-              break;
-            case 'delQCells':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 += "\n" +
-                    AppLocalizations.of(context)!.deleteQueenCells +
-                    " =";
-                printText1 += " ${slots[key]}";
-                delQCells = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis = AppLocalizations.of(context)!.deleteQueenCells +
-                    " = ${slots[key]}";
-                zapisZas = 12;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(12, '${slots[key]}'); //
-              }
-              break;
-            case 'toDo':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.toDo + " =";
-                printText1 += " ${slots[key]}";
-                toDo = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis = AppLocalizations.of(context)!.toDo + " = ${slots[key]}";
-                zapisZas = 13;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(13, '${slots[key]}'); //
-              }
-              break;
-            case 'isDone':
-              if (readyApiary == true &&
-                      readyHive == true &&
-                      (readyBody == true || readyHalfBody == true) &&
-                      readyFrame == true ||
-                  readyFrames == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.isDone + " =";
-                printText1 += " ${slots[key]}";
-                isDone = '${slots[key]}';
-                readyStory = true;
-                resetInfo();
-                readyInfo = false;
-                zapis =
-                    AppLocalizations.of(context)!.isDone + " = ${slots[key]}";
-                zapisZas = 14;
-                zapisWart = '${slots[key]}';
-                //zapisDoBazy(14, '${slots[key]}'); //
-              }
-              break;
-            case 'syrup1to1I': //syrop 1 do 1 część całkowita w litrach
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.syrup + " 1:1 =";
-                printText1 += "  ${slots[key]} l";
-                syrup1to1I = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.syrup +
-                    " 1:1 = $syrup1to1I" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$syrup1to1D l";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'feeding',
-                    AppLocalizations.of(context)!.syrup + " 1:1",
-                    "$syrup1to1I" + '.' + "$syrup1to1D",
-                    "l"); //
-              }
-              break;
-            case 'syrup1to1D': //syrop 1 do 1 część dziesiętna
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.syrup + " 1:1 =";
-                printText1 += "  0.${slots[key]} l";
-                syrup1to1D = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.syrup +
-                    " 1:1 = $syrup1to1I" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$syrup1to1D l";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'feeding',
-                    AppLocalizations.of(context)!.syrup + " 1:1",
-                    "$syrup1to1I" + '.' + "$syrup1to1D",
-                    "l"); //
-              }
-              break;
-            case 'syrup3to2I': //syrop 3 do 2 część całkowita w litrach
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.syrup + " 3:2 =";
-                printText1 += "  ${slots[key]} l";
-                syrup3to2I = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.syrup +
-                    " 3:2 = $syrup3to2I" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$syrup3to2D l";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'feeding',
-                    AppLocalizations.of(context)!.syrup + " 3:2",
-                    "$syrup3to2I" + '.' + "$syrup3to2D",
-                    "l"); //
-              }
-              break;
-            case 'syrup3to2D': //syrop 3 do 2 część dziesiętna
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.syrup + " 3:2 =";
-                printText1 += "  0.${slots[key]} l";
-                syrup3to2D = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.syrup +
-                    " 3:2 = $syrup3to2I" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$syrup3to2D l";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'feeding',
-                    AppLocalizations.of(context)!.syrup + " 3:2",
-                    "$syrup3to2I" + '.' + "$syrup3to2D",
-                    "l"); //
-              }
-              break;
-            case 'candyI': //candy część całkowita w litrach
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 += "\n" + AppLocalizations.of(context)!.candy + " =";
-                printText1 += "  ${slots[key]} kg";
-                candyI = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.candy +
-                    " = $candyI" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$candyD kg";
-                readyInfo = true;
-                zapisInfoDoBazy('feeding', AppLocalizations.of(context)!.candy,
-                    "$candyI" + '.' + "$candyD", "kg"); //
-              }
-              break;
-            case 'candyD': //candy część dziesiętna
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 += "\n" + AppLocalizations.of(context)!.candy + " =";
-                printText1 += "  ${slots[key]} kg";
-                candyD = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.candy +
-                    " = $candyI" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$candyD kg";
-                readyInfo = true;
-                zapisInfoDoBazy('feeding', AppLocalizations.of(context)!.candy,
-                    "$candyI" + '.' + "$candyD", "kg"); //
-              }
-              break;
-            case 'invertI': //invert część całkowita w litrach
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.invert + " =";
-                printText1 += "  ${slots[key]}";
-                invertI = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.invert +
-                    " = $invertI" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$invertD l";
-                readyInfo = true;
-                zapisInfoDoBazy('feeding', AppLocalizations.of(context)!.invert,
-                    "$invertI" + '.' + "$invertD", "l"); //
-              }
-              break;
-            case 'invertD': //invert część dziesiętna
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.invert + " =";
-                printText1 += "  ${slots[key]}";
-                invertD = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.invert +
-                    " = $invertI" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$invertD l";
-                readyInfo = true;
-                zapisInfoDoBazy('feeding', AppLocalizations.of(context)!.invert,
-                    "$invertI" + '.' + "$invertD", "l"); //
-              }
-              break;
-            case 'removedFood': //usunięto pokarm
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.removedFood + " =";
-                printText1 += "  ${slots[key]}";
-                removedFood = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.removedFood +
-                    " = ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'feeding',
-                    AppLocalizations.of(context)!.removedFood,
-                    removedFood,
-                    ''); //
-              }
-              break;
-            case 'leftFood': //pozostał (niezjedzony) pokarm
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.leftFood + " =";
-                printText1 += "  ${slots[key]}";
-                leftFood = '${slots[key]}';
-                zapis =
-                    AppLocalizations.of(context)!.leftFood + " = ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy('feeding',
-                    AppLocalizations.of(context)!.leftFood, leftFood, ''); //
-              }
-              break;
-            case 'apivarol': //
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 += "\n Apiwarol =";
-                printText1 +=
-                    "  ${slots[key]} " + AppLocalizations.of(context)!.dose;
-                zapis = 'Apiwarol = ${slots[key]} ' +
-                    AppLocalizations.of(context)!.dose;
-                readyInfo = true;
-                zapisInfoDoBazy('treatment', 'apivarol', '${slots[key]}',
-                    AppLocalizations.of(context)!.dose); //
-              }
-              break;
-            case 'biovar': //
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 += "\n Biowar =";
-                printText1 += "  ${slots[key]} " +
-                    '$biovarBelts ' +
-                    AppLocalizations.of(context)!.belts;
-                biovarState = '${slots[key]}';
-                zapis = 'Biowar = ${slots[key]} ' +
-                    '$biovarBelts ' +
-                    AppLocalizations.of(context)!.belts;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'treatment',
-                    'biovar',
-                    '${slots[key]}' + ' $biovarBelts',
-                    AppLocalizations.of(context)!.belts); //
-              }
-              break;
-            case 'biovarBelts': //
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 += "\n Biowar =";
-                printText1 += '$biovarState ' +
-                    "${slots[key]} " +
-                    AppLocalizations.of(context)!.belts;
-                biovarBelts = '${slots[key]}';
-                zapis = 'Biowar = ' +
-                    '$biovarState ' +
-                    ' ${slots[key]} ' +
-                    AppLocalizations.of(context)!.belts;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'treatment',
-                    'biovar',
-                    '$biovarState' + ' ${slots[key]}',
-                    AppLocalizations.of(context)!.belts); //
-              }
-              break;
-            case 'acid': //
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                acidXX = '${slots[key]}';
-                if (slots.length == 1)
-                  acidH = ''; //zerowanie setek bo sa tylko dwie cyfry
-                printText1 += '\n' + AppLocalizations.of(context)!.acid + ' =';
-                printText1 += " $acidH$acidXX " +
-                    AppLocalizations.of(context)!.milliliter;
-                zapis = AppLocalizations.of(context)!.acid +
-                    ' = $acidH$acidXX ' +
-                    AppLocalizations.of(context)!.milliliter;
-                readyInfo = true;
-                zapisInfoDoBazy('treatment', AppLocalizations.of(context)!.acid,
-                    '$acidH$acidXX', 'ml'); //
-              }
-              break;
-            case 'acidH':
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                if (globals.jezyk == "pl_PL") {
-                  switch (slots[key]) {
-                    case 'sto':
-                      acidH = '1';
-                      break;
-                    case 'dwieście':
-                      acidH = '2';
-                      break;
-                    case 'trzysta':
-                      acidH = '3';
-                      break;
-                    case 'czterysta':
-                      acidH = '4';
-                      break;
-                    case 'pięćset':
-                      acidH = '5';
-                      break;
-                    case 'sześćset':
-                      acidH = '6';
-                      break;
-                    case 'siedemset':
-                      acidH = '7';
-                      break;
-                    case 'osiemset':
-                      acidH = '8';
-                      break;
-                    case 'dziewięćset':
-                      acidH = '9';
-                      break;
-                    default:
-                      acidH = '9';
-                  }
-                } else {
-                  switch (slots[key]) {
-                    case 'one hundred':
-                      varroaH = '1';
-                      break;
-                    case 'two hundred':
-                      varroaH = '2';
-                      break;
-                    case 'three hundred':
-                      varroaH = '3';
-                      break;
-                    case 'four hundred':
-                      varroaH = '4';
-                      break;
-                    case 'five hundred':
-                      varroaH = '5';
-                      break;
-                    case 'six hundred':
-                      varroaH = '6';
-                      break;
-                    case 'seven hundred':
-                      varroaH = '7';
-                      break;
-                    case 'eight hundred':
-                      varroaH = '8';
-                      break;
-                    case 'nine hundred':
-                      varroaH = '9';
-                      break;
-                    default:
-                      varroaH = '9';
-                  }
-                }
-                if (slots.length == 1)
-                  acidXX = '00'; //dwa zera bo jest tylko cyfra setek
-                printText1 += "\n" + AppLocalizations.of(context)!.acid + " =";
-                printText1 += " $acidH" +
-                    '$acidXX ' +
-                    AppLocalizations.of(context)!.milliliter;
-                zapis = AppLocalizations.of(context)!.acid +
-                    " = $acidH" +
-                    '$acidXX ' +
-                    AppLocalizations.of(context)!.milliliter;
-                readyInfo = true;
-                zapisInfoDoBazy('treatment', AppLocalizations.of(context)!.acid,
-                    '$acidH$acidXX', 'ml'); //
-              }
-              break;
-            case 'varroa': //
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                varroaXX = '${slots[key]}';
-                if (slots.length == 1)
-                  varroaH = ''; //zerowanie setek bo sa tylko dwie cyfry
-                printText1 +=
-                    '\n' + AppLocalizations.of(context)!.vArroa + ' =';
-                printText1 +=
-                    " $varroaH$varroaXX " + AppLocalizations.of(context)!.mites;
-                zapis = AppLocalizations.of(context)!.vArroa +
-                    ' = $varroaH$varroaXX ' +
-                    AppLocalizations.of(context)!.mites;
-                readyInfo = true;
-                zapisInfoDoBazy('treatment', 'varroa', '$varroaH$varroaXX',
-                    AppLocalizations.of(context)!.mites); //
-              }
-              break;
-            case 'varroaH':
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                if (globals.jezyk == "pl_PL") {
-                  switch (slots[key]) {
-                    case 'sto':
-                      varroaH = '1';
-                      break;
-                    case 'dwieście':
-                      varroaH = '2';
-                      break;
-                    case 'trzysta':
-                      varroaH = '3';
-                      break;
-                    case 'czterysta':
-                      varroaH = '4';
-                      break;
-                    default:
-                      varroaH = '5';
-                  }
-                } else {
-                  switch (slots[key]) {
-                    case 'one hundred':
-                      varroaH = '1';
-                      break;
-                    case 'two hundred':
-                      varroaH = '2';
-                      break;
-                    case 'three hundred':
-                      varroaH = '3';
-                      break;
-                    case 'four hundred':
-                      varroaH = '4';
-                      break;
-                    default:
-                      varroaH = '5';
-                  }
-                }
-                if (slots.length == 1)
-                  varroaXX = '00'; //dwa zera bo jest tylko cyfra setek
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.vArroa + " =";
-                printText1 += " $varroaH" +
-                    '$varroaXX ' +
-                    AppLocalizations.of(context)!.mites;
-                zapis = AppLocalizations.of(context)!.vArroa +
-                    " = $varroaH" +
-                    '$varroaXX ' +
-                    AppLocalizations.of(context)!.mites;
-                readyInfo = true;
-                zapisInfoDoBazy('treatment', 'varroa', '$varroaH$varroaXX',
-                    AppLocalizations.of(context)!.mites); //
-              }
-              break;
-            case 'queenState': //
-              if (readyApiary == true && readyHive == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
-                printText1 += "  ${slots[key]}";
-                zapis =
-                    AppLocalizations.of(context)!.queen + " - ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'queen',
-                    AppLocalizations.of(context)!.queen + " -",
-                    '${slots[key]}',
-                    ''); //
-              }
-              break;
-            case 'queenStart': //
-              if (readyApiary == true && readyHive == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
-                printText1 += "  ${slots[key]}";
-                zapis =
-                    AppLocalizations.of(context)!.queenIs + " ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy('queen', AppLocalizations.of(context)!.queenIs,
-                    '${slots[key]}', ''); //
-              }
-              break;
-            case 'queenMark': //
-              if (readyApiary == true && readyHive == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
-                printText1 += "  ${slots[key]}";
-                queenMark = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.queen +
-                    " $queenMark " +
-                    queenNumber;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'queen',
-                    ' ' + AppLocalizations.of(context)!.queen,
-                    '${slots[key]}',
-                    '$queenNumber'); //
-              }
-              break;
-            case 'queenNumber': //
-              if (readyApiary == true && readyHive == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
-                printText1 += "  ${slots[key]}";
-                queenNumber = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.queen + " ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'queen',
-                    " " + AppLocalizations.of(context)!.queen,
-                    '$queenMark',
-                    '${slots[key]}'); //numer matki tu bo potrzebne do info zamiast belki
-              }
-              break;
-            case 'queenQuality': //
-              if (readyApiary == true && readyHive == true) {
-                printText1 += "\n" + AppLocalizations.of(context)!.queen + " =";
-                printText1 += "  ${slots[key]}";
-                zapis =
-                    AppLocalizations.of(context)!.queenIs + " ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'queen',
-                    AppLocalizations.of(context)!.queen +
-                        '  ' +
-                        AppLocalizations.of(context)!.isIs,
-                    '${slots[key]}',
-                    ''); //
-              }
-              break;
-            case 'queenBorn': //
-              if (readyApiary == true && readyHive == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.queenWasBornIn20;
-                printText1 += "${slots[key]}";
-                zapis = AppLocalizations.of(context)!.queenWasBornIn20 +
-                    "${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'queen',
-                    AppLocalizations.of(context)!.queenWasBornIn,
-                    '20${slots[key]}',
-                    ''); //
-              }
-              break;
-            case 'numberOfFrame':
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.numberOfFrame + " =";
-                printText1 += " ${slots[key]}";
-                _nowaIloscRamek  = int.parse('${slots[key]}');
-                zapis = AppLocalizations.of(context)!.numberOfFrame +
-                    " = ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'equipment',
-                    AppLocalizations.of(context)!.numberOfFrame + " = ",
-                    '${slots[key]}',
-                    ''); //
-              }
-              break;
-            case 'excluder': //krata odgrodowa
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.excluder + " = ";
-                printText1 += AppLocalizations.of(context)!.on +
-                    " ${slots[key]} " +
-                    AppLocalizations.of(context)!.body;
-                zapis = AppLocalizations.of(context)!.excluder +
-                    " " +
-                    AppLocalizations.of(context)!.on +
-                    " ${slots[key]} " +
-                    AppLocalizations.of(context)!.body;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'equipment',
-                    AppLocalizations.of(context)!.excluder,
-                    AppLocalizations.of(context)!.onBodyNumber,
-                    '${slots[key]}'); //
-              }
-              break;
-            case 'excluderDel': //krata odgrodowa
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.excluder + " =";
-                printText1 += " ${slots[key]}";
-                zapis =
-                    AppLocalizations.of(context)!.excluder + " ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'equipment',
-                    " " + AppLocalizations.of(context)!.excluder + " -",
-                    '', //${slots[key]} //nic zeby lepiej wyglądało. Bo wyświetla się '0'
-                    '0'); //remove
-              }
-              break;
-            case 'bottomBoard': //dennica
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.bottomBoard + " =";
-                printText1 += " ${slots[key]}";
-                zapis = AppLocalizations.of(context)!.bottomBoard +
-                    " " +
-                    AppLocalizations.of(context)!.isIs +
-                    " ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'equipment',
-                    AppLocalizations.of(context)!.bottomBoard +  " " + AppLocalizations.of(context)!.isIs,
-                    '${slots[key]}',
-                    '');
-              }
-              break;
-            case 'beePolenTrap': //poławiacz pyłku
-              if (readyApiary == true &&
-                  (readyHive == true || readyAllHives == true)) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.beePollenTrap + " =";
-                printText1 += " ${slots[key]}";
-                zapis = AppLocalizations.of(context)!.beePollenTrap +
-                    " " +
-                    AppLocalizations.of(context)!.isIs +
-                    " ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'equipment',
-                    AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs,
-                    '${slots[key]}',
-                    '');
-              }
-              break;
-            case 'colonyForce': //
-              if (readyApiary == true && readyHive == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.colony + " =";
-                printText1 += " ${slots[key]}";
-                zapis = AppLocalizations.of(context)!.colony +
-                    " " +
-                    AppLocalizations.of(context)!.isIs +
-                    " ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'colony',
-                    " " +
-                        AppLocalizations.of(context)!.colony +
-                        " " +
-                        AppLocalizations.of(context)!.isIs,
-                    '${slots[key]}',
-                    '');
-              }
-              break;
-            case 'colonyState': //
-              if (readyApiary == true && readyHive == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.colony + " =";
-                printText1 += " ${slots[key]}";
-                zapis = AppLocalizations.of(context)!.colony +
-                    " " +
-                    AppLocalizations.of(context)!.isIs +
-                    " ${slots[key]}";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'colony',
-                    AppLocalizations.of(context)!.colony +
-                        " " +
-                        AppLocalizations.of(context)!.isIs,
-                    '${slots[key]}',
-                    '');
-              }
-              break;
-            case 'deadBeeML': //
-              if (readyApiary == true && readyHive == true) {
-                deadBeeML = '${slots[key]}';
-                if (slots.length == 1)
-                  deadBeeHML = ''; //zerowanie setek bo sa tylko dwie cyfry
-                printText1 +=
-                    '\n' + AppLocalizations.of(context)!.deadBees + ' =';
-                printText1 += " $deadBeeHML$deadBeeML " +
-                    AppLocalizations.of(context)!.milliliter;
-                zapis = AppLocalizations.of(context)!.deadBees +
-                    ' = $deadBeeHML$deadBeeML ' +
-                    AppLocalizations.of(context)!.milliliter;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'colony',
-                    AppLocalizations.of(context)!.deadBees,
-                    '$deadBeeHML$deadBeeML',
-                    'ml'); //
-              }
-              break;
-            case 'deadBeeHML':
-              if (readyApiary == true && readyHive == true) {
-                if (globals.jezyk == "pl_PL") {
-                  switch (slots[key]) {
-                    case 'sto':
-                      deadBeeHML = '1';
-                      break;
-                    case 'dwieście':
-                      deadBeeHML = '2';
-                      break;
-                    case 'trzysta':
-                      deadBeeHML = '3';
-                      break;
-                    case 'czterysta':
-                      deadBeeHML = '4';
-                      break;
-                    case 'pięćset':
-                      deadBeeHML = '5';
-                      break;
-                    case 'sześćset':
-                      deadBeeHML = '6';
-                      break;
-                    case 'siedemset':
-                      deadBeeHML = '7';
-                      break;
-                    case 'osiemset':
-                      deadBeeHML = '8';
-                      break;
-                    case 'dziewięćset':
-                      deadBeeHML = '9';
-                      break;
-                    default:
-                      deadBeeHML = '9';
-                  }
-                } else {
-                  switch (slots[key]) {
-                    case 'one hundred':
-                      deadBeeHML = '1';
-                      break;
-                    case 'two hundred':
-                      deadBeeHML = '2';
-                      break;
-                    case 'three hundred':
-                      deadBeeHML = '3';
-                      break;
-                    case 'four hundred':
-                      deadBeeHML = '4';
-                      break;
-                    case 'five hundred':
-                      deadBeeHML = '5';
-                      break;
-                    case 'six hundred':
-                      deadBeeHML = '6';
-                      break;
-                    case 'seven hundred':
-                      deadBeeHML = '7';
-                      break;
-                    case 'eight hundred':
-                      deadBeeHML = '8';
-                      break;
-                    case 'nine hundred':
-                      deadBeeHML = '9';
-                      break;
-                    default:
-                      deadBeeHML = '9';
-                  }
-                }
-                if (slots.length == 1)
-                  deadBeeML = '00'; //dwa zera bo jest tylko cyfra setek
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.deadBees + " =";
-                printText1 += " $deadBeeHML" +
-                    '$deadBeeML ' +
-                    AppLocalizations.of(context)!.milliliter;
-                zapis = AppLocalizations.of(context)!.deadBees +
-                    " = $deadBeeHML" +
-                    '$deadBeeML ' +
-                    AppLocalizations.of(context)!.milliliter;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'colony',
-                    AppLocalizations.of(context)!.deadBees,
-                    '$deadBeeHML$deadBeeML',
-                    'ml'); //
-              }
-              break;
-
-            case 'dateDay':
-              printText1 += "\n" + AppLocalizations.of(context)!.day + " =";
-              printText1 += " ${slots[key]}";
-              if (ustawianaData == '') {
-                ustawianaData = formatter.format(now);
-                String a = ustawianaData.substring(0, 8);
-                String b = slots[key]
-                    .toString()
-                    .padLeft(2, '0'); //i.toString().padLeft(2, '0');
-                ustawianaData = a + b;
-                formattedDate = ustawianaData;
-              } else {
-                String a = ustawianaData.substring(0, 8);
-                String b = slots[key]
-                    .toString()
-                    .padLeft(2, '0'); //i.toString().padLeft(2, '0');
-                ustawianaData = a + b;
-                formattedDate = ustawianaData;
-              }
-              beep('open');
-              break;
-            case 'dateMonth':
-              printText1 += "\n" + AppLocalizations.of(context)!.month + " =";
-              printText1 += " ${slots[key]}";
-              if (ustawianaData == '') {
-                ustawianaData = formatter.format(now);
-                String a = ustawianaData.substring(0, 5);
-                String b = slots[key]
-                    .toString()
-                    .padLeft(2, '0'); //i.toString().padLeft(2, '0');
-                String c = ustawianaData.substring(7);
-                ustawianaData = a + b + c;
-                formattedDate = ustawianaData;
-              } else {
-                String a = ustawianaData.substring(0, 5);
-                String b = slots[key]
-                    .toString()
-                    .padLeft(2, '0'); //i.toString().padLeft(2, '0');
-                String c = ustawianaData.substring(7);
-                ustawianaData = a + b + c;
-                formattedDate = ustawianaData;
-              }
-              beep('open');
-              break;
-            case 'dateYear':
-              printText1 += "\n" + AppLocalizations.of(context)!.year + " =";
-              printText1 += " ${slots[key]}";
-              if (ustawianaData == '') {
-                ustawianaData = formatter.format(now);
-                String a = ustawianaData.substring(0, 2);
-                String b = slots[key]
-                    .toString()
-                    .padLeft(2, '0'); //i.toString().padLeft(2, '0');
-                String c = ustawianaData.substring(4);
-                ustawianaData = a + b + c;
-                formattedDate = ustawianaData;
-              } else {
-                String a = ustawianaData.substring(0, 2);
-                String b = slots[key]
-                    .toString()
-                    .padLeft(2, '0'); //i.toString().padLeft(2, '0');
-                String c = ustawianaData.substring(4);
-                ustawianaData = a + b + c;
-                formattedDate = ustawianaData;
-              }
-              beep('open');
-              break;
-            case 'currentDate':
-              printText1 += "\n" + AppLocalizations.of(context)!.date;
-              printText1 += " ${slots[key]}";
-              ustawianaData = '';
-              formattedDate = formatter.format(now);
-              beep('open');
-              break;
-            case 'honeySmallHarvest': //zbiory miodu ilość małych ramek
-              if (readyApiary == true && readyHive == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.honey + " = ";
-                printText1 += " ${slots[key]} " +
-                    AppLocalizations.of(context)!.small +
-                    " " +
-                    AppLocalizations.of(context)!.frame;
-                zapis = AppLocalizations.of(context)!.harvest +
-                    ": " +
-                    AppLocalizations.of(context)!.honey +
-                    " ${slots[key]} x " +
-                    AppLocalizations.of(context)!.small +
-                    " " +
-                    AppLocalizations.of(context)!.frame;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'harvest',
-                    AppLocalizations.of(context)!.honey +
-                        " = " +
-                        AppLocalizations.of(context)!.small +
-                        " " +
-                        AppLocalizations.of(context)!.frame +
-                        " x",
-                    '${slots[key]}',
-                    '');
-              }
-              break;
-            case 'honeyBigHarvest': //zbiory miodu ilość duzych ramek
-              if (readyApiary == true && readyHive == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.honey + " = ";
-                printText1 += " ${slots[key]} " +
-                    AppLocalizations.of(context)!.big +
-                    " " +
-                    AppLocalizations.of(context)!.frame;
-                zapis = AppLocalizations.of(context)!.harvest +
-                    ": " +
-                    AppLocalizations.of(context)!.honey +
-                    " ${slots[key]} x " +
-                    AppLocalizations.of(context)!.big +
-                    " " +
-                    AppLocalizations.of(context)!.frame;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'harvest',
-                    AppLocalizations.of(context)!.honey +
-                        " = " +
-                        AppLocalizations.of(context)!.big +
-                        " " +
-                        AppLocalizations.of(context)!.frame +
-                        " x",
-                    '${slots[key]}',
-                    '');
-              }
-              break;
-            case 'beePollenHarvestML': //zbiory pyłku w mililitrach - część dziesiątki/jedności
-              if (readyApiary == true && readyHive == true) {
-                beePollenHarvestML = '${slots[key]}';
-                if (slots.length == 1)
-                  beePollenHarvestHML =
-                      ''; //zerowanie setek bo sa tylko dwie cyfry
-                printText1 +=
-                    '\n' + AppLocalizations.of(context)!.beePollen + ' =';
-                printText1 += " $beePollenHarvestHML$beePollenHarvestML ml";
-                zapis = AppLocalizations.of(context)!.beePollen +
-                    ' = $beePollenHarvestHML$beePollenHarvestML ml';
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'harvest',
-                    AppLocalizations.of(context)!.beePollen + " = ",
-                    '$beePollenHarvestHML$beePollenHarvestML',
-                    "ml"); //
-              }
-              break;
-            case 'beePollenHarvestHML': //zbiory pyłku w mililitrach - setki
-              if (readyApiary == true && readyHive == true) {
-                if (globals.jezyk == "pl_PL") {
-                  switch (slots[key]) {
-                    case 'sto':
-                      beePollenHarvestHML = '1';
-                      break;
-                    case 'dwieście':
-                      beePollenHarvestHML = '2';
-                      break;
-                    case 'trzysta':
-                      beePollenHarvestHML = '3';
-                      break;
-                    case 'czterysta':
-                      beePollenHarvestHML = '4';
-                      break;
-                    case 'pięćset':
-                      beePollenHarvestHML = '5';
-                      break;
-                    case 'sześćset':
-                      beePollenHarvestHML = '6';
-                      break;
-                    case 'siedemset':
-                      beePollenHarvestHML = '7';
-                      break;
-                    case 'osiemset':
-                      beePollenHarvestHML = '8';
-                      break;
-                    case 'dziewięćset':
-                      beePollenHarvestHML = '9';
-                      break;
-                    default:
-                      beePollenHarvestHML = '0';
-                  }
-                } else {
-                  switch (slots[key]) {
-                    case 'one hundred':
-                      beePollenHarvestHML = '1';
-                      break;
-                    case 'two hundred':
-                      beePollenHarvestHML = '2';
-                      break;
-                    case 'three hundred':
-                      beePollenHarvestHML = '3';
-                      break;
-                    case 'four hundred':
-                      beePollenHarvestHML = '4';
-                      break;
-                    case 'five hundred':
-                      beePollenHarvestHML = '5';
-                      break;
-                    case 'six hundred':
-                      beePollenHarvestHML = '6';
-                      break;
-                    case 'seven hundred':
-                      beePollenHarvestHML = '7';
-                      break;
-                    case 'eight hundred':
-                      beePollenHarvestHML = '8';
-                      break;
-                    case 'nine hundred':
-                      beePollenHarvestHML = '9';
-                      break;
-                    default:
-                      beePollenHarvestHML = '0';
-                  }
-                }
-                if (slots.length == 1)
-                  beePollenHarvestML =
-                      '00'; //dwa zera bo jest tylko cyfra setek
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.beePollen + " =";
-                printText1 +=
-                    " $beePollenHarvestHML" + '$beePollenHarvestML ml';
-                zapis = AppLocalizations.of(context)!.beePollen +
-                    " = $beePollenHarvestHML" +
-                    '$beePollenHarvestML ml';
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'harvest',
-                    AppLocalizations.of(context)!.beePollen + " = ",
-                    '$beePollenHarvestHML$beePollenHarvestML',
-                    "ml"); //
-              }
-              break;
-
-            case 'beePollenHarvest': //zbiory pyłku w miarce
-              if (readyApiary == true && readyHive == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.beePollen + " = ";
-                printText1 +=
-                    " ${slots[key]} " + AppLocalizations.of(context)!.miarka;
-                zapis = AppLocalizations.of(context)!.harvest +
-                    ": " +
-                    AppLocalizations.of(context)!.beePollen +
-                    " ${slots[key]} x " +
-                    AppLocalizations.of(context)!.miarka;
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'harvest',
-                    AppLocalizations.of(context)!.beePollen +
-                        "  = " +
-                        AppLocalizations.of(context)!.miarka +
-                        " x",
-                    '${slots[key]}',
-                    '');
-              }
-              break;
-            case 'beePollenHarvestI': //zbiory pyłku częśc całkowita w litrach
-              if (readyApiary == true && readyHive == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.beePollen + " = ";
-                printText1 += "  ${slots[key]} l";
-                beePollenHarvestI = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.beePollen +
-                    "  = $beePollenHarvestI" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$beePollenHarvestD l";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'harvest',
-                    " " + AppLocalizations.of(context)!.beePollen + " =  ",
-                    "$beePollenHarvestI" + '.' + "$beePollenHarvestD",
-                    "l"); //
-              }
-              break;
-            case 'beePollenHarvestD': //zbiory pyłku częśc dziesiętna w litrach
-              if (readyApiary == true && readyHive == true) {
-                printText1 +=
-                    "\n" + AppLocalizations.of(context)!.beePollen + " = ";
-                printText1 += "  ${slots[key]} l";
-                beePollenHarvestD = '${slots[key]}';
-                zapis = AppLocalizations.of(context)!.beePollen +
-                    "  = $beePollenHarvestI" +
-                    AppLocalizations.of(context)!.kropka +
-                    "$beePollenHarvestD l";
-                readyInfo = true;
-                zapisInfoDoBazy(
-                    'harvest',
-                    " " + AppLocalizations.of(context)!.beePollen + " =  ",
-                    "$beePollenHarvestI" + '.' + "$beePollenHarvestD",
-                    "l"); //
-              }
-              break;
-            // case 'pylekHarvest': //zbiory pyłku - tylko po polsku
-            //   if (readyApiary == true && readyHive == true) {
-            //     printText1 += "\n" + "pyłek = ";
-            //     printText1 += " ${slots[key]} x miarka";
-            //     zapis = AppLocalizations.of(context)!.harvest +
-            //         ": pyłek" +
-            //         " ${slots[key]} x miarka";
-            //     readyInfo = true;
-            //     zapisInfoDoBazy(
-            //         'harvest', 'pyłek = miarka x', '${slots[key]}', '');
-            //   }
-            //   break;
-            case 'help':
-              help = '${slots[key]}';
-              if (globals.jezyk == "pl_PL") {
-                switch (help) {
-                  case 'pomóż mi':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderHelp(context);
-                    beep('open');
-                    openDialog = true;
-                    break;
-                  case 'zamknij pomoc':
-                    if (openDialog) {
-                      printText1 = ' ${slots[key]}';
-                      Navigator.pop(context);
-                      openDialog = false;
-                      beep('close');
-                    }
-                    break;
-                }
-              } else {
-                switch (help) {
-                  case 'help me':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderHelp(context);
-                    beep('open');
-                    openDialog = true;
-                    break;
-                  case 'close help':
-                    if (openDialog) {
-                      printText1 = ' ${slots[key]}';
-                      Navigator.pop(context);
-                      openDialog = false;
-                      beep('close');
-                    }
-                    break;
-                }
-              }
-              break;
-
-            case 'helpMe':
-              helpMe = '${slots[key]}';
-              if (globals.jezyk == "pl_PL") {
-                switch (helpMe) {
-                  case 'lokacja':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderLocation(context);
-                    beep('open');
-                    openDialog = true;
-                    break;
-                  case 'przegląd':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderInspection(context);
-                    beep('open');
-                    openDialog = true;
-                    break;
-                  case 'wyposażenie':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderEquipment(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'pokarm':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderFeeding(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'leczenie':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderTreatement(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'matka':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderQueen(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'rodzina':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderColony(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'zbiór':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderHarvest(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'data':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderDate(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'ul':
-                    if (readyApiary == true && readyHive == true) {
-                      if (openDialog) Navigator.pop(context); //zamknij okno
-                      printText1 = ' ${slots[key]}';
-                      getDaty(nrXXOfApiary, nrXXOfHive).then((_) {
-                        //pobranie dat z bazy
-                        if (_daty.isNotEmpty) {
-                          //print('wybrana = $wybranaData');
-                          wybranaData = _daty[indexDaty].data;
-                        } //najwcześniejsza data pobrana z bazy
-                        //pobranie informacji o korpusach w wybranym ulu
-                        getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData)
-                            .then((_) {
-                          //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
-
-                          Provider.of<Frames>(context, listen: false)
-                              .fetchAndSetFramesForHive(
-                                  nrXXOfApiary, nrXXOfHive)
-                              .then((_) {
-                            //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
-                            Provider.of<Infos>(context, listen: false)
-                                .fetchAndSetInfosForHive(
-                                    nrXXOfApiary, nrXXOfHive)
-                                .then((_) {
-                              //wszystkie informacje dla wybranego pasieki i ula
-
-                              Provider.of<Hives>(context, listen: false)
-                                  .fetchAndSetHives(nrXXOfApiary)
-                                  .then((_) {
-                                //wszystkie ule z tabeli ule z bazy lokalnej
-
-                                //obliczane wielkości płótna dla wszystkich korpusów w ulu
-                                widthCanvas = 0; //szerokość płótna
-                                highCanvas = 0; //wysokość płótna
-                                for (var i = 0; i < _korpusy.length; i++) {
-                                  highCanvas += _korpusy[i].typ * 75 +
-                                      30; //wysokość półkorpusa + 2 po 15 na padding
-                                }
-                                final hivesData =
-                                    Provider.of<Hives>(context, listen: false);
-                                List<Hive> hive = hivesData.items.where((hv) {
-                                  return hv.ulNr ==
-                                      nrXXOfHive; // jest ==  a było contain ale dla typu String
-                                }).toList();
-                                widthCanvas = hive[0].ramek * 20 +
-                                    20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
-
-                                _dialogBuilderHive(context);
-                                openDialog = true;
-                                beep('open');
-                              });
-                            });
-                          });
-                        });
-                      });
-                    }
-                    break;
-                  case 'ul wcześniej':
-                    if (readyApiary == true && readyHive == true) {
-                      if (openDialog) Navigator.pop(context); //zamknij okno
-                      printText1 = ' ${slots[key]}';
-                      indexDaty = indexDaty + 1;
-                      getDaty(nrXXOfApiary, nrXXOfHive).then((_) {
-                        //pobranie dat z bazy
-                        if (indexDaty == _daty.length)
-                          indexDaty = indexDaty - 1;
-                        if (_daty.isNotEmpty) {
-                          //print('wybrana = $wybranaData');
-                          wybranaData = _daty[indexDaty].data;
-                        } //najwcześniejsza data pobrana z bazy
-
-                        //pobranie informacji o korpusach w wybranym ulu
-                        getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData)
-                            .then((_) {
-                          //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
-
-                          Provider.of<Frames>(context, listen: false)
-                              .fetchAndSetFramesForHive(
-                                  nrXXOfApiary, nrXXOfHive)
-                              .then((_) {
-                            //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
-                            Provider.of<Infos>(context, listen: false)
-                                .fetchAndSetInfosForHive(
-                                    nrXXOfApiary, nrXXOfHive)
-                                .then((_) {
-                              //wszystkie informacje dla wybranego pasieki i ula
-
-                              Provider.of<Hives>(context, listen: false)
-                                  .fetchAndSetHives(nrXXOfApiary)
-                                  .then((_) {
-                                //wszystkie ule z tabeli ule z bazy lokalnej
-
-                                //obliczane wielkości płótna dla wszystkich korpusów w ulu
-                                widthCanvas = 0; //szerokość płótna
-                                highCanvas = 0; //wysokość płótna
-                                for (var i = 0; i < _korpusy.length; i++) {
-                                  highCanvas += _korpusy[i].typ * 75 +
-                                      30; //wysokość półkorpusa + 2 po 15 na padding
-                                }
-                                final hivesData =
-                                    Provider.of<Hives>(context, listen: false);
-                                //final hives = hivesData.items;
-                                List<Hive> hive = hivesData.items.where((hv) {
-                                  return hv.ulNr ==
-                                      nrXXOfHive; // jest ==  a było contain ale dla typu String
-                                }).toList();
-                                widthCanvas = hive[0].ramek * 20 +
-                                    20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
-
-                                _dialogBuilderHive(context);
-                                openDialog = true;
-                                beep('open');
-                              });
-                            });
-                          });
-                        });
-                      });
-                    }
-                    break;
-                  case 'ul później':
-                    if (readyApiary == true && readyHive == true) {
-                      if (openDialog) Navigator.pop(context); //zamknij okno
-                      printText1 = ' ${slots[key]}';
-                      indexDaty = indexDaty - 1;
-                      if (indexDaty < 0) indexDaty = 0;
-                      getDaty(nrXXOfApiary, nrXXOfHive).then((_) {
-                        //pobranie dat z bazy
-                        if (_daty.isNotEmpty) {
-                          //print('wybrana = $wybranaData');
-                          wybranaData = _daty[indexDaty].data;
-                        } //najwcześniejsza data pobrana z bazy
-
-                        //pobranie informacji o korpusach w wybranym ulu
-                        getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData)
-                            .then((_) {
-                          //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
-
-                          Provider.of<Frames>(context, listen: false)
-                              .fetchAndSetFramesForHive(
-                                  nrXXOfApiary, nrXXOfHive)
-                              .then((_) {
-                            //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
-                            Provider.of<Infos>(context, listen: false)
-                                .fetchAndSetInfosForHive(
-                                    nrXXOfApiary, nrXXOfHive)
-                                .then((_) {
-                              //wszystkie informacje dla wybranego pasieki i ula
-
-                              Provider.of<Hives>(context, listen: false)
-                                  .fetchAndSetHives(nrXXOfApiary)
-                                  .then((_) {
-                                //wszystkie ule z tabeli ule z bazy lokalnej
-
-                                //obliczane wielkości płótna dla wszystkich korpusów w ulu
-                                widthCanvas = 0; //szerokość płótna
-                                highCanvas = 0; //wysokość płótna
-                                for (var i = 0; i < _korpusy.length; i++) {
-                                  highCanvas += _korpusy[i].typ * 75 +
-                                      30; //wysokość półkorpusa + 2 po 15 na padding
-                                }
-                                final hivesData =
-                                    Provider.of<Hives>(context, listen: false);
-                                List<Hive> hive = hivesData.items.where((hv) {
-                                  return hv.ulNr ==
-                                      nrXXOfHive; // jest ==  a było contain ale dla typu String
-                                }).toList();
-                                widthCanvas = hive[0].ramek * 20 +
-                                    20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
-
-                                _dialogBuilderHive(context);
-                                openDialog = true;
-                                beep('open');
-                              });
-                            });
-                          });
-                        });
-                      });
-                    }
-                    break;
-                }
-              } else {
-                switch (helpMe) {
-                  case 'location':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderLocation(context);
-                    beep('open');
-                    openDialog = true;
-                    break;
-                  case 'inspection':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderInspection(context);
-                    beep('open');
-                    openDialog = true;
-                    break;
-                  case 'equipment':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderEquipment(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'feeding':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderFeeding(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'treatment':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderTreatement(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'queen':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderQueen(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'colony':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderColony(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'harvest':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderHarvest(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'date':
-                    if (openDialog) Navigator.pop(context); //zamknij okno
-                    printText1 = ' ${slots[key]}';
-                    _dialogBuilderDate(context);
-                    openDialog = true;
-                    beep('open');
-                    break;
-                  case 'hive':
-                    if (readyApiary == true && readyHive == true) {
-                      if (openDialog) Navigator.pop(context); //zamknij okno
-                      printText1 = ' ${slots[key]}';
-                      getDaty(globals.pasiekaID, globals.ulID).then((_) {
-                        //pobranie dat z bazy
-                        if (_daty.isNotEmpty) {
-                          //print('wybrana = $wybranaData');
-                          wybranaData = _daty[indexDaty].data;
-                        } //najwcześniejsza data pobrana z bazy
-                        //pobranie informacji o korpusach w wybranym ulu
-                        getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
-                            .then((_) {
-                          //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
-
-                          Provider.of<Frames>(context, listen: false)
-                              .fetchAndSetFramesForHive(
-                                  globals.pasiekaID, globals.ulID)
-                              .then((_) {
-                            //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
-                            Provider.of<Infos>(context, listen: false)
-                                .fetchAndSetInfosForHive(
-                                    globals.pasiekaID, globals.ulID)
-                                .then((_) {
-                              //wszystkie informacje dla wybranego pasieki i ula
-
-                              Provider.of<Hives>(context, listen: false)
-                                  .fetchAndSetHives(globals.pasiekaID)
-                                  .then((_) {
-                                //wszystkie ule z tabeli ule z bazy lokalnej
-
-                                //obliczane wielkości płótna dla wszystkich korpusów w ulu
-                                widthCanvas = 0; //szerokość płótna
-                                highCanvas = 0; //wysokość płótna
-                                for (var i = 0; i < _korpusy.length; i++) {
-                                  highCanvas += _korpusy[i].typ * 75 +
-                                      30; //wysokość półkorpusa + 2 po 15 na padding
-                                }
-                                final hivesData =
-                                    Provider.of<Hives>(context, listen: false);
-                                List<Hive> hive = hivesData.items.where((hv) {
-                                  return hv.ulNr ==
-                                      nrXXOfHive; // jest ==  a było contain ale dla typu String
-                                }).toList();
-                                widthCanvas = hive[0].ramek * 20 +
-                                    20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
-
-                                _dialogBuilderHive(context);
-                                openDialog = true;
-                                beep('open');
-                              });
-                            });
-                          });
-                        });
-                      });
-                    }
-                    break;
-                  case 'hive before':
-                    if (readyApiary == true && readyHive == true) {
-                      if (openDialog) Navigator.pop(context); //zamknij okno
-                      printText1 = ' ${slots[key]}';
-                      indexDaty = indexDaty + 1;
-                      getDaty(globals.pasiekaID, globals.ulID).then((_) {
-                        //pobranie dat z bazy
-                        if (_daty.isNotEmpty) {
-                          //print('wybrana = $wybranaData');
-                          wybranaData = _daty[indexDaty].data;
-                        } //najwcześniejsza data pobrana z bazy
-
-                        //pobranie informacji o korpusach w wybranym ulu
-                        getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
-                            .then((_) {
-                          //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
-
-                          Provider.of<Frames>(context, listen: false)
-                              .fetchAndSetFramesForHive(
-                                  globals.pasiekaID, globals.ulID)
-                              .then((_) {
-                            //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
-                            Provider.of<Infos>(context, listen: false)
-                                .fetchAndSetInfosForHive(
-                                    globals.pasiekaID, globals.ulID)
-                                .then((_) {
-                              //wszystkie informacje dla wybranego pasieki i ula
-
-                              Provider.of<Hives>(context, listen: false)
-                                  .fetchAndSetHives(globals.pasiekaID)
-                                  .then((_) {
-                                //wszystkie ule z tabeli ule z bazy lokalnej
-
-                                //obliczane wielkości płótna dla wszystkich korpusów w ulu
-                                widthCanvas = 0; //szerokość płótna
-                                highCanvas = 0; //wysokość płótna
-                                for (var i = 0; i < _korpusy.length; i++) {
-                                  highCanvas += _korpusy[i].typ * 75 +
-                                      30; //wysokość półkorpusa + 2 po 15 na padding
-                                }
-                                final hivesData =
-                                    Provider.of<Hives>(context, listen: false);
-                                //final hives = hivesData.items;
-                                List<Hive> hive = hivesData.items.where((hv) {
-                                  return hv.ulNr ==
-                                      nrXXOfHive; // jest ==  a było contain ale dla typu String
-                                }).toList();
-                                widthCanvas = hive[0].ramek * 20 +
-                                    20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
-
-                                _dialogBuilderHive(context);
-                                openDialog = true;
-                                beep('open');
-                              });
-                            });
-                          });
-                        });
-                      });
-                    }
-                    break;
-                  case 'hive later':
-                    if (readyApiary == true && readyHive == true) {
-                      if (openDialog) Navigator.pop(context); //zamknij okno
-                      printText1 = ' ${slots[key]}';
-                      indexDaty = indexDaty - 1;
-                      if (indexDaty < 0) indexDaty = 0;
-                      getDaty(globals.pasiekaID, globals.ulID).then((_) {
-                        //pobranie dat z bazy
-                        if (_daty.isNotEmpty) {
-                          //print('wybrana = $wybranaData');
-                          wybranaData = _daty[indexDaty].data;
-                        } //najwcześniejsza data pobrana z bazy
-
-                        //pobranie informacji o korpusach w wybranym ulu
-                        getKorpusy(globals.pasiekaID, globals.ulID, wybranaData)
-                            .then((_) {
-                          //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
-
-                          Provider.of<Frames>(context, listen: false)
-                              .fetchAndSetFramesForHive(
-                                  globals.pasiekaID, globals.ulID)
-                              .then((_) {
-                            //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
-                            Provider.of<Infos>(context, listen: false)
-                                .fetchAndSetInfosForHive(
-                                    globals.pasiekaID, globals.ulID)
-                                .then((_) {
-                              //wszystkie informacje dla wybranego pasieki i ula
-
-                              Provider.of<Hives>(context, listen: false)
-                                  .fetchAndSetHives(globals.pasiekaID)
-                                  .then((_) {
-                                //wszystkie ule z tabeli ule z bazy lokalnej
-
-                                //obliczane wielkości płótna dla wszystkich korpusów w ulu
-                                widthCanvas = 0; //szerokość płótna
-                                highCanvas = 0; //wysokość płótna
-                                for (var i = 0; i < _korpusy.length; i++) {
-                                  highCanvas += _korpusy[i].typ * 75 +
-                                      30; //wysokość półkorpusa + 2 po 15 na padding
-                                }
-                                final hivesData =
-                                    Provider.of<Hives>(context, listen: false);
-                                List<Hive> hive = hivesData.items.where((hv) {
-                                  return hv.ulNr ==
-                                      nrXXOfHive; // jest ==  a było contain ale dla typu String
-                                }).toList();
-                                widthCanvas = hive[0].ramek * 20 +
-                                    20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
-
-                                _dialogBuilderHive(context);
-                                openDialog = true;
-                                beep('open');
-                              });
-                            });
-                          });
-                        });
-                      });
-                    }
-                    break;
-                }
-              }
-              break;
-            case 'apiaryState':
-              apiaryState = '${slots[key]}';
-              if (apiaryState == AppLocalizations.of(context)!.close) {
-                beep('close');
-                printText1 += " ${slots[key]}";
-                readyApiary = false;
-                nrXXOfApiary = 0;
-                nrXXOfApairyTemp = 0;
-                readyHive = false;
-                nrXXOfHive = 0;
-                bodyState = AppLocalizations.of(context)!.close;
-                readyBody = false;
-                readyInfo = false;
-                resetSumowania();
-                resetBody();
-                resetStory();
-                resetInfo();
-              } else {
-                // przypadek dla odwrotnej kolejności wnioskowania lub/i przy ustawianiu Apiary
-                printText1 += " ${slots[key]}";
-                readyApiary = true; //ustawienie Apairy
-                beep('open');
-                nrXXOfApiary =
-                    nrXXOfApairyTemp; // ustawienie numeru Apairy z temp
-                nrXXOfApairyTemp = 0;
-                //zerowanie Hive, Body i Frame
-                readyHive = false;
-                hiveState = AppLocalizations.of(context)!.close;
-                readyAllHives = false;
-                allHivesState = AppLocalizations.of(context)!.close;
-                nrXXOfHive = 0;
-                bodyState = AppLocalizations.of(context)!.close;
-                readyBody = false;
-                readyInfo = false;
-                // globals.ikonaPasieki = 'green'; //"zerowanie" ikony pasieki
-                resetSumowania();
-                resetBody();
-                resetStory();
-              }
-              break;
-            case 'nrXXOfApiary':
-              nrXXOfApiary = int.parse('${slots[key]}');
-              if (apiaryState == AppLocalizations.of(context)!.open ||
-                  apiaryState == AppLocalizations.of(context)!.set) {
-                printText1 += " ${slots[key]}";
-                nrXXOfApairyTemp = nrXXOfApiary;
-                readyApiary =
-                    true; // ustawienie Apairy - kolejność wnioskowania poprawna
-                beep('open');
-                //zerowanie danych Hive, Body i Frame
-                readyHive = false;
-                hiveState = AppLocalizations.of(context)!.close;
-                readyAllHives = false;
-                allHivesState = AppLocalizations.of(context)!.close;
-                nrXXOfHive = 0;
-                bodyState = AppLocalizations.of(context)!.close;
-                readyBody = false;
-                readyInfo = false;
-                // globals.ikonaPasieki = 'green'; //"zerowanie" ikony pasieki
-                resetSumowania();
-                resetBody();
-                resetStory();
-              } else {
-                //przypadek kiedy najpierw będzie numer a pózniej status pasieki (a teraz jest close)
-                printText1 += " ${slots[key]}";
-                nrXXOfApairyTemp = nrXXOfApiary;
-                nrXXOfApiary = 0;
-                readyApiary = false;
-                readyHive = false;
-                nrXXOfHive = 0;
-                bodyState = AppLocalizations.of(context)!.close;
-                readyBody = false;
-                readyInfo = false;
-                resetSumowania();
-                resetBody();
-                resetStory();
-              }
-              break;
-            case 'allHivesState':
-              allHivesState = '${slots[key]}';
-              if (allHivesState == AppLocalizations.of(context)!.close) {
-                beep('close');
-                printText1 += AppLocalizations.of(context)!
-                    .allHivesAre; //"\n All Hives are";
-                printText1 += " ${slots[key]}";
-                readyAllHives = false;
-                readyHive = false;
-                hiveState = AppLocalizations.of(context)!.close;
-                nrXXOfHive = 0;
-                bodyState = AppLocalizations.of(context)!.close;
-                readyBody = false;
-                readyInfo = false;
-                globals.ikonaUla = 'green'; //"zerowanie" ikony ula
-                resetSumowania();
-                resetBody();
-                resetStory();
-                //Navigator.pop(context);
-              } else {
-                if (readyApiary == true) {
-                  printText1 += AppLocalizations.of(context)!.allHivesAre;
-                  printText1 += " ${slots[key]}";
-                  readyAllHives = true;
-                  beep('open');
-                  readyHive = false;
-                  hiveState = AppLocalizations.of(context)!.close;
-                  nrXXOfHive = 0;
-                  bodyState = AppLocalizations.of(context)!.close;
-                  readyBody = false;
-                  globals.ikonaUla = 'green'; //"zerowanie" ikony ula
-                  if (nrXXOfApiary != 0) {
-                    //wpis do tabeli 'pogoda'
-                    aktualizacjaPogody(nrXXOfApiary);
-                  }
-                  resetSumowania();
-                  resetBody();
-                  resetStory();
-                  resetInfo();
-                  // _dialogBuilderHelp(context);
-                }
-              }
-              break;
-          }
-        }
-        //printText += '    }\n';
-        //zapis do tabeli "ramka" jezeli jest jakiś zasób
-        if (zapisZas > 0) zapisDoBazy(zapisZas, zapisWart);
-      } else {
-        //jezeli nie zdekodowano slotu czyli parametrów intencji
-        printText = AppLocalizations.of(context)!.error;
-        beep('error');
-      }
-      printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
-          ? {
-              printText = AppLocalizations.of(context)!.wrongCommand,
-              beep('error'),
             }
-          : printText += printText1;
-    }
-    //printText += '}';
-    print('wynik = $printText');
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
+          break;
+//setAllHives - ustawienie wszystkich uli w pasiece
+        case 'setAllHives':
+          printText += AppLocalizations.of(context)!.allHives; //" All Hives";
+          //intention = 'setAllHives';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) { 
+                case 'allHivesState':
+                  allHivesState = '${slots[key]}';
+                  if (allHivesState == AppLocalizations.of(context)!.close) {
+                    beep('close');
+                    printText1 += AppLocalizations.of(context)!
+                        .allHivesAre; //"\n All Hives are";
+                    printText1 += " ${slots[key]}";
+                    readyAllHives = false;
+                    readyHive = false;
+                    hiveState = AppLocalizations.of(context)!.close;
+                    nrXXOfHive = 0;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyBody = false;
+                    readyInfo = false;
+                    globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                    //Navigator.pop(context);
+                  } else {
+                    if (readyApiary == true) {
+                      printText1 += AppLocalizations.of(context)!.allHivesAre;
+                      printText1 += " ${slots[key]}";
+                      readyAllHives = true;
+                      beep('open');
+                      readyHive = false;
+                      hiveState = AppLocalizations.of(context)!.close;
+                      nrXXOfHive = 0;
+                      bodyState = AppLocalizations.of(context)!.close;
+                      readyBody = false;
+                      globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+                      if (nrXXOfApiary != 0) {
+                        //wpis do tabeli 'pogoda'
+                        aktualizacjaPogody(nrXXOfApiary);
+                      }
+                      resetSumowania();
+                      resetBody();
+                      resetStory();
+                      resetInfo();
+                      // _dialogBuilderHelp(context);
+                    }
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
+          break;
 
-    print('intention = $intention');
-    /*
-    print('readyApiary = $readyApiary');
-    print('readyAllHives = $readyAllHives');
-    print('readyHive = $readyHive');
-    print('readyBody = $readyBody');
-    print('readyHalfBody = $readyHalfBody');
-    print('readyFrame = $readyFrame');
-    print('readyFrames = $readyFrames');
-    print('readyStory = $readyStory');
-    print('readyInfo = $readyInfo');
-    print('---');
-    print('apiaryState = $apiaryState');
-    print('nrXXOfApiary = $nrXXOfApiary');
-    print('allHivesState = $allHivesState');
-    print('hiveState = $hiveState');
-    print('nrXXOfHive = $nrXXOfHive');
-    print('bodyState = $bodyState');
-    print('nrXOfBody = $nrXOfBody');
-    print('halfBodyState = $halfBodyState');
-    print('nrXOfHalfBody = $nrXOfHalfBody');
-    print('frameState = $frameState');
-    print('nrXXOfFrame = $nrXXOfFrame');
-    print('    framesState = $framesState');
-    print('    nrXXOdFrame = $nrXXOdFrame');
-    print('    nrXXDoFrame = $nrXXDoFrame');
-    print('siteOfFrame = $siteOfFrame');
-    print('sizeOfFrame = $sizeOfFrame');
-    print('honey = $honey');
-    print('honeySeald = $honeySeald');
-    print('pollen = $pollen');
-    print('brood = $brood');
-    print('larvae = $larvae');
-    print('eggs = $eggs');
-    print('wax = $wax');
-    print('waxComb = $waxComb');
-    print('queen = $queen');
-    print('queenCells = $queenCells');
-    print('delQCells = $delQCells');
-    print('drone = $drone');
-    print('toDo = $toDo');
-    print('isDone = $isDone');
-    print('syrup1to1I = $syrup1to1I');
-    print('syrup1to1D = $syrup1to1D');
-*/
+//setApiary - numer pasieki        
+        case 'setApiary':
+          printText += AppLocalizations.of(context)!.apiary; //" Apiary";
+          intention = 'setApiary';
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              //print('key ------ $key');
+              switch (key) {         
+                case 'apiaryState':
+                  apiaryState = '${slots[key]}';
+                  if (apiaryState == AppLocalizations.of(context)!.close) {
+                    beep('close');
+                    printText1 += " ${slots[key]}";
+                    readyApiary = false;
+                    nrXXOfApiary = 0;
+                    nrXXOfApairyTemp = 0;
+                    readyHive = false;
+                    nrXXOfHive = 0;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyBody = false;
+                    readyInfo = false;
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                    resetInfo();
+                  } else {
+                    // przypadek dla odwrotnej kolejności wnioskowania lub/i przy ustawianiu Apiary
+                    printText1 += " ${slots[key]}";
+                    readyApiary = true; //ustawienie Apairy
+                    beep('open');
+                    nrXXOfApiary =
+                        nrXXOfApairyTemp; // ustawienie numeru Apairy z temp
+                    nrXXOfApairyTemp = 0;
+                    //zerowanie Hive, Body i Frame
+                    readyHive = false;
+                    hiveState = AppLocalizations.of(context)!.close;
+                    readyAllHives = false;
+                    allHivesState = AppLocalizations.of(context)!.close;
+                    nrXXOfHive = 0;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyBody = false;
+                    readyInfo = false;
+                    // globals.ikonaPasieki = 'green'; //"zerowanie" ikony pasieki
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                  }
+                  break;
+                case 'nrXXOfApiary':
+                  nrXXOfApiary = int.parse('${slots[key]}');
+                  if (apiaryState == AppLocalizations.of(context)!.open ||
+                      apiaryState == AppLocalizations.of(context)!.set) {
+                    printText1 += " ${slots[key]}";
+                    nrXXOfApairyTemp = nrXXOfApiary;
+                    readyApiary =
+                        true; // ustawienie Apairy - kolejność wnioskowania poprawna
+                    beep('open');
+                    //zerowanie danych Hive, Body i Frame
+                    readyHive = false;
+                    hiveState = AppLocalizations.of(context)!.close;
+                    readyAllHives = false;
+                    allHivesState = AppLocalizations.of(context)!.close;
+                    nrXXOfHive = 0;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyBody = false;
+                    readyInfo = false;
+                    // globals.ikonaPasieki = 'green'; //"zerowanie" ikony pasieki
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                  } else {
+                    //przypadek kiedy najpierw będzie numer a pózniej status pasieki (a teraz jest close)
+                    printText1 += " ${slots[key]}";
+                    nrXXOfApairyTemp = nrXXOfApiary;
+                    nrXXOfApiary = 0;
+                    readyApiary = false;
+                    readyHive = false;
+                    nrXXOfHive = 0;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyBody = false;
+                    readyInfo = false;
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                  }
+                  break;
+                }
+              }
+            } else {
+              //jezeli nie zdekodowano slotu czyli parametrów intencji
+              printText = AppLocalizations.of(context)!.error;
+              beep('error');
+            }
+            printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+                ? {
+                    printText = AppLocalizations.of(context)!.wrongCommand,
+                    beep('error'),
+                  }
+                : printText += printText1;
+          break;
+      } //od switch intent
+    } //od if (inference.isUnderstood!)
+ 
+    print('wynik = $printText');  
     return printText;
   }
+
 
   //pobranie pogody z www dla miasta i aktualizacja wpisu w bazie
   Future<bool>? getCurrentWeather(String location) async {
@@ -3009,11 +4110,11 @@ class _VoiceScreenState extends State<VoiceScreen> {
         "https://api.openweathermap.org/data/2.5/weather?q=$location&appid=3943495c9983f5f94616a38aa17fcb4d&units=$units"); //https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=-2.15&appid={API key}")
     var response = await http.get(endpoint);
     var body = jsonDecode(response.body);
-    print('dane o pogodzie z miasta -----------------------');
-    print(body);
+    //print('dane o pogodzie z miasta -----------------------');
+    //print(body);
     temp = body["main"]["temp"];
     icon = body["weather"][0]["icon"];
-    print('$temp, $icon');
+    //print('$temp, $icon');
     String teraz = formatterPogoda.format(now);
 
     DBHelper.updatePogoda(nrXXOfApiary.toString(), teraz, temp, icon); //
@@ -3026,11 +4127,11 @@ class _VoiceScreenState extends State<VoiceScreen> {
         "https://api.openweathermap.org/data/2.5/weather?lat=$lati&lon=$longi&appid=3943495c9983f5f94616a38aa17fcb4d&units=$units"); //https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=-2.15&appid={API key}")
     var response = await http.get(endpoint);
     var body = jsonDecode(response.body);
-    print('dane o pogodzie z koordynatów -----------------------');
-    print(body);
+    //print('dane o pogodzie z koordynatów -----------------------');
+    //print(body);
     temp = body["main"]["temp"];
     icon = body["weather"][0]["icon"];
-    print('$temp, $icon');
+    //print('$temp, $icon');
     String teraz = formatterPogoda.format(now);
 
     DBHelper.updatePogoda(nrXXOfApiary.toString(), teraz, temp, icon); //
@@ -3078,8 +4179,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
         now = DateTime.now();
         final data = DateTime.parse(pogoda[0].pobranie);
         final difference = now.difference(data);
-        print('difference');
-        print(difference.inMinutes);
+        //print('difference');
+        //print(difference.inMinutes);
         //jezeli powyzej 30 minut od ostatniego pobrania pogody
         if (difference.inMinutes > 30) {
           //to aktualizacja z www
@@ -3087,7 +4188,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
             (inter) {
               if (inter) {
                 // print('$inter - jest internet');
-                print('pobranie danych o pogodzie');
+                //print('pobranie danych o pogodzie');
                 if (pogoda[0].latitude != '' && pogoda[0].longitude != '') {
                   getCurrentWeatherCoord(
                       pogoda[0].latitude, pogoda[0].longitude);
@@ -3113,7 +4214,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   }
 
   sumujZasob(int co, ile) {
-    print('sumowanie  ========== zas = $co,  wart = $ile');
+    //print('sumowanie  ========== zas = $co,  wart = $ile');
     //dodawanie zasobów w ramach korpusu (dla danego hive)
     switch (co) {
       case 1:
@@ -3121,7 +4222,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
         break;
       case 2:
         czerw = czerw + int.parse(brood.replaceAll(RegExp('%'), ''));
-        print('czerw w switch = $czerw , brood = $brood');
+        //print('czerw w switch = $czerw , brood = $brood');
         break;
       case 3:
         larwy = larwy + int.parse(larvae.replaceAll(RegExp('%'), ''));
@@ -3248,8 +4349,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
         matka4 = hive[0].matka4;
         matka5 = hive[0].matka5;
       }
-      print(
-          'przeglad hive poczatek korpus ${korpusNr}: t${trut}, c${czerw}, l${larwy}, j${jaja}, p${pierzga}, m${miod}, d${dojrzaly},w${weza}, s${susz}, m${matka}, mt${mateczniki}, dm${usunmat} , td${todo} m1${matka1} m2${matka2} m3${matka3} m4${matka4} m5${matka5}');
+      // print(
+      //     'przeglad hive poczatek korpus ${korpusNr}: t${trut}, c${czerw}, l${larwy}, j${jaja}, p${pierzga}, m${miod}, d${dojrzaly},w${weza}, s${susz}, m${matka}, mt${mateczniki}, dm${usunmat} , td${todo} m1${matka1} m2${matka2} m3${matka3} m4${matka4} m5${matka5}');
 //    });
     // else {
     //   korpusNr = 0;
@@ -3270,7 +4371,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
     //data.       pasiekaNr.    ulNr.     korpusNr.   ramkaNr.   strona.  zasob
     //String id = '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$nrXOfBody.$nrXXOfFrame.$_strona.$zas';
-    print('zapis do bazy ----------- zasob=$zas wartosc=$wart');
+    //print('zapis do bazy ----------- zasob=$zas wartosc=$wart');
 
     if (readyFrames) {
       //dla zakresu ramek w korpusie lub półkorpusie
@@ -3297,7 +4398,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 _korpusNr,
                 _typ,
                 i,
-                i, //ramka po ??? i trzeba zmienić id - dodać ramkaNrPo 
+                i, //ramka po ??? i trzeba zmienić id - dodać ramkaNrPo (tu sie chyba nie da)
                 _rozmiar,
                 1, //lewa
                 zas,
@@ -3340,23 +4441,164 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 wart,
                 0);
             sumujZasob(zas, wart);
-            Frames.insertFrame(
-                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.2.$zas',
-                formattedDate,
-                nrXXOfApiary,
-                nrXXOfHive,
-                _korpusNr,
-                _typ,
-                i,
-                i,
-                _rozmiar,
-                2, //prawa
-                zas,
-                wart,
-                0);
-            sumujZasob(zas, wart);
+            if(zas < 13 ){ //kod nie jest wykonywany dla toDo i isDone (ograniczenie ilości znaczków  - wystarczą tylko dla lewej strony )
+              Frames.insertFrame(
+                  '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.2.$zas',
+                  formattedDate,
+                  nrXXOfApiary,
+                  nrXXOfHive,
+                  _korpusNr,
+                  _typ,
+                  i,
+                  i,
+                  _rozmiar,
+                  2, //prawa
+                  zas,
+                  wart,
+                  0);
+              sumujZasob(zas, wart);
+            }
           }
         } //od for
+       
+        //automatyczna zmiana numeru "ramkaNr" po "isDone" dla zakresu zamek (najpierw komenda "ustaw ramka od X do Y"     
+        //dla "wstaw ramka"
+            if(wart == 'wstaw ramka' || wart == 'inserted'){
+              nrXXOfFrame = 0;    
+              //wstawienie ramek z numerem 0/X dla zakresu ramek
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+                .then((_) {  
+                  //dla wszystkich zasobów dla ramki z numerem "przed" nalezy ustawić taką samą wartość "ramkaNr" = 0 zeby cała ramka z zasobami była nową ramką wstawioną 0/X
+                  final framesData1 = Provider.of<Frames>(context, listen: false);
+                    //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu i tylko dla ramek z numerem "po" róznym od zera - bo z zerem są ramki usuniete wcześniej z tych miejsc)
+                  List<Frame> frames = framesData1.items.where((fr) {
+                    return fr.ramkaNr >= nrXXOdFrame && fr.ramkaNr <= nrXXDoFrame && fr.ramkaNrPo != 0 && fr.data == formattedDate && fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                  }).toList();
+                  //print('frames.length = ${frames.length}');
+                    //dla kazdego zasobu modyfikacja ramkaNrPo
+                  for (var i = 0; i < frames.length; i++) {
+                    //print('w pętli id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                    DBHelper.updateRamkaNr(frames[i].id, 0); //ramkaNr = 0 czyli wstawiona
+                  }
+                Provider.of<Frames>(context, listen: false)
+                  .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                  .then((_) {
+                  //Navigator.of(context).pop();
+                });
+              }); 
+            } 
+        //automatyczna zmiana numeru "ramkaPo" po "isDone" dla zakresu zamek (najpierw komenda "ustaw ramka od X do Y")
+        //dla "usuń ramka"
+            if(wart == 'usuń ramka' || wart == 'deleted'){
+              nrXXOfFramePo = 0;    
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+                .then((_) {  
+                  //dla wszystkich zasobów dla ramki z numerem "przed" (innym niz 0) nalezy ustawić taką samą wartość "ramkaPo" zeby cała ramka z zasobami zmieniła pozycję jeśli ustawiono taką zmianę
+                  final framesData1 = Provider.of<Frames>(context, listen: false);
+                    //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
+                  List<Frame> frames = framesData1.items.where((fr) {
+                    return fr.ramkaNr >= nrXXOdFrame && fr.ramkaNr <= nrXXDoFrame && fr.data == formattedDate && fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                  }).toList();
+                  //print('frames.length = ${frames.length}');
+                    //dla kazdego zasobu modyfikacja ramkaNrPo - nie wystarczy!!!
+                    //dla kazdego zasobu - usuń rekord zasobu i zapisz go z ramkaNrPo = 0 i z nowym id gdzie ramka po = 0
+                  for (var i = 0; i < frames.length; i++) {
+                    //print('w pętli id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                   // DBHelper.updateRamkaNrPo(frames[i].id, 0); //ramkaPo = 0 czyli usunięta
+                    DBHelper.deleteFrame(frames[i].id).then((_) {  //kasowanie ramki bo będzie nowa
+                      Frames.insertFrame(
+                        '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.${frames[i].ramkaNr}.0.${frames[i].strona}.${frames[i].zasob}',
+                        formattedDate,
+                        nrXXOfApiary,
+                        nrXXOfHive,
+                        _korpusNr,
+                        _typ,//2-korpus, 1-półkorpus
+                        frames[i].ramkaNr,//ramkaNr
+                        0, //ramkaNrPo 
+                        frames[i].rozmiar,
+                        frames[i].strona,
+                        frames[i].zasob,
+                        frames[i].wartosc,
+                        0);
+                    });
+                  }
+                Provider.of<Frames>(context, listen: false)
+                  .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                  .then((_) {
+                  //Navigator.of(context).pop();
+                });
+              }); 
+              //zerowanie zasobów bo ramki zostały usuniete (źle bo wszystkie zasoby usunięte a usuniete moze było tylko kilka ramek)
+              trut = 0;
+              czerw = 0;
+              larwy = 0;
+              jaja = 0;
+              pierzga = 0;
+              miod = 0;
+              dojrzaly = 0;
+              weza = 0;
+              susz = 0;
+              matka = 0;
+              mateczniki = 0;
+              usunmat = 0;
+              todo = '0';
+            } 
+
+            //dla "przesuń w lewo"
+            if(wart == 'przesuń w lewo' || wart == 'moved left'){
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+                .then((_) {  
+                  //dla wszystkich zasobów dla ramki z numerem "przed" (innym niz 0) nalezy ustawić taką samą wartość "ramkaPo" zeby cała ramka z zasobami zmieniła pozycję jeśli ustawiono taką zmianę
+                  final framesData1 = Provider.of<Frames>(context, listen: false);
+                    //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
+                  List<Frame> frames = framesData1.items.where((fr) {
+                    return fr.ramkaNr >= nrXXOdFrame && fr.ramkaNr <= nrXXDoFrame && fr.data == formattedDate && fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                  }).toList();
+                  //print('frames.length = ${frames.length}');
+                    //dla kazdego zasobu modyfikacja ramkaNrPo
+                  for (var i = 0; i < frames.length; i++) {
+                    //print('w pętli id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                    DBHelper.updateRamkaNrPo(frames[i].id, frames[i].ramkaNrPo - 1); //ramkaNrPo ma wartośc o 1 mniejszą
+                  }
+                Provider.of<Frames>(context, listen: false)
+                  .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                  .then((_) {
+                  //Navigator.of(context).pop();
+                });
+              }); 
+            } 
+
+            //dla "przesuń w prawo"
+            if(wart == 'przesuń w prawo' || wart == 'moved right'){
+              Provider.of<Frames>(context, listen: false)
+                .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive)
+                .then((_) {  
+                  //dla wszystkich zasobów dla ramki z numerem "przed" (innym niz 0) nalezy ustawić taką samą wartość "ramkaPo" zeby cała ramka z zasobami zmieniła pozycję jeśli ustawiono taką zmianę
+                  final framesData1 = Provider.of<Frames>(context, listen: false);
+                    //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
+                  List<Frame> frames = framesData1.items.where((fr) {
+                    return fr.ramkaNr >= nrXXOdFrame && fr.ramkaNr <= nrXXDoFrame && fr.data == formattedDate &&  fr.korpusNr == _korpusNr; //return fr.data.contains('2024-04-04');
+                  }).toList();
+                    //  print('nrXXOfHive = $nrXXOfHive');
+                    //  print('frames.length = ${frames.length}');
+                    //dla kazdego zasobu modyfikacja ramkaNrPo
+                  for (var i = 0; i < frames.length; i++) {
+                    //print('w pętli id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
+                    DBHelper.updateRamkaNrPo(frames[i].id, frames[i].ramkaNrPo + 1); //ramkaNrPo ma wartośc o 1 większą
+                    //print('numer ramkaPo  = ${frames[i].ramkaNrPo + 1} ');
+                  }
+                Provider.of<Frames>(context, listen: false)
+                  .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+                  .then((_) {
+                  //Navigator.of(context).pop();
+                });
+              }); 
+            } 
+
+
       } else {
         beep('error');
       }
@@ -3365,20 +4607,20 @@ class _VoiceScreenState extends State<VoiceScreen> {
       if (nrXXOfApiary != 0 &&
           nrXXOfHive != 0 &&
           _korpusNr != 0 &&
-          nrXXOfFrame != 0) {
+          (nrXXOfFrame != 0 || nrXXOfFramePo != 0)) {
         if (siteOfFrame == 'left' ||
             siteOfFrame == 'lewa' ||
             siteOfFrame == 'lewej' ||
             siteOfFrame == 'lewą') {
           Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFrame.1.$zas',
+              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFramePo.1.$zas',
               formattedDate,
               nrXXOfApiary,
               nrXXOfHive,
               _korpusNr,
               _typ,
               nrXXOfFrame,
-              nrXXOfFrame, //ramka po ???
+              nrXXOfFramePo, //ramka po 
               _rozmiar,
               1, //lewa
               zas,
@@ -3390,14 +4632,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
             siteOfFrame == 'prawej' ||
             siteOfFrame == 'prawą') {
           Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFrame.2.$zas',
+              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFramePo.2.$zas',
               formattedDate,
               nrXXOfApiary,
               nrXXOfHive,
               _korpusNr,
               _typ,
               nrXXOfFrame,
-              nrXXOfFrame, //ramka po ??
+              nrXXOfFramePo, //ramka po 
               _rozmiar,
               2, //prawa
               zas,
@@ -3407,14 +4649,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
         } else {
           //bo both lub whole
           Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFrame.1.$zas',
+              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFramePo.1.$zas',
               formattedDate,
               nrXXOfApiary,
               nrXXOfHive,
               _korpusNr,
               _typ,
               nrXXOfFrame,
-              nrXXOfFrame, //ramka po ???
+              nrXXOfFramePo, //ramka po
               _rozmiar,
               1, //lewa
               zas,
@@ -3422,14 +4664,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
               0);
           sumujZasob(zas, wart);
           Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFrame.2.$zas',
+              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFramePo.2.$zas',
               formattedDate,
               nrXXOfApiary,
               nrXXOfHive,
               _korpusNr,
               _typ,
               nrXXOfFrame,
-              nrXXOfFrame, //ramka po ???
+              nrXXOfFramePo, //ramka po ???
               _rozmiar,
               2, //prawa
               zas,
@@ -3456,11 +4698,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
     if(_nowaIloscRamek > 0) ramek = _nowaIloscRamek; //zmieniono ilość ramek
     
-    // print('siteOfFrame = $siteOfFrame ');
     // print(
     //     'zapis Hive do bazy korpus = $korpusNr, todo = $todo, usunmat = $usunmat *******************');
-    print(
-        'przegląd korpus po zapisie ${korpusNr}: t${trut}, c${czerw}, l${larwy}, j${jaja}, p${pierzga}, m${miod}, d${dojrzaly},w${weza}, s${susz}, m${matka}, mt${mateczniki}, dm${usunmat} , td${todo} m1${matka1} m2${matka2} m3${matka3} m4${matka4} m5${matka5}');
+    //print('przegląd korpus po zapisie ${korpusNr}: t${trut}, c${czerw}, l${larwy}, j${jaja}, p${pierzga}, m${miod}, d${dojrzaly},w${weza}, s${susz}, m${matka}, mt${mateczniki}, dm${usunmat} , td${todo} m1${matka1} m2${matka2} m3${matka3} m4${matka4} m5${matka5}');
 
     //wpis do tabeli "ule"
     Hives.insertHive(
@@ -3504,7 +4744,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
         final hivesData = Provider.of<Hives>(context, listen: false);
         final hives = hivesData.items;
         ileUli = hives.length;
-        print('voice_screen - ilość uli =');
+        //print('voice_screen - ilość uli = $ileUli');
         // print(hives.length);
         // print(ileUli);
 
@@ -3522,8 +4762,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
           Provider.of<Apiarys>(context, listen: false)
               .fetchAndSetApiarys()
               .then((_) {
-            print(
-                'voice_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
+            //print('voice_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy po InsertHive w zapisDoBazy');
           });
         });
       });
@@ -3550,8 +4789,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
     platform == 'android'
         ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
         : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-    print('beep - JBL_NoMatch');
-    print('voice_screen: zapis Frame do bazy');
+    //print('beep - JBL_NoMatch - insertInfo - zapis info do bazy');
+  
   }
 
   
@@ -3574,10 +4813,10 @@ class _VoiceScreenState extends State<VoiceScreen> {
       .then((_) {
         final hivesData = Provider.of<Hives>(context, listen: false);
         final hives = hivesData.items;
-        print('ilość uli do wpisania info = ${hives.length}');
+        //print('ilość uli do wpisania info = ${hives.length}');
         
         for (var i = 0; i < hives.length; i++) {
-          print('wpis nr $i');
+          //print('wpis nr $i');
           Infos.insertInfo(
               '$formattedDate.$nrXXOfApiary.${hives[i].ulNr}.$kat.$param', //id
               formattedDate, //data
@@ -3592,17 +4831,10 @@ class _VoiceScreenState extends State<VoiceScreen> {
               formatedTime, //czas
               '', //uwagi
               0); //niezarchiwizowane
-          print('kategoria');
-          print(kat);
+          //print('kategoria');
+          //print(kat);
           //jezeli dokarmianie lub leczenie to zmiana danych do wyświetlania belki w widoku uli
           if (kat == 'feeding' || kat == 'treatment') {
-            //final hiveData = Provider.of<Hives>(context, listen: false);
-                // hive = hivesData.items.where((element) {
-                //   //to wczytanie danych ula
-                //   return element.id.contains(
-                //       '$nrXXOfApiary.${hives[i].ulNr}');
-                // }).toList();
-            print('wlazł do ifa');
 
             //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli
             Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrXXOfApiary)
@@ -3681,7 +4913,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
       platform == 'android'
           ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
           : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-      print('beep - JBL_NoMatch');
+      //print('beep - JBL_NoMatch - zapis ula do bazy');
      
     } else {
       //** WAPIS DLA JEDNEGO ula */
@@ -3693,7 +4925,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
       // } else {
       //   //korpusNr = 0; //zeby nie wyświetlał danych o korpusie tylko tekst info
       // }
-
+//print('ZAPIS INFO DO BAZY zzzzzzzzzzzzzzzzzzzzzz');
       Infos.insertInfo(
           '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$kat.$param', //id
           formattedDate, //data
@@ -3756,8 +4988,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
         } else {
           korpusNr = 0;
         }
-          print(
-                  'info poczatek dla jednego ${hive[0].ulNr}: t${hive[0].trut}, c${hive[0].czerw}, l${hive[0].larwy}, j${hive[0].jaja}, p${hive[0].pierzga}, m${hive[0].miod}, d${hive[0].dojrzaly},w${hive[0].weza}, s${hive[0].susz}, m${hive[0].matka}, mt${hive[0].mateczniki}, dm${hive[0].usunmat} , td${hive[0].todo} m1${hive[0].matka1} m2${hive[0].matka2} m3${hive[0].matka3} m4${hive[0].matka4} m5${hive[0].matka5}');
+          // print(
+          //         'info poczatek dla jednego ${hive[0].ulNr}: t${hive[0].trut}, c${hive[0].czerw}, l${hive[0].larwy}, j${hive[0].jaja}, p${hive[0].pierzga}, m${hive[0].miod}, d${hive[0].dojrzaly},w${hive[0].weza}, s${hive[0].susz}, m${hive[0].matka}, mt${hive[0].mateczniki}, dm${hive[0].usunmat} , td${hive[0].todo} m1${hive[0].matka1} m2${hive[0].matka2} m3${hive[0].matka3} m4${hive[0].matka4} m5${hive[0].matka5}');
          
         //jezeli info jest o matce
         if (kat == 'queen') {
@@ -3908,7 +5140,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
             final hivesData = Provider.of<Hives>(context, listen: false);
             final hives = hivesData.items;
             ileUli = hives.length;
-            print('voice_screen - ilość uli =');
+            //print('voice_screen - ilość uli = $ileUli');
             // print(hives.length);
             // print(ileUli);
 
@@ -3926,8 +5158,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               Provider.of<Apiarys>(context, listen: false)
                   .fetchAndSetApiarys()
                   .then((_) {
-                print(
-                    'voice_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
+                //print( 'voice_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy po insertHive');
               });
             });
           });
@@ -3936,8 +5167,13 @@ class _VoiceScreenState extends State<VoiceScreen> {
       platform == 'android'
           ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
           : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-      print('voice_screen: zapis Info do bazy');
+         // print('beep - voice_screen: zapis Info do bazy');
       
+      }else{
+        platform == 'android'
+          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
+          : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
+          // print('beep - voice_screen: zapis Info do bazy');
       }
     }
   }
@@ -3960,7 +5196,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   }
 
   resetBody() {
-    print('kasowanie body');
+    //print('kasowanie body');
     nrXOfBody = 0;
     nrXOfBodyTemp = 0;
     nrXOfHalfBody = 0;
@@ -3968,6 +5204,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
     frameState = AppLocalizations.of(context)!.close;
     readyFrame = false;
     nrXXOfFrame = 0;
+    nrXXOfFramePo = 0;
     readyFrames = false;
     nrXXOdFrame = 0;
     nrXXDoFrame = 0;
@@ -3976,13 +5213,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
   resetFrame() {
     readyFrame = false;
     nrXXOfFrame = 0;
+    nrXXOfFramePo = 0;
     readyFrames = false;
     nrXXOdFrame = 0;
     nrXXDoFrame = 0;
   }
 
   resetStory() {
-    print('resetowanie Store');
+    //print('resetowanie Store');
     resetInfo();
     readyInfo = false;
     readyStory = false;
@@ -4014,6 +5252,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
     removedFood = '0';
     leftFood = '0';
     queenNumber = '';
+    queenAlpha1 = '';
+    queenAlpha2 = '';
     queenMark = '';
     varroaH = '';
     varroaXX = '';
@@ -4028,58 +5268,6 @@ class _VoiceScreenState extends State<VoiceScreen> {
   }
 
   //uruchomienie przycisku START
-  // Future<void> _startProcessing() async {
-  //   print(' 6 _startProcessing .........................');
-  //   if (isProcessing) {
-  //     return;
-  //   }
-  //   //if (mounted) {
-  //   setState(() {
-  //     isButtonDisabled = true;
-  //   });
-  //   // }
-
-  //   try {
-  //     if (_picovoiceManager == null) {
-  //       throw PicovoiceInvalidStateException(
-  //           "_picovoiceManager not initialized.");
-  //     }
-  //     await _picovoiceManager!.start();
-  //     //  if (mounted) {
-  //     setState(() {
-  //       isProcessing = true;
-  //       rhinoText = AppLocalizations.of(context)!
-  //           .listeningForHiBees; //"Listening for \"Hi Bees!\""; //po naciśnięciu START
-  //       //rhinoText += "\"Hi Bees!\"";
-  //       isButtonDisabled = false;
-  //     });
-  //     //  }
-  //   } on PicovoiceInvalidArgumentException {
-  //     errorCallback(PicovoiceInvalidArgumentException(
-  //         "No functionality - the application is inactive."));
-  //     //   "${ex.message}\nEnsure your accessKey '$accessKey' is a valid access key."));
-  //   } on PicovoiceActivationException {
-  //     errorCallback(PicovoiceActivationException(
-  //         "AccessKey activation error.\nInternet connection needed."));
-  //   } on PicovoiceActivationLimitException {
-  //     errorCallback(PicovoiceActivationLimitException(
-  //         "AccessKey reached its device limit."));
-  //   } on PicovoiceActivationRefusedException {
-  //     errorCallback(PicovoiceActivationRefusedException("AccessKey refused."));
-  //   } on PicovoiceActivationThrottledException {
-  //     errorCallback(PicovoiceActivationThrottledException(
-  //         "AccessKey has been throttled."));
-  //   } on PicovoiceException catch (ex) {
-  //     errorCallback(ex);
-  //   }
-
-  //   //wciśnięcie START
-  //   platform == 'android'
-  //       ? FlutterBeep.playSysSound(
-  //           AndroidSoundIDs.TONE_PROP_BEEP2) // było TONE_CDMA_ONE_MIN_BEEP
-  //       : FlutterBeep.playSysSound(iOSSoundIDs.JBL_Begin);
-  //   print('beep - JBL_Begin');
-  // }
   Future<void> _startProcessing() async {
     if (isProcessing) {
       return;
@@ -4111,7 +5299,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
         ? FlutterBeep.playSysSound(
             AndroidSoundIDs.TONE_PROP_BEEP2) // było TONE_CDMA_ONE_MIN_BEEP
         : FlutterBeep.playSysSound(iOSSoundIDs.JBL_Begin);
-    print('beep - JBL_Begin');
+    print('beep - JBL_Begin - start');
   }
 
   Future<void> _stopProcessing() async {
@@ -4119,24 +5307,24 @@ class _VoiceScreenState extends State<VoiceScreen> {
     if (!isProcessing) {
       return;
     }
-    //if (mounted) {
-    setState(() {
-      isButtonDisabled = true;
-    });
-    // }
+   // if (this.mounted) {
+      setState(() {
+        isButtonDisabled = true;
+      });
+   // }
 
     if (_picovoiceManager == null) {
       throw PicovoiceInvalidStateException(
           "_picovoiceManager not initialized.");
     }
     await _picovoiceManager!.stop();
-    //if (mounted) {
+    if (this.mounted) {
     setState(() {
       isProcessing = false;
       rhinoText = "";
       isButtonDisabled = false;
     });
-    // }
+    }
     //beep('close');
   }
 
@@ -4152,7 +5340,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
             ? FlutterBeep.playSysSound(
                 AndroidSoundIDs.TONE_CDMA_KEYPAD_VOLUME_KEY_LITE)
             : FlutterBeep.playSysSound(iOSSoundIDs.EndRecording);
-        print('beep - EndRecording');
+        //print('beep - EndRecording - "open"');
         break;
       case 'error':
         platform == 'android'
@@ -4207,6 +5395,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                         text: ' ' + AppLocalizations.of(context)!.number,
                         style: TextStyle(fontStyle: FontStyle.italic)),
                     TextSpan(text: ' 5', style: TextStyle(color: Colors.red)),
+     //korpus numer               
                     TextSpan(
                         text: '.\n\n' + AppLocalizations.of(context)!.oPen),
                     TextSpan(
@@ -4219,7 +5408,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                         text: ' ' + AppLocalizations.of(context)!.number,
                         style: TextStyle(fontStyle: FontStyle.italic)),
                     TextSpan(text: ' 2', style: TextStyle(color: Colors.red)),
-                    //ramka
+        //ramka numer
                     TextSpan(
                         text: '.\n\n' + AppLocalizations.of(context)!.oPen),
                     TextSpan(
@@ -4240,6 +5429,67 @@ class _VoiceScreenState extends State<VoiceScreen> {
                             AppLocalizations.of(context)!.leftRightBoth +
                             '.\n\n',
                         style: TextStyle(fontStyle: FontStyle.italic)),
+         //ramka po przeglądzie
+                    TextSpan(
+                        text: AppLocalizations.of(context)!.fRame,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 2 ', style: TextStyle(color: Colors.red)),
+                    TextSpan(
+                        text: AppLocalizations.of(context)!.framesAfter,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 5', style: TextStyle(color: Colors.red)),
+                    TextSpan(
+                        text: '.\n\n'),
+        //przenieś
+                    TextSpan(
+                        text: AppLocalizations.of(context)!.mOve),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.hive + ' ' + AppLocalizations.of(context)!.number  + ' 4 ',
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.body +
+                            '/' +
+                            AppLocalizations.of(context)!.halfBody,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 3', style: TextStyle(color: Colors.red)),
+                     TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.frame,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 10', style: TextStyle(color: Colors.red)),
+                   
+         //wstaw ramka           
+                    TextSpan(
+                        text: '\n\n' + AppLocalizations.of(context)!.iNsert),
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.big +
+                            '/' +
+                            AppLocalizations.of(context)!.small,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.frame,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 4', style: TextStyle(color: Colors.red)),
+                    TextSpan(
+                        text: '.\n\n'),
+         //ustaw ramka od do                              
                     TextSpan(
                         text: AppLocalizations.of(context)!.sEt,
                         style: TextStyle(fontStyle: FontStyle.italic)),
@@ -4255,6 +5505,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(text: ' 9', style: TextStyle(color: Colors.red)),
                     TextSpan(text: '.\n'),
+//Przegląd
                     TextSpan(
                       text: ('\n' +
                           AppLocalizations.of(context)!.inspectionSay +
@@ -4372,7 +5623,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                             '\n\n',
                         style: TextStyle(
                             fontStyle: FontStyle.italic, color: Colors.blue)),
-                    //  Equipment
+//  Equipment
                     TextSpan(
                         text: AppLocalizations.of(context)!.equipmentSay + '\n',
                         style: TextStyle(
@@ -4401,7 +5652,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                     TextSpan(text: ' 10', style: TextStyle(color: Colors.red)),
                     TextSpan(text: '.\n\n'),
                     TextSpan(
-                        text: AppLocalizations.of(context)!.exclud,
+                        text: AppLocalizations.of(context)!.eXclud,
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(
                         text: ' ' + AppLocalizations.of(context)!.onBodyNumber),
@@ -4430,7 +5681,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
                     globals.jezyk == 'pl_PL'
                         ? TextSpan(
-                            text: ' zbieracz pyłek.\n\n',
+                            text: ' poławiacz pyłku.\n\n',
                             style: TextStyle(fontWeight: FontWeight.bold))
                         : TextSpan(
                             text:
@@ -4617,14 +5868,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(text: ' 30%', style: TextStyle(color: Colors.red)),
                     globals.jezyk == 'pl_PL'
-                        ? TextSpan(text: ' pokarm.\n\n')
+                        ? TextSpan(text: ' pokarmu.\n\n')
                         : TextSpan(text: '.\n\n'),
                     TextSpan(
                         text: AppLocalizations.of(context)!.rEmoveFood,
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(text: ' 30%', style: TextStyle(color: Colors.red)),
                     globals.jezyk == 'pl_PL'
-                        ? TextSpan(text: ' pokarm.\n\n')
+                        ? TextSpan(text: ' pokarmu.\n\n')
                         : TextSpan(text: '.\n\n'),
 //treatment
                     TextSpan(
@@ -4923,9 +6174,23 @@ class _VoiceScreenState extends State<VoiceScreen> {
                             AppLocalizations.of(context)!.helpMe +
                             '.\n\n'),
                     TextSpan(
+                        text: AppLocalizations.of(context)!.hIve + ' ' + AppLocalizations.of(context)!.before,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.helpMe +
+                            '.\n\n'),                    
+                    TextSpan(
+                        text: AppLocalizations.of(context)!.hIve + ' ' + AppLocalizations.of(context)!.after,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.helpMe +
+                            '.\n\n'),
+                    TextSpan(
                         text: AppLocalizations.of(context)!.hIve +
                             ' ' +
-                            AppLocalizations.of(context)!.before,
+                            AppLocalizations.of(context)!.earlier,
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(
                         text: ' ' +
@@ -5082,6 +6347,69 @@ class _VoiceScreenState extends State<VoiceScreen> {
                             AppLocalizations.of(context)!.leftRightBoth +
                             '.\n\n',
                         style: TextStyle(fontStyle: FontStyle.italic)),
+                    
+          //ramka po przeglądzie
+                    TextSpan(
+                        text: AppLocalizations.of(context)!.fRame,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 2 ', style: TextStyle(color: Colors.red)),
+                    TextSpan(
+                        text: AppLocalizations.of(context)!.framesAfter,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 5', style: TextStyle(color: Colors.red)),
+                    TextSpan(
+                        text: '.\n\n'),
+
+          //przenieś
+                    TextSpan(
+                        text: AppLocalizations.of(context)!.mOve),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.hive + ' ' + AppLocalizations.of(context)!.number  + ' 4 ',
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.body +
+                            '/' +
+                            AppLocalizations.of(context)!.halfBody,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 3', style: TextStyle(color: Colors.red)),
+                     TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.frame,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 10', style: TextStyle(color: Colors.red)),          
+                
+             //wstaw ramka          
+                    TextSpan(
+                        text: '\n\n' + AppLocalizations.of(context)!.iNsert),
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.big +
+                            '/' +
+                            AppLocalizations.of(context)!.small,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.frame,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.number,
+                        style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: ' 4', style: TextStyle(color: Colors.red)),
+                    TextSpan(
+                        text: '.\n\n'),
+                    
                     TextSpan(
                         text: AppLocalizations.of(context)!.sEt,
                         style: TextStyle(fontStyle: FontStyle.italic)),
@@ -5303,7 +6631,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                     TextSpan(text: ' 10', style: TextStyle(color: Colors.red)),
                     TextSpan(text: '.\n\n'),
                     TextSpan(
-                        text: '  ' + AppLocalizations.of(context)!.exclud,
+                        text: '  ' + AppLocalizations.of(context)!.eXclud,
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(
                         text: ' ' + AppLocalizations.of(context)!.onBodyNumber),
@@ -5333,7 +6661,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
                     globals.jezyk == 'pl_PL'
                         ? TextSpan(
-                            text: ' zbieracz pyłek.\n\n',
+                            text: ' poławiacz pyłku.\n\n',
                             style: TextStyle(fontWeight: FontWeight.bold))
                         : TextSpan(
                             text:
@@ -5618,14 +6946,14 @@ class _VoiceScreenState extends State<VoiceScreen> {
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(text: ' 30%', style: TextStyle(color: Colors.red)),
                     globals.jezyk == 'pl_PL'
-                        ? TextSpan(text: ' pokarm.\n\n')
+                        ? TextSpan(text: ' pokarmu.\n\n')
                         : TextSpan(text: '.\n\n'),
                     TextSpan(
                         text: AppLocalizations.of(context)!.rEmoveFood,
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(text: ' 30%', style: TextStyle(color: Colors.red)),
                     globals.jezyk == 'pl_PL'
-                        ? TextSpan(text: ' pokarm.\n\n')
+                        ? TextSpan(text: ' pokarmu.\n\n')
                         : TextSpan(text: '.\n\n'),
                   ],
                 ),
@@ -5969,9 +7297,23 @@ class _VoiceScreenState extends State<VoiceScreen> {
                             AppLocalizations.of(context)!.helpMe +
                             '.\n\n'),
                     TextSpan(
+                        text: AppLocalizations.of(context)!.hIve + ' ' + AppLocalizations.of(context)!.before,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.helpMe +
+                            '.\n\n'),                    
+                    TextSpan(
+                        text: AppLocalizations.of(context)!.hIve + ' ' + AppLocalizations.of(context)!.after,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.helpMe +
+                            '.\n\n'),
+                    TextSpan(
                         text: AppLocalizations.of(context)!.hIve +
                             ' ' +
-                            AppLocalizations.of(context)!.before,
+                            AppLocalizations.of(context)!.earlier,
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     TextSpan(
                         text: ' ' +
@@ -6122,7 +7464,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
 //pobranie listy ramek z unikalnymi datami dla wybranego ula i pasieki z bazy lokalnej
   Future<List<Frame>> getDaty(pasieka, ul) async {
     final dataList = await DBHelper.getDate(pasieka, ul); //numer wybranego ula
-    print('getDaty: pasieka $pasieka ul $ul');
+    //print('getDaty: pasieka $pasieka ul $ul');
     _daty = dataList
         .map(
           (item) => Frame(
@@ -6142,7 +7484,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
           ),
         )
         .toList();
-    print('daty = $_daty');
+    //print('daty = $_daty');
     return _daty;
   }
 
@@ -6172,14 +7514,20 @@ class _VoiceScreenState extends State<VoiceScreen> {
     return _korpusy;
   }
 
-  //okno dialogowe pokazujące ul - polecenie "ul (wczesniej,później) pomóz mi"
+  //okno dialogowe pokazujące ul po przeglądzie - polecenie "ul (wczesniej,później) pomóz mi"
   Future<void> _dialogBuilderHive(BuildContext context) {
     final framesData = Provider.of<Frames>(context, listen: false);
     //ramki z wybranej daty dla ula
-    List<Frame> frames = framesData.items.where((fr) {
-      return fr.data.contains(wybranaData);
-    }).toList();
-
+   
+    List<Frame> frames = [];
+    if(_ulPo)
+      frames = framesData.items.where((fr) {
+        return fr.data.contains(wybranaData) && fr.ramkaNrPo > 0; //tylko ramki "Po" 
+      }).toList();
+    else
+      frames = framesData.items.where((fr) {
+        return fr.data.contains(wybranaData) && fr.ramkaNr > 0; //tylko ramki "Po" 
+      }).toList();
     // print(
     //     'frames_screen - ilość stron ramek w pasiece ${globals.pasiekaID} ulu ${globals.ulID}');
     // print(frames.length);
@@ -6218,9 +7566,13 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      (Text('${_daty[indexDaty].data}',
-                          style: TextStyle(fontWeight: FontWeight.bold))),
+                      _ulPo 
+                        ? Text(AppLocalizations.of(context)!.after)
+                        : Text(AppLocalizations.of(context)!.before),
+                      Text('  ${_daty[indexDaty].data}',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ]),
+                SizedBox(height: 10),
                 Container(
                   //szare body
                   //alignment: Alignment.center,
@@ -6228,6 +7580,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                   // ignore: sort_child_properties_last
                   child: CustomPaint(
                     painter: MyHive(
+                        ulPo: _ulPo,
                         ramki: frames,
                         korpusy: _korpusy,
                         width: widthCanvas,
@@ -6319,7 +7672,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
             // print('voice hive (${hive[0].matka1} != '' || ${hive[0].matka2} != '' || ${hive[0].matka3} != '' || ${hive[0].matka4} != '' || ${hive[0].matka5} != '' )');
             // print(
             //       ' voice hive ${hive[0].ulNr}: t${hive[0].trut}, c${hive[0].czerw}, l${hive[0].larwy}, j${hive[0].jaja}, p${hive[0].pierzga}, m${hive[0].miod}, d${hive[0].dojrzaly},w${hive[0].weza}, s${hive[0].susz}, m${hive[0].matka}, mt${hive[0].mateczniki}, dm${hive[0].usunmat} , td${hive[0].todo} m1${hive[0].matka1} m2${hive[0].matka2} m3${hive[0].matka3} m4${hive[0].matka4} m5${hive[0].matka5}');
-   
+      //print('widget "build" uruchomiony - mozna działać !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      //czyJesWidget = true;   
       }); 
     }
 
@@ -6339,7 +7693,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
             icon: const Icon(Icons.arrow_back_ios,
                 color: Color.fromARGB(255, 0, 0, 0)),
             onPressed: () => {
-              Wakelock.disable(), //usunięcie blokowania wygaszania ekranu
+              WakelockPlus.disable(), //usunięcie blokowania wygaszania ekranu
               Navigator.of(context).pop()
             },
           ),
@@ -6404,227 +7758,22 @@ class _VoiceScreenState extends State<VoiceScreen> {
         ),
       ),
     );
+   
   }
 
+  
+  
   buildAnswerArea(BuildContext context) {
     
     return Expanded(
       flex: 4,
       child: Container(
+          color: Color.fromARGB(255, 255, 255, 255),
           alignment: Alignment.center,
-          margin: EdgeInsets.all(15),
+          padding: EdgeInsets.all(15),
           child: Column(
             children: [
-              //Text(test),
-              //  //zapisz???
-              //               MaterialButton(
-              //                 shape: const StadiumBorder(),
-              //                 onPressed: () {
-              //                   platform == 'android'
-              //                     ? FlutterBeep.playSysSound(
-              //                         AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
-              //                         //TONE_CDMA_NETWORK_BUSY_ONE_SHOT - zapis - tak było
-              //                         //TONE_PROP_BEEP2 - wciśnięcie Start - czekanie na polecenie
-              //                         //TONE_PROP_PROMPT - zrozumiał intencje
-              //                         //TONE_CDMA_ONE_MIN_BEEP - wcisnięcie Start było, teraz jest zapis
-              //                         //TONE_PROP_ACK - zamknięcie
-              //                         //TONE_CDMA_KEYPAD_VOLUME_KEY_LITE - otwarcie
-              //                         //TONE_PROP_NACK - błąd
-              //                     : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-              //                 },
-              //                 child: Text('   ' +
-              //                     (AppLocalizations.of(context)!.saveZ) +
-              //                     '   '), //Modyfikuj
-              //                 color: Theme.of(context).primaryColor,
-              //                 textColor: Colors.white,
-              //                 disabledColor: Colors.grey,
-              //                 disabledTextColor: Colors.white,
-              //               ),
-
-//  //wiersz pasieka
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.center,
-//                 children: [
-//                   Container(
-//                     //width: 100,
-//                     height: 45,
-//                     padding: const EdgeInsets.only(top:5, bottom:5, left: 20, right: 20),
-//                     alignment: Alignment.topCenter,
-//                     decoration: BoxDecoration(
-//                       border: Border.all(
-//                         width: 3.0,
-//                         style: BorderStyle.solid
-//                       ),
-//                       borderRadius: BorderRadius.circular(20),
-//                     ),
-//                     child: Column(
-//                       children: [
-//                         Text(AppLocalizations.of(context)!.apiary +
-//                                         " nr $nrXXOfApiary   ($formattedDate)",
-//                           style:TextStyle(
-//                             fontSize: 20,
-//                             color: Color.fromARGB(255, 0, 0, 0),
-//                             fontWeight: FontWeight.bold,
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ],
-//               ),
-
-//wiersz ul, korpus, ramka
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: [
-//  //ul numer
-//                   Container(
-//                     width: 100,
-//                     height: 100,
-//                     margin: EdgeInsets.only(top:10, bottom: 10),
-//                     padding: const EdgeInsets.all(5),
-//                     child: Column(
-//                       children: [
-//                         Text('ul'),
-//                         Text('16', style:TextStyle(
-//                           fontSize: 50,
-//                           color: Color.fromARGB(255, 0, 0, 0),
-//                           fontWeight: FontWeight.bold,
-//                         ),),
-//                       ],
-//                     ),
-//                     alignment: Alignment.topCenter,
-//                     decoration: BoxDecoration(
-//                       border: Border.all(
-//                         width: 5.0,
-//                         style: BorderStyle.solid
-//                       ),
-//                       borderRadius: BorderRadius.circular(20),
-//                     ),
-//                   ),
-//  //korpus numer
-//                   Container(
-//                     width: 100,
-//                     height: 100,
-//                     padding: const EdgeInsets.all(5),
-//                     child: Column(
-//                       children: [
-//                         Text('pókorpus'),
-//                         Text('2', style:TextStyle(
-//                           fontSize: 50,
-//                           color: Color.fromARGB(255, 0, 0, 0),
-//                           fontWeight: FontWeight.bold,
-//                         ),),
-//                       ],
-//                     ),
-//                     alignment: Alignment.topCenter,
-//                     decoration: BoxDecoration(
-//                       border: Border.all(
-//                         width: 5.0,
-//                         style: BorderStyle.solid
-//                       ),
-//                       borderRadius: BorderRadius.circular(20),
-//                     ),
-//                   ),
-//  //ramka numer
-//                   Container(
-//                     width: 100,
-//                     height: 100,
-//                     padding: const EdgeInsets.all(5),
-//                     //color: Colors.blue,
-//                     child: Column(
-//                       children: [
-//                         Text('ramka'),
-//                         Text('10', style:TextStyle(
-//                           fontSize: 50,
-//                           color: Color.fromARGB(255, 0, 0, 0),
-//                           fontWeight: FontWeight.bold,
-//                         ),),
-//                       ],
-//                     ),
-//                     alignment: Alignment.topCenter,
-//                     decoration: BoxDecoration(
-//                       border: Border.all(
-//                         //color: Colors.black,
-//                         width: 5.0,
-//                         style: BorderStyle.solid
-//                       ),
-//                       borderRadius: BorderRadius.circular(20),
-//                       //color: Colors.yellowAccent,
-//                     ),
-//                   ),
-//                 ],
-//               ),
-// //wiersz opis ramki
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.center,
-//                 children: [
-//                   Container(
-//                     //width: 100,
-//                     height: 45,
-//                     padding: const EdgeInsets.only(top:5, bottom:5, left: 20, right: 20),
-//                     //color: Colors.blue,
-//                     child: Column(
-//                       children: [
-//                         Text(" duza ramka z prawej strony", style:TextStyle(
-//                           fontSize: 20,
-//                           color: Color.fromARGB(255, 0, 0, 0),
-//                           fontWeight: FontWeight.bold,
-//                         ),
-//                       ),
-
-//                       ],
-//                     ),
-
-//                     alignment: Alignment.topCenter,
-//                     decoration: BoxDecoration(
-//                       border: Border.all(
-//                         //color: Colors.black,
-//                         width: 3.0,
-//                         style: BorderStyle.solid
-//                       ),
-//                       borderRadius: BorderRadius.circular(20),
-//                       //color: Colors.yellowAccent,
-//                     ),
-//                   ),
-//                 ],
-//               ),
-              // //zapis zasobu
-              //             Row(
-              //               mainAxisAlignment: MainAxisAlignment.center,
-              //               children: [
-              //                 Container(
-              //                   //width: 100,
-              //                   height: 60,
-              //                   margin: EdgeInsets.only(top:10, bottom: 10),
-              //                   padding: const EdgeInsets.only(top:15, bottom:5, left: 20, right: 20),
-              //                   //color: Colors.blue,
-              //                   child: Column(
-              //                     children: [
-              //                       Text("miód dojrzały 50 %", style:TextStyle(
-              //                         fontSize: 20,
-              //                         color: Color.fromARGB(255, 0, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                     ),
-
-              //                     ],
-              //                   ),
-
-              //                   alignment: Alignment.topCenter,
-              //                   decoration: BoxDecoration(
-              //                     border: Border.all(
-              //                       //color: Colors.black,
-              //                       width: 3.0,
-              //                       style: BorderStyle.solid
-              //                     ),
-              //                     borderRadius: BorderRadius.circular(20),
-              //                     //color: Colors.yellowAccent,
-              //                   ),
-              //                 ),
-              //               ],
-              //             ),
-
+            
 //wiersz pasieka
               heightScreen < 590
                   ? Row(
@@ -6813,10 +7962,12 @@ class _VoiceScreenState extends State<VoiceScreen> {
                           child: Column(
                             children: <Widget>[
                               Text(AppLocalizations.of(context)!.hive),
+                              
                               nrXXOfHive != 0
                                   ? Text(
                                       "$nrXXOfHive",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -6827,6 +7978,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXXOfHive",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -6851,20 +8003,34 @@ class _VoiceScreenState extends State<VoiceScreen> {
                           child: Column(
                             children: <Widget>[
                               Text(AppLocalizations.of(context)!.hive),
-                              nrXXOfHive != 0
-                                  ? Text(
-                                      "$nrXXOfHive",
-                                      style: const TextStyle(
-                                        fontSize: 50,
-                                        color: Color.fromARGB(255, 0, 0, 0),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      // softWrap: false, //zawijanie tekstu
-                                      // overflow: TextOverflow.fade, //skracanie tekstu
-                                    )
+                                nrXXOfHive != 0
+                                  ? nrXXOfHive < 100 //numer ula dwucyfrowy
+                                    ? Text(
+                                        "$nrXXOfHive",
+                                        style: const TextStyle(
+                                          height: 1.0,
+                                          fontSize: 50,
+                                          color: Color.fromARGB(255, 0, 0, 0),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        // softWrap: false, //zawijanie tekstu
+                                        // overflow: TextOverflow.fade, //skracanie tekstu
+                                      )
+                                    : Text( //numer ula trzycyfrowy
+                                        "$nrXXOfHive",
+                                        style: const TextStyle(
+                                          height: 1.0,
+                                          fontSize: 40,
+                                          color: Color.fromARGB(255, 0, 0, 0),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        // softWrap: false, //zawijanie tekstu
+                                        // overflow: TextOverflow.fade, //skracanie tekstu
+                                      )
                                   : Text(
                                       "$nrXXOfHive",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 50,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -6874,6 +8040,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                     ),
                             ],
                           ),
+                        
+                        
                         ),
 //korpus numer
                 if (readyBody)
@@ -6895,6 +8063,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   ? Text(
                                       "$nrXOfBody",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -6906,6 +8075,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXOfBody",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -6934,6 +8104,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   ? Text(
                                       "$nrXOfBody",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 50,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -6944,6 +8115,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXOfBody",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 50,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -6976,6 +8148,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   ? Text(
                                       "$nrXOfHalfBody",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -6986,6 +8159,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXOfHalfBody",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7015,6 +8189,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   ? Text(
                                       "$nrXOfHalfBody",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 50,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7025,6 +8200,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXOfHalfBody",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 50,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7055,10 +8231,11 @@ class _VoiceScreenState extends State<VoiceScreen> {
                           child: Column(
                             children: <Widget>[
                               Text(AppLocalizations.of(context)!.frame),
-                              nrXXOfFrame != 0
+                              nrXXOfFrame != 0 || nrXXOfFramePo != 0
                                   ? Text(
-                                      "$nrXXOfFrame",
+                                      "$nrXXOfFrame/$nrXXOfFramePo",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7069,6 +8246,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXXOfFrame",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7095,11 +8273,12 @@ class _VoiceScreenState extends State<VoiceScreen> {
                           child: Column(
                             children: <Widget>[
                               Text(AppLocalizations.of(context)!.frame),
-                              nrXXOfFrame != 0
+                              nrXXOfFrame != 0 || nrXXOfFramePo != 0
                                   ? Text(
-                                      "$nrXXOfFrame",
+                                      "$nrXXOfFrame/$nrXXOfFramePo",
                                       style: const TextStyle(
-                                        fontSize: 50,
+                                        //height: 1.0,
+                                        fontSize: 30,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -7109,6 +8288,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXXOfFrame",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 50,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7143,6 +8323,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   ? Text(
                                       "$nrXXOdFrame-$nrXXDoFrame",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 15,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7153,6 +8334,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXXOdFrame",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 20,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7183,6 +8365,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   ? Text(
                                       "$nrXXOdFrame-$nrXXDoFrame",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 30,
                                         color: Color.fromARGB(255, 0, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7193,6 +8376,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   : Text(
                                       "$nrXXOdFrame",
                                       style: const TextStyle(
+                                        height: 1.0,
                                         fontSize: 50,
                                         color: Color.fromARGB(255, 255, 0, 0),
                                         fontWeight: FontWeight.bold,
@@ -7272,7 +8456,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
 //wiersz opis ramki
               if (readyFrame || readyFrames)
-                if (nrXXOfFrame != 0 || nrXXOdFrame != 0)
+                if (nrXXOfFrame != 0 || nrXXOfFramePo != 0 || nrXXOdFrame != 0)
                   heightScreen < 590
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -7376,7 +8560,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   nrXXOfApiary != 0 &&
                                           nrXXOfHive != 0 &&
                                           _korpusNr != 0 &&
-                                          (nrXXOfFrame != 0 || nrXXOdFrame != 0)
+                                          (nrXXOfFrame != 0 || nrXXOfFramePo != 0 || nrXXOdFrame != 0)
                                       ? Text(
                                           zapis,
                                           style: TextStyle(
@@ -7434,7 +8618,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                                   nrXXOfApiary != 0 &&
                                           nrXXOfHive != 0 &&
                                           _korpusNr != 0 &&
-                                          (nrXXOfFrame != 0 || nrXXOdFrame != 0)
+                                          (nrXXOfFrame != 0 || nrXXOfFramePo != 0 || nrXXOdFrame != 0)
                                       ? Text(
                                           zapis,
                                           style: TextStyle(
@@ -7584,366 +8768,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                         ],
                       ),
 
-              // if (readyHive) const SizedBox(height: 5),
-              // if (readyHive)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child:
-              //         Container(
-              //           color: Color.fromARGB(255, 252, 193, 104),
-              //           padding:
-              //               const EdgeInsets.all(6.00), //wokół części tekstowej
-              //           child: Column(
-              //             mainAxisSize: MainAxisSize.min,
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: <Widget>[
-              //               nrXXOfHive != 0
-              //                   ? Text(
-              //                       AppLocalizations.of(context)!.hive +
-              //                           " nr $nrXXOfHive",
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 0, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     )
-              //                   : Text(
-              //                       AppLocalizations.of(context)!.hive +
-              //                           " nr $nrXXOfHive - " +
-              //                           AppLocalizations.of(context)!
-              //                               .invalidHiveNumber,
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 255, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     ),
-              //               //if (nrXXOfHive == 0)  beep('error'),
-              //             ],
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // if (readyBody) const SizedBox(height: 5),
-              // if (readyBody)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child: Container(
-              //           color: Color.fromARGB(255, 252, 193, 104),
-              //           padding:
-              //               const EdgeInsets.all(6.00), //wokół części tekstowej
-              //           child: Column(
-              //             mainAxisSize: MainAxisSize.min,
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: <Widget>[
-              //               nrXOfBody != 0
-              //                   ? Text(
-              //                       AppLocalizations.of(context)!.body +
-              //                           " nr $nrXOfBody",
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 0, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     )
-              //                   : Text(
-              //                       AppLocalizations.of(context)!.body +
-              //                           " nr $nrXOfBody - " +
-              //                           AppLocalizations.of(context)!
-              //                               .invalidBodyNumber,
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 255, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     ),
-              //             ],
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // if (readyHalfBody) const SizedBox(height: 5),
-              // if (readyHalfBody)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child: Container(
-              //           color: Color.fromARGB(255, 252, 193, 104),
-              //           padding:
-              //               const EdgeInsets.all(6.00), //wokół części tekstowej
-              //           child: Column(
-              //             mainAxisSize: MainAxisSize.min,
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: <Widget>[
-              //               nrXOfHalfBody != 0
-              //                   ? Text(
-              //                       AppLocalizations.of(context)!.halfBody +
-              //                           " nr $nrXOfHalfBody",
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 0, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     )
-              //                   : Text(
-              //                       AppLocalizations.of(context)!.halfBody +
-              //                           " nr $nrXOfHalfBody - " +
-              //                           AppLocalizations.of(context)!
-              //                               .invalidHalfBodyNumber,
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 255, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     ),
-              //             ],
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // if (readyFrame) const SizedBox(height: 5),
-              // if (readyFrame)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child: Container(
-              //           color: Color.fromARGB(255, 252, 193, 104),
-              //           padding:
-              //               const EdgeInsets.all(6.00), //wokół części tekstowej
-              //           child: Column(
-              //             mainAxisSize: MainAxisSize.min,
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: <Widget>[
-              //               nrXXOfFrame != 0
-              //                   ? Text(
-              //                       AppLocalizations.of(context)!.frame +
-              //                           " nr $nrXXOfFrame",
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 0, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     )
-              //                   : Text(
-              //                       AppLocalizations.of(context)!.frame +
-              //                           " nr $nrXXOfFrame - " +
-              //                           AppLocalizations.of(context)!
-              //                               .invalidFrameNumber,
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 255, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     ),
-              //               if (nrXXOfFrame != 0)
-              //                 Text(
-              //                   "$sizeOfFrame " +
-              //                       AppLocalizations.of(context)!.frameOn +
-              //                       " $siteOfFrame " +
-              //                       AppLocalizations.of(context)!.site,
-              //                   style: const TextStyle(
-              //                     fontSize: 20,
-              //                     color: Color.fromARGB(255, 0, 0, 0),
-              //                     fontWeight: FontWeight.bold,
-              //                   ),
-              //                   softWrap: false, //zawijanie tekstu
-              //                   overflow: TextOverflow.fade, //skracanie tekstu
-              //                 ),
-              //             ],
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-
-              // if (readyStory && !readyInfo) const SizedBox(height: 5),
-              // if (readyStory && !readyInfo)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child: Container(
-              //           color: Color.fromARGB(255, 252, 193, 104),
-              //           padding:
-              //               const EdgeInsets.all(6.00), //wokół części tekstowej
-              //           child: Column(
-              //             mainAxisSize: MainAxisSize.min,
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: <Widget>[
-              //               //jezeli numery pasieki, ula, korpusu i ramki rózne od 0
-              //               nrXXOfApiary != 0 &&
-              //                       nrXXOfHive != 0 &&
-              //                       _korpusNr != 0 &&
-              //                       nrXXOfFrame != 0
-              //                   ? Text(
-              //                       AppLocalizations.of(context)!.save + ":",
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 0, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     )
-              //                   : Text(
-              //                       AppLocalizations.of(context)!.noSave,
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 255, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     ),
-              //             ],
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // if (readyStory && !readyInfo)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child: Container(
-              //           alignment: Alignment.topCenter,
-              //           height: 50,
-              //           color: Color.fromARGB(255, 252, 193, 104),
-              //           padding:
-              //               const EdgeInsets.all(6.00), //wokół części tekstowej
-              //           child: Column(
-              //             mainAxisSize: MainAxisSize.min,
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: <Widget>[
-              //               Text(
-              //                 zapis,
-              //                 style: const TextStyle(
-              //                   fontSize: 20,
-              //                   color: Color.fromARGB(255, 0, 0, 0),
-              //                   fontWeight: FontWeight.bold,
-              //                 ),
-              //                 softWrap: false, //zawijanie tekstu
-              //                 overflow: TextOverflow.fade, //skracanie tekstu
-              //               )
-              //             ],
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // if (readyInfo) const SizedBox(height: 5),
-              // if (readyInfo)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child: Container(
-              //           color: Color.fromARGB(255, 252, 193, 104),
-              //           padding:
-              //               const EdgeInsets.all(6.00), //wokół części tekstowej
-              //           child: Column(
-              //             mainAxisSize: MainAxisSize.min,
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: <Widget>[
-              //               //jezeli numery pasieki, ula, korpusu i ramki rózne od 0
-              //               nrXXOfApiary != 0 &&
-              //                       (nrXXOfHive != 0 || readyAllHives)
-              //                   ? Text(
-              //                       AppLocalizations.of(context)!.save +
-              //                           " info:",
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 0, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     )
-              //                   : Text(
-              //                       AppLocalizations.of(context)!.noSaveInfo,
-              //                       style: const TextStyle(
-              //                         fontSize: 15,
-              //                         color: Color.fromARGB(255, 255, 0, 0),
-              //                         fontWeight: FontWeight.bold,
-              //                       ),
-              //                       softWrap: false, //zawijanie tekstu
-              //                       overflow:
-              //                           TextOverflow.fade, //skracanie tekstu
-              //                     ),
-              //             ],
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // if (readyInfo)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //     children: [
-              //       Expanded(
-              //         child: Container(
-              //           alignment: Alignment.topCenter,
-              //           height: 50,
-              //           color: Color.fromARGB(255, 252, 193, 104),
-              //           padding:
-              //               const EdgeInsets.all(6.00), //wokół części tekstowej
-              //           child: Column(
-              //             mainAxisSize: MainAxisSize.min,
-              //             crossAxisAlignment: CrossAxisAlignment.start,
-              //             children: <Widget>[
-              //               Text(
-              //                 zapis,
-              //                 style: const TextStyle(
-              //                   fontSize: 20,
-              //                   color: Color.fromARGB(255, 0, 0, 0),
-              //                   fontWeight: FontWeight.bold,
-              //                 ),
-              //                 softWrap: false, //zawijanie tekstu
-              //                 overflow: TextOverflow.fade, //skracanie tekstu
-              //               )
-              //             ],
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
+             
             ],
           )),
     );
@@ -7955,8 +8780,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
         child: Container(
             alignment: Alignment.center,
             color: Color.fromARGB(255, 255, 255, 255),
-            margin: EdgeInsets.all(15),
-            padding: EdgeInsets.all(10),
+            //margin: EdgeInsets.all(15),
+            padding: EdgeInsets.all(15),
             child: heightScreen < 600
                 ? Text(rhinoText,
                     style: TextStyle(
@@ -7986,9 +8811,11 @@ class _VoiceScreenState extends State<VoiceScreen> {
                     style: TextStyle(color: Colors.white, fontSize: 18),
                   )));
   }
+  
 }
 
 class MyHive extends CustomPainter {
+  bool ulPo; //w "ul pomóz mi": false="przed", true="po"
   List<Frame> ramki;
   List<Frame> korpusy;
   double width;
@@ -7996,6 +8823,7 @@ class MyHive extends CustomPainter {
   List<Info> informacje;
 
   MyHive({
+    required this.ulPo, 
     required this.ramki,
     required this.korpusy,
     required this.width,
@@ -8094,6 +8922,13 @@ class MyHive extends CustomPainter {
       fontSize: 15,
     );
 
+    //text numery ramek
+    final textStyle1 = TextStyle(
+      color: Color.fromARGB(255, 170, 170, 170),
+      fontSize: 12,
+    );
+
+
     //======= obrysy korpusów =======
     double obrysPoziomy = 0;
     Map<int, double> obrys = {}; //key:nr korpusu, value:obrys poziomy (górny)
@@ -8160,16 +8995,43 @@ class MyHive extends CustomPainter {
       // print('linia dla i=$i - ${temp}');
     }
 
-    //utworzenie mapy startyZasobow = key:korpusNr.ramkaNr.ramkaNr, value: start kolejnego zasobu
-    for (var i = 0; i < ramki.length; i++) {
-      double startMaxZasobu = ramki[i].rozmiar * 75; //wielkość ramki
-      startyZasobow[
-              '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
-          startMaxZasobu; //modyfikowane dla kolejnych zasobów
-      startyMaxZasobow[
-              '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
-          startMaxZasobu; //nie są modyfikowane, odniesienie dla pozycji matek, mateczników
+    
+    //numery ramek pod korpusem
+    for (var i = 0; i < globals.iloscRamek; i++) {
+      var textSpan = TextSpan(
+        text: '${i+1}', //numer ramki
+        style: textStyle1,
+      );
+      var textPainter = TextPainter(
+        text: textSpan,
+        textDirection: ui.TextDirection.ltr,
+      );
+      textPainter.layout(
+        minWidth: 0,
+        maxWidth: 20,
+      );
+      final offset = Offset(10 + (i * 20) + 6.toDouble(), high + 3);
+      textPainter.paint(canvas, offset); //rysowanie numeru korpusa
+      final offset1 = Offset(10 + (i * 20) + 6.toDouble(),  -16);
+      textPainter.paint(canvas, offset1); //rysowanie numeru korpusa
     }
+    
+    
+    
+    
+    //utworzenie mapy startyZasobow = key:korpusNr.ramkaNr.ramkaNr, value: start kolejnego zasobu
+    if(ulPo)
+      for (var i = 0; i < ramki.length; i++) {
+        double startMaxZasobu = ramki[i].rozmiar * 75; //wielkość ramki
+        startyZasobow['${ramki[i].korpusNr}.${ramki[i].ramkaNrPo}.${ramki[i].strona}'] = startMaxZasobu; //modyfikowane dla kolejnych zasobów
+        startyMaxZasobow['${ramki[i].korpusNr}.${ramki[i].ramkaNrPo}.${ramki[i].strona}'] = startMaxZasobu; //nie są modyfikowane, odniesienie dla pozycji matek, mateczników
+      }
+    else 
+      for (var i = 0; i < ramki.length; i++) {
+          double startMaxZasobu = ramki[i].rozmiar * 75; //wielkość ramki
+          startyZasobow['${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] = startMaxZasobu; //modyfikowane dla kolejnych zasobów
+          startyMaxZasobow['${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] = startMaxZasobu; //nie są modyfikowane, odniesienie dla pozycji matek, mateczników
+        }
     //print(startyZasobow);
 
     int brakKorpusow = 0;
@@ -8207,9 +9069,12 @@ class MyHive extends CustomPainter {
     // print('korpusNr = ${ramki[0].korpusNr}');
     // print('brakKorpusow = $brakKorpusow');
     //  ========= rysowanie ramek =========
+    int numerRamki = 0;
     for (var i = 0; i < ramki.length; i++) {
+      //wyswietlany ul przed lub po przeglądzie
+      if (ulPo) numerRamki = ramki[i].ramkaNrPo;
+      else numerRamki = ramki[i].ramkaNr;
       double start = high;
-
       //ustalenie poziomu startu obliczania pozycji ramek w korpusie
       // print('przed for - start = $start');
       for (var j = 1; j <= ramki[i].korpusNr - brakKorpusow; j++) {
@@ -8220,7 +9085,7 @@ class MyHive extends CustomPainter {
       }
       //start zasobu ramki 'i' modyfikowany i odczytywany z mapy startyZasobow
       double startZasobu = startyZasobow[
-          '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']!;
+          '${ramki[i].korpusNr}.$numerRamki.${ramki[i].strona}']!;
 
       int wartoscInt = 0;
       if (ramki[i].zasob < 13) {
@@ -8230,15 +9095,15 @@ class MyHive extends CustomPainter {
 
       switch (ramki[i].zasob) {
         case 1:
-          print('case 1');
+          //print('case 1');
           //print('start dla ramki ${ramki[i].ramkaNr} = $start');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
@@ -8246,18 +9111,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8266,25 +9131,25 @@ class MyHive extends CustomPainter {
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 dronePaint); //zasob 1 - drone // dla strony lewej i prawej
 
-            //print('${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}');
+            //print('${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}');
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
           break;
         case 2:
-          print('case 2');
-          //print('start dla ramki ${ramki[i].ramkaNr} = $start');
+          //print('case 2');
+          //print('start dla ramki ${numerRamki} = $start');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
@@ -8292,18 +9157,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8312,24 +9177,24 @@ class MyHive extends CustomPainter {
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 broodPaint); //zasob 2 - brook // dla strony lewej i prawej
 
-            //print('${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}');
+            //print('${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}');
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
           break;
         case 3:
-          print('case 3');
+          //print('case 3');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
@@ -8337,18 +9202,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8359,22 +9224,22 @@ class MyHive extends CustomPainter {
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
 
           break;
         case 4:
-          print('case 4');
+          //print('case 4');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
@@ -8382,18 +9247,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8404,21 +9269,21 @@ class MyHive extends CustomPainter {
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
           break;
         case 5:
-          print('case 5');
+          //print('case 5');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
@@ -8427,18 +9292,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8449,21 +9314,21 @@ class MyHive extends CustomPainter {
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
           break;
         case 6:
-          print('case 6');
+          //print('case 6');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
@@ -8472,18 +9337,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8494,21 +9359,21 @@ class MyHive extends CustomPainter {
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
           break;
         case 7:
-          print('case 7');
+          //print('case 7');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
@@ -8517,18 +9382,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8539,21 +9404,21 @@ class MyHive extends CustomPainter {
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
           break;
         case 8:
-          print('case 9');
+          //('case 9');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
@@ -8562,18 +9427,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8584,21 +9449,21 @@ class MyHive extends CustomPainter {
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
           break;
         case 9:
-          print('case 8');
+          //print('case 8');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
@@ -8607,18 +9472,18 @@ class MyHive extends CustomPainter {
               startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >=
               startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                   ramki[i].rozmiar * 75) {
             canvas.drawLine(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start + 15 + startZasobu),
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 8) -
                         2,
                     start +
@@ -8629,22 +9494,22 @@ class MyHive extends CustomPainter {
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZasobow[
-                    '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] =
+                    '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
-                        '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! -
+                        '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
                     (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
           }
           break;
         case 10:
-          print('case 10');
+          //print('case 10');
           //canvas.drawCircle(Offset(100, 100), 3, matka);
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
@@ -8653,7 +9518,7 @@ class MyHive extends CustomPainter {
               canvas.drawCircle(
                   Offset(
                       10 +
-                          (ramki[i].ramkaNr - 1) * 20 +
+                          (numerRamki - 1) * 20 +
                           (ramki[i].strona * 12) -
                           8,
                       start + 20),
@@ -8664,7 +9529,7 @@ class MyHive extends CustomPainter {
               canvas.drawCircle(
                   Offset(
                       10 +
-                          (ramki[i].ramkaNr - 1) * 20 +
+                          (numerRamki - 1) * 20 +
                           (ramki[i].strona * 12) -
                           8,
                       start + 20),
@@ -8675,7 +9540,7 @@ class MyHive extends CustomPainter {
               canvas.drawCircle(
                   Offset(
                       10 +
-                          (ramki[i].ramkaNr - 1) * 20 +
+                          (numerRamki - 1) * 20 +
                           (ramki[i].strona * 12) -
                           8,
                       start + 20),
@@ -8686,7 +9551,7 @@ class MyHive extends CustomPainter {
               canvas.drawCircle(
                   Offset(
                       10 +
-                          (ramki[i].ramkaNr - 1) * 20 +
+                          (numerRamki - 1) * 20 +
                           (ramki[i].strona * 12) -
                           8,
                       start + 20),
@@ -8697,7 +9562,7 @@ class MyHive extends CustomPainter {
               canvas.drawCircle(
                   Offset(
                       10 +
-                          (ramki[i].ramkaNr - 1) * 20 +
+                          (numerRamki - 1) * 20 +
                           (ramki[i].strona * 12) -
                           8,
                       start + 20),
@@ -8708,7 +9573,7 @@ class MyHive extends CustomPainter {
               canvas.drawCircle(
                   Offset(
                       10 +
-                          (ramki[i].ramkaNr - 1) * 20 +
+                          (numerRamki - 1) * 20 +
                           (ramki[i].strona * 12) -
                           8,
                       start + 20),
@@ -8719,7 +9584,7 @@ class MyHive extends CustomPainter {
               canvas.drawCircle(
                   Offset(
                       10 +
-                          (ramki[i].ramkaNr - 1) * 20 +
+                          (numerRamki - 1) * 20 +
                           (ramki[i].strona * 12) -
                           8,
                       start + 20),
@@ -8728,26 +9593,26 @@ class MyHive extends CustomPainter {
           }
           break;
         case 11:
-          print('case 11');
+          //print('case 11');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           double temp = startyMaxZasobow[
-                  '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! +
+                  '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! +
               5;
           for (var a = 0; a < int.parse(ramki[i].wartosc); a++) {
             canvas.drawCircle(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 12) -
                         8,
                     start + temp),
@@ -8757,26 +9622,26 @@ class MyHive extends CustomPainter {
           }
           break;
         case 12:
-          print('case 12');
+          //print('case 12');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           double temp = startyMaxZasobow[
-                  '${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']! +
+                  '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! +
               5;
           for (var a = 0; a < int.parse(ramki[i].wartosc); a++) {
             canvas.drawCircle(
                 Offset(
                     10 +
-                        (ramki[i].ramkaNr - 1) * 20 +
+                        (numerRamki - 1) * 20 +
                         (ramki[i].strona * 12) -
                         8,
                     start + temp),
@@ -8786,15 +9651,15 @@ class MyHive extends CustomPainter {
           }
           break;
         case 13: //to Do
-          print('case 13');
+          //print('case 13');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
@@ -8804,7 +9669,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 4;
 
               Offset center =
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 6);
+                  Offset(10 + (numerRamki - 1) * 20 + 10, start + 6);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
 
@@ -8824,7 +9689,7 @@ class MyHive extends CustomPainter {
               var angle = (math.pi * 2) / sides; //kąt
 
               Offset center =
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 7);
+                  Offset(10 + (numerRamki - 1) * 20 + 10, start + 7);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
 
@@ -8845,7 +9710,7 @@ class MyHive extends CustomPainter {
               var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
               Offset center =
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 6);
+                  Offset(10 + (numerRamki - 1) * 20 + 10, start + 6);
               Offset startPoint = Offset(
                   radiusEx * math.cos(radians), radiusEx * math.sin(radians));
 
@@ -8865,17 +9730,17 @@ class MyHive extends CustomPainter {
               //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 6, start + 9),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 14, start + 9),
+                  Offset(10 + (numerRamki - 1) * 20 + 6, start + 9),
+                  Offset(10 + (numerRamki - 1) * 20 + 14, start + 9),
                   linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 6, start + 3),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 6, start + 10),
+                  Offset(10 + (numerRamki - 1) * 20 + 6, start + 3),
+                  Offset(10 + (numerRamki - 1) * 20 + 6, start + 10),
                   linePaint); // | (kreska pionowa lewa)
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 14, start + 3),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 14, start + 10),
+                  Offset(10 + (numerRamki - 1) * 20 + 14, start + 3),
+                  Offset(10 + (numerRamki - 1) * 20 + 14, start + 10),
                   linePaint); // | (kreska pionowa prawa)
               break;
             case 'ramka pracy': //ramka pracy
@@ -8883,7 +9748,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 4;
 
               Offset center =
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 6);
+                  Offset(10 + (numerRamki - 1) * 20 + 10, start + 6);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
 
@@ -8903,7 +9768,7 @@ class MyHive extends CustomPainter {
               var angle = (math.pi * 2) / sides; //kąt
 
               Offset center =
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 7);
+                  Offset(10 + (numerRamki - 1) * 20 + 10, start + 7);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
 
@@ -8924,7 +9789,7 @@ class MyHive extends CustomPainter {
               var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
               Offset center =
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 6);
+                  Offset(10 + (numerRamki - 1) * 20 + 10, start + 6);
               Offset startPoint = Offset(
                   radiusEx * math.cos(radians), radiusEx * math.sin(radians));
 
@@ -8944,31 +9809,31 @@ class MyHive extends CustomPainter {
               //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 6, start + 9),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 14, start + 9),
+                  Offset(10 + (numerRamki - 1) * 20 + 6, start + 9),
+                  Offset(10 + (numerRamki - 1) * 20 + 14, start + 9),
                   linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 6, start + 3),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 6, start + 10),
+                  Offset(10 + (numerRamki - 1) * 20 + 6, start + 3),
+                  Offset(10 + (numerRamki - 1) * 20 + 6, start + 10),
                   linePaint); // | (kreska pionowa lewa)
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 14, start + 3),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 14, start + 10),
+                  Offset(10 + (numerRamki - 1) * 20 + 14, start + 3),
+                  Offset(10 + (numerRamki - 1) * 20 + 14, start + 10),
                   linePaint); // | (kreska pionowa prawa)
               break;
           }
           break;
         case 14: //is Done
-          print('case 14');
+          //print('case 14');
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 4, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 16, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 4, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
           canvas.drawLine(
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10, start + 13),
-              Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset(10 + (numerRamki - 1) * 20 + 10, start + 13),
+              Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
@@ -8978,7 +9843,7 @@ class MyHive extends CustomPainter {
               radians = math.pi; //w lewo
               var angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10 - 2,
+              Offset center = Offset(10 + (numerRamki - 1) * 20 + 10 - 2,
                   start + (75 * ramki[i].rozmiar) + 10 + 12);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
@@ -8998,7 +9863,7 @@ class MyHive extends CustomPainter {
               radians = 0; //w prawo
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10 + 2,
+              Offset center = Offset(10 + (numerRamki - 1) * 20 + 10 + 2,
                   start + (75 * ramki[i].rozmiar) + 10 + 12);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
@@ -9018,7 +9883,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 6; //w górę
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset center = Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 10 + 13);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
@@ -9038,7 +9903,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 2; //w dół
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset center = Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 10 + 11);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
@@ -9055,39 +9920,39 @@ class MyHive extends CustomPainter {
               break;
             case 'insulated': //zaizolowano - załoono izolator
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 1,
+                  Offset(10 + (numerRamki - 1) * 20 + 1,
                       start + (75 * ramki[i].rozmiar) + 20),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 19,
+                  Offset(10 + (numerRamki - 1) * 20 + 19,
                       start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 1, start + 9),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 1,
+                  Offset(10 + (numerRamki - 1) * 20 + 1, start + 9),
+                  Offset(10 + (numerRamki - 1) * 20 + 1,
                       start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // | (kreska pionowa lewa)
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 19, start + 9),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 19,
+                  Offset(10 + (numerRamki - 1) * 20 + 19, start + 9),
+                  Offset(10 + (numerRamki - 1) * 20 + 19,
                       start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // | (kreska pionowa prawa)
               break;
             case 'izolacja': //zaizolowano - załoono izolator
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 1,
+                  Offset(10 + (numerRamki - 1) * 20 + 1,
                       start + (75 * ramki[i].rozmiar) + 20),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 19,
+                  Offset(10 + (numerRamki - 1) * 20 + 19,
                       start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 1, start + 9),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 1,
+                  Offset(10 + (numerRamki - 1) * 20 + 1, start + 9),
+                  Offset(10 + (numerRamki - 1) * 20 + 1,
                       start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // | (kreska pionowa lewa)
               canvas.drawLine(
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 19, start + 9),
-                  Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 19,
+                  Offset(10 + (numerRamki - 1) * 20 + 19, start + 9),
+                  Offset(10 + (numerRamki - 1) * 20 + 19,
                       start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // | (kreska pionowa prawa)
               break;
@@ -9096,7 +9961,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 2; //w dół
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset center = Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 10 + 11);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
@@ -9116,7 +9981,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 6; //w górę
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10,
+              Offset center = Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 10 + 13);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
@@ -9136,7 +10001,7 @@ class MyHive extends CustomPainter {
               radians = 0; //w prawo
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10 + 2,
+              Offset center = Offset(10 + (numerRamki - 1) * 20 + 10 + 2,
                   start + (75 * ramki[i].rozmiar) + 10 + 12);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
@@ -9156,7 +10021,7 @@ class MyHive extends CustomPainter {
               radians = math.pi; //w lewo
               var angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (ramki[i].ramkaNr - 1) * 20 + 10 - 2,
+              Offset center = Offset(10 + (numerRamki - 1) * 20 + 10 - 2,
                   start + (75 * ramki[i].rozmiar) + 10 + 12);
               Offset startPoint = Offset(
                   radius * math.cos(radians), radius * math.sin(radians));
@@ -9174,7 +10039,7 @@ class MyHive extends CustomPainter {
           }
           break;
       }
-      print(startyZasobow);
+      //print(startyZasobow);
       //print(ramki[i].wartosc);
     }
   }
@@ -9185,12 +10050,4 @@ class MyHive extends CustomPainter {
     return true;
   }
 }
-
-/*
-  @override
-  bool shouldRepaint(CustomPainter old) {
-    //throw UnimplementedError();
-    return true;
-  }
-}
-*/
+ //usunąć zeby aktywować cały skrypt !!!!!!!!!!!!!!!!!!!!!!!!!!!

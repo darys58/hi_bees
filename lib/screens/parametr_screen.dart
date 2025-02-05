@@ -160,6 +160,36 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 );
               }, child: Text(('2027'),style: TextStyle(fontSize: 18))
               ),
+            if(2028 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                globals.rokStatystyk = '2028';
+                Navigator.of(context).pushNamed(
+                    ParametrScreen.routeName, 
+                );
+              }, child: Text(('2028'),style: TextStyle(fontSize: 18))
+              ),
+            if(2029 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                globals.rokStatystyk = '2029';
+                Navigator.of(context).pushNamed(
+                    ParametrScreen.routeName, 
+                );
+              }, child: Text(('2029'),style: TextStyle(fontSize: 18))
+              ),
+            if(2030 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                globals.rokStatystyk = '2030';
+                Navigator.of(context).pushNamed(
+                    ParametrScreen.routeName, 
+                );
+              }, child: Text(('2030'),style: TextStyle(fontSize: 18))
+              ),
           ],
         ),
         actions: <Widget>[

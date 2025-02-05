@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hi_bees/screens/frame_edit_screen2.dart';
+//import 'package:hi_bees/screens/frame_edit_screen2.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../globals.dart' as globals;
 import '../models/info.dart';
 import '../models/infos.dart';
@@ -36,6 +37,23 @@ class _InfoScreenState extends State<InfoScreen> {
     Color.fromARGB(255, 210, 170, 49),
   ];
 
+  List<Map<String, dynamic>> daneZbioruPylkuDoWykresu = [];
+  List<Map<String, dynamic>> daneZbioruMioduDoWykresu = [];
+  List<Map<String, dynamic>> daneVarroaDoWykresu = [];     
+  
+  // List<Map<String, dynamic>> dataFromDatabase = [
+  //   {"x": 0, "value": 20, "label": "Jan"},
+  //   {"x": 1, "value": 400, "label": "Feb"},
+  //   {"x": 2, "value": 300, "label": "Mar"},
+  //   {"x": 3, "value": 50, "label": "Apr"},
+  // ];
+  List<BarChartGroupData> barGroupsPylek = []; //lista elementów sekcji "barGroupsPylek" czyli słupki wykresu pyłku
+  Map<int, String> xAxisLabelsPylek = {}; // Mapowanie etykiet tekstowych dla osi X wykresy pyłku
+  List<BarChartGroupData> barGroupsMiod = []; //lista elementów sekcji "barGroupsPylek" czyli słupki wykresu miodu
+  Map<int, String> xAxisLabelsMiod = {}; // Mapowanie etykiet tekstowych dla osi X wykresy miodu
+  List<BarChartGroupData> barGroupsVarroa = []; //lista elementów sekcji "barGroupsPylek" czyli słupki wykresu warrozy
+  Map<int, String> xAxisLabelsVarroa = {}; // Mapowanie etykiet tekstowych dla osi X wykresy warrozy
+  
   @override
   void didChangeDependencies() {
     // print('frames_screen - didChangeDependencies');
@@ -43,10 +61,12 @@ class _InfoScreenState extends State<InfoScreen> {
     // print('frames_screen - _isInit = $_isInit');
 
     if (_isInit) {
+      //wszystkie informacje dla wybranej pasieki i ula
       Provider.of<Infos>(context, listen: false)
           .fetchAndSetInfosForHive(globals.pasiekaID, globals.ulID)
           .then((_) {
-        //wszystkie informacje dla wybranej pasieki i ula
+        //wywołanie funkcji dynamicznego tworzenia słupków wykresu
+         
       });
     }
     _isInit = false;
@@ -64,6 +84,60 @@ class _InfoScreenState extends State<InfoScreen> {
       return '$miesiac-$dzien';
   }
 
+  // Funkcja do dynamicznego tworzenia słupków wykresu na podstawie danych - dynamiczne tworzenie sekcji "barGroupsPylek"
+  void _generateBarGroupsPylek() {
+    barGroupsPylek = daneZbioruPylkuDoWykresu.map((data) {
+      // Dodajemy mapowanie wartości 'x' na etykietę tekstową
+      xAxisLabelsPylek[data['x']] = data['label'];
+      return BarChartGroupData(
+        x: data['x'], // Wartość X - kolejny numer słupka
+        barRods: [
+          BarChartRodData(
+            toY: data['value'].toDouble(), // Wartość Y z bazy danych
+            borderRadius: BorderRadius.zero, //słupek bez zaokrągleń
+            color: Color.fromARGB(255, 56, 127, 251),
+          ),
+        ],
+      );
+    }).toList();
+  }
+
+  // Funkcja do dynamicznego tworzenia słupków wykresu na podstawie danych - dynamiczne tworzenie sekcji "barGroupsMiod"
+  void _generateBarGroupsMiod() {
+    barGroupsMiod = daneZbioruMioduDoWykresu.map((data) {
+      // Dodajemy mapowanie wartości 'x' na etykietę tekstową
+      xAxisLabelsMiod[data['x']] = data['label'];
+      return BarChartGroupData(
+        x: data['x'], // Wartość X - kolejny numer słupka
+        barRods: [
+          BarChartRodData(
+            toY: data['value'].toDouble(), // Wartość Y z bazy danych
+            borderRadius: BorderRadius.zero, //słupek bez zaokrągleń
+            color: Color.fromARGB(255, 56, 127, 251),
+          ),
+        ],
+      );
+    }).toList();
+  }
+
+  // Funkcja do dynamicznego tworzenia słupków wykresu na podstawie danych - dynamiczne tworzenie sekcji "barGroupsVarroa"
+  void _generateBarGroupsVarroa() {
+    barGroupsVarroa = daneVarroaDoWykresu.map((data) {
+      // Dodajemy mapowanie wartości 'x' na etykietę tekstową
+      xAxisLabelsVarroa[data['x']] = data['label'];
+      return BarChartGroupData(
+        x: data['x'], // Wartość X - kolejny numer słupka
+        barRods: [
+          BarChartRodData(
+            toY: data['value'].toDouble(), // Wartość Y z bazy danych
+            borderRadius: BorderRadius.zero, //słupek bez zaokrągleń
+            color: Color.fromARGB(255, 56, 127, 251),
+          ),
+        ],
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     //przekazanie hiveNr z hives_item za pomocą navigatora
@@ -73,7 +147,7 @@ class _InfoScreenState extends State<InfoScreen> {
     while (kolor > 10) {
       kolor = kolor - 10;
     }
-    //pobranie danych patametryzacyjnych(e-waga mała ramka, f-waga duza ramka)
+    //pobranie danych parametryzacyjnych (e - waga mała ramka, f - waga duza ramka)
     final dod1Data = Provider.of<Dodatki1>(context, listen: false);
     final dod1 = dod1Data.items;
 
@@ -86,8 +160,19 @@ class _InfoScreenState extends State<InfoScreen> {
     // print(wybranaKategoria);
     // print('======= infos lenght ${infos.length}');
 
-    int miod = 0;
-    int pylek = 0;
+    int miod = 0; //suma zboru miodu w g
+    int miodSlupekNr = 0; //numer słupka na wykresie zbioru miodu
+    daneZbioruMioduDoWykresu = []; //zerowanie danych wykresu miodu dla ula
+    String tempDataZbioru = ''; // tymczasowe zapamietanie daty zbioru przy dodawaniu zbiorów miodu z małych i duzych ramek
+    
+    int pylek = 0; //suma zbioru pyłku w ml
+    int pylekSlupekNr = 0; //numer słupka na wykresie zbioru pyłku
+    daneZbioruPylkuDoWykresu = []; //zerowanie danych wykresu pyłku dla ula
+
+    int varroa = 0; //suma varroa w sztukach
+    int varroaSlupekNr = 0; //numer słupka na wykresie varroa
+    daneVarroaDoWykresu = []; //zerowanie danych wykresu varroa dla ula
+
     double wysokoscStatystyk = 0;
     int dodatek = 0;
     var ostatniaData1 = DateTime.parse('2022-01-01 00:00');
@@ -106,10 +191,10 @@ class _InfoScreenState extends State<InfoScreen> {
     double suma2 = 0.0;
     double suma3 = 0.0;
     double suma4 = 0.0;
-    double suma5 = 0.0;
+   //double suma5 = 0.0;
 
 
-    //dla kazdego info o zbiorach - podliczenie roczne zbiorów
+    //dla kazdego info o zbiorach - podliczenie roczne zbiorów i przygotowanie danych do wykresów
     for (var i = 0; i < infos.length; i++) {
       // print(
       //     '${infos[i].id},${infos[i].data},${infos[i].pasiekaNr},${infos[i].ulNr},${infos[i].kategoria},${infos[i].parametr},${infos[i].wartosc},${infos[i].miara},${infos[i].pogoda},${infos[i].temp},${infos[i].czas},${infos[i].uwagi},${infos[i].arch}');
@@ -122,28 +207,77 @@ class _InfoScreenState extends State<InfoScreen> {
         if (infos[i].data.substring(0, 4) == rokStatystyk &&
             infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x") {
           miod = miod + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
+          //dane do wykresu
+          if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
+            daneZbioruMioduDoWykresu.add({ //to dodaj następny słupek wykresu
+              "x": miodSlupekNr,         // Kolejna wartość osi X
+              "value": int.parse(infos[i].wartosc) * int.parse(dod1[0].e),   // Wartość słupka
+              "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X - data zbioru
+            });
+            tempDataZbioru = infos[i].data; //zapamietanie daty zbioru
+            miodSlupekNr = miodSlupekNr + 1;
+          }else{ //jezeli data jest taka sama jak przy ostatnim wpisie to dodaj wartość zbióru do poprzedniego słupka wykresu
+            daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //tzn. edytuj poprzednią wartość "value"
+            = daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //dodając do niej
+            + int.parse(infos[i].wartosc) * int.parse(dod1[0].e); //kolejną wartość bo jest taka sama data zbioru 
+          }
         }
         //dla bierzącego roku i danego rodzaju zbioru (miód, duza ramka)
         if (infos[i].data.substring(0, 4) == rokStatystyk &&
             infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x") {
           miod = miod + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
+          //dane do wykresu
+          if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
+            daneZbioruMioduDoWykresu.add({ //to dodaj następny słupek wykresu
+              "x": miodSlupekNr,         // Kolejna wartość osi X
+              "value": int.parse(infos[i].wartosc) * int.parse(dod1[0].f),   // Wartość słupka
+              "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X - data zbioru
+            });
+            tempDataZbioru = infos[i].data; //zapamietanie daty zbioru
+            miodSlupekNr = miodSlupekNr + 1;
+          }else{ //jezeli data jest taka sama jak przy ostatnim wpisie to dodaj wartość zbióru do poprzedniego słupka wykresu
+            daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //tzn. edytuj poprzednią wartość "value"
+            = daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //dodając do niej
+            + int.parse(infos[i].wartosc) * int.parse(dod1[0].e); //kolejną wartość bo jest taka sama data zbioru 
+          }
         }
         //dla bierzącego roku i danego rodzaju zbioru (pyłek, miarka)
         if (infos[i].data.substring(0, 4) == rokStatystyk &&
             (infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
             infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x")) {
           pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
+          //dane do wykresu
+          daneZbioruPylkuDoWykresu.add({
+            "x": pylekSlupekNr,         // Kolejna wartość osi X
+            "value": int.parse(infos[i].wartosc) * int.parse(dod1[0].g),   // Wartość słupka
+            "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X
+          });
+          pylekSlupekNr = pylekSlupekNr + 1;
         }
         //dla bierzącego roku i danego rodzaju zbioru (pyłek w ml)
         if (infos[i].data.substring(0, 4) == rokStatystyk &&
             infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = ") {
           pylek = pylek + (int.parse(infos[i].wartosc));
+          //dane do wykresu
+          daneZbioruPylkuDoWykresu.add({
+            "x": pylekSlupekNr,         // Kolejna wartość osi X
+            "value": int.parse(infos[i].wartosc),   // Wartość słupka
+            "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X
+          });
+          pylekSlupekNr = pylekSlupekNr + 1;
         }
 
         //dla bierzącego roku i danego rodzaju zbioru (pyłek w l)
         if (infos[i].data.substring(0, 4) == rokStatystyk &&
             infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  ") {
           pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
+          //dane do wykresu
+          daneZbioruPylkuDoWykresu.add({
+            "x": pylekSlupekNr,         // Kolejna wartość osi X
+            "value": (double.parse(infos[i].wartosc) * 1000).toInt(),   // Wartość słupka
+            "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X
+          });
+          pylekSlupekNr = pylekSlupekNr + 1;
         }
       }
 
@@ -321,24 +455,26 @@ class _InfoScreenState extends State<InfoScreen> {
             globals.jezyk == 'pl_PL'
                 ? wartosc4 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
                 : wartosc4 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+
           }
         }
         //dla bierzącego roku i parametru removeFood
         if (infos[i].data.substring(0, 4) == rokStatystyk &&
             infos[i].parametr == AppLocalizations.of(context)!.removedFood) {
           //suma5 = suma5 + double.parse(infos[i].wartosc);
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
+          if (DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
             globals.jezyk == 'pl_PL'
                 ? wartosc5 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
                 : wartosc5 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+
           }
         }
         //dla bierzącego roku i parametru leftFood
         if (infos[i].data.substring(0, 4) == rokStatystyk &&
             infos[i].parametr == AppLocalizations.of(context)!.leftFood) {
           //suma5 = suma5 + double.parse(infos[i].wartosc);
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData6)) {
+          if (DateTime.parse(infos[i].data).isAfter(ostatniaData6) && DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData6 = DateTime.parse(infos[i].data);
             globals.jezyk == 'pl_PL'
                 ? wartosc6 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
@@ -383,10 +519,20 @@ class _InfoScreenState extends State<InfoScreen> {
             ostatniaData4 = DateTime.parse(infos[i].data);
             wartosc4 = infos[i].wartosc + ' ' + infos[i].miara +
                 ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
-          }
+          } //ostatnia wartość varroa (nieuzywana bo wyswietlana jest suma)
+          varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu
+          daneVarroaDoWykresu.add({
+            "x": varroaSlupekNr,         // Kolejna wartość osi X
+            "value": int.parse(infos[i].wartosc),   // Wartość słupka
+            "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X
+          });
+          varroaSlupekNr = varroaSlupekNr + 1;
         }
       }
     }
+
+    if (miod > 0 && pylek == 0) globals.wykresZbiory = 'miod';
+    if (miod == 0 && pylek > 0) globals.wykresZbiory = 'pylek';
     if (miod != 0 || pylek != 0 ||
         wartosc1 != '' ||
         wartosc2 != '' ||
@@ -396,12 +542,12 @@ class _InfoScreenState extends State<InfoScreen> {
         wartosc6 != '') dodatek = 10;
     if (miod != 0) wysokoscStatystyk = wysokoscStatystyk + 19;
     if (pylek != 0) wysokoscStatystyk = wysokoscStatystyk + 19;
-    if (wartosc1 != '') wysokoscStatystyk = wysokoscStatystyk + 19;
-    if (wartosc2 != '') wysokoscStatystyk = wysokoscStatystyk + 19;
-    if (wartosc3 != '') wysokoscStatystyk = wysokoscStatystyk + 19;
-    if (wartosc4 != '') wysokoscStatystyk = wysokoscStatystyk + 19;
-    if (wartosc5 != '') wysokoscStatystyk = wysokoscStatystyk + 19;
-    if (wartosc6 != '') wysokoscStatystyk = wysokoscStatystyk + 19;
+    if (wartosc1 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    if (wartosc2 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    if (wartosc3 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    if (wartosc4 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    if (wartosc5 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    if (wartosc6 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
     // print(wartosc1);
     // print(wartosc2);
     // print(wartosc3);
@@ -473,6 +619,39 @@ class _InfoScreenState extends State<InfoScreen> {
                 );
               }, child: Text(('2027'),style: TextStyle(fontSize: 18))
               ),
+            if(2028 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                globals.rokStatystyk = '2028';
+                Navigator.of(context).pushNamed(
+                    InfoScreen.routeName,
+                    arguments: globals.ulID ,
+                );
+              }, child: Text(('2028'),style: TextStyle(fontSize: 18))
+              ),
+            if(2029 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                globals.rokStatystyk = '2029';
+                Navigator.of(context).pushNamed(
+                    InfoScreen.routeName,
+                    arguments: globals.ulID ,
+                );
+              }, child: Text(('2029'),style: TextStyle(fontSize: 18))
+              ),
+            if(2030 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                globals.rokStatystyk = '2030';
+                Navigator.of(context).pushNamed(
+                    InfoScreen.routeName,
+                    arguments: globals.ulID ,
+                );
+              }, child: Text(('2030'),style: TextStyle(fontSize: 18))
+              ),
           ],
         ),
         actions: <Widget>[
@@ -493,8 +672,6 @@ class _InfoScreenState extends State<InfoScreen> {
     );
   }
     
-
-
 
     // + dodawanie przeglądu lub info
     void _showAlert(BuildContext context, int pasieka, int ul) {
@@ -517,15 +694,15 @@ class _InfoScreenState extends State<InfoScreen> {
                 );
             }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18))
             ), 
-          // if(wybranaKategoria == 'inspection')
-          //   TextButton(onPressed: (){
-          //     Navigator.of(context).pop();
-          //     Navigator.of(context).pushNamed(
-          //         FrameEditScreen2.routeName,
-          //         arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
-          //       );
-          //   }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18))
-          //   ),  
+          if(wybranaKategoria == 'inspection')
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameEditScreen2.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+                );
+            }, child: Text((AppLocalizations.of(context)!.resourceOnFramePlus),style: TextStyle(fontSize: 18))
+            ),  
           if(wybranaKategoria == 'inspection')  
             TextButton(onPressed: (){
               Navigator.of(context).pop();
@@ -996,8 +1173,19 @@ class _InfoScreenState extends State<InfoScreen> {
           false, //zeby zaciemnione tło było zablokowane na kliknięcia
     );
   }
+
+    //odwócenie elementów listy zeby daty zwykresów były narastajaco (bo z bazy są malejąco)
+    daneZbioruPylkuDoWykresu = daneZbioruPylkuDoWykresu.reversed.toList();
+    daneZbioruMioduDoWykresu = daneZbioruMioduDoWykresu.reversed.toList();
+    daneVarroaDoWykresu = daneVarroaDoWykresu.reversed.toList();   
     
-    
+    //generowanie wykresów
+    if(globals.wykresZbiory == 'miod') _generateBarGroupsMiod();
+    if(globals.wykresZbiory == 'pylek') _generateBarGroupsPylek();
+    _generateBarGroupsVarroa();
+
+
+     //ThemeData theme = Theme.of(context);
     
     return Scaffold(
       appBar: AppBar(
@@ -1071,7 +1259,10 @@ class _InfoScreenState extends State<InfoScreen> {
       ),
       body: Column(
         children: <Widget>[
-          //menu wyboru kategorii info - ikony w kółkach
+
+
+
+  //menu wyboru kategorii info - ikony w kółkach
           Container(
             margin: EdgeInsets.all(10),
             //height: 60,
@@ -1100,7 +1291,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         });
                       },
                       style: IconButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
                       ),
                     ),
                   )
@@ -1141,7 +1332,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         });
                       },
                       style: IconButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
                       ),
                     ),
                   )
@@ -1183,7 +1374,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         });
                       },
                       style: IconButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
                       ),
                     ),
                   )
@@ -1226,7 +1417,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         });
                       },
                       style: IconButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
                       ),
                     ),
                   )
@@ -1268,7 +1459,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         });
                       },
                       style: IconButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
                       ),
                     ),
                   )
@@ -1309,7 +1500,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         });
                       },
                       style: IconButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
                       ),
                     ),
                   )
@@ -1350,7 +1541,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         });
                       },
                       style: IconButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
                       ),
                     ),
                   )
@@ -1419,72 +1610,201 @@ class _InfoScreenState extends State<InfoScreen> {
           //       )
           //     : SizedBox(height: 1),
 
-//Statystyki zbiorów dla biezacego roku
+//Statystyki zbiorów dla biezacego roku - wykres
+//Wykres zbiorów miodu
+          SizedBox(height: 10),
+          if (wybranaKategoria == 'harvest' && globals.wykresZbiory == 'miod' && miod > 0)
+            Padding(
+              padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0, bottom: 10),
+              child: AspectRatio(
+                aspectRatio: 2.2,
+                child: BarChart(
+                  BarChartData(
+                    barGroups: barGroupsMiod, // Używamy dynamicznie generowanych słupków
+                    barTouchData: BarTouchData( //etykiety słupków
+                      touchTooltipData: BarTouchTooltipData(
+                        //tooltipMargin: 0,
+                        getTooltipItem: (
+                          BarChartGroupData group,
+                          int groupIndex,
+                          BarChartRodData rod,
+                          int rodIndex
+                        ){
+                          return BarTooltipItem(
+                            (rod.toY/1000).toString(),
+                            TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
+                        }
+                      )
+                    ),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      bottomTitles: AxisTitles( //dolne opisy osi
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 50,
+                          getTitlesWidget: (double value, TitleMeta meta) {
+                            // Pobieranie tekstu na podstawie wartości 'x'
+                            String text = xAxisLabelsMiod[value.toInt()] ?? '';
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: RotatedBox(
+                                quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                child: Text(text, style: TextStyle(fontSize: 12)),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      leftTitles: AxisTitles( //lewe opisy osi
+                        axisNameSize: 20,
+                        //axisNameWidget: Text('kg'), //nazwa osi lewej
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 60,
+                          getTitlesWidget: (value, meta) {
+                            double osY = value.toDouble()/1000;
+                            return Padding( 
+                              padding: const EdgeInsets.only(left: 10.0),
+                              child: Text (osY.toString()+' kg', style: TextStyle(fontSize: 12)), //, fontWeight: FontWeight.bold
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false,)
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false,)
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+//Wykres zbiorów pyłku
+          if (wybranaKategoria == 'harvest' && globals.wykresZbiory == 'pylek' && pylek > 0)
+            Padding(
+              padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0, bottom: 10),
+              child: AspectRatio(
+                aspectRatio: 2.2,
+                child: BarChart(
+                  BarChartData(
+                    barGroups: barGroupsPylek, // Używamy dynamicznie generowanych słupków
+                    barTouchData: BarTouchData( //etykiety słupków
+                      touchTooltipData: BarTouchTooltipData(
+                        //tooltipMargin: 0,
+                        getTooltipItem: (
+                          BarChartGroupData group,
+                          int groupIndex,
+                          BarChartRodData rod,
+                          int rodIndex
+                        ){
+                          return BarTooltipItem(
+                            rod.toY.toString().substring(0, rod.toY.toString().length - 2), //obcięce .0
+                            TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
+                        }
+                      )
+                    ),
+                    titlesData: FlTitlesData( //opisy osi
+                      show: true,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 50,
+                          getTitlesWidget: (double value, TitleMeta meta) {
+                            // Pobieranie tekstu na podstawie wartości 'x'
+                            String text = xAxisLabelsPylek[value.toInt()] ?? '';
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: RotatedBox(
+                                quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                child: Text(text, style: TextStyle(fontSize: 12)),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      leftTitles: AxisTitles(
+                        //axisNameWidget: Text('ml'), //nazwa osi lewej
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 60,
+                          getTitlesWidget: (value, meta) {
+                            return Padding( 
+                              padding: const EdgeInsets.only(left: 10.0),
+                              child: Text(value.toInt().toString()+' ml', style: TextStyle(fontSize: 12)),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false,)
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false,)
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+
           if (wybranaKategoria == 'harvest')
             Container(
               //margin: EdgeInsets.all(10),
-              height: wysokoscStatystyk + dodatek,
+              height: wysokoscStatystyk + dodatek + 50,
               child: Column(
-                children: [
-                  // RichText(
-                  //   text: TextSpan(
-                  //     style: TextStyle(color: Colors.black),
-                  //     children: [
-                  //       if (miod != 0)  
-                  //         TextSpan(
-                  //           text: ("(1) " + AppLocalizations.of(context)!.honeyZbior),
-                  //           style: TextStyle(
-                  //               fontSize: 16,
-                  //               // FontWeight.bold,
-                  //               color: Color.fromARGB(255, 0, 0, 0)),
-                  //         ),
-                  //       if (miod != 0)  
-                  //         TextSpan(
-                  //           text: (' $rokStatystyk: ${(miod / 1000).toString().replaceAll('.', ',')} kg\n'),
-                  //           style: TextStyle(
-                  //               fontSize: 16,
-                  //               fontWeight: FontWeight.bold,
-                  //               color: Color.fromARGB(255, 0, 0, 0)),
-                  //         ),
-                  //       if (pylek != 0)  
-                  //         TextSpan(
-                  //           text: ("(2) " + AppLocalizations.of(context)!.beePollenZbior),
-                  //           style: TextStyle(
-                  //               fontSize: 16,
-                  //               //fontWeight: FontWeight.bold,
-                  //               color: Color.fromARGB(255, 0, 0, 0)),
-                  //         ),
-                  //       if (pylek != 0)
-                  //         TextSpan(
-                  //           text: (' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l'),
-                  //           style: TextStyle(
-                  //               fontSize: 16,
-                  //               fontWeight: FontWeight.bold,
-                  //               color: Color.fromARGB(255, 0, 0, 0)),
-                  //         )
-                  
-                  //     ],
-                  //   ),
-                  // ),        
-                  
-                  
-                  
+                children: [                
                   if (miod != 0)
-                    Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
+                    TextButton(onPressed: (){                      
+                      setState(() {
+                        globals.wykresZbiory = 'miod';
+                        _generateBarGroupsMiod();
+                      });
+                      }, child: 
+                      globals.wykresZbiory == 'miod'
+                        ? Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
                             ' $rokStatystyk: ${(miod / 1000).toString().replaceAll('.', ',')} kg',
-                        style: const TextStyle(fontSize: 16)),
-                  if (pylek != 0)
-                    Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255)))
+                        : Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
+                            ' $rokStatystyk: ${(miod / 1000).toString().replaceAll('.', ',')} kg',
+                            style: const TextStyle(fontSize: 16)),
+                    ), 
+                  
+                  if (pylek != 0)  
+                    TextButton(onPressed: (){
+                      setState(() {
+                        globals.wykresZbiory = 'pylek';
+                        _generateBarGroupsPylek();
+                      });
+                      }, child:  
+                      globals.wykresZbiory == 'pylek'
+                        ? Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
                             ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
-                        style: const TextStyle(fontSize: 16)),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255)))
+                        : Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
+                            ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
+                            style: const TextStyle(fontSize: 16)),
+                    ),
+                    
+                    // Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
+                    //         ' $rokStatystyk: ${(miod / 1000).toString().replaceAll('.', ',')} kg',
+                    //     style: const TextStyle(fontSize: 16)),
+                  // if (pylek != 0)
+                  //   Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
+                  //           ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
+                  //       style: const TextStyle(fontSize: 16)),
                 ],
               ),
             ),
+
+
 //Statystyki equipment dla biezacego roku
           if (wybranaKategoria == 'equipment')
             Container(
               //margin: EdgeInsets.all(10),
-              height: wysokoscStatystyk + dodatek,
+              height: wysokoscStatystyk + dodatek + 10,
               child: Column(
                 children: [
                   if (wartosc3 != '')
@@ -1546,7 +1866,7 @@ class _InfoScreenState extends State<InfoScreen> {
           if (wybranaKategoria == 'feeding')
             Container(
               //margin: EdgeInsets.all(10),
-              height: wysokoscStatystyk + dodatek,
+              height: wysokoscStatystyk + dodatek + 10,
               child: Column(
                 children: [
                   if (wartosc1 != '')
@@ -1579,6 +1899,7 @@ class _InfoScreenState extends State<InfoScreen> {
                                 ' $wartosc3' +
                                 ' ($rokStatystyk: $suma3 l)',
                         style: const TextStyle(fontSize: 16)),
+                  if (wartosc4 != '') SizedBox(height: 10),
                   if (wartosc4 != '')
                     Text(
                         globals.jezyk == 'pl_PL'
@@ -1599,12 +1920,85 @@ class _InfoScreenState extends State<InfoScreen> {
               ),
             ),
 //Statystyki treatment dla biezacego roku
+//Wykres varroa
+          if (wybranaKategoria == 'treatment' && varroa > 0)
+            Padding(
+              padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0, bottom: 10),
+              child: AspectRatio(
+                aspectRatio: 2.2,
+                child: BarChart(
+                  BarChartData(
+                    barGroups: barGroupsVarroa, // Używamy dynamicznie generowanych słupków
+                    barTouchData: BarTouchData( //etykiety słupków
+                      touchTooltipData: BarTouchTooltipData(
+                        //tooltipMargin: 0,
+                        getTooltipItem: (
+                          BarChartGroupData group,
+                          int groupIndex,
+                          BarChartRodData rod,
+                          int rodIndex
+                        ){
+                          return BarTooltipItem(
+                            rod.toY.toString().substring(0, rod.toY.toString().length - 2), //obcięce .0
+                            TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
+                        }
+                      )
+                    ),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 50,
+                          getTitlesWidget: (double value, TitleMeta meta) {
+                            // Pobieranie tekstu na podstawie wartości 'x'
+                            String text = xAxisLabelsVarroa[value.toInt()] ?? '';
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: RotatedBox(
+                                quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                child: Text(text, style: TextStyle(fontSize: 12)),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      leftTitles: AxisTitles(
+                        axisNameWidget: Text(AppLocalizations.of(context)!.mites), //nazwa osi lewej
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 44,
+                          getTitlesWidget: (value, meta) {
+                            return Padding( 
+                              padding: const EdgeInsets.only(left: 10.0),
+                              child: Text(value.toInt().toString(), style: TextStyle(fontSize: 12)),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false,)
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false,)
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          
+          
           if (wybranaKategoria == 'treatment')
             Container(
               // margin: EdgeInsets.all(10),
               height: wysokoscStatystyk + dodatek,
               child: Column(
                 children: [
+                  if (varroa != '')
+                    Text('(4) varroa' + ' $rokStatystyk: ${(varroa).toString().replaceAll('.', ',')} ' + AppLocalizations.of(context)!.mites,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255))),
                   if (wartosc1 != '')
                     Text('(1) apivarol' + ' $wartosc1',
                         style: const TextStyle(fontSize: 16)),
@@ -1614,13 +2008,15 @@ class _InfoScreenState extends State<InfoScreen> {
                   if (wartosc3 != '')
                     Text('(3) ' + AppLocalizations.of(context)!.acid + ' $wartosc3',
                         style: const TextStyle(fontSize: 16)),
-                  if (wartosc4 != '')
-                    Text('(4) varroa' + ' $wartosc4',
-                        style: const TextStyle(fontSize: 16)),
+                  // if (wartosc4 != '')
+                  //   Text('(4) varroa' + ' $wartosc4',
+                  //       style: const TextStyle(fontSize: 16)),
                 ],
               ),
             ),
-          //kreska
+          
+
+//kreska pod statystykami
           const Divider(
             height: 10,
             thickness: 1,
@@ -1628,7 +2024,8 @@ class _InfoScreenState extends State<InfoScreen> {
             endIndent: 0,
             color: Colors.black,
           ),
-          //lista z informacjami w poszczególnych kategoriach
+          
+//lista z informacjami w poszczególnych kategoriach
           infos.length > 0
               ? Expanded(
                   child: ListView.builder(
