@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "hi_bees_60@x2.png",
+      "filename" : "LaunchImage.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "hi_bees_76@x2.png",
+      "filename" : "LaunchImage@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "hi_bees_60@x3.png",
+      "filename" : "LaunchImage@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

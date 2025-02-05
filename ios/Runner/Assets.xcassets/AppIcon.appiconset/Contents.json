@@ -1,115 +1,115 @@
 {
   "images" : [
     {
-      "filename" : "hi_bees_40@x1 1.png",
+      "filename" : "Icon20@x2.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "20x20"
     },
     {
-      "filename" : "hi_bees_60@x1.png",
+      "filename" : "Icon20@x3.png",
       "idiom" : "iphone",
       "scale" : "3x",
       "size" : "20x20"
     },
     {
-      "filename" : "hi_bees_29@x1.png",
+      "filename" : "Icon29@x1.png",
       "idiom" : "iphone",
       "scale" : "1x",
       "size" : "29x29"
     },
     {
-      "filename" : "hi_bees_29@x2.png",
+      "filename" : "Icon29@x2.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "29x29"
     },
     {
-      "filename" : "hi_bees_29@x3.png",
+      "filename" : "Icon29@x3.png",
       "idiom" : "iphone",
       "scale" : "3x",
       "size" : "29x29"
     },
     {
-      "filename" : "hi_bees_40@x2 1.png",
+      "filename" : "Icon40@x2.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "40x40"
     },
     {
-      "filename" : "hi_bees_60@x2 1.png",
+      "filename" : "Icon40@x3.png",
       "idiom" : "iphone",
       "scale" : "3x",
       "size" : "40x40"
     },
     {
-      "filename" : "hi_bees_60@x2.png",
+      "filename" : "Icon60@x2.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "60x60"
     },
     {
-      "filename" : "hi_bees_60@x3.png",
+      "filename" : "Icon60@x3.png",
       "idiom" : "iphone",
       "scale" : "3x",
       "size" : "60x60"
     },
     {
-      "filename" : "hi_bees_20@x1.png",
+      "filename" : "Icon20@x1.png",
       "idiom" : "ipad",
       "scale" : "1x",
       "size" : "20x20"
     },
     {
-      "filename" : "hi_bees_40@x1 2.png",
+      "filename" : "Icon20@x2 1.png",
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "20x20"
     },
     {
-      "filename" : "hi_bees_29@x1 1.png",
+      "filename" : "Icon29@x1 1.png",
       "idiom" : "ipad",
       "scale" : "1x",
       "size" : "29x29"
     },
     {
-      "filename" : "hi_bees_29@x2 1.png",
+      "filename" : "Icon29@x2 1.png",
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "29x29"
     },
     {
-      "filename" : "hi_bees_40@x1.png",
+      "filename" : "Icon40@x1.png",
       "idiom" : "ipad",
       "scale" : "1x",
       "size" : "40x40"
     },
     {
-      "filename" : "hi_bees_40@x2.png",
+      "filename" : "Icon40@x2 1.png",
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "40x40"
     },
     {
-      "filename" : "hi_bees_76@x1.png",
+      "filename" : "Icon76@x1.png",
       "idiom" : "ipad",
       "scale" : "1x",
       "size" : "76x76"
     },
     {
-      "filename" : "hi_bees_76@x2.png",
+      "filename" : "Icon76@x2.png",
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "76x76"
     },
     {
-      "filename" : "hi_bees_835@x2.png",
+      "filename" : "Icon835@x2.png",
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "83.5x83.5"
     },
     {
-      "filename" : "hi_bees_1024.png",
+      "filename" : "Icon1024.png",
       "idiom" : "ios-marketing",
       "scale" : "1x",
       "size" : "1024x1024"
