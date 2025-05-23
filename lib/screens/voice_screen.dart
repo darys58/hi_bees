@@ -139,7 +139,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   String sizeOfFrame = '0'; //big, small   2-duza, 1-mała
   String? site; //left, right  - dla moved
   String kolorMatki =
-      '1'; //1-czarna,2-zółta,3-czerwona,4-zielona,5-niebieska,6-biała
+      '1'; //1-czarna,2-zółta,3-czerwona,4-zielona,5-niebieska,6-biała,7-inna
   //store
   String honey = '0';
   String honeySeald = '0';
@@ -262,7 +262,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
     // nrXXOfFramePo = 10;
 
 
-    initPicovoice();
+    initPicovoice();  //!!!!!!!!!!!!!! zablokowanie połączenia z picovoice.ai bo mam tylko jedną licencję.
+  //!!!!!!!!!!! Aby odblokować picowoice przed opublikowaniem apki trzeba odblokować linię kodu powyzej; 
+  
   }
 
   @override
@@ -354,7 +356,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
         : Platform.isIOS
             ? "ios"
             : throw PicovoiceRuntimeException(
-                "This demo supports iOS and Android only.");
+                "This app supports iOS and Android only.");
 
     String wakeWordPath =
         "assets/keyword_files/$platform/Hi-Maya_${platform}_${globals.jezyk}.ppn";
@@ -473,7 +475,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
   void errorCallback(PicovoiceException error) {
     if (error.message != null) {
-      print('4 errorCallback ..............................');
+     // print('4 errorCallback ..............................');
 
       setState(() {
         isError = true;
@@ -753,6 +755,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
                         case 'biała':
                           queen = '6';
                           break;
+                        case 'inna':
+                          queen = '7';
+                          break;
                         default:
                           queen = '1';
                       }
@@ -776,6 +781,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
                           break;
                         case 'white':
                           queen = '6';
+                          break;
+                        case 'other':
+                          queen = '7';
                           break;
                         default:
                           queen = '1';
@@ -1238,7 +1246,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
           break;
 //setTempBody - przeniesienie ramki do innego korpusu
         case 'setMoveBody':
-        print('setMoveBody');
+        //print('setMoveBody');
         printText += AppLocalizations.of(context)!.moveFrame; 
           intention = 'setMoveBody';
           if (inference.slots!.isNotEmpty) {
@@ -1303,8 +1311,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
                   }
                   break;
                 case 'nrTempHalfBody':
-                print('nrTempHalfBody');
+                //print('nrTempHalfBody');
                   nrTempHalfBody = int.parse('${slots[key]}');
+                  nrTempBody = 0; //zeby usunać poprzedni numer półnadstawki przypisywany nizej (idź do KOM1)
                   if ((frameState == AppLocalizations.of(context)!.open ||
                           frameState == AppLocalizations.of(context)!.set) &&
                       (readyApiary == true &&
@@ -1331,7 +1340,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                   }
                   break;
                 case 'nrTempFrame':
-                print('nrTempFrame');
+                //print('nrTempFrame');
                   nrTempFrame = int.parse('${slots[key]}');
                   if ((frameState == AppLocalizations.of(context)!.open ||
                           frameState == AppLocalizations.of(context)!.set) &&
@@ -1363,7 +1372,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               int typ;
               if(nrTempHive == 0) nrTempHive = nrXXOfHive; //przenoszenie w tym samym ulu
               if(nrTempBody != 0) { typ = 2;} 
-              else {nrTempBody = nrTempHalfBody; typ = 1;}
+              else {nrTempBody = nrTempHalfBody; typ = 1;}//(KOM1) przypisanie korpusowi numeru półkorpusa zeby nie tworzyć nowej zmiennej
               // print('nrTempBody = $nrTempBody');
               // print('typ = $typ');
               //ustalenie numeru korpusu dla pobrania wpisów do zmiany dla ramki po
@@ -1388,7 +1397,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                     //print ('przeniesiona do ul = $nrTempHive, korpus = $nrTempBody, ramka = $nrTempFrame');
                     //DBHelper.moveRamkaToBody(frames[i].id, nrTempHave, nrTempBody, nrTempFrame);
                     //print('frames[i].zasob = ${frames[i].zasob}');
-                    if(frames[i].zasob != 14) //jezeli jest rózne od "isDone" czyli prawdopodobnie jest = "usuń ramka"
+                    if(frames[i].zasob != 14){ //jezeli zasób jest rózny od "isDone" czyli prawdopodobnie nie jest = "usuń ramka"
                       Frames.insertFrame(
                         '$formattedDate.$nrXXOfApiary.$nrTempHive.$nrTempBody.0.$nrTempFrame.${frames[i].strona}.${frames[i].zasob}',
                         formattedDate,
@@ -1396,14 +1405,18 @@ class _VoiceScreenState extends State<VoiceScreen> {
                         nrTempHive,
                         nrTempBody,
                         typ,//2-korpus, 1-półkorpus
-                        0,//ramkaNr
+                        0,//ramkaNr przed (0 bo jest wstawiana)
                         nrTempFrame, //ramkaNrPo 
                         frames[i].rozmiar,
                         frames[i].strona,
                         frames[i].zasob,
                         frames[i].wartosc,
                         0);
-                    else //więc jezeli jest "usuń ramka" to zamień na "wstaw ramka"
+                        
+                        //ramkaPo zmienić na 0 bo zostaje usunieta z obecnego miejsca
+                        DBHelper.updateRamkaNrPo(frames[i].id, 0);
+                    }
+                    else{ //więc jezeli jest "usuń ramka" to zamień na "wstaw ramka"
                       Frames.insertFrame(
                           '$formattedDate.$nrXXOfApiary.$nrTempHive.$nrTempBody.0.$nrTempFrame.${frames[i].strona}.${frames[i].zasob}',
                           formattedDate,
@@ -1418,6 +1431,10 @@ class _VoiceScreenState extends State<VoiceScreen> {
                           frames[i].zasob,
                           AppLocalizations.of(context)!.inserted, //wstaw ramka
                           0);
+                          
+                          //ramkaPo zmienić na 0 bo zostaje usunieta z obecnego miejsca 
+                          DBHelper.updateRamkaNrPo(frames[i].id, 0);
+                    }
                   }
                 Provider.of<Frames>(context, listen: false)
                   .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
@@ -5019,6 +5036,10 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 break;
               case 'unmarked': matka2 = 'niez'; //nieznaczona
                 break;
+              case 'ma inny znak': matka2 = 'inny ' + miar; //kolor + numer matki
+                break;
+              case 'marker other': matka2 = 'inny ' + miar; //kolor + numer matki
+                break;
               case 'ma biały znak': matka2 = 'biał ' + miar; //kolor + numer matki
                 break;
               case 'marker white': matka2 = 'biał ' + miar; //kolor + numer matki
@@ -5299,11 +5320,11 @@ class _VoiceScreenState extends State<VoiceScreen> {
         ? FlutterBeep.playSysSound(
             AndroidSoundIDs.TONE_PROP_BEEP2) // było TONE_CDMA_ONE_MIN_BEEP
         : FlutterBeep.playSysSound(iOSSoundIDs.JBL_Begin);
-    print('beep - JBL_Begin - start');
+   // print('beep - JBL_Begin - start');
   }
 
   Future<void> _stopProcessing() async {
-    print('7  _stopProcessing...........................');
+   // print('7  _stopProcessing...........................');
     if (!isProcessing) {
       return;
     }
@@ -7139,6 +7160,17 @@ class _VoiceScreenState extends State<VoiceScreen> {
                     TextSpan(text: ' ' + AppLocalizations.of(context)!.miarka),
                     TextSpan(text: '.\n\n'),
 
+                     TextSpan(
+                        text: AppLocalizations.of(context)!.beePollenHarvest,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(
+                        text: ' 825 ', style: TextStyle(color: Colors.red)),
+                    // TextSpan(
+                    //     text: AppLocalizations.of(context)!.razy,
+                    //     style: TextStyle(fontStyle: FontStyle.italic)),
+                    TextSpan(text: AppLocalizations.of(context)!.milliliter),
+                    TextSpan(text: '.\n\n'),
+
                     TextSpan(
                         text: AppLocalizations.of(context)!.beePollenHarvest,
                         style: TextStyle(fontWeight: FontWeight.bold)),
@@ -8424,6 +8456,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
                             Icon(Icons.circle,color: Color.fromARGB(255, 61, 61, 61),)
                           else if(hive.isNotEmpty && hive[0].matka2 != '' && hive[0].matka2 != '0') if(hive[0].matka2.substring(0, 4) == 'brak')
                             Icon(Icons.dangerous_outlined,color: Color.fromARGB(255, 255, 0, 0))
+                          else if(hive.isNotEmpty && hive[0].matka2 != '' && hive[0].matka2 != '0') if(hive[0].matka2.substring(0, 4) == 'inny')
+                            Icon(Icons.check_circle_rounded,color: Color.fromARGB(255, 158, 166, 172),)
                           else if(hive.isNotEmpty && hive[0].matka2 != '' && hive[0].matka2 != '0') if(hive[0].matka2.substring(0, 4) == 'biał')
                             Icon(Icons.check_circle_outline_outlined,color: Color.fromARGB(255, 0, 0, 0),)
                           else if(hive.isNotEmpty && hive[0].matka2 != '' && hive[0].matka2 != '0') if(hive[0].matka2.substring(0, 4) == 'żółt')

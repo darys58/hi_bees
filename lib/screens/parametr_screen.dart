@@ -118,7 +118,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 Navigator.of(context).pushNamed(
                     ParametrScreen.routeName,
                   );
-              }, child: Text(('2023'),style: TextStyle(fontSize: 18))
+              }, child: globals.rokStatystyk == '2023'
+                        ? Text(('> 2023 <'),style: TextStyle(fontSize: 18))
+                        : Text(('2023'),style: TextStyle(fontSize: 18))
               ),  
             if(2024 <= int.parse(DateTime.now().toString().substring(0, 4)))  
               TextButton(onPressed: (){
@@ -128,7 +130,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 Navigator.of(context).pushNamed(
                     ParametrScreen.routeName, 
                 );
-              }, child: Text(('2024'),style: TextStyle(fontSize: 18))
+              }, child: globals.rokStatystyk == '2024'
+                        ? Text(('> 2024 <'),style: TextStyle(fontSize: 18))
+                        : Text(('2024'),style: TextStyle(fontSize: 18))
               ),
             if(2025 <= int.parse(DateTime.now().toString().substring(0, 4)))  
               TextButton(onPressed: (){
@@ -138,7 +142,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 Navigator.of(context).pushNamed(
                     ParametrScreen.routeName, 
                 );
-              }, child: Text(('2025'),style: TextStyle(fontSize: 18))
+              }, child: globals.rokStatystyk == '2025'
+                        ? Text(('> 2025 <'),style: TextStyle(fontSize: 18))
+                        : Text(('2025'),style: TextStyle(fontSize: 18))
               ),
             if(2026 <= int.parse(DateTime.now().toString().substring(0, 4)))  
               TextButton(onPressed: (){
@@ -148,7 +154,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 Navigator.of(context).pushNamed(
                     ParametrScreen.routeName, 
                 );
-              }, child: Text(('2026'),style: TextStyle(fontSize: 18))
+              }, child: globals.rokStatystyk == '2026'
+                        ? Text(('> 2026 <'),style: TextStyle(fontSize: 18))
+                        : Text(('2026'),style: TextStyle(fontSize: 18))
               ),
             if(2027 <= int.parse(DateTime.now().toString().substring(0, 4)))  
               TextButton(onPressed: (){
@@ -158,7 +166,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 Navigator.of(context).pushNamed(
                     ParametrScreen.routeName, 
                 );
-              }, child: Text(('2027'),style: TextStyle(fontSize: 18))
+              }, child: globals.rokStatystyk == '2027'
+                        ? Text(('> 2027 <'),style: TextStyle(fontSize: 18))
+                        : Text(('2027'),style: TextStyle(fontSize: 18))
               ),
             if(2028 <= int.parse(DateTime.now().toString().substring(0, 4)))  
               TextButton(onPressed: (){
@@ -168,7 +178,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 Navigator.of(context).pushNamed(
                     ParametrScreen.routeName, 
                 );
-              }, child: Text(('2028'),style: TextStyle(fontSize: 18))
+              }, child: globals.rokStatystyk == '2028'
+                        ? Text(('> 2028 <'),style: TextStyle(fontSize: 18))
+                        : Text(('2028'),style: TextStyle(fontSize: 18))
               ),
             if(2029 <= int.parse(DateTime.now().toString().substring(0, 4)))  
               TextButton(onPressed: (){
@@ -178,7 +190,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 Navigator.of(context).pushNamed(
                     ParametrScreen.routeName, 
                 );
-              }, child: Text(('2029'),style: TextStyle(fontSize: 18))
+              }, child: globals.rokStatystyk == '2029'
+                        ? Text(('> 2029 <'),style: TextStyle(fontSize: 18))
+                        : Text(('2029'),style: TextStyle(fontSize: 18))
               ),
             if(2030 <= int.parse(DateTime.now().toString().substring(0, 4)))  
               TextButton(onPressed: (){
@@ -188,7 +202,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 Navigator.of(context).pushNamed(
                     ParametrScreen.routeName, 
                 );
-              }, child: Text(('2030'),style: TextStyle(fontSize: 18))
+              }, child: globals.rokStatystyk == '2030'
+                        ? Text(('> 2030 <'),style: TextStyle(fontSize: 18))
+                        : Text(('2030'),style: TextStyle(fontSize: 18))
               ),
           ],
         ),
@@ -224,6 +240,13 @@ class _ParametrScreenState extends State<ParametrScreen> {
           title: Text(
             AppLocalizations.of(context)!.pArameterization,
             style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+          ),
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
           ),
         ),
         body: dod1.isEmpty

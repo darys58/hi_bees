@@ -81,6 +81,13 @@ class _NoteScreenState extends State<NoteScreen> {
             //   }),
             // )
           ],
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
+          ),
         ),
         body: notatki.length == 0
             ? Center(

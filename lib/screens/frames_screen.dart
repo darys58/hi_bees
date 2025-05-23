@@ -5,7 +5,7 @@ import 'package:hi_bees/models/hive.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
-import 'package:wakelock_plus/wakelock_plus.dart';
+//import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 //import 'package:rhino_flutter/rhino.dart';
 //import 'package:picovoice_flutter/picovoice_manager.dart';
@@ -21,6 +21,7 @@ import '../models/info.dart';
 import '../screens/frames_detail_screen.dart';
 import '../screens/frame_edit_screen.dart';
 import '../screens/frame_edit_screen2.dart';
+import '../screens/frame_move_screen.dart';
 
 class FramesScreen extends StatefulWidget {
   static const routeName = '/screen-frames'; //nazwa trasy do tego ekranu
@@ -98,7 +99,7 @@ class _FramesScreenState extends State<FramesScreen> {
   @override
   void initState() {
     super.initState();
-    WakelockPlus.enable(); //blokada wyłaczania ekranu
+   // WakelockPlus.enable(); //blokada wyłaczania ekranu
   }
 
   @override
@@ -356,7 +357,16 @@ class _FramesScreenState extends State<FramesScreen> {
             }, child: Text((AppLocalizations.of(context)!.itWasDone),
             style: TextStyle(fontSize: 18)),
             ),
-
+            
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameMoveScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+                );
+            }, child: Text((AppLocalizations.of(context)!.mOvingFrame),
+            style: TextStyle(fontSize: 18)),
+            ),
           ],
         ),
         actions: <Widget>[
@@ -432,13 +442,16 @@ class _FramesScreenState extends State<FramesScreen> {
     
     return MaterialApp(
         home: Scaffold(
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
+        backgroundColor: Color.fromARGB(255, 255, 255, 255), //tło pola nawigacji
+        elevation: 0, // Brak cienia = brak zmiany koloru
+        //iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         title: Text(
           AppLocalizations.of(context)!.inspectionHive + " $hiveNr",
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
-        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+       
         // title: Text('Inspection hive $hiveNr'),
         // backgroundColor: Color.fromARGB(255, 233, 140, 0),
         //automaticallyImplyLeading: false, //usuwanie cofania
@@ -447,7 +460,7 @@ class _FramesScreenState extends State<FramesScreen> {
             icon: const Icon(Icons.arrow_back_ios,
                 color: Color.fromARGB(255, 0, 0, 0)),
             onPressed: () => {
-                  WakelockPlus.disable(), //usunięcie blokowania wygaszania ekranu
+                  //WakelockPlus.disable(), //usunięcie blokowania wygaszania ekranu
                   Navigator.of(context).pop(),
                 }),
         actions: <Widget>[
@@ -472,6 +485,13 @@ class _FramesScreenState extends State<FramesScreen> {
             }),
           )
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.grey[300], // kolor linii
+            height: 1.0,
+          ),
+        ),
       ),
       body: frames.length == 0
           ? Center(
@@ -493,7 +513,7 @@ class _FramesScreenState extends State<FramesScreen> {
             )
           : SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(15.0),
+                padding: const EdgeInsets.all(0.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -774,6 +794,9 @@ class MyHive extends CustomPainter {
     Paint matkaBlue = Paint()
       ..color = Color.fromARGB(255, 0, 89, 255)
       ..style = PaintingStyle.fill; //matkaBlue
+    Paint matkaOther = Paint()
+      ..color = Color.fromARGB(255, 125, 125, 125)
+      ..style = PaintingStyle.fill; //matkaOther
     Paint matecznik = Paint()
       ..color = Color.fromARGB(255, 255, 17, 0)
       ..style = PaintingStyle.fill
@@ -1274,6 +1297,10 @@ class MyHive extends CustomPainter {
             case '6':
               canvas.drawCircle(
                   Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaWhite);
+              break;
+            case '7':
+              canvas.drawCircle(
+                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaOther);
               break;
             default:
               canvas.drawCircle(

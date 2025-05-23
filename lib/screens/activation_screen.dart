@@ -25,7 +25,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
 // @override
   Future<void> wyslijKod(String kod) async {
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_kod.php'),
+      Uri.parse('https://darys.pl/cbt_hi_kod.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -153,6 +153,13 @@ class _ActivationScreenState extends State<ActivationScreen> {
           title: Text(
             AppLocalizations.of(context)!.aCtivation,
             style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+          ),
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
           ),
         ),
         body: SingleChildScrollView(

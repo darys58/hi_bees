@@ -261,7 +261,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import notatek
                   Notes.fetchNotatkiFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_notatki')
+                          'https://darys.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_notatki')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import notatek';
@@ -272,7 +272,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import zakupów
                   Purchases.fetchZakupyFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zakupy')
+                          'https://darys.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zakupy')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import zakupów';
@@ -283,7 +283,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import sprzedazy
                   Sales.fetchSprzedazFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_sprzedaz')
+                          'https://darys.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_sprzedaz')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import sprzedazy';
@@ -294,7 +294,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import zbiorów
                   Harvests.fetchZbioryFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zbiory')
+                          'https://darys.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zbiory')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import zbiorów';
@@ -305,7 +305,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                   //import ramek
                   Frames.fetchFramesFromSerwer(
-                          'https://hibees.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_ramka')
+                          'https://darys.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_ramka')
                       .then((_) {
                     // setState(() {
                     //   komunikat = 'Import zawartości ramek';
@@ -362,7 +362,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
                       //import info
                       Infos.fetchInfosFromSerwer(
-                              'https://hibees.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_info')
+                              'https://darys.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_info')
                           .then((_) {
                         // setState(() {
                         //   komunikat = 'Import informacji o ulu';
@@ -1263,7 +1263,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       Provider.of<Frames>(context, listen: false);
                   final ramki = framesAllData.items;
                   // print('ilość wszystkich wpisów w tabeli ramka');
-                  //(ramki.length);
+                  //print(ramki.length);
 
                   //informacja o ilości rekordów do wysłania
                   iloscDoWyslania = ramki.length;
@@ -2211,7 +2211,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2261,7 +2261,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupInfo(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2310,7 +2310,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupZbiory(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2358,7 +2358,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupSprzedaz(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2406,7 +2406,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupZakupy(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2454,7 +2454,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupNotatki(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2510,6 +2510,13 @@ class _ImportScreenState extends State<ImportScreen> {
           title: Text(
             AppLocalizations.of(context)!.zarzadzanieDanymi,
             style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+          ),
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
           ),
         ),
         body: ListView(

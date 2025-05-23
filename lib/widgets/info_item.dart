@@ -415,19 +415,29 @@ class InfoItem extends StatelessWidget {
         ),
         child: Padding(
             padding: const EdgeInsets.all(1),
-            child: info.kategoria == 'inspection' //przeglądy
-                ? ListTile(
-                  //rokStatystyk = DateTime.now().toString().substring(0, 4)
-                  tileColor: info.data.substring(0, 4) == globals.rokStatystyk ? null : Colors.grey[200], 
-                    onTap: () {
-                      globals.dataInspekcji = info.data;
+            child: 
+              info.kategoria == 'inspection' //jezeli przeglądy
+                ? info.parametr == 'likwidacja ula' || info.parametr == 'hive liquidation'  //jezeli jest to usunięcie ula
+                  ? ListTile( //element listy dla usuniętego ula
+                  tileColor: info.wartosc == 'red'
+                              ? const Color.fromARGB(255, 244, 208, 208)
+                              : info.data.substring(0, 4) == globals.rokStatystyk 
+                                ? null 
+                                : Colors.grey[200],
+                   onTap: () {
+                      //_showAlert(context, 'Edycja', '${frame.id}');
+                      // globals.dataInspekcji = frame.data;
                       Navigator.of(context).pushNamed(
-                        FramesScreen.routeName,
-                        arguments: info.ulNr,
+                        InfosEditScreen.routeName,
+                        arguments: {'idInfo': info.id},
                       );
                     },
                     leading: CircleAvatar(
-                      backgroundColor: info.data.substring(0, 4) == globals.rokStatystyk ? Colors.white : Colors.grey[200],
+                      backgroundColor: info.wartosc == 'red'
+                                          ? const Color.fromARGB(255, 244, 208, 208)
+                                          : info.data.substring(0, 4) == globals.rokStatystyk 
+                                            ? Colors.white 
+                                            : Colors.grey[200],
                       child: Image.asset('assets/image/hi_bees.png'),
                     ),
                     title: globals.jezyk == 'pl_PL'
@@ -436,48 +446,107 @@ class InfoItem extends StatelessWidget {
                             style: const TextStyle(fontSize: 14))
                         : Text('${info.data}  ${info.czas}  ${info.temp}',
                             style: const TextStyle(fontSize: 14)),
-                    subtitle: Row(
-                      children: [
-                        Text(
-                            '${info.parametr} ', //  ${info.wartosc} ${info.miara}',
-                            style: const TextStyle(
-                                fontSize: 18, color: Colors.black)),
-                        info.wartosc == 'green'
-                            ? Icon(
-                                Icons.hive,
-                                color: Color.fromARGB(255, 0, 227, 0),
-                              )
-                            : info.wartosc == 'yellow'
-                                ? Icon(
-                                    Icons.hive,
-                                    color: Color.fromARGB(255, 233, 229, 1),
-                                    //size: 20,
-                                  )
-                                : info.wartosc == 'red'
-                                    ? Icon(
-                                        Icons.hive,
-                                        color: Color.fromARGB(255, 255, 0, 0),
-                                        //size: 20,
-                                      )
-                                    : Icon(
-                                        Icons.hive,
-                                        color:
-                                            Color.fromARGB(255, 116, 116, 116),
-                                        //size: 20,
-                                      ),
-                        // if(info.pogoda != '')
-                        //   Image.network(
-                        //     //obrazek pogody pobierany z neta
-                        //     'https://openweathermap.org/img/w/${info.pogoda}.png', //adres internetowy
-                        //     height: 40, //wysokość obrazka
-                        //     //width: 140,
-                        //     fit: BoxFit.cover, //dopasowanie do pojemnika
-                        //   ),
-                      ],
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios))
-                : ListTile(
-                  tileColor: info.data.substring(0, 4) == globals.rokStatystyk ? null : Colors.grey[200],
+                    subtitle: RichText(
+                        text: TextSpan(
+                            style: TextStyle(color: Colors.black),
+                            children: [
+                          TextSpan(
+                            text: ('${info.parametr} '),
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 0, 0, 0)),
+                          ),
+                          // TextSpan(
+                          //   text: ('${info.wartosc.replaceAll('.', ',')} '),
+                          //   style: TextStyle(
+                          //       fontSize: 16,
+                          //       fontWeight: FontWeight.bold,
+                          //       color: Color.fromARGB(255, 0, 0, 0)),
+                          // ),
+                          // TextSpan(
+                          //   text: ('${info.miara}'),
+                          //   style: TextStyle(
+                          //       fontSize: 16,
+                          //       //fontWeight: FontWeight.bold,
+                          //       color: Color.fromARGB(255, 0, 0, 0)),
+                          // ),
+                          TextSpan(
+                            text: '\n${info.uwagi}',
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: Color.fromARGB(255, 0, 0, 0)),
+                          )
+                        ])),
+                    trailing: const Icon(Icons.edit))
+                  
+                  : ListTile( //element listy dla przeglądu normalnego a nie usunięcia ula
+                    //rokStatystyk = DateTime.now().toString().substring(0, 4)
+                    tileColor: info.data.substring(0, 4) == globals.rokStatystyk ? null : Colors.grey[200], 
+                      onTap: () {
+                        globals.dataInspekcji = info.data;
+                        Navigator.of(context).pushNamed(
+                          FramesScreen.routeName,
+                          arguments: info.ulNr,
+                        );
+                      },
+                      leading: CircleAvatar(
+                        backgroundColor: info.data.substring(0, 4) == globals.rokStatystyk ? Colors.white : Colors.grey[200],
+                        child: Image.asset('assets/image/hi_bees.png'),
+                      ),
+                      title: globals.jezyk == 'pl_PL'
+                          ? Text(
+                              '${zmienDate(info.data)}  ${info.czas}  ${info.temp}',
+                              style: const TextStyle(fontSize: 14))
+                          : Text('${info.data}  ${info.czas}  ${info.temp}',
+                              style: const TextStyle(fontSize: 14)),
+                      subtitle: Row(
+                        children: [
+                          Text(
+                              '${info.parametr} ', //  ${info.wartosc} ${info.miara}',
+                              style: const TextStyle(
+                                  fontSize: 18, color: Colors.black)),
+                          info.wartosc == 'green'
+                              ? Icon(
+                                  Icons.hive,
+                                  color: Color.fromARGB(255, 0, 227, 0),
+                                )
+                              : info.wartosc == 'yellow'
+                                  ? Icon(
+                                      Icons.hive,
+                                      color: Color.fromARGB(255, 233, 229, 1),
+                                      //size: 20,
+                                    )
+                                  : info.wartosc == 'red'
+                                      ? Icon(
+                                          Icons.hive,
+                                          color: Color.fromARGB(255, 255, 0, 0),
+                                          //size: 20,
+                                        )
+                                      : Icon(
+                                          Icons.hive,
+                                          color:
+                                              Color.fromARGB(255, 116, 116, 116),
+                                          //size: 20,
+                                        ),
+                          // if(info.pogoda != '')
+                          //   Image.network(
+                          //     //obrazek pogody pobierany z neta
+                          //     'https://openweathermap.org/img/w/${info.pogoda}.png', //adres internetowy
+                          //     height: 40, //wysokość obrazka
+                          //     //width: 140,
+                          //     fit: BoxFit.cover, //dopasowanie do pojemnika
+                          //   ),
+                        ],
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios))
+                : ListTile(  //pozostałe info (oprócz przegladu)
+                  tileColor: info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
+                              ? const Color.fromARGB(255, 244, 208, 208)
+                              : info.data.substring(0, 4) == globals.rokStatystyk 
+                                ? null 
+                                : Colors.grey[200],
+                    
                     onTap: () {
                       //_showAlert(context, 'Edycja', '${frame.id}');
                       // globals.dataInspekcji = frame.data;
@@ -487,7 +556,12 @@ class InfoItem extends StatelessWidget {
                       );
                     },
                     leading: CircleAvatar(
-                        backgroundColor: info.data.substring(0, 4) == globals.rokStatystyk ? Colors.white : Colors.grey[200],
+                        backgroundColor: info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
+                                          ? const Color.fromARGB(255, 244, 208, 208)
+                                          : info.data.substring(0, 4) == globals.rokStatystyk 
+                                            ? Colors.white 
+                                            : Colors.grey[200],
+                        
                         child: info.kategoria == 'feeding'
                             ? Image.asset('assets/image/invert.png')
                             : info.kategoria == 'treatment'
@@ -548,7 +622,9 @@ class InfoItem extends StatelessWidget {
                     //     '${info.parametr} ${info.wartosc} ${info.miara}',
                     //     style:
                     //         const TextStyle(fontSize: 18, color: Colors.black)),
-                    trailing: const Icon(Icons.edit))),
+                    trailing: const Icon(Icons.edit)
+                )
+        ),
       ),
     );
   }

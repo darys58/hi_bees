@@ -243,7 +243,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
 
       //sumowanie zbiorów i tworzenie słupków wykresów
       for (var i = 0; i < infos.length; i++) {
-        if (infos[i].data.substring(0, 4) == '2023'){ //info z roku ...
+        if (infos[i].data.substring(0, 4) == '2023' && infos[i].wartosc.isNotEmpty){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
             if(infos[i].parametr == "varroa"){
               varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu 
@@ -267,7 +267,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
 
       //sumowanie zbiorów i tworzenie słupków wykresów
       for (var i = 0; i < infos.length; i++) {
-        if (infos[i].data.substring(0, 4) == '2024'){ //info z roku ...
+        if (infos[i].data.substring(0, 4) == '2024' && infos[i].wartosc.isNotEmpty){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
             if(infos[i].parametr == "varroa"){
               varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu 
@@ -291,7 +291,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
 
       //sumowanie zbiorów i tworzenie słupków wykresów
       for (var i = 0; i < infos.length; i++) {
-        if (infos[i].data.substring(0, 4) == '2025'){ //info z roku ...
+        if (infos[i].data.substring(0, 4) == '2025' && infos[i].wartosc.isNotEmpty){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
             if(infos[i].parametr == "varroa"){
               varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu 
@@ -315,7 +315,7 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
 
       //sumowanie zbiorów i tworzenie słupków wykresów
       for (var i = 0; i < infos.length; i++) {
-        if (infos[i].data.substring(0, 4) == '2026'){ //info z roku ...
+        if (infos[i].data.substring(0, 4) == '2026' && infos[i].wartosc.isNotEmpty){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
             if(infos[i].parametr == "varroa"){
               varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu 
@@ -339,7 +339,7 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
 
       //sumowanie zbiorów i tworzenie słupków wykresów
       for (var i = 0; i < infos.length; i++) {
-        if (infos[i].data.substring(0, 4) == '2027'){ //info z roku ...
+        if (infos[i].data.substring(0, 4) == '2027' && infos[i].wartosc.isNotEmpty){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
             if(infos[i].parametr == "varroa"){
               varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu 
@@ -363,7 +363,7 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
 
       //sumowanie zbiorów i tworzenie słupków wykresów
       for (var i = 0; i < infos.length; i++) {
-        if (infos[i].data.substring(0, 4) == '2028'){ //info z roku ...
+        if (infos[i].data.substring(0, 4) == '2028' && infos[i].wartosc.isNotEmpty){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
             if(infos[i].parametr == "varroa"){
               varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu 
@@ -387,7 +387,7 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
 
       //sumowanie zbiorów i tworzenie słupków wykresów
       for (var i = 0; i < infos.length; i++) {
-        if (infos[i].data.substring(0, 4) == '2029'){ //info z roku ...
+        if (infos[i].data.substring(0, 4) == '2029' && infos[i].wartosc.isNotEmpty){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
             if(infos[i].parametr == "varroa"){
               varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu 
@@ -411,7 +411,7 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
 
       //sumowanie zbiorów i tworzenie słupków wykresów
       for (var i = 0; i < infos.length; i++) {
-        if (infos[i].data.substring(0, 4) == '2030'){ //info z roku ...
+        if (infos[i].data.substring(0, 4) == '2030' && infos[i].wartosc.isNotEmpty){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
             if(infos[i].parametr == "varroa"){
               varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu 
@@ -526,6 +526,13 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
           //AppLocalizations.of(context)!.pArameterization,
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
+        bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
+          ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -585,17 +592,17 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -658,17 +665,17 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -731,17 +738,17 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -804,17 +811,17 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -877,17 +884,17 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -950,17 +957,17 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -1023,17 +1030,17 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -1096,17 +1103,17 @@ for (var j = 1; j < hivesNumbers.length + 1; j++) {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),

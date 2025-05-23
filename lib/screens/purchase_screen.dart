@@ -330,6 +330,13 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
             //   }),
             // )
           ],
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
+          ),
         ),
         body: zakupy.length == 0
             ? Center(

@@ -5,6 +5,7 @@ import '../models/frames.dart';
 import '../models/frame.dart';
 import '../widgets/frames_detail_item.dart';
 import '../screens/frame_edit_screen.dart';
+import '../screens/frame_move_screen.dart';
 //import '../screens/frame_edit_screen2.dart';
 import '../globals.dart' as globals;
 
@@ -61,7 +62,15 @@ class _FramesDetailScreenState extends State<FramesDetailScreen> {
             }, child: Text((AppLocalizations.of(context)!.itWasDone),
             style: TextStyle(fontSize: 18)),
             ),
-
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameMoveScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+                );
+            }, child: Text((AppLocalizations.of(context)!.mOvingFrame),
+            style: TextStyle(fontSize: 18)),
+            ),
           ],
         ),
         actions: <Widget>[

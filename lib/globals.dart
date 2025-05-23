@@ -23,6 +23,8 @@ String ikonaPasieki = 'green'; //
 
 var nieaktualnaPogoda = DateTime(2024,6,1,0,0,0); //czas kiedy wyświetlił się ostatni komunikat o braku aktualnej pogody
 String dataWpisu = DateTime.now().toString().substring(0, 10);
+String dataPrzeniesRamke = DateTime.now().toString().substring(0, 10); //data przeglądu do którego przenoszona jest ramka
+int nowyNrUla = 1;
 int nowyNrKorpusu = 1;
 int nowyNrRamki = 1;
 int nowyNrRamkiPo = 1;

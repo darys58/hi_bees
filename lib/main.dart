@@ -19,6 +19,7 @@ import './screens/import_screen.dart';
 import './screens/about_screen.dart';
 import './screens/activation_screen.dart';
 import './screens/frame_edit_screen.dart';
+import './screens/frame_move_screen.dart';
 import './screens/frame_edit_screen2.dart';
 import './screens/harvest_screen.dart';
 import './screens/parametr_screen.dart';
@@ -156,8 +157,17 @@ class _MyAppState extends State<MyApp> {
         theme: ThemeData(
           //definiowanie danych decydujących o wyglądzie (kolory, style, czcionki)
           //appBarTheme: AppBarTheme(color: Color.fromRGBO(55, 125, 255, 1),),
-          scaffoldBackgroundColor: const Color(0xFFFFFFFF),
+          scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
           dialogBackgroundColor: const Color(0xFFFFFFFF),
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            scrolledUnderElevation: 0, // ⬅️ KLUCZOWE przy przewijaniu!
+            surfaceTintColor: Colors.transparent, // ⬅️ zapobiega efektowi "szarości"
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.black,
+          ),
+          
           listTileTheme: ListTileThemeData(
             tileColor: Color.fromARGB(255, 255, 255, 255), // Ustawienie koloru tła dla elementów listy
           ),
@@ -205,6 +215,7 @@ class _MyAppState extends State<MyApp> {
           AboutScreen.routeName: (ctx) => AboutScreen(),
           ActivationScreen.routeName: (ctx) => ActivationScreen(),
           FrameEditScreen.routeName: (ctx) => FrameEditScreen(),
+          FrameMoveScreen.routeName: (ctx) => FrameMoveScreen(),
           FrameEditScreen2.routeName: (ctx) => FrameEditScreen2(),
           HarvestScreen.routeName:(ctx) => HarvestScreen(),
           HarvestEditScreen.routeName: (ctx) => HarvestEditScreen(),

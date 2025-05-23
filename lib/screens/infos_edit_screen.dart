@@ -165,6 +165,11 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        if(nowaKategoria == 'inspection')
+                          Text(
+                              AppLocalizations.of(context)!.oUlu,
+                              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                            ),
                         if(nowaKategoria == 'equipment')
                           Text(
                               AppLocalizations.of(context)!.oWyposazeniu,
@@ -903,6 +908,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value:AppLocalizations.of(context)!.markedGreen),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedBlue),
                                                   value:AppLocalizations.of(context)!.markedBlue),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedOther),
+                                                  value:AppLocalizations.of(context)!.markedOther),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.missing),
                                                   value:AppLocalizations.of(context)!.missing),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gone),
@@ -1536,82 +1543,83 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     shape: const StadiumBorder(),
                     onPressed: () {
                       if (_formKey1.currentState!.validate()) {
-                        if (edycja) {
-                          DBHelper.deleteInfo(info[0].id).then((_) {
-                            Infos.insertInfo(
-                              '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
-                              dateController.text,
-                              nowaPasieka,
-                              nowyUl,
-                              nowaKategoria,
-                              nowyParametr,
-                              nowyWartosc,
-                              nowyMiara!,
-                              info[0].pogoda,
-                              info[0].temp,
-                              info[0].czas,
-                              nowyUwagi!,
-                              0, //info[0].arch,
-                            ).then((_) {
-                              Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
-                              .then((_) {
-                                Navigator.of(context).pop();
+                        if(nowyWartosc != '') //jezeli wartość nie jest pusta
+                          if (edycja) {
+                            DBHelper.deleteInfo(info[0].id).then((_) {
+                              Infos.insertInfo(
+                                '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
+                                dateController.text,
+                                nowaPasieka,
+                                nowyUl,
+                                nowaKategoria,
+                                nowyParametr,
+                                nowyWartosc,
+                                nowyMiara!,
+                                info[0].pogoda,
+                                info[0].temp,
+                                info[0].czas,
+                                nowyUwagi!,
+                                0, //info[0].arch,
+                              ).then((_) {
+                                Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                                .then((_) {
+                                  Navigator.of(context).pop();
+                                });
                               });
                             });
-                          });
-                        }else{
-                          if(_selectedZakresUli[0] == true){ //dodawanie info tylko dla tego ula
-                            Infos.insertInfo(
-                              '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
-                              dateController.text,
-                              nowaPasieka,
-                              nowyUl,
-                              nowaKategoria,
-                              nowyParametr,
-                              nowyWartosc,
-                              nowyMiara!,
-                              '',//info[0].pogoda,
-                              '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
-                              formatterHm.format(DateTime.now()),
-                              nowyUwagi!,
-                              0, //info[0].arch,
-                            ).then((_) {
-                              Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                          }else{
+                            if(_selectedZakresUli[0] == true){ //dodawanie info tylko dla tego ula
+                              Infos.insertInfo(
+                                '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
+                                dateController.text,
+                                nowaPasieka,
+                                nowyUl,
+                                nowaKategoria,
+                                nowyParametr,
+                                nowyWartosc,
+                                nowyMiara!,
+                                '',//info[0].pogoda,
+                                '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                formatterHm.format(DateTime.now()),
+                                nowyUwagi!,
+                                0, //info[0].arch,
+                              ).then((_) {
+                                Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                                  .then((_) {
+                                  Navigator.of(context).pop();
+                                });
+                              });
+                            }else{ //dodawanie tego samego info dla wszystkich uli
+                              //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
+                              Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowaPasieka,)
                                 .then((_) {
-                                Navigator.of(context).pop();
-                              });
-                            });
-                          }else{ //dodawanie tego samego info dla wszystkich uli
-                            //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
-                            Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowaPasieka,)
-                              .then((_) {
-                                final hivesDataDL = Provider.of<Hives>(context,listen: false);
-                                final hivesDL = hivesDataDL.items;
-                                for (var i = 0; i < hivesDL.length; i++) {
-                                  Infos.insertInfo(
-                                    '${dateController.text}.$nowaPasieka.${hivesDL[i].ulNr}.$nowaKategoria.$nowyParametr',
-                                    dateController.text,
-                                    nowaPasieka,
-                                    hivesDL[i].ulNr,
-                                    nowaKategoria,
-                                    nowyParametr,
-                                    nowyWartosc,
-                                    nowyMiara!,
-                                    '',//info[0].pogoda,
-                                    '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
-                                    formatterHm.format(DateTime.now()),
-                                    nowyUwagi!,
-                                    0, //info[0].arch,
-                                  );
-                                };
-                                 Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
-                                .then((_) {
-                                globals.odswiezBelkiUliDL = true; //odświezenie belek uli
-                                Navigator.of(context).pop();
-                              });
-                              });
+                                  final hivesDataDL = Provider.of<Hives>(context,listen: false);
+                                  final hivesDL = hivesDataDL.items;
+                                  for (var i = 0; i < hivesDL.length; i++) {
+                                    Infos.insertInfo(
+                                      '${dateController.text}.$nowaPasieka.${hivesDL[i].ulNr}.$nowaKategoria.$nowyParametr',
+                                      dateController.text,
+                                      nowaPasieka,
+                                      hivesDL[i].ulNr,
+                                      nowaKategoria,
+                                      nowyParametr,
+                                      nowyWartosc,
+                                      nowyMiara!,
+                                      '',//info[0].pogoda,
+                                      '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                      formatterHm.format(DateTime.now()),
+                                      nowyUwagi!,
+                                      0, //info[0].arch,
+                                    );
+                                  };
+                                  Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                                  .then((_) {
+                                  globals.odswiezBelkiUliDL = true; //odświezenie belek uli
+                                  Navigator.of(context).pop();
+                                });
+                                });
+                            }
                           }
-                        }
 
                         //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki
                         if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'queen' || nowaKategoria == 'equipment') {
@@ -1689,9 +1697,13 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   break;
                                 case 'unmarked': matka2 = 'niez'; //nieznaczona
                                   break;
+                                case 'ma inny znak': matka2 = 'inny ' + nowyMiara!; //kolor + numer matki
+                                  break;
+                                case 'marked other': matka2 = 'inny ' + nowyMiara!; //kolor + numer matki
+                                  break;
                                 case 'ma biały znak': matka2 = 'biał ' + nowyMiara!; //kolor + numer matki
                                   break;
-                                case 'marker white': matka2 = 'biał ' + nowyMiara!; //kolor + numer matki
+                                case 'marked white': matka2 = 'biał ' + nowyMiara!; //kolor + numer matki
                                   break;
                                 case 'ma żółty znak': matka2 = 'żółt ' + nowyMiara!; //kolor + numer matki
                                   break;
@@ -1728,7 +1740,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               }
 //** */ State matka3 - czy unasienniona?
                             if (nowyParametr == AppLocalizations.of(context)!.queen + " -") //State
-                              if (nowyWartosc == 'dziewica' || nowyWartosc == 'virgin') {
+                              if (nowyWartosc == 'dziewica' || nowyWartosc == 'virgine') {
                                 matka3 = 'nieunasienniona';
                                 if (ikona == 'red') { //bo był brak matki
                                   ikona = 'orange';

@@ -125,6 +125,13 @@ class _SaleEditScreenState extends State<SaleEditScreen> {
             tytulEkranu,
             style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
           ),
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
+          ),
         ),
         body: SingleChildScrollView(
             child: Padding(

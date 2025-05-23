@@ -3,6 +3,7 @@ import 'dart:convert'; //obsługa json'a
 
 //import 'package:hi_bees/screens/apiarys_weather_edit_screen.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
@@ -76,6 +77,11 @@ class _HivesScreenState extends State<HivesScreen> {
   String matka4 = '';
   String matka5 = '';
   
+  @override
+  void initState() {
+    super.initState();
+    WakelockPlus.enable(); //blokada wyłaczania ekranu
+  }
 
   @override
   void didChangeDependencies() {
@@ -335,25 +341,91 @@ class _HivesScreenState extends State<HivesScreen> {
               }).toList();
               if (infosMatka1[0].wartosc == 'mała' || infosMatka1[0].wartosc == 'słaba' || infosMatka1[0].wartosc == 'zła' || infosMatka1[0].wartosc == 'stara' ||
                 infosMatka1[0].wartosc == 'small' || infosMatka1[0].wartosc == 'to exchange' || infosMatka1[0].wartosc == 'canceled' || infosMatka1[0].wartosc == 'weak' ) {
-              matka1 = 'zła';
-              if (ikona == 'red') { //bo był brak matki
-                ikona = 'orange';
-                //globals.ikonaPasieki = 'orange';
+                matka1 = 'zła';
+                if (ikona == 'red') { //bo był brak matki
+                  ikona = 'orange';
+                  //globals.ikonaPasieki = 'orange';
+                }
+                if (matka2 == 'brak') matka2 = '';
+              } else {
+                matka1 = 'ok';
+                if (ikona == 'red') {  //bo był brak matki               
+                  ikona = 'orange';
+                  //globals.ikonaPasieki = 'orange';
+                }
+                if (matka2 == 'brak') matka2 = '';
               }
-              if (matka2 == 'brak') matka2 = '';
-            } else {
-              matka1 = 'ok';
-              if (ikona == 'red') {  //bo był brak matki               
-                ikona = 'orange';
-                //globals.ikonaPasieki = 'orange';
-              }
-              if (matka2 == 'brak') matka2 = '';
-            }
               //print('matka1 = ${infosMatka1[0].wartosc}'); 
           } else {matka1 = '';}
         DBHelper.updateUleMatka1('${globals.pasiekaID}.$numerUla',matka1);
+          
+            //MATKA3 - queenState (dziewica, naturalna)
+            getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queen + " -").then((_) async {
+              if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce3
+              final tempDataMatka3 = _datyInfo[0].data; //data ostatniego wpisu matka3
+                //pobranie info dla ula i dla daty ostatniego wpisu o matce3
+                List<Info> infosMatka3 = hivesInfo.where((m3) {
+                    return  m3.data == tempDataMatka3 && m3.kategoria == 'queen' &&  m3.parametr == AppLocalizations.of(context)!.queen + " -"; 
+                  }).toList();
+                  if (infosMatka3[0].wartosc == 'dziewica' || infosMatka3[0].wartosc == 'virgine') {
+                      matka3 = 'nieunasienniona';
+                      if (ikona == 'red') { //bo był brak matki
+                        ikona = 'orange';
+                        //globals.ikonaPasieki = 'orange';
+                      }
+                      if (matka2 == 'brak') matka2 = '';
+                    } else {
+                      matka3 = 'unasienniona';
+                      if (ikona != 'yellow') { //jezeli nie toDo
+                        ikona = 'green';
+                        //globals.ikonaPasieki = 'green'; 
+                      }
+                      if (matka2 == 'brak') matka2 = '';
+                    }
+                  //print('matka3 = ${infosMatka3[0].wartosc}'); 
+              } else {matka3 = '';}
+            DBHelper.updateUleMatka3('${globals.pasiekaID}.$numerUla',matka3);
+           
+              //MATKA4 - queenStart (wolna, w klatce)
+              getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queenIs).then((_) async {
+                if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce4
+                final tempDataMatka4 = _datyInfo[0].data; //data ostatniego wpisu matka4
+                  //pobranie info dla ula i dla daty ostatniego wpisu o matce4
+                  List<Info> infosMatka4 = hivesInfo.where((m4) {
+                      return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  m4.parametr == AppLocalizations.of(context)!.queenIs; 
+                    }).toList();
+                    if (infosMatka4[0].wartosc == 'wolna' || infosMatka4[0].wartosc == 'freed'){
+                      matka4 = 'wolna';
+                      if (ikona == 'red') {//bo był brak matki
+                        ikona = 'orange';
+                        //globals.ikonaPasieki = 'orange';
+                      }
+                      if (matka2 == 'brak') matka2 = '';
+                    } else{
+                      matka4 = 'ograniczona';
+                      if (ikona == 'red') {  //bo był brak matki
+                        ikona = 'orange';
+                        //globals.ikonaPasieki = 'orange';
+                      }
+                      if (matka2 == 'brak') matka2 = '';
+                    }
+                    //print('matka4 = ${infosMatka4[0].wartosc}'); 
+                } else {matka4 = '';}
+                DBHelper.updateUleMatka4('${globals.pasiekaID}.$numerUla',matka4);
+                  
+                //MATKA5 - queenBorn
+                getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queenWasBornIn).then((_) async {
+                  if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce5
+                  final tempDataMatka5 = _datyInfo[0].data; //data oststniego wpisu matka5
+                    //pobranie info dla ula i dla daty ostatniego wpisu o matce5
+                    List<Info> infosMatka5 = hivesInfo.where((m5) {
+                        return  m5.data == tempDataMatka5 && m5.kategoria == 'queen' &&  m5.parametr == AppLocalizations.of(context)!.queenWasBornIn; 
+                      }).toList();
+                      matka5 = infosMatka5[0].wartosc;
+                  } else {matka5 = '';}
+                DBHelper.updateUleMatka5('${globals.pasiekaID}.$numerUla',matka5);
 
-          //MATKA2 - queenMark (ma znak, brak)
+    //MATKA2 - queenMark (ma znak, brak)
           getDatyInfo(globals.pasiekaID, numerUla,'queen'," " + AppLocalizations.of(context)!.queen).then((_) async {
             if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce2
             final tempDataMatka2 = _datyInfo[0].data; //data ostatniego wpisu matka2
@@ -366,9 +438,13 @@ class _HivesScreenState extends State<HivesScreen> {
                     break;
                   case 'unmarked': matka2 = 'niez'; //nieznaczona
                     break;
+                  case 'ma inny znak': matka2 = 'inny ' + infosMatka2[0].miara; //kolor + numer matki
+                    break;
+                  case 'marked other': matka2 = 'inny ' + infosMatka2[0].miara; //kolor + numer matki
+                    break;
                   case 'ma biały znak': matka2 = 'biał ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
-                  case 'marker white': matka2 = 'biał ' + infosMatka2[0].miara; //kolor + numer matki
+                  case 'marked white': matka2 = 'biał ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
                   case 'ma żółty znak': matka2 = 'żółt ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
@@ -406,73 +482,14 @@ class _HivesScreenState extends State<HivesScreen> {
                 //print('matka2 = ${infosMatka2[0].wartosc}'); 
             } else {matka2 = '';}
              DBHelper.updateUleMatka2('${globals.pasiekaID}.$numerUla',matka2);
-
-            //MATKA3 - queenState (dziewica, naturalna)
-            getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queen + " -").then((_) async {
-              if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce3
-              final tempDataMatka3 = _datyInfo[0].data; //data ostatniego wpisu matka3
-                //pobranie info dla ula i dla daty ostatniego wpisu o matce3
-                List<Info> infosMatka3 = hivesInfo.where((m3) {
-                    return  m3.data == tempDataMatka3 && m3.kategoria == 'queen' &&  m3.parametr == AppLocalizations.of(context)!.queen + " -"; 
-                  }).toList();
-                  if (infosMatka3[0].wartosc == 'dziewica' || infosMatka3[0].wartosc == 'virgin') {
-                      matka3 = 'nieunasienniona';
-                      if (ikona == 'red') { //bo był brak matki
-                        ikona = 'orange';
-                        //globals.ikonaPasieki = 'orange';
-                      }
-                      if (matka2 == 'brak') matka2 = '';
-                    } else {
-                      matka3 = 'unasienniona';
-                      if (ikona != 'yellow') { //jezeli nie toDo
-                        ikona = 'green';
-                        //globals.ikonaPasieki = 'green'; 
-                      }
-                      if (matka2 == 'brak') matka2 = '';
-                    }
-                  //print('matka3 = ${infosMatka3[0].wartosc}'); 
-              } else {matka3 = '';}
-            DBHelper.updateUleMatka3('${globals.pasiekaID}.$numerUla',matka3);
-              
-              //MATKA4 - queenStart (wolna, w klatce)
-              getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queenIs).then((_) async {
-                if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce4
-                final tempDataMatka4 = _datyInfo[0].data; //data ostatniego wpisu matka4
-                  //pobranie info dla ula i dla daty ostatniego wpisu o matce4
-                  List<Info> infosMatka4 = hivesInfo.where((m4) {
-                      return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  m4.parametr == AppLocalizations.of(context)!.queenIs; 
-                    }).toList();
-                    if (infosMatka4[0].wartosc == 'wolna' || infosMatka4[0].wartosc == 'freed'){
-                      matka4 = 'wolna';
-                      if (ikona == 'red') {//bo był brak matki
-                        ikona = 'orange';
-                        //globals.ikonaPasieki = 'orange';
-                      }
-                      if (matka2 == 'brak') matka2 = '';
-                    } else{
-                      matka4 = 'ograniczona';
-                      if (ikona == 'red') {  //bo był brak matki
-                        ikona = 'orange';
-                        //globals.ikonaPasieki = 'orange';
-                      }
-                      if (matka2 == 'brak') matka2 = '';
-                    }
-                    //print('matka4 = ${infosMatka4[0].wartosc}'); 
-                } else {matka4 = '';}
-                DBHelper.updateUleMatka4('${globals.pasiekaID}.$numerUla',matka4);
-                      
-                //MATKA5 - queenBorn
-                getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queenWasBornIn).then((_) async {
-                  if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce5
-                  final tempDataMatka5 = _datyInfo[0].data; //data oststniego wpisu matka5
-                    //pobranie info dla ula i dla daty ostatniego wpisu o matce5
-                    List<Info> infosMatka5 = hivesInfo.where((m5) {
-                        return  m5.data == tempDataMatka5 && m5.kategoria == 'queen' &&  m5.parametr == AppLocalizations.of(context)!.queenWasBornIn; 
-                      }).toList();
-                      matka5 = infosMatka5[0].wartosc;
-                  } else {matka5 = '';}
-                DBHelper.updateUleMatka5('${globals.pasiekaID}.$numerUla',matka5);
-    
+            //jezeli matki brak to kasowanie innych parametrów matki w tabeli "ule" (jezeli matka2 bedzie nowa tzn. bedzie rózna od 'brak' to moga sie wyswietlać parametry poprzedniej matki dopóki nie zostaną zastąpione nowymi)
+            if(matka2 ==  'brak'){
+              DBHelper.updateUleMatka1('${globals.pasiekaID}.$numerUla',matka1);
+              DBHelper.updateUleMatka3('${globals.pasiekaID}.$numerUla',matka3);
+              DBHelper.updateUleMatka4('${globals.pasiekaID}.$numerUla',matka4);
+              DBHelper.updateUleMatka5('${globals.pasiekaID}.$numerUla',matka5);
+            }    
+                  
                   //AKTUALIZACJA DANYCH O PASIECE
                   //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
                   Provider.of<Hives>(context, listen: false).fetchAndSetHives(globals.pasiekaID)
@@ -485,7 +502,7 @@ class _HivesScreenState extends State<HivesScreen> {
                     // print(ileUli);
 
                     //DBHelper.updateIleUli(nrXXOfApiary, ileUli); //
-                    //print('insertApiary');
+                    //print('aktualizacja tabeli pasieki insertApiary');
                     //zapis do tabeli "pasieki"
                     Apiarys.insertApiary(
                       '${globals.pasiekaID}',
@@ -498,16 +515,16 @@ class _HivesScreenState extends State<HivesScreen> {
                       Provider.of<Apiarys>(context, listen: false)
                           .fetchAndSetApiarys()
                           .then((_) {
-                        // print(
+                         //print("aktualizacja apki z danymi PASIEKI!!!");
                         //     'edit_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
                       });
                     });
                   });
-                }); //daty matka1
-              }); //daty matka2
+                }); //daty matka5
+              }); //daty matka4
             }); //daty matka3
-          }); //daty matka4
-        }); //daty matka5
+          }); //daty matka2
+        }); //daty matka1
       }); //daty ile ramek   
     });
   }
@@ -735,7 +752,7 @@ class _HivesScreenState extends State<HivesScreen> {
   //pobranie listy info z unikalnymi datami dla wybranego ula, pasieki, kategorii i parametru z bazy lokalnej
   Future<List<Info>> getDatyInfo(pasieka, ul, kategoria, parametr) async {
     final dataList = await DBHelper.getDateInfo(pasieka, ul, kategoria, parametr); //numer wybranego ula
-    //('getDatyInfo: pasieka=$pasieka ul=$ul katagoria=$kategoria parametr=$parametr');
+    //print('getDatyInfo: pasieka=$pasieka ul=$ul katagoria=$kategoria parametr=$parametr');
     _datyInfo = dataList
         .map(
           (item) => Info(
@@ -1121,6 +1138,13 @@ class _HivesScreenState extends State<HivesScreen> {
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
           //   title: Text('Apiary $numerPasieki'),
           //   backgroundColor: Color.fromARGB(255, 233, 140, 0),
+           leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios,
+                color: Color.fromARGB(255, 0, 0, 0)),
+            onPressed: () => {
+                  WakelockPlus.disable(), //usunięcie blokowania wygaszania ekranu
+                  Navigator.of(context).pop(),
+                }),
           actions: <Widget>[
             if (icon != '')
               IconButton(
@@ -1151,8 +1175,15 @@ class _HivesScreenState extends State<HivesScreen> {
                //print('${globals.pasiekaID}, $hiveNr')
                 _showAlertOdswiez(),
                
-          ), 
+            ), 
           ],
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
+          ),
         ),
         body: hives.length == 0
             ? Center(

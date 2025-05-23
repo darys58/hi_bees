@@ -89,14 +89,23 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.6.9.47 02.10.2024 - ununięto Picovoice bo błąd w XCode: obecny kod binarny w bibliotekach porcupino i rhuino, usunieto subskrypcję bo błedy przy kompilacji androida
   //1.6.10.48 14.10.2024 - dodano statystyki zbioru miodu, pyłku i varrozy, poprawa statystyki dokarmiania ciastem, chyba poprawa wyświetlania szczegółów ramek przy zmianie daty przegladu
   //1.6.11.49 27.10.2024 - dodano raporty zbiorów i raporty leczenia,
+  //zminana MacBook Pro
   //1.6.12.50 02.11.2024 - dodano "frame_edit_screen2" - ekran dodawania zasobów na ramkach w wersji dla obu stron ramki naraz i automatycznego zwiększania numeru ramki
   //1.7.0.51 11.11.2024 - zaktualizowano wszystkie pakiety (biblioteki) - apka nie działa z picovoice_flutter: ^3.0.3 !!!
   //1.7.0.51 06.12.2024 - Picovoice naprawił rhino_flutter 3.0.4 i działa juz picovoice_flutter: ^3.0.3, pliki .rhn v.3_0_0, model: ang1, pol1, poprawki w wersji angielskiej (PlayGoogle)
+  //aktualizacja Fluttera - nie działa wersja na Androida
   //1.7.1.52 05.01.2025 - usunięcie błędnego działania vioce_screen, modyfikacja voice_screen: wstaw/usuń ramka, numer ramki przed i po przeglądzie np. przed 3/8 po, isDone dla zakresu ramek - wstaw/usuń wiele ramek (AppStore tylko bo android nie działa po flutter upgrade)
   //1.8.0.53 17.01.2025 - zmiana nazwy i ikony apki na "Hey Maya", nowy ekran powitalny, poprawki i nowe słowa w modelu Rhiuno, statystyki do 2030 roku, literowe oznaczenia matek,
   //1.8.1.54 25.01.2025 - poprawka niedziałajacej funkcji _isInternet() po zmianie biblioteki connectivity_plus
-  final wersja = '1.8.1.54'; //wersja aplikacji
-  final dataWersji = '2025-01-27';
+  //1.8.2.55 15.02.2025 - zmiana adresu strony ze skryptami rejestrowania uzytkowników i eksportu/importu danych z hibees.pl na darys.pl  
+  //1.8.3.56 18.02.2025 - poprzednia wersja nie chciała się uruchomić na AppStore więc wysłałem powtórnir bez zmian
+  //1.8.4.57 26.03.2025 - dodano inne zaznaczenie matki (srebrne)(trzeba dodać w modelu na picovoice.ai !!!!!), rok urodzenia matki wyswietla się w info niezaleznie od roku statystyk
+  //1.8.5.58 06.04.2025 - usunięty błąd w statystykach przy braku wartości parametru (pole wartość puste), blokowanie wygaszania ekranów wszystkich oprócz startowego, oś pozioma raportów zbiorczych pokazuje numer ula a nie kolejny numer słupka
+  //1.8.6.59 04.05.2025 - oznaczanie np: > 2025 < w oknie wyboru roku statystyk, zmiana daty ( na dateController.text) przy edycji ramkaPo dla wszystkich zasobów na ramce, w ekranie "Zbiory Pomóz mi" dodanie pyłku w ml, w voice_screen ustawianie ramkaPo=0 dla zasobów ramki przenoszonej do innego korpusa lub ula, matka2=='brak' -> czerwone tło, przy przenoszeniu ramki zerowanie numeru korpusa - komentarz KOM1,
+  //1.8.7.60 11.05.2025 - przenoszenie ramek ręczne, błąd w statystykach zbiorów miodu z duzych ramek, likwidacja ula, poprawki tła appBar i dodanie kreski oddzielającej od body
+  
+  final wersja = '1.8.7.60'; //wersja aplikacji na iOS
+  final dataWersji = '2025-05-11';
   final now = DateTime.now();
   int aktywnosc = 0;
 
@@ -149,6 +158,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           globals.wersja = wersja;
 
           //uaktualnienie wersji apki na serwerze www po np. aktualizacji apki
+          //print('mem.wer = ${mem[0].wer}');
+          //print('mem.kod = ${mem[0].kod}');
           if (mem.isNotEmpty && mem[0].wer != wersja) wyslijKod(mem[0].kod);
 
           //czy jest wpis w bazie dla tego deviceId? - (wpis moze być ale accessKey niekoniecznie!!!)
@@ -480,7 +491,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -528,7 +539,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   Future<void> wyslijBackupInfo(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -574,7 +585,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //wysyłanie kodu
   Future<void> wyslijKod(String kod) async {
     final http.Response response = await http.post(
-      Uri.parse('https://hibees.pl/cbt_hi_kod.php'),
+      Uri.parse('https://darys.pl/cbt_hi_kod.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -775,9 +786,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     // print(heightScreen);
 
     final Uri toLaunchPl = Uri(
-        scheme: 'https', host: 'www.hibees.pl', path: '/index.php/przewodnik');
+        scheme: 'https', host: 'www.heymaya.eu', path: '/index.php/przewodnik');
     final Uri toLaunchEn =
-        Uri(scheme: 'https', host: 'www.hibees.pl', path: '/index.php/guide');
+        Uri(scheme: 'https', host: 'www.heymaya.eu', path: '/index.php/guide');
 
 // print('globals.deviceId = ${globals.deviceId}');
 // print('globals.key = ${globals.key}');
@@ -847,6 +858,13 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
               // }),
             )
         ],
+         bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.grey[300], // kolor linii
+            height: 1.0,
+          ),
+        ),
       ),
 
       body: _isLoading //jezeli dane są ładowane

@@ -435,27 +435,27 @@ class _RaportScreenState extends State<RaportScreen> {
       for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2023'){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x"){ 
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               miodMala = miodMala + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
               miod2023 = miod2023 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x"){
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               miodDuza = miodDuza + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
               miod2023 = miod2023 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x"){
+            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2023 = pylek2023 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = "){
+            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2023 = pylek2023 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  "){
+            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2023 = pylek2023 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -497,27 +497,27 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2024'){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x"){ 
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               miodMala = miodMala + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
               miod2024 = miod2024 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x"){
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               miodDuza = miodDuza + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
               miod2024 = miod2024 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x"){
+            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2024 = pylek2024 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = "){
+            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2024 = pylek2024 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  "){
+            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2024 = pylek2024 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -548,27 +548,27 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2025'){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x"){ 
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               miodMala = miodMala + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
               miod2025 = miod2025 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x"){
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               miodDuza = miodDuza + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
               miod2025 = miod2025 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x"){
+            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2025 = pylek2025 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = "){
+            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2025 = pylek2025 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  "){
+            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2025 = pylek2025 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -599,27 +599,27 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2026'){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x"){ 
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               miodMala = miodMala + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
               miod2026 = miod2026 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x"){
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               miodDuza = miodDuza + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
               miod2026 = miod2026 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x"){
+            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2026 = pylek2026 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = "){
+            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2026 = pylek2026 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  "){
+            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2026 = pylek2026 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -650,27 +650,27 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2027'){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x"){ 
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               miodMala = miodMala + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
               miod2027 = miod2027 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x"){
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               miodDuza = miodDuza + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
               miod2027 = miod2027 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x"){
+            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2027 = pylek2027 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = "){
+            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2027 = pylek2027 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  "){
+            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2027 = pylek2027 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -701,27 +701,27 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2028'){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x"){ 
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               miodMala = miodMala + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
               miod2028 = miod2028 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x"){
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               miodDuza = miodDuza + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
               miod2028 = miod2028 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x"){
+            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2028 = pylek2028 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = "){
+            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2028 = pylek2028 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  "){
+            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2028 = pylek2028 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -752,27 +752,27 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2029'){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x"){ 
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               miodMala = miodMala + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
               miod2029 = miod2029 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x"){
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               miodDuza = miodDuza + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
               miod2029 = miod2029 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x"){
+            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2029 = pylek2029 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = "){
+            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2029 = pylek2029 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  "){
+            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2029 = pylek2029 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -803,27 +803,27 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2030'){ //info z roku ...
           if(infos[i].ulNr == j) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x"){ 
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               miodMala = miodMala + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
               miod2030 = miod2030 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x"){
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               miodDuza = miodDuza + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
               miod2030 = miod2030 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x"){
+            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2030 = pylek2030 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = "){
+            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2030 = pylek2030 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  "){
+            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2030 = pylek2030 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -942,6 +942,13 @@ class _RaportScreenState extends State<RaportScreen> {
           //AppLocalizations.of(context)!.pArameterization,
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
+        bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              color: Colors.grey[300], // kolor linii
+              height: 1.0,
+            ),
+          ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -1000,16 +1007,16 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                    // child: RotatedBox(
-                                    //   quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                     child: RotatedBox(
+                                       quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                    // ),
+                                     ),
                                     );
                                   },
                                 ),
@@ -1072,16 +1079,16 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                    // child: RotatedBox(
-                                    //   quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                     child: RotatedBox(
+                                       quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                    // ),
+                                     ),
                                     );
                                   },
                                 ),
@@ -1144,16 +1151,16 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                    // child: RotatedBox(
-                                    //   quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                     child: RotatedBox(
+                                       quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                    // ),
+                                     ),
                                     );
                                   },
                                 ),
@@ -1216,16 +1223,16 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                    // child: RotatedBox(
-                                    //   quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                     child: RotatedBox(
+                                       quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                    // ),
+                                     ),
                                     );
                                   },
                                 ),
@@ -1259,7 +1266,7 @@ class _RaportScreenState extends State<RaportScreen> {
         
 //miód wykres 2026 
                   if(daneZbioruMioduDoWykresu2026.isNotEmpty) SizedBox(height: 10),
-                  if(daneZbioruMioduDoWykresu2026.isNotEmpty) Text(AppLocalizations.of(context)!.hOneyHarvest + ' 2026: ${miod2027/1000} kg', style: TextStyle(fontSize: 16)),
+                  if(daneZbioruMioduDoWykresu2026.isNotEmpty) Text(AppLocalizations.of(context)!.hOneyHarvest + ' 2026: ${miod2026/1000} kg', style: TextStyle(fontSize: 16)),
                   if(daneZbioruMioduDoWykresu2026.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
@@ -1288,16 +1295,16 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                    // child: RotatedBox(
-                                    //   quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                     child: RotatedBox(
+                                       quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                    // ),
+                                     ),
                                     );
                                   },
                                 ),
@@ -1360,16 +1367,16 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                    // child: RotatedBox(
-                                    //   quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                     child: RotatedBox(
+                                       quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                    // ),
+                                     ),
                                     );
                                   },
                                 ),
@@ -1432,16 +1439,16 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35, //It determines the maximum space that your titles need,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                    // child: RotatedBox(
-                                    //   quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                     child: RotatedBox(
+                                       quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                    // ),
+                                     ),
                                     );
                                   },
                                 ),
@@ -1504,17 +1511,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -1548,7 +1555,7 @@ class _RaportScreenState extends State<RaportScreen> {
 
 //pyłek wykres 2030        
                 if(daneZbioruPylkuDoWykresu2030.isNotEmpty) SizedBox(height: 10),
-                if(daneZbioruPylkuDoWykresu2030.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2030: ${pylek2024/1000} l', style: TextStyle(fontSize: 16),),  
+                if(daneZbioruPylkuDoWykresu2030.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2030: ${pylek2030/1000} l', style: TextStyle(fontSize: 16),),  
                 if(daneZbioruPylkuDoWykresu2030.isNotEmpty)
                   Padding(
                       padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
@@ -1577,17 +1584,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -1621,7 +1628,7 @@ class _RaportScreenState extends State<RaportScreen> {
 
 //pyłek wykres 2029        
                 if(daneZbioruPylkuDoWykresu2029.isNotEmpty) SizedBox(height: 10),
-                if(daneZbioruPylkuDoWykresu2029.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2029: ${pylek2024/1000} l', style: TextStyle(fontSize: 16),),  
+                if(daneZbioruPylkuDoWykresu2029.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2029: ${pylek2029/1000} l', style: TextStyle(fontSize: 16),),  
                 if(daneZbioruPylkuDoWykresu2029.isNotEmpty)
                   Padding(
                       padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
@@ -1650,17 +1657,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -1694,7 +1701,7 @@ class _RaportScreenState extends State<RaportScreen> {
 
 //pyłek wykres 2028        
                 if(daneZbioruPylkuDoWykresu2028.isNotEmpty) SizedBox(height: 10),
-                if(daneZbioruPylkuDoWykresu2028.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2028: ${pylek2024/1000} l', style: TextStyle(fontSize: 16),),  
+                if(daneZbioruPylkuDoWykresu2028.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2028: ${pylek2028/1000} l', style: TextStyle(fontSize: 16),),  
                 if(daneZbioruPylkuDoWykresu2028.isNotEmpty)
                   Padding(
                       padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
@@ -1723,17 +1730,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -1767,7 +1774,7 @@ class _RaportScreenState extends State<RaportScreen> {
 
 //pyłek wykres 2027        
                 if(daneZbioruPylkuDoWykresu2027.isNotEmpty) SizedBox(height: 10),
-                if(daneZbioruPylkuDoWykresu2027.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2027: ${pylek2024/1000} l', style: TextStyle(fontSize: 16),),  
+                if(daneZbioruPylkuDoWykresu2027.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2027: ${pylek2027/1000} l', style: TextStyle(fontSize: 16),),  
                 if(daneZbioruPylkuDoWykresu2027.isNotEmpty)
                   Padding(
                       padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
@@ -1796,17 +1803,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -1840,7 +1847,7 @@ class _RaportScreenState extends State<RaportScreen> {
 
 //pyłek wykres 2026        
                 if(daneZbioruPylkuDoWykresu2026.isNotEmpty) SizedBox(height: 10),
-                if(daneZbioruPylkuDoWykresu2026.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2026: ${pylek2024/1000} l', style: TextStyle(fontSize: 16),),  
+                if(daneZbioruPylkuDoWykresu2026.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2026: ${pylek2026/1000} l', style: TextStyle(fontSize: 16),),  
                 if(daneZbioruPylkuDoWykresu2026.isNotEmpty)
                   Padding(
                       padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
@@ -1869,17 +1876,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -1913,7 +1920,7 @@ class _RaportScreenState extends State<RaportScreen> {
 
 //pyłek wykres 2025        
                 if(daneZbioruPylkuDoWykresu2025.isNotEmpty) SizedBox(height: 10),
-                if(daneZbioruPylkuDoWykresu2025.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2025: ${pylek2024/1000} l', style: TextStyle(fontSize: 16),),  
+                if(daneZbioruPylkuDoWykresu2025.isNotEmpty) Text(AppLocalizations.of(context)!.bEePollenHarvest + ' 2025: ${pylek2025/1000} l', style: TextStyle(fontSize: 16),),  
                 if(daneZbioruPylkuDoWykresu2025.isNotEmpty)
                   Padding(
                       padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
@@ -1942,17 +1949,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -2015,17 +2022,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -2088,17 +2095,17 @@ class _RaportScreenState extends State<RaportScreen> {
                               bottomTitles: AxisTitles( //dolne opisy osi
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 50,
+                                  reservedSize: 35,
                                   getTitlesWidget: (double value, TitleMeta meta) {
                                     // Pobieranie tekstu na podstawie wartości 'x'
                                     //String text = xAxisLabelsMiod[value.toInt()] ?? '';
-                                    String text = value.toInt().toString();
+                                    String text = hivesNumbers[value.toInt()-1].toString(); //numer ula 
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
-                                     // child: RotatedBox(
-                                      //  quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
+                                      child: RotatedBox(
+                                        quarterTurns: 3, // Obracamy o -90 stopni (czyli 270 stopni)
                                         child: Text(text, style: TextStyle(fontSize: 12)),
-                                     // ),
+                                      ),
                                     );
                                   },
                                 ),

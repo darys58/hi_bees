@@ -91,7 +91,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   List<int> gridItems = [];//tworzona lista klawiszy klawiatury wyboru numeru ramki
   List<int> gridItemsKorpus = [1,2,3,4,5,6,7,8,9]; //lista klawiszy klawiatury wyboru numeru korpusu
   List<int> gridItemsZasob = [0,5,10,15,20,25,30,35,40,50,60,70,80,90,100]; //lista klawiszy klawiatury ilosci zasobu do dodania
-  List<String> gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych'];
+  List<String> gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych','inny'];
   var matkaKolor = Icon(Icons.brightness_1, color: Color.fromARGB(255, 255, 255, 255), size: 30.0,);//niewidoczny - brak informacji o matce
  
 
@@ -165,6 +165,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                       case 5: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);break;
                       case 6: matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);break;
                       case 6: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);break;
+                      case 7: matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);break;
                       default:
                     }
             break;
@@ -261,8 +262,8 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       else if(globals.numeryWieluRamek == 2) _selectedNumeryWieluRamek=<bool>[false, false, true];
 
       globals.jezyk == 'pl_PL'
-        ? gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych']
-        : gridItemsKolor = ['black','yellow','red','green','blue','white','no\ndata'];
+        ? gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych','inny']
+        : gridItemsKolor = ['black','yellow','red','green','blue','white','no\ndata','other'];
       
       double heightScreen = MediaQuery.of(context).size.height;
       // print('wysokość ekranu');
@@ -793,6 +794,12 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 //matkaDod = 6;
                                 matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
                                 nowyZasob = 10; nowaWartosc = '6';
+                              }); break; 
+                            case 'inny': 
+                              setState(() {
+                                //matkaDod = 7;
+                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
+                                nowyZasob = 10; nowaWartosc = '7';
                               }); break;                     
                             default:
                               setState(() {
@@ -839,6 +846,12 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
                                 nowyZasob = 10; nowaWartosc = '6';
                               }); break;                     
+                            case 'other': 
+                              setState(() {
+                                //matkaDod = 7;
+                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
+                                nowyZasob = 10; nowaWartosc = '7';
+                              }); break;  
                             default:
                               setState(() {
                                 //matkaDod = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
@@ -884,6 +897,11 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 matkaDod = 6;
                                 matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
                               }); break;                     
+                            case 'inny': 
+                              setState(() {
+                                matkaDod = 7;
+                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
+                              }); break;  
                             default:
                               setState(() {
                                 matkaDod = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
@@ -922,6 +940,11 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 matkaDod = 6;
                                 matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
                               }); break;                     
+                            case 'other': 
+                              setState(() {
+                                matkaDod = 7;
+                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
+                              }); break;  
                             default:
                               setState(() {
                                 matkaDod = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
@@ -2595,8 +2618,9 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                       final framesData1 = Provider.of<Frames>(context, listen: false);
                                         //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
                                       List<Frame> frames = framesData1.items.where((fr) {
-                                        return fr.ramkaNr == nowyNrRamki && fr.data == globals.dataWpisu && fr.korpusNr == nowyNrKorpusu; //return fr.data.contains('2024-04-04');
+                                        return fr.ramkaNr == nowyNrRamki && fr.data == dateController.text && fr.korpusNr == nowyNrKorpusu; //return fr.data.contains('2024-04-04');
                                       }).toList();
+
                                         //dla kazdego zasobu modyfikacja ramkaNrPo
                                       for (var i = 0; i < frames.length; i++) {
                                         //(' id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
@@ -2667,7 +2691,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                         final framesData1 = Provider.of<Frames>(context, listen: false);
                                         //zasoby tej ramki (z wybranej daty dla ula i tylko w wybranym korpusie)
                                         List<Frame> frames = framesData1.items.where((fr) {
-                                          return fr.ramkaNr == nowyNrRamki && fr.data == globals.dataWpisu && fr.korpusNr == nowyNrKorpusu; //return fr.data.contains('2024-04-04');
+                                          return fr.ramkaNr == nowyNrRamki && fr.data == dateController.text && fr.korpusNr == nowyNrKorpusu; //return fr.data.contains('2024-04-04');
                                         }).toList();
                                         //dla kazdego zasobu modyfikacja ramkaNrPo
                                         for (var i = 0; i < frames.length; i++) {
