@@ -32,12 +32,12 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
   bool _isInit = true;
   var formatterHm = new DateFormat('H:mm');
   int? nrPasieki;
-  int? nrUlaZ;
-  int? nrUlaDo;
-  int? nrKorpusuZ;
-  int? nrKorpusuDo;
-  int? nrRamkiZ;//przed  przeglądem
-  int? nrRamkiDo; //po przeglądzie
+  // int? nrUlaZ;
+  // int? nrUlaDo;
+  // int? nrKorpusuZ;
+  // int? nrKorpusuDo;
+  // int? nrRamkiZ;//przed  przeglądem
+  // int? nrRamkiDo; //po przeglądzie
   int korpus = 2;//1-półkorpus, 2-korpus
   List<bool> _selectedKorpus = <bool>[false, true]; // pół|cały
   int rozmiarRamki = 2;//1-mała, 2-duza
@@ -71,7 +71,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
       final routeArgs = ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
       //final idRamki = routeArgs['idRamki']; //pobiera z frames_detail_item.dart
       final idPasieki = routeArgs['idPasieki'];
-      final idUla = routeArgs['idUla'];
+      //final idUla = routeArgs['idUla'];
       final idZasobu = routeArgs['idZasobu'];
       //print('ramka = $idRamki, pasieka = $idPasieki , ul = $idUla');
 
@@ -82,15 +82,15 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
         // nowyMiesiac = DateFormat('MM').format(DateTime.now());
         // nowyDzien = DateFormat('dd').format(DateTime.now());
         nrPasieki = int.parse('$idPasieki');
-        nrUlaZ = int.parse('$idUla');
-        nrKorpusuZ = globals.nowyNrKorpusu; //zapamiętany ostatni wybór
-        nrRamkiZ = globals.nowyNrRamki;
-        nrRamkiDo = globals.nowyNrRamki;
+        // nrUlaZ = int.parse('$idUla');
+        // nrKorpusuZ = globals.nowyNrKorpusu; //zapamiętany ostatni wybór
+        // nrRamkiZ = globals.nowyNrRamki;
+        // nrRamkiDo = globals.nowyNrRamki;
         korpus = globals.korpus;
         korpus == 1 ? _selectedKorpus[0] = true : _selectedKorpus[0] = false;
         korpus == 2 ? _selectedKorpus[1] = true : _selectedKorpus[1] = false;
-        nrUlaDo = nrUlaZ;
-        nrKorpusuDo = nrKorpusuZ;
+        // nrUlaDo = nrUlaZ;
+        // nrKorpusuDo = nrKorpusuZ;
         rozmiarRamki = globals.rozmiarRamki;
         stronaRamki = globals.stronaRamki;
        
@@ -105,7 +105,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
         final hiveData = Provider.of<Hives>(context, listen: false);
         hive = hiveData.items.where((element) {
           //to wczytanie danych edytowanego ula
-          return element.id.contains('$nrPasieki.$nrUlaZ');
+          return element.id.contains('$nrPasieki.${globals.nrUlaPrzeniesZ}');
         }).toList();
         
         ramekZ = hive[0].ramek; //liczba ramek w ulu
@@ -162,12 +162,12 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                       switch (przycisk) {
                         case 1:
                           setState(() {
-                            nrRamkiZ = data;
+                            globals.nrRamkiPrzeniesZ = data;
                           });
                           break;
                         case 2:
                           setState(() {
-                            nrRamkiDo = data;
+                            globals.nrRamkiPrzeniesDo = data;
                           });
                           break;                         
                         default:
@@ -250,12 +250,12 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                        switch (przycisk) {
                         case 1:
                           setState(() {
-                            nrKorpusuZ = data;
+                            globals.nrKorpusuPrzeniesZ = data;
                           });
                           break;
                         case 2:
                           setState(() {
-                            nrKorpusuDo = data;
+                            globals.nrKorpusuPrzeniesDo = data;
                           });
                           break;                         
                         default:
@@ -339,12 +339,12 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                        switch (przycisk) {
                         case 1:
                           setState(() {
-                            nrUlaZ = data;
+                            globals.nrUlaPrzeniesZ = data;
                           });
                           break;
                         case 2:
                           setState(() {
-                            nrUlaDo = data;
+                            globals.nrUlaPrzeniesDo = data;
                           });
                           break;                         
                         default:
@@ -420,14 +420,14 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
       fixedSize: Size(126.0, 35.0),
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
-    final ButtonStyle buttonPasiekaUlStyle = OutlinedButton.styleFrom(
-      padding: const EdgeInsets.all(2.0),
-      backgroundColor: Color.fromARGB(255, 211, 211, 211),
-      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(83.0, 35.0),
-      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
-    );
+    // final ButtonStyle buttonPasiekaUlStyle = OutlinedButton.styleFrom(
+    //   padding: const EdgeInsets.all(2.0),
+    //   backgroundColor: Color.fromARGB(255, 211, 211, 211),
+    //   shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+    //   side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+    //   fixedSize: Size(83.0, 35.0),
+    //   textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
+    // );
     // final ButtonStyle buttonSumaZasobow = OutlinedButton.styleFrom(
     //   padding: const EdgeInsets.all(2.0),
     //   backgroundColor: Color.fromARGB(255, 211, 211, 211),
@@ -442,7 +442,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
           title: Text(
-            AppLocalizations.of(context)!.mOvingFrame,
+            AppLocalizations.of(context)!.mOvingFrame + ' (' + AppLocalizations.of(context)!.apiary + ' $nrPasieki)',
             style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
           ),
         ),
@@ -460,11 +460,101 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                             children: <Widget>[
 
 
-//data - pasieka - ul - korpus
+// //data - pasieka - ul - korpus
+//                               Row(
+//                                 mainAxisAlignment: MainAxisAlignment.center,
+//                                 children: [
+//  //data przeglądu  
+//                                   Column(
+//                                     mainAxisAlignment: MainAxisAlignment.center,
+//                                     crossAxisAlignment: CrossAxisAlignment.center,
+//                                     children: [
+//                                       Text(AppLocalizations.of(context)!.inspectionDate),
+//                                       OutlinedButton(
+//                                         style: dataButtonStyle,
+//                                         onPressed: () async {
+//                                           DateTime? pickedDate =
+//                                             await showDatePicker(
+//                                               context: context,
+//                                               initialDate: DateTime.parse(dateController.text),
+//                                               firstDate: DateTime(2000),
+//                                               lastDate: DateTime(2101),
+//                                               builder:(context , child){
+//                                                 return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
+//                                                   colorScheme: ColorScheme.light(
+//                                                     primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
+//                                                     onPrimary: Colors.white, // titles and 
+//                                                     onSurface: Colors.black, // Month days , years 
+//                                                   ),
+//                                                   textButtonTheme: TextButtonThemeData(
+//                                                     style: TextButton.styleFrom(
+//                                                       foregroundColor: Colors.black, // ok , cancel    buttons
+//                                                     ),
+//                                                   ),
+//                                                 ),  child: child!   );  // pass child to this child
+//                                               }
+//                                             );
+//                                           if (pickedDate != null) {
+//                                             String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+//                                             setState(() {
+//                                               dateController.text = formattedDate;
+//                                               globals.dataWpisu = formattedDate;
+//                                             });
+//                                           } else {print("Date is not selected");}
+//                                         },
+  
+//                                          child: Text(dateController.text ,
+//                                           style: const TextStyle(
+//                                             color: Color.fromARGB(255, 0, 0, 0),
+//                                             fontSize: 15),),   
+//                                       ),
+//                                   ]),                                                             
+//  //pasieka                             
+//                                   SizedBox(width: 10),
+//                                   Column(
+//                                     mainAxisAlignment: MainAxisAlignment.center,
+//                                     crossAxisAlignment: CrossAxisAlignment.center,
+//                                     children: [
+//                                       Text(AppLocalizations.of(context)!.aPiary),
+//                                       OutlinedButton(
+//                                           style: buttonPasiekaUlStyle,
+//                                           onPressed: null,
+//                                           child: Text('$nrPasieki',
+//                                             style: const TextStyle(
+//                                               fontSize: 17,
+//                                               color: Color.fromARGB(255, 0, 0,0))),
+//                                         )]) ,                                                     
+//                                ],
+//                               ),
+
+
+
+
+// przenieś ramkę z:
+                              //SizedBox(height: 20),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
- //data przeglądu  
+ 
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(AppLocalizations.of(context)!.mOveFrameFrom,
+                                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color.fromARGB(255, 0, 0, 0))
+                                      ),
+                                    ]
+                                )]
+                              ),
+
+
+
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                //mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[ 
+  //data przegladu
                                   Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -508,52 +598,8 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                             color: Color.fromARGB(255, 0, 0, 0),
                                             fontSize: 15),),   
                                       ),
-                                  ]),                                                             
- //pasieka                             
-                                  SizedBox(width: 10),
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text(AppLocalizations.of(context)!.aPiary),
-                                      OutlinedButton(
-                                          style: buttonPasiekaUlStyle,
-                                          onPressed: null,
-                                          child: Text('$nrPasieki',
-                                            style: const TextStyle(
-                                              fontSize: 17,
-                                              color: Color.fromARGB(255, 0, 0,0))),
-                                        )]) ,                                                     
-                               ],
-                              ),
-
-
-
-
-// przenieś ramkę z:
-                              SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
- 
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text(AppLocalizations.of(context)!.mOveFrameFrom,
-                                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color.fromARGB(255, 0, 0, 0))
-                                      ),
-                                    ]
-                                )]
-                              ),
-
-
-
-                              SizedBox(height: 5),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                //mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[ 
+                                  ]),    
+  
   //ul        
                    
                                   SizedBox(width: 10),
@@ -565,11 +611,140 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       OutlinedButton(
                                           style: buttonStyle,
                                           onPressed: () {_showAlertNrUla(AppLocalizations.of(context)!.hIveNr,1);},
-                                          child: Text('$nrUlaZ',
+                                          child: Text('${globals.nrUlaPrzeniesZ}',
                                             style: const TextStyle(
                                               fontSize: 18,
                                               color: Color.fromARGB(255, 0, 0,0))),
                                         )])  ,                    
+// //korpus                               
+//                                 SizedBox(width: 10),
+//                                   Column(
+//                                     mainAxisAlignment: MainAxisAlignment.center,
+//                                     crossAxisAlignment: CrossAxisAlignment.center,
+//                                     children: [
+//                                       Text(AppLocalizations.of(context)!.bOdy),
+//                                       OutlinedButton(
+//                                           style: buttonStyle,
+//                                           onPressed: () {_showAlertNrKorpusu(AppLocalizations.of(context)!.bOdyNumber,1);},
+//                                           child: Text('$nrKorpusuZ',
+//                                             style: const TextStyle(
+//                                               fontSize: 18,
+//                                               color: Color.fromARGB(255, 0, 0,0))),
+//                                         )])  ,                                                         
+                               
+
+
+                              
+// //ramka do przeniesienia                            
+//                                 SizedBox(width: 10),
+
+//                                 Column(
+//                                     mainAxisAlignment: MainAxisAlignment.center,
+//                                     crossAxisAlignment: CrossAxisAlignment.center,
+//                                     children: [
+//                                       Text(AppLocalizations.of(context)!.fRame),
+//                                       OutlinedButton(
+//                                             style: buttonStyle,
+//                                             onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberBefore,1);},
+//                                             child: Text('$nrRamkiZ',
+//                                               style: const TextStyle(
+//                                                 fontSize: 18,
+//                                                 color: Color.fromARGB(255, 0, 0,0))),
+//                                           )])
+                              
+  
+                                
+                                
+                                ],
+                              ),
+
+
+// // przenieś ramkę z:
+//                               SizedBox(height: 20),
+//                               Row(
+//                                 mainAxisAlignment: MainAxisAlignment.center,
+//                                 children: [
+ 
+//                                   Column(
+//                                     mainAxisAlignment: MainAxisAlignment.center,
+//                                     crossAxisAlignment: CrossAxisAlignment.center,
+//                                     children: [
+//                                       Text(AppLocalizations.of(context)!.mOveFrameFrom,
+//                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color.fromARGB(255, 0, 0, 0))
+//                                       ),
+//                                     ]
+//                                 )]
+//                               ),
+
+
+
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                //mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[ 
+  //data przegladu
+  //                                 Column(
+  //                                   mainAxisAlignment: MainAxisAlignment.center,
+  //                                   crossAxisAlignment: CrossAxisAlignment.center,
+  //                                   children: [
+  //                                     Text(AppLocalizations.of(context)!.inspectionDate),
+  //                                     OutlinedButton(
+  //                                       style: dataButtonStyle,
+  //                                       onPressed: () async {
+  //                                         DateTime? pickedDate =
+  //                                           await showDatePicker(
+  //                                             context: context,
+  //                                             initialDate: DateTime.parse(dateController.text),
+  //                                             firstDate: DateTime(2000),
+  //                                             lastDate: DateTime(2101),
+  //                                             builder:(context , child){
+  //                                               return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
+  //                                                 colorScheme: ColorScheme.light(
+  //                                                   primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
+  //                                                   onPrimary: Colors.white, // titles and 
+  //                                                   onSurface: Colors.black, // Month days , years 
+  //                                                 ),
+  //                                                 textButtonTheme: TextButtonThemeData(
+  //                                                   style: TextButton.styleFrom(
+  //                                                     foregroundColor: Colors.black, // ok , cancel    buttons
+  //                                                   ),
+  //                                                 ),
+  //                                               ),  child: child!   );  // pass child to this child
+  //                                             }
+  //                                           );
+  //                                         if (pickedDate != null) {
+  //                                           String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+  //                                           setState(() {
+  //                                             dateController.text = formattedDate;
+  //                                             globals.dataWpisu = formattedDate;
+  //                                           });
+  //                                         } else {print("Date is not selected");}
+  //                                       },
+  
+  //                                        child: Text(dateController.text ,
+  //                                         style: const TextStyle(
+  //                                           color: Color.fromARGB(255, 0, 0, 0),
+  //                                           fontSize: 15),),   
+  //                                     ),
+  //                                 ]),    
+  
+  // //ul        
+                   
+  //                                 SizedBox(width: 10),
+  //                                 Column(
+  //                                   mainAxisAlignment: MainAxisAlignment.center,
+  //                                   crossAxisAlignment: CrossAxisAlignment.center,
+  //                                   children: [
+  //                                     Text(AppLocalizations.of(context)!.hIve),
+  //                                     OutlinedButton(
+  //                                         style: buttonStyle,
+  //                                         onPressed: () {_showAlertNrUla(AppLocalizations.of(context)!.hIveNr,1);},
+  //                                         child: Text('$nrUlaZ',
+  //                                           style: const TextStyle(
+  //                                             fontSize: 18,
+  //                                             color: Color.fromARGB(255, 0, 0,0))),
+  //                                       )])  ,                    
 //korpus                               
                                 SizedBox(width: 10),
                                   Column(
@@ -580,7 +755,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       OutlinedButton(
                                           style: buttonStyle,
                                           onPressed: () {_showAlertNrKorpusu(AppLocalizations.of(context)!.bOdyNumber,1);},
-                                          child: Text('$nrKorpusuZ',
+                                          child: Text('${globals.nrKorpusuPrzeniesZ}',
                                             style: const TextStyle(
                                               fontSize: 18,
                                               color: Color.fromARGB(255, 0, 0,0))),
@@ -600,7 +775,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       OutlinedButton(
                                             style: buttonStyle,
                                             onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberBefore,1);},
-                                            child: Text('$nrRamkiZ',
+                                            child: Text('${globals.nrRamkiPrzeniesZ}',
                                               style: const TextStyle(
                                                 fontSize: 18,
                                                 color: Color.fromARGB(255, 0, 0,0))),
@@ -613,7 +788,9 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                               ),
 
 
-
+ 
+ 
+ 
  // przenieś ramkę do:
                               SizedBox(height: 20),
                               Row(
@@ -640,10 +817,56 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
-                               
+ //data przegladu ula docelowgo                              
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(AppLocalizations.of(context)!.inspectionDate),
+                                      OutlinedButton(
+                                        style: dataButtonStyle,
+                                        onPressed: () async {
+                                          DateTime? pickedDate =
+                                            await showDatePicker(
+                                              context: context,
+                                              initialDate: DateTime.parse(globals.dataPrzeniesRamke),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime(2101),
+                                              builder:(context , child){
+                                                return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
+                                                  colorScheme: ColorScheme.light(
+                                                    primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
+                                                    onPrimary: Colors.white, // titles and 
+                                                    onSurface: Colors.black, // Month days , years 
+                                                  ),
+                                                  textButtonTheme: TextButtonThemeData(
+                                                    style: TextButton.styleFrom(
+                                                      foregroundColor: Colors.black, // ok , cancel    buttons
+                                                    ),
+                                                  ),
+                                                ),  child: child!   );  // pass child to this child
+                                              }
+                                            );
+                                          if (pickedDate != null) {
+                                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                                            setState(() {
+                                              //dateController.text = formattedDate;
+                                              globals.dataPrzeniesRamke = formattedDate;
+                                            });
+                                          } else {print("Date is not selected");}
+                                        },
+  
+                                         child: Text(globals.dataPrzeniesRamke  ,
+                                          style: const TextStyle(
+                                            color: Color.fromARGB(255, 0, 0, 0),
+                                            fontSize: 15),),   
+                                      ),
+                                  ]),   
+  
+  
   //ul  docelowy      
                    
-                                  
+                                  SizedBox(width: 10),
                                   Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -652,7 +875,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       OutlinedButton(
                                           style: buttonStyle,
                                           onPressed: () {_showAlertNrUla(AppLocalizations.of(context)!.hIveNr,2);},
-                                          child: Text('$nrUlaDo',
+                                          child: Text('${globals.nrUlaPrzeniesDo}',
                                             style: const TextStyle(
                                               fontSize: 18,
                                               color: Color.fromARGB(255, 0, 0,0))),
@@ -668,16 +891,13 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       OutlinedButton(
                                           style: buttonStyle,
                                           onPressed: () {_showAlertNrKorpusu(AppLocalizations.of(context)!.bOdyNumber,2);},
-                                          child: Text('$nrKorpusuDo',
+                                          child: Text('${globals.nrKorpusuPrzeniesDo}',
                                             style: const TextStyle(
                                               fontSize: 18,
                                               color: Color.fromARGB(255, 0, 0,0))),
                                         )])  ,                 
 
                               ]),  
-
-
-
 
 
 
@@ -703,6 +923,12 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                             // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
                                             for (int i = 0; i < _selectedKorpus.length; i++) {
                                               _selectedKorpus[i] = i == index;
+                                            }
+                                            //ustawienie zmiennej "korpus" jeszcze przed zapisem zeby ustawienie nie znikło jezeli nie będze zapisane
+                                            if(_selectedKorpus[0] == true){ //[0]==true to półkorpus; [0]==false to korpus
+                                              korpus = 1; globals.korpus = 1;   
+                                            }else { 
+                                              korpus = 2; globals.korpus = 2;
                                             }
                                           });
                                         },
@@ -733,21 +959,14 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       OutlinedButton(
                                             style: buttonStyle,
                                             onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberAfter,2);},
-                                            child: Text('$nrRamkiDo',
+                                            child: Text('${globals.nrRamkiPrzeniesDo}',
                                               style: const TextStyle(
                                                 fontSize: 18,
                                                 color: Color.fromARGB(255, 0, 0,0))),
                                           )])
 
                               ]),
-                       
-                       
-
-
-
-
-
-                       
+                                            
                        
                         ]),
                       ),
@@ -770,14 +989,14 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
                                  print('data = ${dateController.text}');
-                                 print('nrPasieki = $nrPasieki, nrUlaZ = $nrUlaZ, nrUlaDo = $nrUlaDo, nrKorpusuZ = $nrKorpusuZ, nrKorpusuDo = $nrKorpusuDo');
-                                 print (' nrRamkiZ = $nrRamkiZ, nrRamkiDo = $nrRamkiDo; korpus = $korpus');
+                                 print('nrPasieki = $nrPasieki, nrUlaZ = ${globals.nrUlaPrzeniesZ}, nrUlaDo = ${globals.nrUlaPrzeniesDo}, nrKorpusuZ = ${globals.nrKorpusuPrzeniesZ}, nrKorpusuDo = ${globals.nrKorpusuPrzeniesDo}');
+                                 print (' nrRamkiZ = ${globals.nrRamkiPrzeniesZ}, nrRamkiDo = ${globals.nrRamkiPrzeniesDo}; korpus = $korpus');
                                  //ustawienie zmiennej "korpus"
-                                 if(_selectedKorpus[0] == true){ //[0]==true to półkorpus; [0]==false to korpus
-                                    korpus = 1; globals.korpus = 1;   
-                                  }else { 
-                                    korpus = 2; globals.korpus = 2;
-                                  }
+                                //  if(_selectedKorpus[0] == true){ //[0]==true to półkorpus; [0]==false to korpus
+                                //     korpus = 1; globals.korpus = 1;   
+                                //   }else { 
+                                //     korpus = 2; globals.korpus = 2;
+                                //   }
                                   // int typ;
                                   // nrTempHive = nrUlaDo; 
                                   // if(nrTempBody != 0) { typ = 2;} 
@@ -792,13 +1011,13 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                   // }
                                   //przeniesienie ramki do innego korpusu
                                   Provider.of<Frames>(context, listen: false)
-                                    .fetchAndSetFramesForHive(nrPasieki, nrUlaZ)
+                                    .fetchAndSetFramesForHive(nrPasieki, globals.nrUlaPrzeniesZ)
                                     .then((_) {  
                                       //dla wszystkich zasobów wykonanie kopii ramki i zmiana "przed", "po", korpusu i ewentualnie ula
                                       final framesData1 = Provider.of<Frames>(context, listen: false);
                                         //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
                                       List<Frame> frames = framesData1.items.where((fr) {
-                                        return fr.ramkaNr == nrRamkiZ && fr.data == dateController.text  && fr.korpusNr == nrKorpusuZ; //return fr.data.contains('2024-04-04');
+                                        return fr.ramkaNr == globals.nrRamkiPrzeniesZ && fr.data == dateController.text  && fr.korpusNr == globals.nrKorpusuPrzeniesZ; //return fr.data.contains('2024-04-04');
                                       }).toList();
                                         print('frames.length = ${frames.length}');
                                         //dla kazdego zasobu - zapis z innym id oraz modyfikacja ramkaNr, ramkaNrPo, korpusNr i ewentualnie ulNr
@@ -807,16 +1026,16 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                         //DBHelper.moveRamkaToBody(frames[i].id, nrTempHave, nrTempBody, nrTempFrame);
                                         //print('frames[i].zasob = ${frames[i].zasob}');
                                         if(frames[i].zasob != 14){ //jezeli zasób jest rózny od "isDone" czyli prawdopodobnie nie jest = "usuń ramka"
-                                          print('${dateController.text}.$nrPasieki.$nrUlaDo.$nrKorpusuDo.0.$nrRamkiDo.${frames[i].strona}.${frames[i].zasob}');
+                                          print('${globals.dataPrzeniesRamke}.$nrPasieki.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.${globals.nrRamkiPrzeniesDo}.${frames[i].strona}.${frames[i].zasob}');
                                           Frames.insertFrame(
-                                            '${dateController.text}.$nrPasieki.$nrUlaDo.$nrKorpusuDo.0.$nrRamkiDo.${frames[i].strona}.${frames[i].zasob}',
-                                            dateController.text,
+                                            '${globals.dataPrzeniesRamke}.$nrPasieki.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.${globals.nrRamkiPrzeniesDo}.${frames[i].strona}.${frames[i].zasob}',
+                                            globals.dataPrzeniesRamke,
                                             nrPasieki!,
-                                            nrUlaDo!,
-                                            nrKorpusuDo!,
+                                            globals.nrUlaPrzeniesDo,
+                                            globals.nrKorpusuPrzeniesDo,
                                             korpus,//2-korpus, 1-półkorpus
                                             0,//ramkaNr przed (0 bo jest wstawiana)
-                                            nrRamkiDo!, //ramkaNrPo 
+                                            globals.nrRamkiPrzeniesDo, //ramkaNrPo 
                                             frames[i].rozmiar,
                                             frames[i].strona,
                                             frames[i].zasob,
@@ -828,14 +1047,14 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                         }
                                         else{ //więc jezeli jest "usuń ramka" to zamień na "wstaw ramka"
                                           Frames.insertFrame(
-                                              '${dateController.text}.$nrPasieki.$nrUlaDo.$nrKorpusuDo.0.$nrRamkiDo.${frames[i].strona}.${frames[i].zasob}',
-                                              dateController.text,
+                                              '${globals.dataPrzeniesRamke}.$nrPasieki.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.${globals.nrRamkiPrzeniesDo}.${frames[i].strona}.${frames[i].zasob}',
+                                              globals.dataPrzeniesRamke,
                                               nrPasieki!,
-                                              nrUlaDo!,
-                                              nrKorpusuDo!,
+                                              globals.nrUlaPrzeniesDo,
+                                              globals.nrKorpusuPrzeniesDo,
                                               korpus,//2-korpus, 1-półkorpus
                                               0,//ramkaNr
-                                              nrRamkiDo!, //ramkaNrPo 
+                                              globals.nrRamkiPrzeniesDo, //ramkaNrPo 
                                               frames[i].rozmiar,
                                               frames[i].strona,
                                               frames[i].zasob,
@@ -846,8 +1065,41 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                               DBHelper.updateRamkaNrPo(frames[i].id, 0);
                                         }
                                       }
+                                      //poniewaz moze nie być "zasob == 14"  czyli "usun ramka", na wszelki wypadek zapis: 
+                                      //"wstaw ramka" dla ramki Do
+                                      Frames.insertFrame(
+                                              '${globals.dataPrzeniesRamke}.$nrPasieki.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.${globals.nrRamkiPrzeniesDo}.1.14',
+                                              globals.dataPrzeniesRamke,
+                                              nrPasieki!,
+                                              globals.nrUlaPrzeniesDo,
+                                              globals.nrKorpusuPrzeniesDo,
+                                              korpus,//2-korpus, 1-półkorpus  rozmiar ramki Do
+                                              0,//ramkaNr
+                                              globals.nrRamkiPrzeniesDo, //ramkaNrPo 
+                                              frames[0].rozmiar,//rozmiar ramki Z
+                                              1,
+                                              14,
+                                              AppLocalizations.of(context)!.inserted, //wstaw ramka
+                                              0);
+                                      // i "usuń ramka" dla ramki Z
+                                      Frames.insertFrame(
+                                              '${globals.dataWpisu}.$nrPasieki.${globals.nrUlaPrzeniesZ}.${globals.nrKorpusuPrzeniesZ}.0.${globals.nrRamkiPrzeniesZ}.1.14',
+                                              globals.dataWpisu,
+                                              nrPasieki!,
+                                              globals.nrUlaPrzeniesZ,
+                                              globals.nrKorpusuPrzeniesZ,
+                                              frames[0].typ,//2-korpus, 1-półkorpus  rozmiar ramki Z
+                                              globals.nrRamkiPrzeniesZ,//ramkaNr
+                                              0, //ramkaNrPo 
+                                              frames[0].rozmiar,//rozmiar ramki Z
+                                              1,
+                                              14,
+                                              AppLocalizations.of(context)!.deleted, //usuń ramka
+                                              0);
+                                       print('${globals.dataWpisu}.$nrPasieki.${globals.nrUlaPrzeniesZ}.${globals.nrKorpusuPrzeniesZ}.0.${globals.nrRamkiPrzeniesZ}.1.14');
+                                             
                                     Provider.of<Frames>(context, listen: false)
-                                      .fetchAndSetFramesForHive(nrPasieki, nrUlaZ)
+                                      .fetchAndSetFramesForHive(nrPasieki, globals.nrUlaPrzeniesZ)
                                       .then((_) {
                                       Navigator.of(context).pop();
                                     });

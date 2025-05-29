@@ -484,7 +484,8 @@ class InfoItem extends StatelessWidget {
                     //rokStatystyk = DateTime.now().toString().substring(0, 4)
                     tileColor: info.data.substring(0, 4) == globals.rokStatystyk ? null : Colors.grey[200], 
                       onTap: () {
-                        globals.dataInspekcji = info.data;
+                        globals.dataInspekcji = info.data; //data przeglądu
+                        globals.ikonaInspekcji = info.wartosc; //kolor ikony przeglądu
                         Navigator.of(context).pushNamed(
                           FramesScreen.routeName,
                           arguments: info.ulNr,
@@ -500,35 +501,84 @@ class InfoItem extends StatelessWidget {
                               style: const TextStyle(fontSize: 14))
                           : Text('${info.data}  ${info.czas}  ${info.temp}',
                               style: const TextStyle(fontSize: 14)),
-                      subtitle: Row(
-                        children: [
-                          Text(
-                              '${info.parametr} ', //  ${info.wartosc} ${info.miara}',
-                              style: const TextStyle(
-                                  fontSize: 18, color: Colors.black)),
+                      subtitle: 
+                      //Row(
+                        //children: [
+                          RichText(
+                        text: TextSpan(
+                            style: TextStyle(color: Colors.black),
+                            children: [
                           info.wartosc == 'green'
-                              ? Icon(
-                                  Icons.hive,
-                                  color: Color.fromARGB(255, 0, 227, 0),
+                              ? TextSpan(
+                                  text: ('${info.parametr} '),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color.fromARGB(255, 0, 159, 3)),
                                 )
                               : info.wartosc == 'yellow'
-                                  ? Icon(
-                                      Icons.hive,
-                                      color: Color.fromARGB(255, 233, 229, 1),
-                                      //size: 20,
-                                    )
+                                 ? TextSpan(
+                                    text: ('${info.parametr} '),
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 205, 181, 1)),
+                                  )
                                   : info.wartosc == 'red'
-                                      ? Icon(
-                                          Icons.hive,
-                                          color: Color.fromARGB(255, 255, 0, 0),
-                                          //size: 20,
+                                      ? TextSpan(
+                                          text: ('${info.parametr} '),
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color.fromARGB(255, 179, 2, 2)),
                                         )
-                                      : Icon(
-                                          Icons.hive,
-                                          color:
-                                              Color.fromARGB(255, 116, 116, 116),
-                                          //size: 20,
+                                      : TextSpan(
+                                          text: ('${info.parametr} '),
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              //fontWeight: FontWeight.bold,
+                                              color: Color.fromARGB(255, 0, 0, 0)),
                                         ),
+                          // TextSpan(
+                          //   text: ('${info.parametr} '),
+                          //   style: TextStyle(
+                          //       fontSize: 16,
+                          //       //fontWeight: FontWeight.bold,
+                          //       color: Color.fromARGB(255, 0, 0, 0)),
+                          // ),
+                         
+                          TextSpan(
+                            text: '\n${info.uwagi}',
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: Color.fromARGB(255, 0, 0, 0)),
+                          )
+                        ])),
+                          
+                          // info.wartosc == 'green'
+                          //     ? Icon(
+                          //         Icons.hive,
+                          //         color: Color.fromARGB(255, 0, 227, 0),
+                          //       )
+                          //     : info.wartosc == 'yellow'
+                          //         ? Icon(
+                          //             Icons.hive,
+                          //             color: Color.fromARGB(255, 233, 229, 1),
+                          //             //size: 20,
+                          //           )
+                          //         : info.wartosc == 'red'
+                          //             ? Icon(
+                          //                 Icons.hive,
+                          //                 color: Color.fromARGB(255, 255, 0, 0),
+                          //                 //size: 20,
+                          //               )
+                          //             : Icon(
+                          //                 Icons.hive,
+                          //                 color:
+                          //                     Color.fromARGB(255, 116, 116, 116),
+                          //                 //size: 20,
+                          //               ),
+                          
                           // if(info.pogoda != '')
                           //   Image.network(
                           //     //obrazek pogody pobierany z neta
@@ -537,8 +587,8 @@ class InfoItem extends StatelessWidget {
                           //     //width: 140,
                           //     fit: BoxFit.cover, //dopasowanie do pojemnika
                           //   ),
-                        ],
-                      ),
+                       // ],
+                     // ),
                       trailing: const Icon(Icons.arrow_forward_ios))
                 : ListTile(  //pozostałe info (oprócz przegladu)
                   tileColor: info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'

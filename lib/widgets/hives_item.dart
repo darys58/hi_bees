@@ -102,7 +102,6 @@ class HivesItem extends StatelessWidget {
               // },
               onTap: () {
                 globals.ulID = hive.ulNr;
-                //globals.ikonaUla = 'green';
                 Navigator.of(context).pushNamed(
                   InfoScreen.routeName,
                   arguments: hive.ulNr,

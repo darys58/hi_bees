@@ -780,7 +780,7 @@ class _InfoScreenState extends State<InfoScreen> {
                   InfosEditScreen.routeName,
                   arguments: {'idInfo': '',
                               'kategoria': 'inspection', 
-                              'parametr': AppLocalizations.of(context)!.hiveLiquidation, //likwidacja ula
+                              'parametr': AppLocalizations.of(context)!.hiveLiquidation, //likwidacja ula - parametr wystarczy zeby zapisać info o likwidacji + uwagi
                               'wartosc': 'red', //wartość domyślna - czerwona ikona
                               'idPasieki': pasieka, 
                               'idUla':ul,},
@@ -788,6 +788,8 @@ class _InfoScreenState extends State<InfoScreen> {
             }, child: Text((AppLocalizations.of(context)!.hIveLiquidation), //likwidacja ula
             style: TextStyle(fontSize: 18)),
             ),
+          
+        
 //wyposazenie                   
           if(wybranaKategoria == 'equipment')
             TextButton(onPressed: (){

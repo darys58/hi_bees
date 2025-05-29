@@ -63,7 +63,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     //final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
     print('idInfo= $idInfo||');
-   
+     print('wartosc= $wartosc||');
+      print('ikona ula= ${globals.ikonaUla}||');
+    print('dataWpisu= ${globals.dataWpisu}||');
+    print('dataInspekcji= ${globals.dataInspekcji}||');
     //jezeli edycja istniejącego wpisu to wczytanie danych zbioru
     if (idInfo != '') {
       edycja = true;
@@ -82,7 +85,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       tytulEkranu = AppLocalizations.of(context)!.editingInfo;
     }else { //a jezeli dodanie nowego info
       edycja = false;
-      dateController.text = globals.dataWpisu; //DateTime.now().toString().substring(0, 10);
+      if(nowyParametr == AppLocalizations.of(context)!.inspection)
+        dateController.text = globals.dataInspekcji; //zeby wpis(notatka) dotyczył wybranego przegladu 
+      else dateController.text = globals.dataWpisu; //ostatnio wybrana data      DateTime.now().toString().substring(0, 10);
       nowaPasieka = int.parse(idPasieki.toString());
       nowyUl = int.parse(idUla.toString());
       nowaKategoria = kategoria.toString();
@@ -91,6 +96,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowyMiara = '';
       nowyUwagi = '';
       tytulEkranu = AppLocalizations.of(context)!.addInfo;
+
       
       if(nowyWartosc == AppLocalizations.of(context)!.onBodyNumber) nowyMiara = '1';//wartość domyslna korpusu dla kraty odgrodowej przy dodawaniu wpisu
       if(nowyParametr == " " + AppLocalizations.of(context)!.excluder + " -") nowyMiara = '0';//wartość domyslna dla usunietej kraty odgrodowej

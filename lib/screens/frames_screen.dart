@@ -22,6 +22,7 @@ import '../screens/frames_detail_screen.dart';
 import '../screens/frame_edit_screen.dart';
 import '../screens/frame_edit_screen2.dart';
 import '../screens/frame_move_screen.dart';
+import '../screens/infos_edit_screen.dart';
 
 class FramesScreen extends StatefulWidget {
   static const routeName = '/screen-frames'; //nazwa trasy do tego ekranu
@@ -328,7 +329,7 @@ class _FramesScreenState extends State<FramesScreen> {
                   FrameEditScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
                 );
-            }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18))
+            }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18)) //dodawanie zasobów
             ),
 
             TextButton(onPressed: (){
@@ -337,7 +338,7 @@ class _FramesScreenState extends State<FramesScreen> {
                   FrameEditScreen2.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
                 );
-            }, child: Text((AppLocalizations.of(context)!.resourceOnFramePlus),style: TextStyle(fontSize: 18))
+            }, child: Text((AppLocalizations.of(context)!.resourceOnFramePlus),style: TextStyle(fontSize: 18))// dodawanie zasobów +
             ),  
             
             TextButton(onPressed: (){
@@ -346,15 +347,16 @@ class _FramesScreenState extends State<FramesScreen> {
                   FrameEditScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 13},
                 );
-            }, child: Text((AppLocalizations.of(context)!.toDO),style: TextStyle(fontSize: 18)),
+            }, child: Text((AppLocalizations.of(context)!.toDO),style: TextStyle(fontSize: 18)), //do zrobienia
             ),
+            
             TextButton(onPressed: (){
               Navigator.of(context).pop();
               Navigator.of(context).pushNamed(
                   FrameEditScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 14},
                 );
-            }, child: Text((AppLocalizations.of(context)!.itWasDone),
+            }, child: Text((AppLocalizations.of(context)!.itWasDone), //zostało zrobione
             style: TextStyle(fontSize: 18)),
             ),
             
@@ -364,9 +366,28 @@ class _FramesScreenState extends State<FramesScreen> {
                   FrameMoveScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
                 );
-            }, child: Text((AppLocalizations.of(context)!.mOvingFrame),
+            }, child: Text((AppLocalizations.of(context)!.mOvingFrame), //przenies ramkę
             style: TextStyle(fontSize: 18)),
             ),
+          
+  
+            TextButton(onPressed: (){
+              globals.dataWpisu = wybranaData; //zeby notatka dotyczyła wybranego przegladu/daty
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  InfosEditScreen.routeName,
+                  arguments: {'idInfo': '',
+                              'kategoria': 'inspection', 
+                              'parametr': AppLocalizations.of(context)!.inspection, //przegląd - parametr wystarczy zeby zapisać uwagę/notatkę do przeglądu
+                              'wartosc': globals.ikonaInspekcji, //pobranie ikony przeglądu zeby sie nie zmieniła przy dodawaniu notatki
+                              'idPasieki': pasieka, 
+                              'idUla':ul,},
+                );         
+            }, child: Text((AppLocalizations.of(context)!.nOteForInspection), //notatka do przeglądu
+            style: TextStyle(fontSize: 18)),
+            ),
+          
+
           ],
         ),
         actions: <Widget>[
