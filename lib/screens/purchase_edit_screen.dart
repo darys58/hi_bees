@@ -38,6 +38,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
   String tytulEkranu = 'Edycja zakupów';
   List<Purchase> zakupy = [];
   TextEditingController dateController = TextEditingController();
+  DateTime? _selectedDate = DateTime.now(); // domyślnie dziś ; //wybrana data
 
   @override
   
@@ -55,15 +56,13 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
       final idZakupy = routeArgs['idZakupy'];
       //final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
-      print('idZakupy= $idZakupy');
-
       if (idZakupy != null) {
         edycja = true;
         //jezeli edycja istniejącego wpisu
         final zakupyData = Provider.of<Purchases>(context, listen: false);
         zakupy = zakupyData.items.where((element) {
           //to wczytanie danych zakupyu
-          return element.id.toString().contains('$idZakupy');
+          return element.id.toString() == '$idZakupy';
         }).toList();
         dateController.text = zakupy[0].data;
         nowyRok = zakupy[0].data.substring(0, 4);
@@ -99,16 +98,26 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
     super.didChangeDependencies();
   }
 
+  //kalendarz wyboru daty 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate , // domyślnie dziś
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+        dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate); // np. 2025-11-01
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
-     final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
-      backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
-      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(150.0, 35.0),
-      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
-    );
+    
 
     return Scaffold(
         appBar: AppBar(
@@ -138,240 +147,27 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-  //data
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
- //data 
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text(AppLocalizations.of(context)!.purchaseData),
-                                      OutlinedButton(
-                                        style: dataButtonStyle,
-                                        onPressed: () async {
-                                          DateTime? pickedDate =
-                                            await showDatePicker(
-                                              context: context,
-                                              initialDate: DateTime.parse(dateController.text),
-                                              firstDate: DateTime(2000),
-                                              lastDate: DateTime(2101),
-                                              builder:(context , child){
-                                                return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
-                                                  colorScheme: ColorScheme.light(
-                                                    primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
-                                                    onPrimary: Colors.white, // titles and 
-                                                    onSurface: Colors.black, // Month days , years 
-                                                  ),
-                                                  textButtonTheme: TextButtonThemeData(
-                                                    style: TextButton.styleFrom(
-                                                      foregroundColor: Colors.black, // ok , cancel    buttons
-                                                    ),
-                                                  ),
-                                                ),  child: child!   );  // pass child to this child
-                                              }
-                                            );
-                                          if (pickedDate != null) {
-                                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-                                            setState(() {
-                                              dateController.text = formattedDate;
-                                             // globals.dataWpisu = formattedDate;
-                                            });
-                                          } else {print("Date is not selected");}
-                                        },
-  
-                                         child: Text(dateController.text ,
-                                          style: const TextStyle(
-                                            color: Color.fromARGB(255, 0, 0, 0),
-                                            fontSize: 15),),   
-                                      ),
-                                  ]),  
-                                ]),
-                             
-                             
-                              // TextField(
-                              //     controller:
-                              //         dateController, //editing controller of this TextField
-                              //     decoration:  InputDecoration(
-                              //         icon: Icon(Icons
-                              //             .calendar_today), //icon of text field
-                              //         labelText: AppLocalizations.of(context)!.noteDate
-                              //         ),
-                              //     readOnly:
-                              //         true, // when true user cannot edit text
-                              //     onTap: () async {
-                              //       DateTime? pickedDate = await showDatePicker(
-                              //         context: context,
-                              //         initialDate: DateTime.parse(dateController.text),
-                              //         firstDate: DateTime(2000), 
-                              //         lastDate: DateTime(2101));
-                              //       if (pickedDate != null) {
-                              //         String formattedDate =
-                              //             DateFormat('yyyy-MM-dd').format( pickedDate); 
-
-                              //         setState(() {
-                              //           dateController.text = formattedDate; 
-                              //         });
-                              //       } else {
-                              //         print("Date is not selected");
-                              //       }
-                              //     }),
-
-
-                              // Row(
-                              //   mainAxisAlignment: MainAxisAlignment.start,
-                              //   crossAxisAlignment: CrossAxisAlignment.end,
-                              //   children: <Widget>[
-                              //     SizedBox(
-                              //       width: 70,
-                              //       child: Text(
-                              //         AppLocalizations.of(context)!.dAte +
-                              //             ':',
-                              //         style: TextStyle(
-                              //           //fontWeight: FontWeight.bold,
-                              //           fontSize: 15,
-                              //           color: Colors.black,
-                              //         ),
-                              //         softWrap: true, //zawijanie tekstu
-                              //         overflow: TextOverflow.fade,
-                              //       ),
-                              //     ),
-                              //     SizedBox(width: 20),
-                              //     SizedBox(
-                              //       width: 50,
-                              //       child: TextFormField(
-                              //           initialValue: nowyRok,
-                              //           keyboardType: TextInputType.number,
-                              //           decoration: InputDecoration(
-                              //             labelText:
-                              //                 (AppLocalizations.of(context)!
-                              //                     .year),
-                              //             labelStyle:
-                              //                 TextStyle(color: Colors.black),
-                              //             hintText:
-                              //                 (AppLocalizations.of(context)!
-                              //                     .yYYY),
-                              //           ),
-                              //           validator: (value) {
-                              //             if (value!.isEmpty) {
-                              //               return (AppLocalizations.of(
-                              //                           context)!
-                              //                       .enter +
-                              //                   ' ' +
-                              //                   AppLocalizations.of(context)!
-                              //                       .year);
-                              //             }
-                              //             nowyRok = value;
-                              //             return null;
-                              //           }),
-                              //     ),
-                              //     SizedBox(width: 15),
-                              //     SizedBox(
-                              //       width: 60,
-                              //       child: TextFormField(
-                              //           initialValue: nowyMiesiac,
-                              //           keyboardType: TextInputType.number,
-                              //           decoration: InputDecoration(
-                              //             labelText:
-                              //                 (AppLocalizations.of(context)!
-                              //                     .month),
-                              //             labelStyle:
-                              //                 TextStyle(color: Colors.black),
-                              //             hintText: ('MM'),
-                              //           ),
-                              //           validator: (value) {
-                              //             if (value!.isEmpty) {
-                              //               return (AppLocalizations.of(
-                              //                           context)!
-                              //                       .enter +
-                              //                   ' ' +
-                              //                   AppLocalizations.of(context)!
-                              //                       .month);
-                              //             }
-                              //             nowyMiesiac = value;
-                              //             return null;
-                              //           }),
-                              //     ),
-                              //     SizedBox(width: 15),
-                              //     SizedBox(
-                              //       width: 50,
-                              //       child: TextFormField(
-                              //           initialValue: nowyDzien,
-                              //           keyboardType: TextInputType.number,
-                              //           decoration: InputDecoration(
-                              //             labelText:
-                              //                 (AppLocalizations.of(context)!
-                              //                     .day),
-                              //             labelStyle:
-                              //                 TextStyle(color: Colors.black),
-                              //             hintText: ('DD'),
-                              //           ),
-                              //           validator: (value) {
-                              //             if (value!.isEmpty) {
-                              //               return (AppLocalizations.of(
-                              //                           context)!
-                              //                       .enter +
-                              //                   ' ' +
-                              //                   AppLocalizations.of(context)!
-                              //                       .day);
-                              //             }
-                              //             nowyDzien = value;
-                              //             return null;
-                              //           }),
-                              //     ),
-                              //   ],
-                           //   ),
-
-// pasieka
-                              // Row(
-                              //     //mainAxisAlignment: MainAxisAlignment.center,
-                              //     mainAxisAlignment: MainAxisAlignment.start,
-                              //     crossAxisAlignment: CrossAxisAlignment.end,
-                              //     children: <Widget>[
-                              //       SizedBox(
-                              //         width: 70,
-                              //         child: Text(
-                              //           AppLocalizations.of(context)!.apiaryNr +
-                              //               ':',
-                              //           style: TextStyle(
-                              //             //fontWeight: FontWeight.bold,
-                              //             fontSize: 15,
-                              //             color: Colors.black,
-                              //           ),
-                              //           softWrap: true, //zawijanie tekstu
-                              //           overflow: TextOverflow.fade,
-                              //         ),
-                              //       ),
-                              //       SizedBox(width: 20),
-                              //       SizedBox(
-                              //         width: 180,
-                              //         child: TextFormField(
-                              //             initialValue:
-                              //                 nowyNrPasieki.toString(),
-                              //             keyboardType: TextInputType.number,
-                              //             decoration: InputDecoration(
-                              //               labelText: (''),
-                              //               labelStyle:
-                              //                   TextStyle(color: Colors.black),
-                              //               hintText:
-                              //                   (AppLocalizations.of(context)!
-                              //                       .apiaryNr),
-                              //             ),
-                              //             validator: (value) {
-                              //               if (value!.isEmpty) {
-                              //                 return (AppLocalizations.of(
-                              //                             context)!
-                              //                         .enter +
-                              //                     ' ' +
-                              //                     AppLocalizations.of(context)!
-                              //                         .apiaryNr);
-                              //               }
-                              //               nowyNrPasieki = int.parse(value);
-                              //               return null;
-                              //             }),
-                              //       ),
-                              //     ]),
+   
+  //data 
+                              SizedBox(height: 10,),
+                              Padding(
+                                padding: const EdgeInsets.all(0.0),
+                                child: TextFormField(
+                                  controller: dateController,
+                                  readOnly: true, // blokuje ręczne wpisywanie
+                                  decoration: InputDecoration(                        
+                                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                                    focusedBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.blue)),
+                                    labelText: AppLocalizations.of(context)!.purchaseData,
+                                    labelStyle: TextStyle(color: Colors.black),
+                                    hintText: AppLocalizations.of(context)!.sElectDate,
+                                    suffixIcon: Icon(Icons.calendar_today),
+                                  ),
+                                  onTap: () => _selectDate(context),
+                                ),
+                              ),
+ 
+    
 
 // nazwa
                              SizedBox(
@@ -404,54 +200,6 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                                     return null;
                                   }),
                              
-                             
-                              // Row(
-                              //     //mainAxisAlignment: MainAxisAlignment.center,
-                              //     mainAxisAlignment: MainAxisAlignment.start,
-                              //     crossAxisAlignment: CrossAxisAlignment.end,
-                              //     children: <Widget>[
-                              //       SizedBox(
-                              //         width: 70,
-                              //         child: Text(
-                              //           AppLocalizations.of(context)!.nAme +
-                              //               ':',
-                              //           style: TextStyle(
-                              //             //fontWeight: FontWeight.bold,
-                              //             fontSize: 15,
-                              //             color: Colors.black,
-                              //           ),
-                              //           softWrap: true, //zawijanie tekstu
-                              //           overflow: TextOverflow.fade,
-                              //         ),
-                              //       ),
-                              //       SizedBox(width: 20),
-                              //       SizedBox(
-                              //         width: 180,
-                              //         child: TextFormField(
-                              //             initialValue: nowaNazwa,
-                              //             keyboardType: TextInputType.text,
-                              //             decoration: InputDecoration(
-                              //               labelText: (''),
-                              //               labelStyle:
-                              //                   TextStyle(color: Colors.black),
-                              //               hintText:
-                              //                   (AppLocalizations.of(context)!
-                              //                       .nAme),
-                              //             ),
-                              //             validator: (value) {
-                              //               // if (value!.isEmpty) {
-                              //               //   return (AppLocalizations.of(
-                              //               //               context)!
-                              //               //           .enter +
-                              //               //       ' ' +
-                              //               //       AppLocalizations.of(context)!
-                              //               //           .nAme);
-                              //               // }
-                              //               nowaNazwa = value;
-                              //               return null;
-                              //             }),
-                              //       ),
-                              //     ]),
 
 
 //kategoria
@@ -461,7 +209,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: <Widget>[
                                     SizedBox(
-                                      width: 75,
+                                      width: 110,
                                       child: Text(
                                         AppLocalizations.of(context)!.cAtegory +
                                             ':',
@@ -762,14 +510,15 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                             //zmień
                             MaterialButton(
                               height: 50,
-                              shape: const StadiumBorder(),
+                              shape: const StadiumBorder(
+                                side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                                ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
                                   //if (nowaKategoriaId! >= 4) nowyMiara = 2;
                                   if (edycja) {
                                     
-                                      print(
-                                          '$nowyNrPasieki, $nowaNazwa, $nowaKategoriaId, $nowyIlosc, $nowyMiara, $nowaCena, $nowaWartosc, $nowaWaluta, $nowyUwagi');
+                                      //print('$nowyNrPasieki, $nowaNazwa, $nowaKategoriaId, $nowyIlosc, $nowyMiara, $nowaCena, $nowaWartosc, $nowaWaluta, $nowyUwagi');
                                       DBHelper.updateZakupy(
                                         zakupy[0].id,
                                         dateController.text,
@@ -829,7 +578,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                                   (AppLocalizations.of(context)!.saveZ) +
                                   '   '), //Modyfikuj
                               color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
+                              textColor: Colors.black,
                               disabledColor: Colors.grey,
                               disabledTextColor: Colors.white,
                             ),

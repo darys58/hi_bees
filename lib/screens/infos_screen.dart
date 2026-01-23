@@ -8,10 +8,14 @@ import '../models/info.dart';
 import '../models/infos.dart';
 import '../widgets/info_item.dart';
 import '../models/dodatki1.dart';
+import '../models/dodatki2.dart';
+import '../models/queen.dart';
+import '../screens/queens_screen.dart';
 import '../screens/infos_edit_screen.dart';
 import '../screens/frame_edit_screen.dart';
 import '../screens/frame_move_screen.dart';
 import '../screens/frame_edit_screen2.dart';
+//import '../screens/add_queen_screen.dart';
 
 class InfoScreen extends StatefulWidget {
   static const routeName = '/screen-infos';
@@ -24,6 +28,10 @@ class _InfoScreenState extends State<InfoScreen> {
   bool _isInit = true;
   String wybranaKategoria = globals.aktualnaKategoriaInfo;
   String rokStatystyk = globals.rokStatystyk; //DateTime.now().toString().substring(0, 4);
+  String typUla = '';
+  String rodzajUla = '';
+  String uwagiUla = '';
+  String nazwaWlasna = '';
 
   List<Color> colory = [
     const Color.fromARGB(255, 252, 193, 104),
@@ -31,7 +39,7 @@ class _InfoScreenState extends State<InfoScreen> {
     const Color.fromARGB(255, 104, 187, 254),
     const Color.fromARGB(255, 83, 215, 88),
     const Color.fromARGB(255, 203, 174, 85),
-    const Color.fromARGB(255, 253, 182, 76),
+    const Color.fromARGB(255, 248, 168, 48),
     const Color.fromARGB(255, 255, 86, 74),
     const Color.fromARGB(255, 71, 170, 251),
     Color.fromARGB(255, 61, 214, 66),
@@ -67,7 +75,11 @@ class _InfoScreenState extends State<InfoScreen> {
           .fetchAndSetInfosForHive(globals.pasiekaID, globals.ulID)
           .then((_) {
         //wywołanie funkcji dynamicznego tworzenia słupków wykresu
-         
+        Provider.of<Queens>(context,listen: false)
+          .fetchAndSetQueens()
+          .then((_) {
+
+          }); 
       });
     }
     _isInit = false;
@@ -158,20 +170,54 @@ class _InfoScreenState extends State<InfoScreen> {
     while (kolor > 10) {
       kolor = kolor - 10;
     }
-    //pobranie danych parametryzacyjnych (e - waga mała ramka, f - waga duza ramka)
+    
+    //pobranie danych parametryzacyjnych (b - waga 1dm2 plastra, e - waga mała ramka, f - waga duza ramka)
     final dod1Data = Provider.of<Dodatki1>(context, listen: false);
     final dod1 = dod1Data.items;
 
     //pobranie danych info z wybranej kategorii
     final infosData = Provider.of<Infos>(context);
     List<Info> infos = infosData.items.where((inf) {
-      return inf.kategoria.contains(wybranaKategoria);
+      return inf.kategoria == (wybranaKategoria);
     }).toList();
+    
+    //uzyskanie dostępu do danych w tabeli Dodatki2 - typy własne uli
+    final dod2Data = Provider.of<Dodatki2>(context);
+    final dod2 = dod2Data.items;
+
+    //nazwy własne typów uli
+    String nazwaWl(String typ){
+      switch(typ){
+        case 'TYP A': nazwaWlasna = dod2[0].n; break;
+        case 'TYP B': nazwaWlasna = dod2[1].n; break;
+        case 'TYP C': nazwaWlasna = dod2[2].n; break;
+        case 'TYP D': nazwaWlasna = dod2[3].n; break;
+        default:nazwaWlasna = '';     
+      }
+      return ' ($nazwaWlasna)';
+    }
+
+    //poszukanie najstarszego roku w wybranej kategorii
+    int odRoku = int.parse(DateTime.now().toString().substring(0, 4)); //biezący rok
+    for (var i = 0; i < infos.length; i++) {
+      if(odRoku > int.parse(infos[i].data.substring(0, 4)))
+        odRoku = int.parse(infos[i].data.substring(0, 4));
+    }
+
+    rodzajUla = '';
+    typUla = '';
+
+    //pobranie danych matki z wybranej kategorii dla tego ula
+    final queensData = Provider.of<Queens>(context);
+    List<Queen> queens = queensData.items.where((qu) {
+      return qu.pasieka == globals.pasiekaID && qu.ul == globals.ulID ;
+    }).toList();
+
     //print('======= infos globals ${globals.pasiekaID}, ${globals.ulID}');
     // print(wybranaKategoria);
-    // print('======= infos lenght ${infos.length}');
+    //print('======= queens lenght ${queens.length}');
 
-    int miod = 0; //suma zboru miodu w g
+    double miod = 0; //suma zboru miodu w g
     int miodSlupekNr = 0; //numer słupka na wykresie zbioru miodu
     daneZbioruMioduDoWykresu = []; //zerowanie danych wykresu miodu dla ula
     String tempDataZbioru = ''; // tymczasowe zapamietanie daty zbioru przy dodawaniu zbiorów miodu z małych i duzych ramek
@@ -184,8 +230,8 @@ class _InfoScreenState extends State<InfoScreen> {
     int varroaSlupekNr = 0; //numer słupka na wykresie varroa
     daneVarroaDoWykresu = []; //zerowanie danych wykresu varroa dla ula
 
-    double wysokoscStatystyk = 0;
-    int dodatek = 0;
+   // double wysokoscStatystyk = 0;
+   // int dodatek = 0;
     var ostatniaData1 = DateTime.parse('2022-01-01 00:00');
     var ostatniaData2 = DateTime.parse('2022-01-01 00:00');
     var ostatniaData3 = DateTime.parse('2022-01-01 00:00');
@@ -203,9 +249,17 @@ class _InfoScreenState extends State<InfoScreen> {
     double suma3 = 0.0;
     double suma4 = 0.0;
    //double suma5 = 0.0;
+    //grafiki przy informacjach o matce 
+    Icon icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),); 
+    Icon icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);;
+    Icon icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+    Image image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
+    String rocznik = '';
+    bool brakMatki = false;
 
-
-    //dla kazdego info o zbiorach - podliczenie roczne zbiorów i przygotowanie danych do wykresów
+//******************************************************** */
+    //dla kazdego info - podliczenie roczne zbiorów i przygotowanie danych do wykresów
+ //******************************************************** */   
     for (var i = 0; i < infos.length; i++) {
       // print(
       //     '${infos[i].id},${infos[i].data},${infos[i].pasiekaNr},${infos[i].ulNr},${infos[i].kategoria},${infos[i].parametr},${infos[i].wartosc},${infos[i].miara},${infos[i].pogoda},${infos[i].temp},${infos[i].czas},${infos[i].uwagi},${infos[i].arch}');
@@ -214,16 +268,20 @@ class _InfoScreenState extends State<InfoScreen> {
 
       //****** ZBIORY*****  dla harvest:
       if (wybranaKategoria == 'harvest') {
-        
+        double dm = 0; //rozmiar węzy w dm2
         //dla bierzącego roku i danego rodzaju zbioru (miód, mała ramka)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x") {
-          miod = miod + (int.parse(infos[i].wartosc) * int.parse(dod1[0].e));
+          
+          if(infos[i].miara == '') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
+          else dm = double.parse(infos[i].miara);
+         
+          miod = miod + (double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000);
           //dane do wykresu
           if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
             daneZbioruMioduDoWykresu.add({ //to dodaj następny słupek wykresu
               "x": miodSlupekNr,         // Kolejna wartość osi X
-              "value": int.parse(infos[i].wartosc) * int.parse(dod1[0].e),   // Wartość słupka
+              "value": double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000,   // Wartość słupka
               "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X - data zbioru
             });
             tempDataZbioru = infos[i].data; //zapamietanie daty zbioru
@@ -231,18 +289,22 @@ class _InfoScreenState extends State<InfoScreen> {
           }else{ //jezeli data jest taka sama jak przy ostatnim wpisie to dodaj wartość zbióru do poprzedniego słupka wykresu
             daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //tzn. edytuj poprzednią wartość "value"
             = daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //dodając do niej
-            + int.parse(infos[i].wartosc) * int.parse(dod1[0].e); //kolejną wartość bo jest taka sama data zbioru 
+            + double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000; //kolejną wartość bo jest taka sama data zbioru 
           }
         }
         //dla bierzącego roku i danego rodzaju zbioru (miód, duza ramka)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x") {
-          miod = miod + (int.parse(infos[i].wartosc) * int.parse(dod1[0].f));
+          
+          if(infos[i].miara == '') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
+          else dm = double.parse(infos[i].miara);
+           print('dod1[0].b = ${dod1[0].b}');
+          miod = miod + double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000;//np: 1(ilość ramek) x 245(waga 1dm2) x 78725/10000(ilość dm2 wezy w ramce)
           //dane do wykresu
           if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
             daneZbioruMioduDoWykresu.add({ //to dodaj następny słupek wykresu
               "x": miodSlupekNr,         // Kolejna wartość osi X
-              "value": int.parse(infos[i].wartosc) * int.parse(dod1[0].f),   // Wartość słupka
+              "value": double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000,   // Wartość słupka
               "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X - data zbioru
             });
             tempDataZbioru = infos[i].data; //zapamietanie daty zbioru
@@ -250,9 +312,29 @@ class _InfoScreenState extends State<InfoScreen> {
           }else{ //jezeli data jest taka sama jak przy ostatnim wpisie to dodaj wartość zbióru do poprzedniego słupka wykresu
             daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //tzn. edytuj poprzednią wartość "value"
             = daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //dodając do niej
-            + int.parse(infos[i].wartosc) * int.parse(dod1[0].f); //kolejną wartość bo jest taka sama data zbioru 
+            + double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000; //kolejną wartość bo jest taka sama data zbioru 
           }
         }
+        //dla bierzącego roku i danego rodzaju zbioru (miód w kg)
+        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+            infos[i].parametr == AppLocalizations.of(context)!.honey + " = ") {
+          miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
+          //dane do wykresu
+          if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
+            daneZbioruMioduDoWykresu.add({ //to dodaj następny słupek wykresu
+              "x": miodSlupekNr,         // Kolejna wartość osi X
+              "value": (double.parse(infos[i].wartosc) * 1000).toInt(),    // Wartość słupka
+              "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X - data zbioru
+            });
+            tempDataZbioru = infos[i].data; //zapamietanie daty zbioru
+            miodSlupekNr = miodSlupekNr + 1;
+          }else{ //jezeli data jest taka sama jak przy ostatnim wpisie to dodaj wartość zbióru do poprzedniego słupka wykresu
+            daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //tzn. edytuj poprzednią wartość "value"
+            = daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //dodając do niej
+            + (double.parse(infos[i].wartosc) * 1000).toInt(); //kolejną wartość bo jest taka sama data zbioru 
+          }
+        }
+        
         //dla bierzącego roku i danego rodzaju zbioru (pyłek, miarka)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             (infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
@@ -295,136 +377,203 @@ class _InfoScreenState extends State<InfoScreen> {
 
       //********** WYPOSAZENIE ******** dla kategorii equipment
       if (wybranaKategoria == 'equipment') {
-        //dla bierzącego roku i parametru excluder
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.excluder) {
+        //dla wszystkich lat i parametru excluder
+        // if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+        //     infos[i].parametr == AppLocalizations.of(context)!.excluder) {
+        if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.excluder) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             wartosc1 = AppLocalizations.of(context)!.excluder + 
                 ' ' + AppLocalizations.of(context)!.on + ' ' + infos[i].miara +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'; //zamiana na polski format
+                ' (${zmienDate_cala(infos[i].data)})'; //zamiana na polski format
           }
         }
-        //dla bierzącego roku i parametru excluder - usuń
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == " " + AppLocalizations.of(context)!.excluder + " -") {
+        //dla wszystkich lat i parametru excluder - usuń
+        if ( infos[i].miara.isNotEmpty && infos[i].parametr == " " + AppLocalizations.of(context)!.excluder + " -") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             wartosc1 = AppLocalizations.of(context)!.excluder + ' - ' + AppLocalizations.of(context)!.lack +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'; //zamiana na polski format
+                ' (${zmienDate_cala(infos[i].data)})'; //zamiana na polski format
           }
         }
-        //dla bierzącego roku i parametru bottomBoard
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.bottomBoard + " " + AppLocalizations.of(context)!.isIs) {
+        //dla wszystkich lat i parametru bottomBoard
+        if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.bottomBoard + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
             wartosc2 = infos[i].parametr + ' ' + infos[i].wartosc +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ' (${zmienDate_cala(infos[i].data)})';
           }
         }
-        //dla bierzącego roku i parametru beePolenTrap
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs) {
+        //dla wszystkich lat i parametru beePolenTrap
+        if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
             wartosc3 = infos[i].parametr + ' ' + infos[i].wartosc +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ' (${zmienDate_cala(infos[i].data)})';
           }
         }
-        //dla bierzącego roku i parametru numberOfFrame
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {
+        
+ 
+        //dla wszystkich lat i parametru numberOfFrame
+        if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
+            typUla = infos[i].miara;
+            rodzajUla = infos[i].pogoda;
+            uwagiUla = infos[i].uwagi; 
             wartosc4 = infos[i].parametr + ' ' + infos[i].wartosc +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ' (${zmienDate_cala(infos[i].data)})';
           }
         }
       }
 
       //********** RODZINA ******** dla kategorii colony
       if (wybranaKategoria == 'colony') {
-        //dla bierzącego roku i parametru colonyForce
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+        //dla wszystkich lat i parametru colonyForce
+        //if (infos[i].data.substring(0, 4) == rokStatystyk && 
+        if(infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == " " + AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
-            wartosc1 = infos[i].wartosc +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            if(infos[i].wartosc == 'norma'){
+              wartosc1 = 'normalna' +
+                ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            }else{
+              wartosc1 = infos[i].wartosc +
+                ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            }
           }
         }
-        //dla bierzącego roku i cechy colony colonyState
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+        //dla wszystkich lat i cechy colony colonyState
+        //if (infos[i].data.substring(0, 4) == rokStatystyk && 
+        if (infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
-            wartosc2 = infos[i].wartosc +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            if(infos[i].wartosc == "zła"){
+              wartosc2 = 'agresywna' +
+                ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            }else{
+              wartosc2 = infos[i].wartosc +
+                ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            }
           }
         }
-        //dla bierzącego roku i cechy colony deadBees
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+        //dla wszystkich lat i cechy colony deadBees
+        //if (infos[i].data.substring(0, 4) == rokStatystyk && 
+        if(infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.deadBees) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
             wartosc3 = infos[i].wartosc + ' ' + infos[i].miara +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
       }
 
       //********** MATKA ******** dla queen
       if (wybranaKategoria == 'queen') {
-        //dla bierzącego roku i cechy matki queenBorn
+         
+         //dla wszystkich lat i cechy matki queenQuality (bardzo dobra)
+        if (//infos[i].data.substring(0, 4) == rokStatystyk && 
+            infos[i].wartosc.isNotEmpty &&
+            infos[i].parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) {
+          if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
+            ostatniaData1 = DateTime.parse(infos[i].data);
+            if(infos[i].wartosc == 'ok' || infos[i].wartosc == AppLocalizations.of(context)!.big || infos[i].wartosc == AppLocalizations.of(context)!.good || infos[i].wartosc == AppLocalizations.of(context)!.veryGood)              
+              icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),); 
+            else icon1 = Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),);                    
+            wartosc1 = 'ID' + infos[i].pogoda + ' ' + infos[i].wartosc +
+                ' (${zmienDate_cala(infos[i].data)})';
+                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+          }
+        }
+        //dla wszystkich lat i cechy matki queenBorn
         if (//infos[i].data.substring(0, 4) == rokStatystyk &&
             infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.queenWasBornIn) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
-            wartosc5 = infos[i].wartosc +
+            rocznik = '\'${infos[i].wartosc.substring(2)}';
+            wartosc5 = 'ID' + infos[i].pogoda + ' ' + AppLocalizations.of(context)!.bornIn + ' ' + infos[i].wartosc +
                 ' (${zmienDate_cala(infos[i].data)})';
                // ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
-        //dla bierzącego roku i cechy matki queenState (dziewica, naturalna)
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+        //wszystkich lat i cechy matki queenState (dziewica, naturalna)
+        if (//infos[i].data.substring(0, 4) == rokStatystyk && 
+            infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.queen + " -") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
-            wartosc3 = infos[i].wartosc +
-                //' (${zmienDate_cala(infos[i].data)})';
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            String wartoscM3 = '';
+            if(infos[i].wartosc == AppLocalizations.of(context)!.virgine){                   
+              icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),); 
+              wartoscM3 = AppLocalizations.of(context)!.virgine1;
+            } else if(infos[i].wartosc == AppLocalizations.of(context)!.naturallyMated){   
+              icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);                   
+              wartoscM3 = AppLocalizations.of(context)!.naturallyMated1;
+            } else if(infos[i].wartosc == AppLocalizations.of(context)!.artificiallyInseminated){   
+              icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);                   
+              wartoscM3 = AppLocalizations.of(context)!.artificiallyInseminated1;
+            } else if(infos[i].wartosc == AppLocalizations.of(context)!.droneLaying){   
+              icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),);                   
+              wartoscM3 = AppLocalizations.of(context)!.droneLaying;
+            }
+            wartosc3 = 'ID' + infos[i].pogoda + ' ' + wartoscM3 +
+                ' (${zmienDate_cala(infos[i].data)})';
+                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
-        //dla bierzącego roku i cechy matki queenStart (wolna, w klatce)
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+        //dla wszystkich lat i cechy matki queenStart (wolna, w klatce)
+        if (//infos[i].data.substring(0, 4) == rokStatystyk && 
+            infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.queenIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
-            wartosc4 = infos[i].wartosc +
-                //' (${zmienDate_cala(infos[i].data)})';
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            if(infos[i].wartosc == 'wolna' || infos[i].wartosc == 'freed')
+               image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
+            else image4 = Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
+            wartosc4 = 'ID' + infos[i].pogoda + ' ' + infos[i].wartosc +
+                ' (${zmienDate_cala(infos[i].data)})';
+                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
-        //dla bierzącego roku i cechy matki queenMark
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+        //dla wszystkich lat i cechy matki queenMark
+        if (//infos[i].data.substring(0, 4) == rokStatystyk && 
+            infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == " " + AppLocalizations.of(context)!.queen) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
-            wartosc2 = infos[i].wartosc + ' ' + infos[i].miara +
-                //' (${zmienDate_cala(infos[i].data)})';
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
-          }
-        }
-        //dla bierzącego roku i cechy matki queenQuality (bardzo dobra)
-        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) {
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
-            ostatniaData1 = DateTime.parse(infos[i].data);
-            wartosc1 = infos[i].wartosc +
-                //' (${zmienDate_cala(infos[i].data)})';
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            if(infos[i].wartosc == 'nie ma znak' || infos[i].wartosc == 'unmarked')
+              icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);
+            else if(infos[i].wartosc == 'ma inny znak' || infos[i].wartosc == 'marked other')
+              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),);
+            else if(infos[i].wartosc == 'ma biały znak' || infos[i].wartosc == 'marked white') 
+              icon2 = Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),);
+            else if(infos[i].wartosc == 'ma żółty znak' || infos[i].wartosc == 'marked yellow') 
+              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),);
+            else if(infos[i].wartosc == 'ma czerwony znak' || infos[i].wartosc == 'marked red') 
+              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
+            else if(infos[i].wartosc == 'ma zielony znak' || infos[i].wartosc == 'marked green')
+              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+            else if(infos[i].wartosc == 'ma niebieski znak' || infos[i].wartosc == 'marked blue')
+              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),);
+            else if(infos[i].wartosc == 'nie ma' || infos[i].wartosc == 'gone'){
+              icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
+              brakMatki = true;
+              }
+            else if(infos[i].wartosc == 'brak' || infos[i].wartosc == 'missing'){
+              icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
+               brakMatki = true;
+              }
+            String wartoscM2 = infos[i].wartosc;
+            if(infos[i].wartosc == AppLocalizations.of(context)!.unmarked ) wartoscM2 = AppLocalizations.of(context)!.unmarked1; 
+            else if(infos[i].wartosc == AppLocalizations.of(context)!.missing ) wartoscM2 = AppLocalizations.of(context)!.missing1; 
+            else if(infos[i].wartosc == AppLocalizations.of(context)!.gone ) wartoscM2 = AppLocalizations.of(context)!.gone1;            
+            wartosc2 = 'ID' + infos[i].pogoda + ' ' + wartoscM2 + ' ' + infos[i].miara +
+                ' (${zmienDate_cala(infos[i].data)})';
+                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
       }
@@ -483,8 +632,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
             globals.jezyk == 'pl_PL'
-                ? wartosc5 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
-                : wartosc5 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ? wartosc5 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'//' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
+                : wartosc5 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
 
           }
         }
@@ -495,8 +644,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData6) && DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData6 = DateTime.parse(infos[i].data);
             globals.jezyk == 'pl_PL'
-                ? wartosc6 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
-                : wartosc6 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ? wartosc6 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})' //' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
+                : wartosc6 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
       }
@@ -509,7 +658,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             wartosc1 = infos[i].wartosc + ' ' + infos[i].miara +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+              ' (${zmienDate_cala(infos[i].data)})';
+              //  ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
         //dla bierzącego roku i parametru biovar
@@ -518,24 +668,36 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
             wartosc2 = infos[i].wartosc + ' ' + infos[i].miara +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            ' (${zmienDate_cala(infos[i].data)})';
+                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
-        //dla bierzącego roku i parametru acid
+        //dla bierzącego roku i parametru acid (ml)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.acid) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
             wartosc3 = infos[i].wartosc + ' ' + infos[i].miara +
-                ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+              ' (${zmienDate_cala(infos[i].data)})';
+               // ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+          }
+        }
+        //dla bierzącego roku i parametru acid (g)
+        if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
+            infos[i].parametr == " " + AppLocalizations.of(context)!.acid) {
+          if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
+            ostatniaData4 = DateTime.parse(infos[i].data);
+            wartosc4 = infos[i].wartosc + ' ' + infos[i].miara +
+              ' (${zmienDate_cala(infos[i].data)})';
+              //  ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
         //dla bierzącego roku i parametru varroa
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == "varroa") {
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
-            ostatniaData4 = DateTime.parse(infos[i].data);
-            wartosc4 = infos[i].wartosc + ' ' + infos[i].miara +
+          if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
+            ostatniaData5 = DateTime.parse(infos[i].data);
+            wartosc5 = infos[i].wartosc + ' ' + infos[i].miara +
                 ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           } //ostatnia wartość varroa (nieuzywana bo wyswietlana jest suma)
           varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu
@@ -549,28 +711,40 @@ class _InfoScreenState extends State<InfoScreen> {
       }
     }
 
+    //usunięcie ze ststystyk informacji o matce jezeli jej brak
+    if(brakMatki){
+      wartosc1 = '';
+      wartosc3 = '';
+      wartosc4 = '';
+      wartosc5 = '';
+    }
+
     if (miod > 0 && pylek == 0) globals.wykresZbiory = 'miod';
     if (miod == 0 && pylek > 0) globals.wykresZbiory = 'pylek';
-    if (miod != 0 || pylek != 0 ||
-        wartosc1 != '' ||
-        wartosc2 != '' ||
-        wartosc3 != '' ||
-        wartosc4 != '' ||
-        wartosc5 != '' ||
-        wartosc6 != '') dodatek = 10;
-    if (miod != 0) wysokoscStatystyk = wysokoscStatystyk + 19;
-    if (pylek != 0) wysokoscStatystyk = wysokoscStatystyk + 19;
-    if (wartosc1 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
-    if (wartosc2 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
-    if (wartosc3 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
-    if (wartosc4 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
-    if (wartosc5 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
-    if (wartosc6 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    
+    // if (wybranaKategoria == 'harvest' && miod != 0 || pylek != 0 ||
+    //     wartosc1 != '' ||
+    //     wartosc2 != '' ||
+    //     wartosc3 != '' ||
+    //     wartosc4 != '' ||
+    //     wartosc5 != '' ||
+    //     wartosc6 != '') dodatek = 10;
+    // if (wybranaKategoria == 'harvest' && miod != 0) wysokoscStatystyk = wysokoscStatystyk + 19;
+    // if (wybranaKategoria == 'harvest' && pylek != 0) wysokoscStatystyk = wysokoscStatystyk + 19;
+    // if (wartosc1 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    // if (wartosc2 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    // if (wartosc3 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    // if (wartosc4 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    // if (wartosc5 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    // if (wartosc6 != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    // if (wybranaKategoria == 'equipment' && typUla != '' || rodzajUla != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    // if (wybranaKategoria == 'equipment' && uwagiUla != '') wysokoscStatystyk = wysokoscStatystyk + 22;
+    // if (wybranaKategoria == 'queen' && queens.length > 0) wysokoscStatystyk = wysokoscStatystyk + 22*2*queens.length + 5;
     // print(wartosc1);
     // print(wartosc2);
     // print(wartosc3);
     // print(wartosc4);
-    // print(wartosc5);
+   // print('wysokość statystyk = $wysokoscStatystyk');
 
     // wybór roku do statystyk
     void _showAlertYear() {
@@ -582,7 +756,7 @@ class _InfoScreenState extends State<InfoScreen> {
           //zeby tekst był wyśrodkowany w poziomie
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[        
-            if(2023 <= int.parse(DateTime.now().toString().substring(0, 4)))   
+            if(2023 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2023 >= odRoku)   
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -596,7 +770,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         : Text(('2023'),style: TextStyle(fontSize: 18))
               ), 
             
-            if(2024 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            if(2024 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2024 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -607,10 +781,10 @@ class _InfoScreenState extends State<InfoScreen> {
                 );
               }, child: globals.rokStatystyk == '2024'
                         ? Text(('> 2024 <'),style: TextStyle(fontSize: 18))
-                        : Text(('2024'),style: TextStyle(fontSize: 18))
-                        
+                        : Text(('2024'),style: TextStyle(fontSize: 18))                     
               ),
-            if(2025 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+
+            if(2025 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2025 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -623,7 +797,8 @@ class _InfoScreenState extends State<InfoScreen> {
                         ? Text(('> 2025 <'),style: TextStyle(fontSize: 18))
                         : Text(('2025'),style: TextStyle(fontSize: 18))
               ),
-            if(2026 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            
+            if(2026 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2026 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -636,7 +811,8 @@ class _InfoScreenState extends State<InfoScreen> {
                         ? Text(('> 2026 <'),style: TextStyle(fontSize: 18))
                         : Text(('2026'),style: TextStyle(fontSize: 18))
               ),
-            if(2027 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            
+            if(2027 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2027 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -649,7 +825,8 @@ class _InfoScreenState extends State<InfoScreen> {
                         ? Text(('> 2027 <'),style: TextStyle(fontSize: 18))
                         : Text(('2027'),style: TextStyle(fontSize: 18))
               ),
-            if(2028 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            
+            if(2028 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2028 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -662,7 +839,8 @@ class _InfoScreenState extends State<InfoScreen> {
                         ? Text(('> 2028 <'),style: TextStyle(fontSize: 18))
                         : Text(('2028'),style: TextStyle(fontSize: 18))
               ),
-            if(2029 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            
+            if(2029 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2029 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -675,7 +853,8 @@ class _InfoScreenState extends State<InfoScreen> {
                         ? Text(('> 2029 <'),style: TextStyle(fontSize: 18))
                         : Text(('2029'),style: TextStyle(fontSize: 18))
               ),
-            if(2030 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            
+            if(2030 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2030 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -790,7 +969,22 @@ class _InfoScreenState extends State<InfoScreen> {
             ),
           
         
-//wyposazenie                   
+//wyposazenie 
+          if(wybranaKategoria == 'equipment')
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  InfosEditScreen.routeName,
+                  arguments: {'idInfo': '',
+                              'kategoria': 'equipment', 
+                              'parametr': AppLocalizations.of(context)!.numberOfFrame + " = ", //ilość ramek
+                              'wartosc': '10', //wartość domyślna
+                              'idPasieki': pasieka, 
+                              'idUla':ul,},
+                );         
+            }, child: Text(('(1) ' + AppLocalizations.of(context)!.typeNumberOfFrame),
+            style: TextStyle(fontSize: 18)),
+            ),                   
           if(wybranaKategoria == 'equipment')
             TextButton(onPressed: (){
               Navigator.of(context).pop();
@@ -803,7 +997,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(1) ' + AppLocalizations.of(context)!.beePollenTrap), //poławiacz pyłku
+            }, child: Text(('(2) ' + AppLocalizations.of(context)!.beePollenTrap), //poławiacz pyłku
             style: TextStyle(fontSize: 18)),
             ), 
           if(wybranaKategoria == 'equipment')
@@ -818,7 +1012,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(2) ' + AppLocalizations.of(context)!.dennica),//dennica
+            }, child: Text(('(3) ' + AppLocalizations.of(context)!.dennica),//dennica
             style: TextStyle(fontSize: 18)),
             ), 
           if(wybranaKategoria == 'equipment')
@@ -833,7 +1027,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(3) ' + AppLocalizations.of(context)!.exclud + ' - ' + AppLocalizations.of(context)!.lack),
+            }, child: Text(('(4) ' + AppLocalizations.of(context)!.excludNo), //brak kraty
             style: TextStyle(fontSize: 18)),
             ), 
           if(wybranaKategoria == 'equipment')
@@ -848,24 +1042,10 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(4) ' + AppLocalizations.of(context)!.set + " " + AppLocalizations.of(context)!.exclud),
+            }, child: Text(('(5) ' + AppLocalizations.of(context)!.set + " " + AppLocalizations.of(context)!.exclud),
             style: TextStyle(fontSize: 18)),
             ), 
-          if(wybranaKategoria == 'equipment')
-            TextButton(onPressed: (){
-              Navigator.of(context).pop();
-              Navigator.of(context).pushNamed(
-                  InfosEditScreen.routeName,
-                  arguments: {'idInfo': '',
-                              'kategoria': 'equipment', 
-                              'parametr': AppLocalizations.of(context)!.numberOfFrame + " = ", //ilość ramek
-                              'wartosc': '10', //wartość domyślna
-                              'idPasieki': pasieka, 
-                              'idUla':ul,},
-                );         
-            }, child: Text(('(5) ' + AppLocalizations.of(context)!.numberOfFrame),
-            style: TextStyle(fontSize: 18)),
-            ), 
+          
 
 //rodzina
           if(wybranaKategoria == 'colony')
@@ -915,6 +1095,23 @@ class _InfoScreenState extends State<InfoScreen> {
             ),                  
 
 //matka                   
+          if(wybranaKategoria == 'queen')
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  QueenScreen.routeName, 
+                  arguments: {'idInfo': '',
+                              'kategoria': 'queen', 
+                              'parametr': AppLocalizations.of(context)!.queenIs, //Start
+                              'wartosc': AppLocalizations.of(context)!.freed, //wartość domyślna
+                              'idPasieki': pasieka, 
+                              'idUla':ul,},
+                );         
+            }, child: Text((AppLocalizations.of(context)!.aDdingQueen),
+            style: TextStyle(fontSize: 18)),
+            ),
+          
+          
           if(wybranaKategoria == 'queen')
             TextButton(onPressed: (){
               Navigator.of(context).pop();
@@ -1004,7 +1201,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(1) ' + AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame),
+            }, child: Text(('(1) ' + AppLocalizations.of(context)!.honey + " (" + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + ")"),
             style: TextStyle(fontSize: 18)),
             ),
           if(wybranaKategoria == 'harvest')
@@ -1019,9 +1216,25 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(1) ' + AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame),// duza ramka
+            }, child: Text(('(1) ' + AppLocalizations.of(context)!.honey + " (" + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + ")"),// duza ramka
             style: TextStyle(fontSize: 18)),
             ),
+          if(wybranaKategoria == 'harvest')
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  InfosEditScreen.routeName,
+                  arguments: {'idInfo': '',
+                              'kategoria': 'harvest', 
+                              'parametr': AppLocalizations.of(context)!.honey + " = " , //miód w kg
+                              'wartosc': '1', //wartość domyślna
+                              'idPasieki': pasieka, 
+                              'idUla':ul,},
+                );         
+            }, child: Text(('(1) ' + AppLocalizations.of(context)!.honey + " (kg)"),// duza ramka
+            style: TextStyle(fontSize: 18)),
+            ),    
+          
           if(wybranaKategoria == 'harvest')
             TextButton(onPressed: (){
               Navigator.of(context).pop();
@@ -1196,12 +1409,27 @@ class _InfoScreenState extends State<InfoScreen> {
                   InfosEditScreen.routeName,
                   arguments: {'idInfo': '',
                               'kategoria': 'treatment', 
-                              'parametr': AppLocalizations.of(context)!.acid, //biovar
+                              'parametr': AppLocalizations.of(context)!.acid, //kwas w ml
                               'wartosc': '1', //wartość domyślna
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(3) ' + AppLocalizations.of(context)!.acid),
+            }, child: Text(('(3) ' + AppLocalizations.of(context)!.acid + ' (ml)'),
+            style: TextStyle(fontSize: 18)),
+            ),
+          if(wybranaKategoria == 'treatment')
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  InfosEditScreen.routeName,
+                  arguments: {'idInfo': '',
+                              'kategoria': 'treatment', 
+                              'parametr': " " + AppLocalizations.of(context)!.acid, //kwas w gramach
+                              'wartosc': '1', //wartość domyślna
+                              'idPasieki': pasieka, 
+                              'idUla':ul,},
+                );         
+            }, child: Text(('(4) ' + AppLocalizations.of(context)!.acid + ' (g)'),
             style: TextStyle(fontSize: 18)),
             ),
           if(wybranaKategoria == 'treatment')
@@ -1242,7 +1470,7 @@ class _InfoScreenState extends State<InfoScreen> {
     );
   }
 
-    //odwócenie elementów listy zeby daty zwykresów były narastajaco (bo z bazy są malejąco)
+    //odwócenie elementów listy zeby daty z wykresów były narastajaco (bo z bazy są malejąco)
     daneZbioruPylkuDoWykresu = daneZbioruPylkuDoWykresu.reversed.toList();
     daneZbioruMioduDoWykresu = daneZbioruMioduDoWykresu.reversed.toList();
     daneVarroaDoWykresu = daneVarroaDoWykresu.reversed.toList();   
@@ -1261,40 +1489,40 @@ class _InfoScreenState extends State<InfoScreen> {
         title: 
         wybranaKategoria == 'inspection'
         ? Text(
-            AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.frameInspections  + " " + rokStatystyk,
-            style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+            AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.frameInspections + ' ' + AppLocalizations.of(context)!.frames2,//  + " " + rokStatystyk,
+            style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
           )
         : wybranaKategoria == 'equipment'
           ? Text(
-              AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.equipment  + " " + rokStatystyk,
-              style: TextStyle(fontSize: 17, color: Color.fromARGB(255, 0, 0, 0)),
+              AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.equipment,//  + " " + rokStatystyk,
+              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
             )
-            : wybranaKategoria == 'colony'
+          : wybranaKategoria == 'colony'
+            ? Text(
+                AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.colony,// + " " + rokStatystyk,
+                style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+              )
+            : wybranaKategoria == 'queen'
               ? Text(
-                  AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.colony + " " + rokStatystyk,
-                  style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+                  AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.queen ,//+ " " + rokStatystyk,
+                  style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
                 )
-                : wybranaKategoria == 'queen'
+              : wybranaKategoria == 'harvest'
+                ? Text(
+                    AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.harvest + " " + rokStatystyk,
+                    style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+                  )
+                : wybranaKategoria == 'feeding'
                   ? Text(
-                      AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.queen + " " + rokStatystyk,
-                      style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+                      AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.feeding + " " + rokStatystyk,
+                      style: TextStyle(fontSize: 17, color: Color.fromARGB(255, 0, 0, 0)),
                     )
-                  : wybranaKategoria == 'harvest'
+                  : wybranaKategoria == 'treatment'
                     ? Text(
-                        AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.harvest + " " + rokStatystyk,
+                        AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.treatment + " " + rokStatystyk,
                         style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
                       )
-                    : wybranaKategoria == 'feeding'
-                      ? Text(
-                          AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.feeding + " " + rokStatystyk,
-                          style: TextStyle(fontSize: 17, color: Color.fromARGB(255, 0, 0, 0)),
-                        )
-                      : wybranaKategoria == 'treatment'
-                        ? Text(
-                            AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.treatment + " " + rokStatystyk,
-                            style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
-                          )
-                        : null,      
+                    : null,      
         backgroundColor: Color.fromARGB(255, 255, 255, 255), //tło pola nawigacji
         elevation: 0, // Brak cienia = brak zmiany koloru
         shadowColor: Colors.transparent,
@@ -1305,7 +1533,17 @@ class _InfoScreenState extends State<InfoScreen> {
             icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
             onPressed: () => 
                //print('${globals.pasiekaID}, $hiveNr')
-                _showAlert(context, globals.pasiekaID, hiveNr)
+               wybranaKategoria == 'queen' && queens.length == 0 //jezeli brak wybranej matki dla ula
+                  ? Navigator.of(context).pushNamed(
+                    QueenScreen.routeName, 
+                      arguments: {'idInfo': '',
+                                  'kategoria': 'queen', 
+                                  'parametr': AppLocalizations.of(context)!.queenIs, //Start
+                                  'wartosc': AppLocalizations.of(context)!.freed, //wartość domyślna
+                                  'idPasieki': globals.pasiekaID, 
+                                  'idUla':globals.ulID,},
+                    )
+                  : _showAlert(context, globals.pasiekaID, hiveNr)
                
           ),
           //wybranaKategoria=='harvest' || wybranaKategoria=='feeding'
@@ -1331,10 +1569,8 @@ class _InfoScreenState extends State<InfoScreen> {
       body: Container(
         child: Column(
           children: <Widget>[
-        
-        
-        
-          //menu wyboru kategorii info - ikony w kółkach
+
+      //menu wyboru kategorii info - ikony w kółkach
             Container(
               margin: EdgeInsets.all(10),
               //height: 60,
@@ -1369,7 +1605,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     )
                     : CircleAvatar(
                       maxRadius: 30,
-                      backgroundColor: colory[kolor - 1],
+                      //backgroundColor: colory[kolor - 1],
                       child: IconButton(
                         //backgroundColor: Color.fromARGB(255, 252, 193, 104),
                         color: Colors.black,
@@ -1381,8 +1617,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           });
                         },
                         style: IconButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 252, 193, 104),
-                        ),
+                          backgroundColor: colory[kolor - 1], //backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                        side:BorderSide(color: Colors.grey,width: 1,), ),
                       ),
                     ),
                     const SizedBox(
@@ -1410,7 +1646,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     )
                     : CircleAvatar(
                       maxRadius: 30,
-                      backgroundColor: colory[kolor - 1],
+                      //backgroundColor: colory[kolor - 1],
                       child: IconButton(
                         //backgroundColor: Color.fromARGB(255, 252, 193, 104),
                         color: Colors.black,
@@ -1422,7 +1658,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           });
                         },
                         style: IconButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          backgroundColor: colory[kolor - 1],// Color.fromARGB(255, 252, 193, 104),
+                          side:BorderSide(color: Colors.grey,width: 1,),
                         ),
                       ),
                     ),
@@ -1452,7 +1689,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     )
                     : CircleAvatar(
                       maxRadius: 30,
-                      backgroundColor: colory[kolor - 1],
+                      //backgroundColor: colory[kolor - 1],
                       child: IconButton(
                         //backgroundColor: Color.fromARGB(255, 252, 193, 104),
                         color: Colors.black,
@@ -1465,7 +1702,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           });
                         },
                         style: IconButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          backgroundColor: colory[kolor - 1], //backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          side:BorderSide(color: Colors.grey,width: 1,),
                         ),
                       ),
                     ),
@@ -1495,7 +1733,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     )
                     : CircleAvatar(
                       maxRadius: 30,
-                      backgroundColor: colory[kolor - 1],
+                      //backgroundColor: colory[kolor - 1],
                       child: IconButton(
                         //backgroundColor: Color.fromARGB(255, 252, 193, 104),
                         color: Colors.black,
@@ -1508,7 +1746,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           });
                         },
                         style: IconButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          backgroundColor: colory[kolor - 1], //backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          side:BorderSide(color: Colors.grey,width: 1,),
                         ),
                       ),
                     ),
@@ -1537,7 +1776,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     )
                     : CircleAvatar(
                       maxRadius: 30,
-                      backgroundColor: colory[kolor - 1],
+                      //backgroundColor: colory[kolor - 1],
                       child: IconButton(
                         //backgroundColor: Color.fromARGB(255, 252, 193, 104),
                         color: Colors.black,
@@ -1549,7 +1788,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           });
                         },
                         style: IconButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          backgroundColor: colory[kolor - 1], //backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          side:BorderSide(color: Colors.grey,width: 1,),
                         ),
                       ),
                     ),
@@ -1578,7 +1818,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     )
                     : CircleAvatar(
                       maxRadius: 30,
-                      backgroundColor: colory[kolor - 1],
+                      //backgroundColor: colory[kolor - 1],
                       child: IconButton(
                         //backgroundColor: Color.fromARGB(255, 252, 193, 104),
                         color: Colors.black,
@@ -1590,7 +1830,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           });
                         },
                         style: IconButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          backgroundColor: colory[kolor - 1], //backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          side:BorderSide(color: Colors.grey,width: 1,),
                         ),
                       ),
                     ),
@@ -1619,7 +1860,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     )
                     : CircleAvatar(
                       maxRadius: 30,
-                      backgroundColor: colory[kolor - 1],
+                      //backgroundColor: colory[kolor - 1],
                       child: IconButton(
                         //backgroundColor: Color.fromARGB(255, 252, 193, 104),
                         color: Colors.black,
@@ -1631,7 +1872,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           });
                         },
                         style: IconButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          backgroundColor: colory[kolor - 1], //backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                          side:BorderSide(color: Colors.grey,width: 1,),
                         ),
                       ),
                     ),
@@ -1680,9 +1922,9 @@ class _InfoScreenState extends State<InfoScreen> {
             //             //       const TextStyle(fontSize: 18, color: Colors.black)),
             //             trailing: const Icon(Icons.arrow_forward_ios)),
             //       )
-            //     : SizedBox(height: 1),
+           
         
-        //Statystyki zbiorów dla biezacego roku - wykres
+//Statystyki zbiorów dla biezacego roku - wykres
         //Wykres zbiorów miodu
             SizedBox(height: 10),
             if (wybranaKategoria == 'harvest' && globals.wykresZbiory == 'miod' && miod > 0)
@@ -1703,7 +1945,7 @@ class _InfoScreenState extends State<InfoScreen> {
                             int rodIndex
                           ){
                             return BarTooltipItem(
-                              (rod.toY/1000).toString(),
+                              (rod.toY/1000).toStringAsFixed(2), //zaokrąglenkie
                               TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
                           }
                         )
@@ -1713,7 +1955,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         bottomTitles: AxisTitles( //dolne opisy osi
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 50,
+                            reservedSize: 60, //miejsce na daty pod wykresem
                             getTitlesWidget: (double value, TitleMeta meta) {
                               // Pobieranie tekstu na podstawie wartości 'x'
                               String text = xAxisLabelsMiod[value.toInt()] ?? '';
@@ -1732,12 +1974,12 @@ class _InfoScreenState extends State<InfoScreen> {
                           //axisNameWidget: Text('kg'), //nazwa osi lewej
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 60,
+                            reservedSize: 70,
                             getTitlesWidget: (value, meta) {
-                              double osY = value.toDouble()/1000;
+                              double osY = value.toDouble()/1000; 
                               return Padding( 
                                 padding: const EdgeInsets.only(left: 10.0),
-                                child: Text (osY.toString()+' kg', style: TextStyle(fontSize: 12)), //, fontWeight: FontWeight.bold
+                                child: Text (osY.toStringAsFixed(2)+' kg', style: TextStyle(fontSize: 12)), //z zaokrągleniem, fontWeight: FontWeight.bold
                               );
                             },
                           ),
@@ -1753,7 +1995,7 @@ class _InfoScreenState extends State<InfoScreen> {
                   ),
                 ),
               ),
-        //Wykres zbiorów pyłku
+  //Wykres zbiorów pyłku
             if (wybranaKategoria == 'harvest' && globals.wykresZbiory == 'pylek' && pylek > 0)
               Padding(
                 padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0, bottom: 10),
@@ -1782,7 +2024,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 50,
+                            reservedSize: 60,//miejsce na daty pod wykresem
                             getTitlesWidget: (double value, TitleMeta meta) {
                               // Pobieranie tekstu na podstawie wartości 'x'
                               String text = xAxisLabelsPylek[value.toInt()] ?? '';
@@ -1800,7 +2042,7 @@ class _InfoScreenState extends State<InfoScreen> {
                           //axisNameWidget: Text('ml'), //nazwa osi lewej
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 60,
+                            reservedSize: 70,
                             getTitlesWidget: (value, meta) {
                               return Padding( 
                                 padding: const EdgeInsets.only(left: 10.0),
@@ -1821,178 +2063,454 @@ class _InfoScreenState extends State<InfoScreen> {
                 ),
               ),
         
-        
+  //Teksty do wyboru wyswietlanego wykresu miodu lub pyłku      
             if (wybranaKategoria == 'harvest')
-              Container(
-                //margin: EdgeInsets.all(10),
-                height: wysokoscStatystyk + dodatek + 50,
-                child: Column(
-                  children: [                
-                    if (miod != 0)
-                      TextButton(onPressed: (){                      
-                        setState(() {
-                          globals.wykresZbiory = 'miod';
-                          _generateBarGroupsMiod();
-                        });
-                        }, child: 
-                        globals.wykresZbiory == 'miod'
-                          ? Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
-                              ' $rokStatystyk: ${(miod / 1000).toString().replaceAll('.', ',')} kg',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255)))
-                          : Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
-                              ' $rokStatystyk: ${(miod / 1000).toString().replaceAll('.', ',')} kg',
-                              style: const TextStyle(fontSize: 16)),
-                      ), 
-                    
-                    if (pylek != 0)  
-                      TextButton(onPressed: (){
-                        setState(() {
-                          globals.wykresZbiory = 'pylek';
-                          _generateBarGroupsPylek();
-                        });
-                        }, child:  
-                        globals.wykresZbiory == 'pylek'
-                          ? Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
-                              ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255)))
-                          : Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
-                              ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
-                              style: const TextStyle(fontSize: 16)),
-                      ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  //margin: EdgeInsets.all(10),
+                  //height: wysokoscStatystyk + dodatek + 50,
+                  child: Column(
+                    children: [                
+                      if (miod != 0)
+                        TextButton(onPressed: (){                      
+                          setState(() {
+                            globals.wykresZbiory = 'miod';
+                            _generateBarGroupsMiod();
+                          });
+                          }, child: 
+                          globals.wykresZbiory == 'miod'
+                            ? Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
+                                ' $rokStatystyk: ${(miod / 1000).toStringAsFixed(2).replaceAll('.', ',')} kg', //z zaokrągleniem
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255)))
+                            : Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
+                                ' $rokStatystyk: ${(miod / 1000).toStringAsFixed(2).replaceAll('.', ',')} kg', //z zaokrągleniem
+                                style: const TextStyle(fontSize: 16)),
+                        ), 
                       
-                      // Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
-                      //         ' $rokStatystyk: ${(miod / 1000).toString().replaceAll('.', ',')} kg',
-                      //     style: const TextStyle(fontSize: 16)),
-                    // if (pylek != 0)
-                    //   Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
-                    //           ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
-                    //       style: const TextStyle(fontSize: 16)),
-                  ],
+                      if (pylek != 0)  
+                        TextButton(onPressed: (){
+                          setState(() {
+                            globals.wykresZbiory = 'pylek';
+                            _generateBarGroupsPylek();
+                          });
+                          }, child:  
+                          globals.wykresZbiory == 'pylek'
+                            ? Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
+                                ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255)))
+                            : Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
+                                ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
+                                style: const TextStyle(fontSize: 16)),
+                        ),
+                        
+                        // Text("(1) " + AppLocalizations.of(context)!.honeyZbior +
+                        //         ' $rokStatystyk: ${(miod / 1000).toString().replaceAll('.', ',')} kg',
+                        //     style: const TextStyle(fontSize: 16)),
+                      // if (pylek != 0)
+                      //   Text("(2) " + AppLocalizations.of(context)!.beePollenZbior +
+                      //           ' $rokStatystyk: ${(pylek / 1000).toString().replaceAll('.', ',')} l',
+                      //       style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
               ),
         
         
-        //Statystyki equipment dla biezacego roku
+    //Ostatnie infa equipment dla biezacego roku
             if (wybranaKategoria == 'equipment')
-              Container(
-                //margin: EdgeInsets.all(10),
-                height: wysokoscStatystyk + dodatek + 10,
-                child: Column(
-                  children: [
-                    if (wartosc3 != '')
-                      Text('(1) $wartosc3', style: const TextStyle(fontSize: 16)),
-                    if (wartosc2 != '')
-                      Text('(2) $wartosc2', style: const TextStyle(fontSize: 16)),
-                    if (wartosc1 != '')
-                      Text('(3/4) $wartosc1', style: const TextStyle(fontSize: 16)),
-                    if (wartosc4 != '')
-                      Text('(5) $wartosc4', style: const TextStyle(fontSize: 16)),
-                  ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  //margin: EdgeInsets.all(10),
+                  //height: wysokoscStatystyk + dodatek + 10,
+                  child: Column(
+                    children: [
+                      if (typUla != '' || rodzajUla != '')  
+                        Text('$rodzajUla  $typUla' + nazwaWl('$typUla'),style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      if (uwagiUla != '')  
+                        Text('$uwagiUla' ,style: const TextStyle(fontSize: 14)),
+                      if (wartosc4 != '')
+                        Text('(1) $wartosc4', style: const TextStyle(fontSize: 16)),
+                      if (wartosc3 != '')
+                        Text('(2) $wartosc3', style: const TextStyle(fontSize: 16)),
+                      if (wartosc2 != '')
+                        Text('(3) $wartosc2', style: const TextStyle(fontSize: 16)),
+                      if (wartosc1 != '')
+                        Text('(4/5) $wartosc1', style: const TextStyle(fontSize: 16)),                    
+                    ],
+                  ),
                 ),
               ),
-        //Statystyki colony dla biezacego roku
+    //Ostatnie infa colony dla biezacego roku
             if (wybranaKategoria == 'colony')
-              Container(
-                //margin: EdgeInsets.all(10),
-                height: wysokoscStatystyk + dodatek,
-                child: Column(
-                  children: [
-                    if (wartosc2 != '')
-                      Text('(1) $wartosc2',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc1 != '')
-                      Text('(2) $wartosc1',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc3 != '')
-                      Text('(3) ' + AppLocalizations.of(context)!.deadBees + ' $wartosc3',
-                          style: const TextStyle(fontSize: 16)),
-                  ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  //margin: EdgeInsets.all(10),
+                 // height: wysokoscStatystyk + dodatek,
+                  child: Column(
+                    children: [
+                      if (wartosc2 != '')
+                        Text('(1) $wartosc2',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc1 != '')
+                        Text('(2) $wartosc1',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc3 != '')
+                        Text('(3) ' + AppLocalizations.of(context)!.deadBees + ' $wartosc3',
+                            style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
               ),
-        //Statystyki queen dla biezacego roku
+  
+  //Ostatnie infa  queen dla biezacego roku
             if (wybranaKategoria == 'queen')
-              Container(
-                //margin: EdgeInsets.all(10),
-                height: wysokoscStatystyk + dodatek,
-                child: Column(
-                  children: [
-                    if (wartosc4 != '')
-                      Text('(1) $wartosc4',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc1 != '')
-                      Text('(2) $wartosc1',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc3 != '')
-                      Text('(3) $wartosc3',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc2 != '')
-                      Text('(4) $wartosc2',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc5 != '')
-                      Text('(5) $wartosc5',
-                          style: const TextStyle(fontSize: 16)),
-                  ],
+              Padding(
+                padding: const EdgeInsets.only(left: 30, bottom: 8),
+                child: Container(
+                  //margin: EdgeInsets.all(10),
+                  //height: wysokoscStatystyk + dodatek,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+    //dla trzeciej matki podłączonej do ula
+                    if(queens.length > 2)
+                      if(queens[2].dataStraty =='') //jezeli matka zyje
+                        RichText(
+                          text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                            TextSpan(
+                              text: ('(ID ${queens[2].id}) '),
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            TextSpan(
+                              text: ('${queens[2].linia} '),
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            TextSpan(
+                              text: ('${queens[2].rasa}'),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            // TextSpan(
+                            //   text: (
+                            //     '${queens[0].napis} '),
+                            //   style: TextStyle(
+                            //       fontSize: 18,
+                            //       fontWeight: FontWeight.bold,
+                            //       color: Color.fromARGB(255, 0, 0, 0)),
+                            //   ),
+                
+                            ])),  
+                        
+                      if(queens.length > 2)
+                        if(queens[2].dataStraty =='') //jezeli matka zyje
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              if(queens[2].znak != '' && queens[2].znak != '0') 
+                                if(queens[2].znak == AppLocalizations.of(context)!.unmarked)
+                                  Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
+                                else if(queens[2].znak == AppLocalizations.of(context)!.markedWhite)
+                                  Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),)
+                                else if(queens[2].znak == AppLocalizations.of(context)!.markedYellow)
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),)
+                                else if(queens[2].znak == AppLocalizations.of(context)!.markedRed)
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)
+                                else if(queens[2].znak == AppLocalizations.of(context)!.markedGreen) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
+                                else if(queens[2].znak == AppLocalizations.of(context)!.markedBlue) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),)
+                                else if(queens[2].znak == AppLocalizations.of(context)!.markedOther) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),),
+                
+                          Text(' ${queens[2].napis} ',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0))),
+                          Text('  ${queens[2].zrodlo} ${zmienDate_cala(queens[2].data)} ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0))),
+                           ],),
+                       
+                      SizedBox(height: 5),    
+                   
+
+    //dla drugiej matki podłączonej do ula
+                    if(queens.length > 1)
+                      if(queens[1].dataStraty =='') //jezeli matka zyje
+                        RichText(
+                          text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                            TextSpan(
+                              text: ('(ID ${queens[1].id}) '),
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            TextSpan(
+                              text: ('${queens[1].linia} '),
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            TextSpan(
+                              text: ('${queens[1].rasa}'),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            // TextSpan(
+                            //   text: (
+                            //     '${queens[0].napis} '),
+                            //   style: TextStyle(
+                            //       fontSize: 18,
+                            //       fontWeight: FontWeight.bold,
+                            //       color: Color.fromARGB(255, 0, 0, 0)),
+                            //   ),
+                
+                            ])),  
+                        
+                      if(queens.length > 1)
+                        if(queens[1].dataStraty =='') //jezeli matka zyje
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              if(queens[1].znak != '' && queens[1].znak != '0') 
+                                if(queens[1].znak == AppLocalizations.of(context)!.unmarked)
+                                  Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
+                                else if(queens[1].znak == AppLocalizations.of(context)!.markedWhite)
+                                  Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),)
+                                else if(queens[1].znak == AppLocalizations.of(context)!.markedYellow)
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),)
+                                else if(queens[1].znak == AppLocalizations.of(context)!.markedRed)
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)
+                                else if(queens[1].znak == AppLocalizations.of(context)!.markedGreen) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
+                                else if(queens[1].znak == AppLocalizations.of(context)!.markedBlue) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),)
+                                else if(queens[1].znak == AppLocalizations.of(context)!.markedOther) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),),
+                
+                          Text(' ${queens[1].napis} ',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0))),
+                          Text('  ${queens[1].zrodlo} ${zmienDate_cala(queens[1].data)} ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0))),
+                           ],),
+                       
+                      SizedBox(height: 5),    
+                            
+                    
+          //dla pierwszej matki podłączonej do ula
+          //pierwszy wiersz: ID, linia, rasa
+                    if(queens.length > 0)
+                      if(queens[0].dataStraty =='') //jezeli matka zyje
+                        RichText(
+                          text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                            TextSpan(
+                              text: ('(ID ${queens[0].id}) '),
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            TextSpan(
+                              text: ('${queens[0].linia} '),
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            TextSpan(
+                              text: ('${queens[0].rasa}'),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                            // TextSpan(
+                            //   text: (
+                            //     '${queens[0].napis} '),
+                            //   style: TextStyle(
+                            //       fontSize: 18,
+                            //       fontWeight: FontWeight.bold,
+                            //       color: Color.fromARGB(255, 0, 0, 0)),
+                            //   ),
+                
+                            ])),  
+      //drugi wersz:  znak, napis, zródło, data pozyskania                 
+                      if(queens.length > 0)
+                        if(queens[0].dataStraty =='') //jezeli matka zyje
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              if(queens[0].znak != '' && queens[0].znak != '0') 
+                                if(queens[0].znak == AppLocalizations.of(context)!.unmarked)
+                                  Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
+                                else if(queens[0].znak == AppLocalizations.of(context)!.markedWhite)
+                                  Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),)
+                                else if(queens[0].znak == AppLocalizations.of(context)!.markedYellow)
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),)
+                                else if(queens[0].znak == AppLocalizations.of(context)!.markedRed)
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)
+                                else if(queens[0].znak == AppLocalizations.of(context)!.markedGreen) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
+                                else if(queens[0].znak == AppLocalizations.of(context)!.markedBlue) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),)
+                                else if(queens[0].znak == AppLocalizations.of(context)!.markedOther) 
+                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),),
+                
+                          Text(' ${queens[0].napis} ',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0))),
+                          Text('  ${queens[0].zrodlo} ${zmienDate_cala(queens[0].data)} ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  //fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 0, 0, 0))),
+                           ],),
+//informacje z przeglądów                   
+                      SizedBox(height: 5),    
+ //ograniczenie matki
+                      if (wartosc4 != '')
+                        Row(
+                          children: [
+                            image4,
+                            Text(' (1) $wartosc4',
+                                style: const TextStyle(fontSize: 16)),
+                          ],
+                        ),
+ //jakość matki                     
+                      if (wartosc1 != '')
+                        Row(
+                          children: [
+                            SizedBox(width: 6),
+                            icon1,
+                            Text(' (2) $wartosc1',
+                                style: const TextStyle(fontSize: 16)),
+                          ],
+                        ),
+//unasiennienie                      
+                      if (wartosc3 != '')
+                        Row(
+                          children: [
+                            SizedBox(width: 6),
+                            icon3,
+                            Text(' (3) $wartosc3',
+                                style: const TextStyle(fontSize: 16)),
+                          ],
+                        ),
+//znak                      
+                      if (wartosc2 != '')
+                        Row(
+                          children: [
+                            SizedBox(width: 6),
+                            icon2,
+                            Text(' (4) $wartosc2',
+                                style: const TextStyle(fontSize: 16)),
+                          ],
+                        ),
+//rocznik                      
+                      if (wartosc5 != '')
+                        Text('$rocznik (5) $wartosc5',
+                            style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
               ),
-        //Statystyki feeding dla biezacego roku
+        
+        
+  //Statystyki feeding dla biezacego roku
             if (wybranaKategoria == 'feeding')
-              Container(
-                //margin: EdgeInsets.all(10),
-                height: wysokoscStatystyk + dodatek + 10,
-                child: Column(
-                  children: [
-                    if (wartosc1 != '')
-                      Text(
-                          globals.jezyk == 'pl_PL'
-                              ? '(1) ' + AppLocalizations.of(context)!.syrup +
-                                  ' 1:1 $wartosc1' +
-                                  ' ($rokStatystyk: ${suma1.toString().replaceAll('.', ',')} l))'
-                              : '(1) ' + AppLocalizations.of(context)!.syrup +
-                                  ' 1:1 $wartosc1' +
-                                  ' ($rokStatystyk: $suma1 l)',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc2 != '')
-                      Text(
-                          globals.jezyk == 'pl_PL'
-                              ? '(2) ' + AppLocalizations.of(context)!.syrup +
-                                  ' 3:2 $wartosc2' +
-                                  ' ($rokStatystyk: ${suma2.toString().replaceAll('.', ',')} l)'
-                              : '(2) ' + AppLocalizations.of(context)!.syrup +
-                                  ' 3:2 $wartosc2' +
-                                  ' ($rokStatystyk: $suma2 l)',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc3 != '')
-                      Text(
-                          globals.jezyk == 'pl_PL'
-                              ? '(3) ' + AppLocalizations.of(context)!.invert +
-                                  ' $wartosc3' +
-                                  ' ($rokStatystyk: ${suma3.toString().replaceAll('.', ',')} l)'
-                              : '(3) ' + AppLocalizations.of(context)!.invert +
-                                  ' $wartosc3' +
-                                  ' ($rokStatystyk: $suma3 l)',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc4 != '') SizedBox(height: 10),
-                    if (wartosc4 != '')
-                      Text(
-                          globals.jezyk == 'pl_PL'
-                              ? '(4) ' + AppLocalizations.of(context)!.candy +
-                                  ' $wartosc4' +
-                                  ' ($rokStatystyk: ${suma4.toString().replaceAll('.', ',')} kg)'
-                              : '(4) ' + AppLocalizations.of(context)!.candy +
-                                  ' $wartosc4' +
-                                  ' ($rokStatystyk: $suma4 kg)',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc5 != '')
-                      Text('(5) ' + AppLocalizations.of(context)!.removedFood + ' $wartosc5',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc6 != '')
-                      Text('(6) ' + AppLocalizations.of(context)!.leftFood + ' $wartosc6',
-                          style: const TextStyle(fontSize: 16)),
-                  ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  //margin: EdgeInsets.all(10),
+                  //height: wysokoscStatystyk + dodatek + 10,
+                  child: Column(
+                    children: [
+                      if (wartosc1 != '')
+                        Text(
+                            globals.jezyk == 'pl_PL'
+                                ? '(1) ' + AppLocalizations.of(context)!.syrup +
+                                    ' 1:1 $wartosc1' +
+                                    ' ($rokStatystyk: ${suma1.toString().replaceAll('.', ',')} l))'
+                                : '(1) ' + AppLocalizations.of(context)!.syrup +
+                                    ' 1:1 $wartosc1' +
+                                    ' ($rokStatystyk: $suma1 l)',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc2 != '')
+                        Text(
+                            globals.jezyk == 'pl_PL'
+                                ? '(2) ' + AppLocalizations.of(context)!.syrup +
+                                    ' 3:2 $wartosc2' +
+                                    ' ($rokStatystyk: ${suma2.toString().replaceAll('.', ',')} l)'
+                                : '(2) ' + AppLocalizations.of(context)!.syrup +
+                                    ' 3:2 $wartosc2' +
+                                    ' ($rokStatystyk: $suma2 l)',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc3 != '')
+                        Text(
+                            globals.jezyk == 'pl_PL'
+                                ? '(3) ' + AppLocalizations.of(context)!.invert +
+                                    ' $wartosc3' +
+                                    ' ($rokStatystyk: ${suma3.toString().replaceAll('.', ',')} l)'
+                                : '(3) ' + AppLocalizations.of(context)!.invert +
+                                    ' $wartosc3' +
+                                    ' ($rokStatystyk: $suma3 l)',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc4 != '') SizedBox(height: 10),
+                      if (wartosc4 != '')
+                        Text(
+                            globals.jezyk == 'pl_PL'
+                                ? '(4) ' + AppLocalizations.of(context)!.candy +
+                                    ' $wartosc4' +
+                                    ' ($rokStatystyk: ${suma4.toString().replaceAll('.', ',')} kg)'
+                                : '(4) ' + AppLocalizations.of(context)!.candy +
+                                    ' $wartosc4' +
+                                    ' ($rokStatystyk: $suma4 kg)',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc5 != '')
+                        Text('(5) ' + AppLocalizations.of(context)!.removedFood + ' $wartosc5',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc6 != '')
+                        Text('(6) ' + AppLocalizations.of(context)!.leftFood + ' $wartosc6',
+                            style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
               ),
-        //Statystyki treatment dla biezacego roku
-        //Wykres varroa
+  //Statystyki treatment dla biezacego roku
+  //Wykres varroa
             if (wybranaKategoria == 'treatment' && varroa > 0)
               Padding(
                 padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0, bottom: 10),
@@ -2021,7 +2539,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 50,
+                            reservedSize: 60, //miejsce na daty pod wykresem
                             getTitlesWidget: (double value, TitleMeta meta) {
                               // Pobieranie tekstu na podstawie wartości 'x'
                               String text = xAxisLabelsVarroa[value.toInt()] ?? '';
@@ -2036,10 +2554,10 @@ class _InfoScreenState extends State<InfoScreen> {
                           ),
                         ),
                         leftTitles: AxisTitles(
-                          axisNameWidget: Text(AppLocalizations.of(context)!.mites), //nazwa osi lewej
+                          //axisNameWidget: Text(AppLocalizations.of(context)!.mites), //nazwa osi lewej
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 44,
+                            reservedSize: 50,
                             getTitlesWidget: (value, meta) {
                               return Padding( 
                                 padding: const EdgeInsets.only(left: 10.0),
@@ -2061,29 +2579,36 @@ class _InfoScreenState extends State<InfoScreen> {
               ),
         
             
-            
+  //infa w roku statystycznym o leczenu          
             if (wybranaKategoria == 'treatment')
-              Container(
-                // margin: EdgeInsets.all(10),
-                height: wysokoscStatystyk + dodatek,
-                child: Column(
-                  children: [
-                    if (varroa != '')
-                      Text('(4) varroa' + ' $rokStatystyk: ${(varroa).toString().replaceAll('.', ',')} ' + AppLocalizations.of(context)!.mites,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255))),
-                    if (wartosc1 != '')
-                      Text('(1) apivarol' + ' $wartosc1',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc2 != '')
-                      Text('(2) biovar' + ' $wartosc2',
-                          style: const TextStyle(fontSize: 16)),
-                    if (wartosc3 != '')
-                      Text('(3) ' + AppLocalizations.of(context)!.acid + ' $wartosc3',
-                          style: const TextStyle(fontSize: 16)),
-                    // if (wartosc4 != '')
-                    //   Text('(4) varroa' + ' $wartosc4',
-                    //       style: const TextStyle(fontSize: 16)),
-                  ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  // margin: EdgeInsets.all(10),
+                  //height: wysokoscStatystyk + dodatek,
+                  child: Column(
+                    children: [
+                      if (wartosc5 != '')
+                        Text('(5) varroa' + ' $rokStatystyk: ${(varroa).toString().replaceAll('.', ',')} ' + AppLocalizations.of(context)!.mites,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255))),
+                      if (wartosc1 != '')
+                        Text('(1) apivarol' + ' $wartosc1',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc2 != '')
+                        Text('(2) biovar' + ' $wartosc2',
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc3 != '')
+                        Text('(3) ' + AppLocalizations.of(context)!.acid + ' $wartosc3', //w ml
+                            style: const TextStyle(fontSize: 16)),
+                      if (wartosc4 != '')
+                        Text('(4) ' + AppLocalizations.of(context)!.acid + ' $wartosc4', //w g
+                            style: const TextStyle(fontSize: 16)),
+                     
+                      // if (wartosc4 != '')
+                      //   Text('(4) varroa' + ' $wartosc4',
+                      //       style: const TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
               ),
             

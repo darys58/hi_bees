@@ -14,7 +14,7 @@ class ApiarysItem extends StatelessWidget {
     const Color.fromARGB(255, 104, 187, 254),
     const Color.fromARGB(255, 83, 215, 88),
     const Color.fromARGB(255, 203, 174, 85),
-    const Color.fromARGB(255, 253, 182, 76),
+    const Color.fromARGB(255, 248, 168, 48),
     const Color.fromARGB(255, 255, 86, 74),
     const Color.fromARGB(255, 71, 170, 251),
     const Color.fromARGB(255, 61, 214, 66),
@@ -28,6 +28,7 @@ class ApiarysItem extends StatelessWidget {
     while (kolor > 10) {
       kolor = kolor - 10;
     }
+    //print('kolor = $kolor');
     //int ileUli = 0;
 
     //obliczanie róznicy miedzy dwoma datami
@@ -41,8 +42,8 @@ class ApiarysItem extends StatelessWidget {
     final przeglad = DateTime.parse(apiary.przeglad);
     final now = DateTime.now();
     final difference = daysBetween(przeglad, now);
-    // print('apiary.przeglad');
-    // print('${apiary.przeglad}');
+     //print('apiary.przeglad');
+     //print('${apiary.przeglad}');
 
     return InkWell(
       onTap: () {
@@ -59,6 +60,10 @@ class ApiarysItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.grey,
+            width: 1, //      
+          ),
           boxShadow: [
             BoxShadow(
               color: Color.fromARGB(255, 115, 115, 115).withValues(alpha:0.5),
@@ -87,8 +92,7 @@ class ApiarysItem extends StatelessWidget {
                 Expanded(
                   child: Container(
                     //zeby zrobić margines wokół części tekstowej
-                    padding: const EdgeInsets.all(
-                        6.00), //margines wokół części tekstowej
+                    padding: const EdgeInsets.all(6.00), //margines wokół części tekstowej
                     child: Column(
                       //ustawienie elementów jeden pod drugim - tytuł i opis
                       mainAxisSize: MainAxisSize.min,
@@ -110,9 +114,9 @@ class ApiarysItem extends StatelessWidget {
                           overflow: TextOverflow.fade, //skracanie tekstu
                         ),
                         Container(
-//pojemnik na datę ostatniego przeglądu
+//pojemnik na ilość uli i ilość dni od ostatniego przeglądu
                           padding: const EdgeInsets.only(top: 2),
-                          height: 18,
+                          height: 24,
                           child:
                               //ilość dni od ostatniego przegladu
                               apiary.ileUli > 1

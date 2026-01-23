@@ -36,17 +36,17 @@ class _ActivationScreenState extends State<ActivationScreen> {
         "jezyk": globals.jezyk,
       }),
     );
-    print(response.body);
+    //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
       if (odpPost['success'] == 'email') {
         _showAlertOK(context, AppLocalizations.of(context)!.alert,
             AppLocalizations.of(context)!.activationCodeWillBeSent);
-        print('wysłano e-mail');
+        //print('wysłano e-mail');
       } else if (odpPost['success'] == 'brak_email') {
         _showAlertOK(context, AppLocalizations.of(context)!.alert,
             AppLocalizations.of(context)!.sendAgain);
-        print('wysłano e-mail ale nie zapisał się');
+        //print('wysłano e-mail ale nie zapisał się');
       } else if (odpPost['success'] == 'ok') {
         _showAlertOK(context, AppLocalizations.of(context)!.success,
             AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
@@ -73,7 +73,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
       } else {
         _showAlertOK(context, AppLocalizations.of(context)!.alert,
             AppLocalizations.of(context)!.errorWhileActivating);
-        print('brak danych dla tej apki');
+        //print('brak danych dla tej apki');
       }
 
       //Navigator.of(context).pushNamed(OrderScreen.routeName);
@@ -204,7 +204,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                   //Aktywuj
                   MaterialButton(
                     height: 50,
-                    shape: const StadiumBorder(),
+                    shape: const StadiumBorder(
+                      side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                      ),                          
                     onPressed: () {
                       if (_formKey3.currentState!.validate()) {
                         //jezeli formularz wypełniony poprawnie
@@ -213,7 +215,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
                             if (inter) {
                               wyslijKod(globals.kod);
                             } else {
-                              print('braaaaaak internetu');
+                              //print('braaaaaak internetu');
                               _showAlertOK(
                                   context,
                                   AppLocalizations.of(context)!.alert,
@@ -229,7 +231,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         (AppLocalizations.of(context)!.activate) +
                         '   '), //AKTYWUJ===========================
                     color: Theme.of(context).primaryColor,
-                    textColor: Colors.white,
+                    textColor: Colors.black,
                     disabledColor: Colors.grey,
                     disabledTextColor: Colors.white,
                   ),

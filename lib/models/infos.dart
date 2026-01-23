@@ -133,6 +133,32 @@ class Infos with ChangeNotifier {
     notifyListeners();
   }
 
+  //pobranie wpisów o info dla jednegj pasieki z bazy lokalnej
+  Future<void> fetchAndSetInfosForApiary(pasieka) async {
+    final dataList = await DBHelper.getInfosOfApiary(pasieka);
+    _items = dataList
+        .map(
+          (item) => Info(
+            id: item['id'],
+            data: item['data'],
+            pasiekaNr: item['pasiekaNr'],
+            ulNr: item['ulNr'],
+            kategoria: item['kategoria'],
+            parametr: item['parametr'],
+            wartosc: item['wartosc'],
+            miara: item['miara'],
+            pogoda: item['pogoda'],
+            temp: item['temp'],
+            czas: item['czas'],
+            uwagi: item['uwagi'],
+            arch: item['arch']!,
+          ),
+        )
+        .toList();
+    //print('wczytanie info dla podanego ula i pasieki ---> Infos <---');
+    //print(_items);
+    notifyListeners();
+  }
 
   //zapisanie info do bazy lokalnej
   static Future<void> insertInfo(
@@ -167,22 +193,4 @@ class Infos with ChangeNotifier {
   }
 
 
-
-  /* 
-  //usuwanie wszystkich dań z bazy lokalnej
-  static Future<void> deleteAllMeals()async{
-     await DBHelper.deleteTable('dania');
-
-  }
-
-  static Future<void> updateFavorite(id, fav)async{
-     await DBHelper.updateFav(id, fav);
-
-  }
-
-  static Future<void> updateKoszyk(id, ile)async{
-     await DBHelper.updateIle(id, ile);
-
-  }
-*/
 }

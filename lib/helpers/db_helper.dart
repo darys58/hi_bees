@@ -9,31 +9,7 @@ import 'package:sqflite/sqlite_api.dart';
 
 //dostep do bazy - otwarcie bazy lub utworzenie nowej jesli nie było.
 class DBHelper {
-  /*
-  static Database _database;
-
-  Future<Database> get database async{
-    if (_database != null)
-    return _database;
-    _database = await initDB();
-    return _database;
-  }
-
-  initDB() async{
-    final dataPath = await sql.getDatabasesPath();
-    String dbPath = path.join(dataPath,'cobytu.db');
-    return await sql.openDatabase(
-      dbPath,
-      version: 1,
-      onCreate: (Database db, int version) async {
-        await db.execute(
-          'CREATE TABLE dania(id TEXT PRIMARY KEY, nazwa TEXT, opis TEXT, idwer TEXT, wersja TEXT, foto TEXT, gdzie TEXT, kategoria TEXT, podkat TEXT, srednia TEXT, alergeny TEXT, cena TEXT, czas TEXT, waga TEXT, kcal TEXT, lubi TEXT, fav TEXT, stolik TEXT)'
-          );
-    
-      }
-      );
-  }
-*/
+  
 
   static Future<Database> database() async {
     final dbPath = await sql.getDatabasesPath();
@@ -67,7 +43,9 @@ class DBHelper {
           'CREATE TABLE notatki(id INTEGER PRIMARY KEY, data TEXT, tytul TEXT, pasiekaNr INTEGER, ulNr INTEGER, notatka TEXT, status INTEGER, priorytet TEXT, uwagi TEXT, arch INTEGER)');
       await db.execute(
           'CREATE TABLE pogoda(id TEXT PRIMARY KEY, miasto TEXT, latitude TEXT, longitude TEXT, pobranie TEXT, temp TEXT, weatherId TEXT, icon TEXT, units INTEGER, lang TEXT, inne TEXT)');
-
+      await db.execute(
+          'CREATE TABLE matki(id INTEGER PRIMARY KEY, data TEXT, zrodlo TEXT, rasa TEXT, linia TEXT, znak TEXT, napis TEXT, uwagi TEXT, pasieka INTEGER, ul INTEGER, dataStraty TEXT, a TEXT, b TEXT, c TEXT, arch INTEGER)');
+     
       //    'CREATE TABLE podkategorie(id TEXT PRIMARY KEY, kolejnosc TEXT, kaId TEXT, nazwa TEXT)');
     }, version: 1);
   }
@@ -81,7 +59,7 @@ class DBHelper {
 //zapis do bazy
   static Future<void> insert(String table, Map<String, Object> data) async {
     final db = await DBHelper.database();
-   // print('DBHelper - wstawianie do tabeli $table');
+    //print('DBHelper - wstawianie do tabeli $table');
     db.insert(
       table,
       data,
@@ -173,6 +151,13 @@ class DBHelper {
     db.update('sprzedaz', {'arch': 1}, where: 'id = ?', whereArgs: [id]);
   }
 
+  //update tabeli matki - rekord zarchiwizowany - dla import_screen
+  static Future<void> updateMatkiArch(int id) async {
+    final db = await DBHelper.database();
+    //print('db_helpers: update matki - id=$id');
+    db.update('matki', {'arch': 1}, where: 'id = ?', whereArgs: [id]);
+  }
+
   //update tabeli zakupy - rekord zarchiwizowany - dla import_screen
   static Future<void> updateZakupyArch(int id) async {
     final db = await DBHelper.database();
@@ -224,18 +209,31 @@ class DBHelper {
     db.update('dodatki1', {'$pole': wartosc}, where: 'id = ?', whereArgs: ['1']);
   }
 
+  //update matki - dla import_screen
+  static Future<void> updateQueen(int id, String pole, int wartosc) async {
+    final db = await DBHelper.database();
+    //print('db_helpers: update matki $id: pole = $pole , wartość = $wartosc ');
+    db.update('matki', {'$pole': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
+
+//update ule, pola np. ikona - dla import_screen
+  static Future<void> updateUle(String id, String pole, String wartosc) async {
+    final db = await DBHelper.database();
+    //print('db_helpers: update ule $id: pole = $pole , wartość = $wartosc ');
+    db.update('ule', {'$pole': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
   
   //update ula w tabeli ule - info o matce1 - dla hives_screen
   static Future<void> updateUleMatka1(String id, String wartosc) async {
     final db = await DBHelper.database();
-  //  print('db_helpers: update ule - id=$id, matka1 = $wartosc');
+   //print('db_helpers: update ule - id=$id, matka1 = $wartosc');
     db.update('ule', {'matka1': wartosc}, where: 'id = ?', whereArgs: [id]);
   }
   
   //update ula w tabeli ule - info o matce2 - dla hives_screen
   static Future<void> updateUleMatka2(String id, String wartosc) async {
     final db = await DBHelper.database();
-  //  print('db_helpers: update ule - id=$id, matka2 = $wartosc');
+  // print('db_helpers: update matka2 - id=$id, matka2 = $wartosc');
     db.update('ule', {'matka2': wartosc}, where: 'id = ?', whereArgs: [id]);
   }
   
@@ -260,7 +258,36 @@ class DBHelper {
     db.update('ule', {'matka5': wartosc}, where: 'id = ?', whereArgs: [id]);
   }
   
-
+  //update dodatki2 - dla parametry_ula_screen
+  static Future<void> updateDodatki2(
+    String id,
+    String m,
+    String n,
+    String s,
+    String t,
+    String u,
+    String v,
+    String w,
+    String z, 
+  ) async {
+    final db = await DBHelper.database();
+    print('db_helpers: update dodatki2 - id = $id, m = $m, n = $n, s = $s');
+    db.update(
+        'dodatki2',
+        {
+          'm': m,
+          'n': n,
+          's': s,
+          't': t,
+          'u': u,
+          'v': v,
+          'w': w,
+          'z': z,
+        },
+        where: 'id = ?',
+        whereArgs: [id]);
+  }
+  
   //update zakupy - dla purchase_edit_screen
   static Future<void> updateZakupy(
     int id,
@@ -399,7 +426,7 @@ class DBHelper {
   static Future<void> updatePogoda(
       String id, String pobranie, double temp, String icon) async {
     final db = await DBHelper.database();
-   // print( 'db_helpers: update pogoda - id = $id, pobrane = $pobranie, temp = $temp, icon = $icon');
+    //print( 'db_helpers: update pogoda - id = $id, pobranie = $pobranie, temp = $temp, icon = $icon');
     db.update('pogoda', {'pobranie': pobranie, 'temp': temp, 'icon': icon},
         where: 'id = ?', whereArgs: [id]);
   }
@@ -440,6 +467,33 @@ class DBHelper {
         [pasieka, ul,'feeding','treatment']);
   }
 
+  //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii harvest - dla hives_screen
+  static Future<List<Map<String, dynamic>>> getDateInfoZkg(int pasieka, int ul, String parametr) async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie dat infoDL dla ula nr $ul');
+    return db.rawQuery(
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr = ? ORDER BY data DESC',
+        [pasieka, ul,'harvest', parametr]);
+  } 
+
+  //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii harvest - dla hives_screen
+  static Future<List<Map<String, dynamic>>> getDateInfoZmr(int pasieka, int ul, String parametr) async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie dat infoDL dla ula nr $ul');
+    return db.rawQuery(
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr = ? ORDER BY data DESC',
+        [pasieka, ul,'harvest', parametr]);
+  }
+
+   //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii harvest - dla hives_screen
+  static Future<List<Map<String, dynamic>>> getDateInfoZdr(int pasieka, int ul, String parametr) async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie dat infoDL dla ula nr $ul');
+    return db.rawQuery(
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr = ? ORDER BY data DESC',
+        [pasieka, ul,'harvest', parametr]);
+  }
+
   //pobieranie ramek dla danego ula i pasieki - dla frames
   static Future<List<Map<String, dynamic>>> getFramesOfHive(
       int pasieka, int ul) async {
@@ -465,6 +519,16 @@ class DBHelper {
     return db.query("info",
         where: "pasiekaNr=? and ulNr=? ORDER BY data DESC, czas DESC",
         whereArgs: [pasieka, ul]);
+  }
+
+  //pobieranie info dla danej pasieki - dla raportów
+  static Future<List<Map<String, dynamic>>> getInfosOfApiary(
+      int pasieka) async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie info dla pasieki nr $pasieka');
+    return db.query("info",
+        where: "pasiekaNr=? ORDER BY data DESC, czas DESC",
+        whereArgs: [pasieka]);
   }
 
   //pobieranie wszystkich nowych info do achiwizacji dla import_screen
@@ -495,6 +559,13 @@ class DBHelper {
     return db.query("sprzedaz", where: "arch=?", whereArgs: [0]);
   }
 
+  //pobieranie wszystkich nowych matek do achiwizacji dla import_screen
+  static Future<List<Map<String, dynamic>>> getMatkiToArch() async {
+    final db = await DBHelper.database();
+   // print('DBHelper - pobieranie tabeli matki do achiwizacji');
+    return db.query("matki", where: "arch=?", whereArgs: [0]);
+  }
+
   //pobieranie wszystkich nowych zakupy do achiwizacji dla import_screen
   static Future<List<Map<String, dynamic>>> getZakupyToArch() async {
     final db = await DBHelper.database();
@@ -523,7 +594,7 @@ class DBHelper {
   static Future<List<Map<String, dynamic>>> getMem(String dev) async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie memory dla dev = $dev');
-    return db.rawQuery('SELECT * FROM memory WHERE  dev = ?', [dev]);
+    return db.rawQuery('SELECT * FROM memory WHERE  dev = ? OR dev = "test"', [dev]);
   }
 
   //odczyt z tabeli dodatki1  - dla apiary_screen
@@ -531,6 +602,20 @@ class DBHelper {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie dodatki 1');
     return db.rawQuery('SELECT * FROM dodatki1');
+  }
+
+  //odczyt z tabeli dodatki1  - dla apiary_screen
+  static Future<List<Map<String, dynamic>>> getDodatki2() async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie dodatki 1');
+    return db.rawQuery('SELECT * FROM dodatki2');
+  }
+
+  //odczyt z tabeli matki  - dla apiary_screen, infos_screen
+  static Future<List<Map<String, dynamic>>> getQueens() async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie matek');
+    return db.rawQuery('SELECT * FROM matki ORDER BY id DESC');
   }
 
   //odczyt z tabeli zbiory - dla harvest_screen
@@ -610,6 +695,13 @@ class DBHelper {
     db.delete('notatki', where: 'id= ?', whereArgs: [id]);
   }
 
+   //usuniecie rekordu o podanym id z tabeli matki - dla , queen_item
+  static Future<void> deleteQueen(int id) async {
+    final db = await DBHelper.database();
+  //  print('DBhelper: delete notatki id = $id');
+    db.delete('matki', where: 'id= ?', whereArgs: [id]);
+  }
+
   //usuniecie rekordu o podanym id z tabeli sprzedaz - dla sale_edit_screen, sale_item
   static Future<void> deleteSprzedaz(int id) async {
     final db = await DBHelper.database();
@@ -633,146 +725,4 @@ class DBHelper {
         whereArgs: [data, pasieka, ul]);
   }
 
-  // //odczyt z bazy jednej ramki
-  //  static Future<List<Map<String, dynamic>>> getFrame(String ul) async {
-  //   final db = await DBHelper.database();
-  //   print('pobieranie ula dla $ul');
-  //   return db.rawQuery('SELECT  * FROM ramka WHERE ulId = ?', [ul]);
-  // }
-
-  // static Future<List<Map<String, dynamic>>> isFrame(String pasiekaId, String ulId) async {
-  //   final db = await DBHelper.database();
-  //   print('pobieranie id ramki dla PasiekaId = $pasiekaId');
-  //   var ramka = await db.query("ramka",
-  //       where: "pasiekaId=? and ulId=?", whereArgs: [pasiekaId, ulId]);
-  //   //int wyn = ramka.isNotEmpty ? ramka.length : 0;
-  //   return ramka;
-  // }
-
-/*
-  //update polubienia dania
-  static Future<void> updateFav(String id, String fav) async {
-    final db = await DBHelper.database();
-    print('update dania fav');
-    db.update('dania', {'fav': fav}, where: 'id = ?', whereArgs: [id]);
-  }
-
-  //update koszyka/stolika dania - ilość dań w koszyku
-  static Future<void> updateIle(String id, String ile) async {
-    final db = await DBHelper.database();
-    print('db_helpers: update dania - ile w koszyku da=$id ile=$ile');
-    db.update('dania', {'stolik': ile}, where: 'id = ?', whereArgs: [id]);
-  }
-
-  //odczyt z bazy restauracji z unikalnymi województwami - dla location
-  static Future<List<Map<String, dynamic>>> getWoj(String table) async {
-    final db = await DBHelper.database();
-    print('pobieranie wojewodztw z tabeli $table');
-    return db
-        .rawQuery('SELECT DISTINCT woj, wojId FROM $table ORDER BY woj ASC ');
-  }
-
-  //odczyt z bazy restauracji z unikalnymi miastami dla danego województwa - dla location
-  static Future<List<Map<String, dynamic>>> getMia(String woj) async {
-    final db = await DBHelper.database();
-    print('pobieranie miast dla $woj');
-    return db.rawQuery(
-        'SELECT DISTINCT miasto, miaId FROM restauracje WHERE woj = ? ORDER BY miasto ASC',
-        [woj]);
-  }
-
-  //odczyt z bazy restauracji dla danego miasta - dla location
-  static Future<List<Map<String, dynamic>>> getRests(String miasto) async {
-    final db = await DBHelper.database();
-    print('pobieranie restauracji dla $miasto');
-    return db.rawQuery(
-        'SELECT  * FROM restauracje WHERE miasto = ? ORDER BY nazwa ASC',
-        [miasto]);
-  }
-
-  //odczyt z bazy restauracji dla danego id - dla meal_item - potrzebne modMenu
-  static Future<List<Map<String, dynamic>>> getRestWithId(String restId) async {
-    final db = await DBHelper.database();
-    print('db_helpers: pobieranie restauracji dla id = $restId');
-    return db.rawQuery('SELECT  * FROM restauracje WHERE id = ?', [restId]);
-  }
-
-  //odczyt rekordu z bazy memory
-  static Future<List<Map<String, dynamic>>> getMemory(String nazwa) async {
-    final db = await DBHelper.database();
-    print('pobieranie memory dla $nazwa');
-    return db.rawQuery('SELECT  * FROM memory WHERE nazwa = ?', [nazwa]);
-  }
-
-  //czy jest danie o podanym id
-  static Future<bool> isMeal(String daId) async {
-    final db = await DBHelper.database();
-    print('pobieranie dania dla daId = $daId');
-    var danie = await db.query("dania", where: "id=?", whereArgs: [daId]);
-    return danie.isNotEmpty ? true : false;
-  }
-
-  //pobranie dania o podanym id
-  static Future<List<Map<String, dynamic>>>  getMeal(String daId) async {
-    final db = await DBHelper.database();
-    print('pobieranie dania dla daId = $daId');
-    var danie = await db.query("dania", where: "id=?", whereArgs: [daId]);
-    return danie.isNotEmpty ? db.rawQuery('SELECT  * FROM dania WHERE id = ?', [daId]) : null;
-  }
-*/
-
 }
-/*class DbHelper {
-      static const NEW_DB_VERSION = 2;
-
-      static final DbHelper _instance = DbHelper.internal();
-
-      factory DbHelper() => _instance;
-
-      DbHelper.internal();
-
-      Database _db;
-
-      Future<Database> get db async {
-        if (_db != null) {
-          return _db;
-        } else {
-          _db = await initDb();
-          return _db;
-        }
-      }
-
-      Future<Database> initDb() async {
-
-        final databasesPath = await getDatabasesPath();
-        final path = join(databasesPath, "database.db");
-
-        var db = await openDatabase(path);
-
-        //if database does not exist yet it will return version 0
-        if (await db.getVersion() < NEW_DB_VERSION) {
-
-          db.close();
-
-          //delete the old database so you can copy the new one
-          await deleteDatabase(path);
-
-          try {
-            await Directory(dirname(path)).create(recursive: true);
-          } catch (_) {}
-
-          //copy db from assets to database folder
-          ByteData data = await rootBundle.load("assets/databases/database.db");
-          List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-          await File(path).writeAsBytes(bytes, flush: true);
-
-          //open the newly created db 
-          db = await openDatabase(path);
-
-          //set the new version to the copied db so you do not need to do it manually on your bundled database.db
-          db.setVersion(NEW_DB_VERSION);
-
-        }
-
-        return db;
-      }*/

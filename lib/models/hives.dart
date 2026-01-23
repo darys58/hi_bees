@@ -185,25 +185,6 @@ class Hives with ChangeNotifier {
   }
 
 
-  
-  // List<Hive> get favoriteItems {
-  //   return _items.where((prodItem) => prodItem.isFavorite).toList();
-  // }
-
-  // Hive findById(String id) {
-  //   return _items.firstWhere((prod) => prod.id == id);
-  // }
-
-  // void showFavoritesOnly() {
-  //   _showFavoritesOnly = true;
-  //   notifyListeners();
-  // }
-
-  // void showAll() {
-  //   _showFavoritesOnly = false;
-  //   notifyListeners();
-  // }
-
   //addHive
   void addProduct() {
     // _items.add(value);

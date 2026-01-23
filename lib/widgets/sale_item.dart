@@ -165,7 +165,7 @@ class _SaleItemState extends State<SaleItem> {
                 TextButton(
                   onPressed: () => {
                     DBHelper.deleteSprzedaz(sprzedaz.id).then((_) {
-                      print('3... kasowanie elementu sprzedazu');
+                      //print('3... kasowanie elementu sprzedazu');
 
                       Navigator.of(context)
                           .pop(true); //skasowanie elementu listy
@@ -177,7 +177,7 @@ class _SaleItemState extends State<SaleItem> {
                       Provider.of<Sales>(context, listen: false)
                           .fetchAndSetSprzedaz()
                           .then((_) {
-                        print('4... aktualizacja sprzedazow w sale_item');
+                       // print('4... aktualizacja sprzedazow w sale_item');
                       });
                     }),
                   },

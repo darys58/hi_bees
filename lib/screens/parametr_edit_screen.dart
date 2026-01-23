@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 //import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-//import '../globals.dart' as globals;
+import '../globals.dart' as globals;
 //import 'package:intl/intl.dart';
 import '../helpers/db_helper.dart';
 import '../models/dodatki1.dart';
@@ -20,6 +20,7 @@ class _ParametrEditScreenState extends State<ParametrEditScreen> {
 
   String? pole;
   String? wartosc;
+
  
 
   @override
@@ -28,8 +29,8 @@ class _ParametrEditScreenState extends State<ParametrEditScreen> {
         ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
     pole = routeArgs['pole'].toString();
     wartosc = routeArgs['wartosc'].toString();
-    print('pole= $pole');
-    print('wartosc= $wartosc');
+    //print('pole= $pole');
+   // print('wartosc= $wartosc');
     
     super.didChangeDependencies();
   }
@@ -66,6 +67,20 @@ class _ParametrEditScreenState extends State<ParametrEditScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
+                              if(pole == 'b') //waga miodu na 1dm2 ramki
+                                Container(
+                                  //mainAxisAlignment: MainAxisAlignment.center,
+                                  // mainAxisAlignment: MainAxisAlignment.start,
+                                  //crossAxisAlignment: CrossAxisAlignment.end,
+                                  child: 
+                                    Text(AppLocalizations.of(context)!.honeyOnDmFrame,
+                                        style: TextStyle(
+                                            //fontWeight: FontWeight.bold,
+                                            fontSize: 15),
+                                            softWrap: true, //zawijanie tekstu
+                                            overflow: TextOverflow.fade,
+                                            ),
+                                  ),
                               if(pole == 'e') //waga miodu na małej ramce
                                 Container(
                                   //mainAxisAlignment: MainAxisAlignment.center,
@@ -101,6 +116,20 @@ class _ParametrEditScreenState extends State<ParametrEditScreen> {
                                   //crossAxisAlignment: CrossAxisAlignment.end,
                                   child: 
                                     Text(AppLocalizations.of(context)!.beePollenPortion,
+                                        style: TextStyle(
+                                            //fontWeight: FontWeight.bold,
+                                            fontSize: 15),
+                                            softWrap: true, //zawijanie tekstu
+                                            overflow: TextOverflow.fade,
+                                            ),
+                                  ),
+                                if(pole == 'h') //ilość uli na stronie
+                                Container(
+                                  //mainAxisAlignment: MainAxisAlignment.center,
+                                  // mainAxisAlignment: MainAxisAlignment.start,
+                                  //crossAxisAlignment: CrossAxisAlignment.end,
+                                  child: 
+                                    Text(AppLocalizations.of(context)!.hivesOnSiteReport,
                                         style: TextStyle(
                                             //fontWeight: FontWeight.bold,
                                             fontSize: 15),
@@ -159,28 +188,37 @@ class _ParametrEditScreenState extends State<ParametrEditScreen> {
                                         }),
                                     ),
                                     SizedBox(width: 20),
+                                    
+                                    if(pole == 'g')
+                                      SizedBox(
+                                        width: 30,
+                                        child: 
+                                          Text('ml',
+                                              style: TextStyle(
+                                                //fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                                color: Colors.black,
+                                              ),
+                                              softWrap: true, //zawijanie tekstu
+                                              overflow: TextOverflow.fade,
+                                            ),
+                                          
+                                      ),
+                                    
+                                    if(pole == 'b')
                                     SizedBox(
                                       width: 30,
                                       child: 
-                                        pole == 'g'
-                                        ? Text('ml',
-                                            style: TextStyle(
-                                              //fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                              color: Colors.black,
-                                            ),
-                                            softWrap: true, //zawijanie tekstu
-                                            overflow: TextOverflow.fade,
-                                          )
-                                        : Text('g',
-                                            style: TextStyle(
-                                              //fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                              color: Colors.black,
-                                            ),
-                                            softWrap: true, //zawijanie tekstu
-                                            overflow: TextOverflow.fade,
+                                        Text('g',
+                                          style: TextStyle(
+                                            //fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            color: Colors.black,
                                           ),
+                                          softWrap: true, //zawijanie tekstu
+                                          overflow: TextOverflow.fade,
+                                        ),
+                                        
                                     ),
                                     
                                   ]),
@@ -198,11 +236,12 @@ class _ParametrEditScreenState extends State<ParametrEditScreen> {
                             //zmień
                             MaterialButton(
                               height: 50,
-                              shape: const StadiumBorder(),
+                              shape: const StadiumBorder(
+                                side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                                ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
-                                  // print(
-                                  //     '$idPasieki,$miasto,$latitude,$longitude,$units,$lang');
+                                  if(pole=='h') globals.raportIleUliNaStronie = int.parse(wartosc!);
                                   DBHelper.updateDodatki1('$pole', '$wartosc').then((_) {
 
                                     Provider.of<Dodatki1>(context, listen: false)
@@ -219,7 +258,7 @@ class _ParametrEditScreenState extends State<ParametrEditScreen> {
                                   (AppLocalizations.of(context)!.saveZ) +
                                   '   '), //Modyfikuj
                               color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
+                              textColor: Colors.black,
                               disabledColor: Colors.grey,
                               disabledTextColor: Colors.white,
                             ),

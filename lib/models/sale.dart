@@ -45,7 +45,7 @@ class Sales with ChangeNotifier {
     //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
-      print(json.decode(response.body));
+      //print(json.decode(response.body));
 
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
       // if (extractedData == null) {
@@ -98,8 +98,8 @@ class Sales with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie danych do uruchomienia apki --> Sprzedaz <---');
-    print(_items);
+    //print('wczytanie danych do uruchomienia apki --> Sprzedaz <---');
+    //print(_items);
     notifyListeners();
   }
 
@@ -125,7 +125,7 @@ class Sales with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich nowych sprzedaz --> Sprzedaz <---');
+    //print('wczytanie wszystkich nowych sprzedaz --> Sprzedaz <---');
     //print(_items);
     notifyListeners();
   }

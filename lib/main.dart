@@ -26,13 +26,17 @@ import './screens/parametr_screen.dart';
 import './screens/apiarys_weather_edit_screen.dart';
 import './screens/infos_edit_screen.dart';
 import './screens/parametr_edit_screen.dart';
+import './screens/parametry_ula_screen.dart';
 import './screens/sale_screen.dart';
 import './screens/sale_edit_screen.dart';
 import './screens/purchase_screen.dart';
 import './screens/purchase_edit_screen.dart';
 import './screens/note_screen.dart';
 import './screens/note_edit_screen.dart';
+import './screens/queens_screen.dart';
+import './screens/queen_edit_screen.dart';
 import './screens/add_hive_screen.dart';
+import './screens/add_queen_screen.dart';
 import './screens/apiary_weather_5days.dart';
 import './screens/raport_screen.dart';
 import './screens/raport2_screen.dart';
@@ -42,11 +46,13 @@ import './models/apiarys.dart';
 import './models/frames.dart'; //zaimportowanie klasy dostawcy
 import './models/hives.dart';
 import './models/note.dart';
+import 'models/queen.dart';
 import './models/sale.dart';
 import './models/purchase.dart';
 import './models/infos.dart';
 import './models/memory.dart';
 import './models/dodatki1.dart';
+import './models/dodatki2.dart';
 import './models/weathers.dart';
 
 //import 'screens/languages.dart';
@@ -108,6 +114,10 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider.value(
           //zarejestrowanie dostawcy danych (bez kontekstu)
+          value: Dodatki2(), //dla Hives
+        ),
+        ChangeNotifierProvider.value(
+          //zarejestrowanie dostawcy danych (bez kontekstu)
           value: Harvests(), //dla Hives
         ),
         ChangeNotifierProvider.value(
@@ -125,6 +135,10 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider.value(
           //zarejestrowanie dostawcy danych (bez kontekstu)
           value: Notes(), //dla Hives
+        ),
+        ChangeNotifierProvider.value(
+          //zarejestrowanie dostawcy danych (bez kontekstu)
+          value: Queens(), //dla Hives
         ),
         
       ],
@@ -223,13 +237,17 @@ class _MyAppState extends State<MyApp> {
           WeatherEditScreen.routeName: (ctx) => WeatherEditScreen(),
           InfosEditScreen.routeName: (ctx) => InfosEditScreen(),
           ParametrEditScreen.routeName: (ctx) => ParametrEditScreen(),
+          ParametryUlaScreen.routeName: (ctx) => ParametryUlaScreen(),
           SaleScreen.routeName: (ctx) => SaleScreen(),
           SaleEditScreen.routeName: (ctx) => SaleEditScreen(),
           PurchaseScreen.routeName: (ctx) => PurchaseScreen(),
           PurchaseEditScreen.routeName: (ctx) => PurchaseEditScreen(),
           NoteScreen.routeName: (ctx) => NoteScreen(),
           NoteEditScreen.routeName: (ctx) => NoteEditScreen(),
+          QueenScreen.routeName: (ctx) => QueenScreen(),
+          QueenEditScreen.routeName: (ctx) => QueenEditScreen(),
           AddHiveScreen.routeName: (ctx) => AddHiveScreen(),
+          AddQueenScreen.routeName: (ctx) => AddQueenScreen(),
           Weather5DaysScreen.routeName: (ctx) => Weather5DaysScreen(),
           RaportScreen.routeName: (ctx) => RaportScreen(),
           Raport2Screen.routeName: (ctx) => Raport2Screen(),

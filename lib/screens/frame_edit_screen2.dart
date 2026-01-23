@@ -11,6 +11,7 @@ import '../models/apiarys.dart';
 import '../models/frame.dart';
 import '../models/hives.dart';
 import '../models/infos.dart';
+import '../models/info.dart';
 //import '../screens/activation_screen.dart';
 import '../models/frames.dart';
 import '../models/hive.dart';
@@ -88,6 +89,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
   String matka3 = '';
   String matka4 = '';
   String matka5 = '';
+  String rodzajUla = '';
+  String typUla = '';
   List<int> gridItems = [];//tworzona lista klawiszy klawiatury wyboru numeru ramki
   List<int> gridItemsKorpus = [1,2,3,4,5,6,7,8,9]; //lista klawiszy klawiatury wyboru numeru korpusu
   List<int> gridItemsZasob = [0,5,10,15,20,25,30,35,40,50,60,70,80,90,100]; //lista klawiszy klawiatury ilosci zasobu do dodania
@@ -260,7 +263,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
         final hiveData = Provider.of<Hives>(context, listen: false);
         hive = hiveData.items.where((element) {
           //to wczytanie danych edytowanego ula
-          return element.id.contains('$nowyNrPasieki.$nowyNrUla');
+          return element.id == ('$nowyNrPasieki.$nowyNrUla');
         }).toList();
         
         ramek = hive[0].ramek; //liczba ramek w ulu
@@ -1390,7 +1393,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
     final hiveData = Provider.of<Hives>(context, listen: false);
     hive = hiveData.items.where((element) {
       //to wczytanie danych edytowanego ula
-      return element.id.contains('$nowyNrPasieki.$nowyNrUla');
+      return element.id == ('$nowyNrPasieki.$nowyNrUla');
     }).toList();
     ikona = hive[0].ikona; 
     ramek = hive[0].ramek;
@@ -1413,7 +1416,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
     matka3 = hive[0].matka3;
     matka4 = hive[0].matka4;
     matka5 = hive[0].matka5;
-
+    rodzajUla = hive[0].h1;
+    typUla = hive[0].h2;     
     //print('nowyNrPasieki = $nowyNrPasieki, nowyNrUla = $nowyNrUla, id wpisu w "ule" = ${hive[0].id}, data wybranego przeglądu = $formattedDate, data ostatniego przeglądu =  ${hive[0].przeglad}');
     //print('nowyZasob = $nowyZasob, korpusNr = $korpusNr, nowyNrKorpusu = $nowyNrKorpusu');
     
@@ -1588,8 +1592,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
           matka3,
           matka4,
           matka5,
-          '0', //zapas h1
-          '0', //h2
+          rodzajUla, // h1
+          typUla, //h2
           '0', //h3
           0, //aktualne zasoby
         ).then((_) {
@@ -1626,33 +1630,51 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
       }); //od pobrania ramek z zasobami do aktualizacji 
     }
     
-    //zapis przeglady do info 'inspection"
-    Infos.insertInfo(
-      '$formattedDate.$nowyNrPasieki.$nowyNrUla.inspection.${AppLocalizations.of(context)!.inspection}', //id
-      formattedDate, //data
-      nowyNrPasieki!, //pasiekaNr
-      nowyNrUla!, //ulNr
-      'inspection', //karegoria
-      AppLocalizations.of(context)!.inspection, //parametr
-      ikona, //wartosc
-      '', //miara
-      '',//icon, //ikona pogody
-      '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
-      formatterHm.format(DateTime.now()), //formatedTime, //czas
-      '', //uwagi
-      0 //arch
-    ).then((_) {
-      Provider.of<Infos>(context, listen: false)
-          .fetchAndSetInfosForHive(nowyNrPasieki,nowyNrUla)
-          .then((_) {
-        // print(
-        //     'edit_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
-      });
-    });
+     //zapis info o przegladzie do bazy (podczas przeglądu tylko raz na poczatku przegladu zeby była godzina rozpoczecia przegladu i ewentualnie notatka jesli kiedykolwiek sie pojawi zeby jej nie stracić)
+    //więc jeśli nie zapisywano jeszcze info przegladu lub zpisano info o innym przeglądzie niz obecny określony przez datę
+    if(globals.dataAktualnegoPrzegladu == '' || globals.dataAktualnegoPrzegladu != '$formattedDate' || globals.ulID != nowyNrUla || globals.pasiekaID != nowyNrPasieki){
+      // to pobranie wszystkich info dla ula
+      final infoData = Provider.of<Infos>(context, listen: false);
+      //pobranie info o tym przeglądzie jezeli jest (czyli zgadza się data, nr ula, kategoria i parametr)
+      List<Info> info = infoData.items.where((element) { 
+        return element.data == formattedDate && element.ulNr == nowyNrUla && element.kategoria == 'inspection' && element.parametr == '${AppLocalizations.of(context)!.inspection}'; //data, nr ula, kategoria i parametr
+      }).toList();
+      //i jezeli wpis o przeglądzie juz jest to
+      if(info.isNotEmpty){ 
+        //to zapisz w globals datę tego przeglądu
+        globals.dataAktualnegoPrzegladu = '$formattedDate';
+        //print('info = ${info[0].id}, kategoria = ${info[0].kategoria}, czas = ${info[0].czas}');
+      }else{ //a jezeli jeszcze nie ma takego wpisu
+        //print('jeszcze nie ma wpisu');
+        //to zapis przegladu do info 'inspection"
+        Infos.insertInfo(
+          '$formattedDate.$nowyNrPasieki.$nowyNrUla.inspection.${AppLocalizations.of(context)!.inspection}', //id
+          formattedDate, //data
+          nowyNrPasieki!, //pasiekaNr
+          nowyNrUla!, //ulNr
+          'inspection', //karegoria
+          AppLocalizations.of(context)!.inspection, //parametr
+          ikona, //wartosc
+          '', //miara
+          '',//icon, //ikona pogody
+          '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+          formatterHm.format(DateTime.now()), //formatedTime, //czas
+          '', //uwagi
+          0 //arch
+        ).then((_) {
+          Provider.of<Infos>(context, listen: false)
+              .fetchAndSetInfosForHive(nowyNrPasieki,nowyNrUla)
+              .then((_) {
+            // print(
+            //     'edit_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
+          });
+        });
+      }
+    }//else{print('juz jest wpis = ${globals.dataAktualnegoPrzegladu}');}
 
   }
 
-//zapis zasobu do tabeli "ramki" - tylko dla lewej strony ramki
+//zapis zasobu do tabeli "ramki" - tylko dla prawej strony ramki
   zapisDoBazyP(int zas, String wart, String zrobic) {
     String formattedDate = dateController.text; //nowyRok + '-' + nowyMiesiac + '-' + nowyDzien;
 
@@ -1848,7 +1870,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
     final hiveData = Provider.of<Hives>(context, listen: false);
     hive = hiveData.items.where((element) {
       //to wczytanie danych edytowanego ula
-      return element.id.contains('$nowyNrPasieki.$nowyNrUla');
+      return element.id == ('$nowyNrPasieki.$nowyNrUla');
     }).toList();
     ikona = hive[0].ikona; 
     ramek = hive[0].ramek;
@@ -1871,7 +1893,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
     matka3 = hive[0].matka3;
     matka4 = hive[0].matka4;
     matka5 = hive[0].matka5;
-
+    rodzajUla = hive[0].h1;
+    typUla = hive[0].h2;
     //print('nowyNrPasieki = $nowyNrPasieki, nowyNrUla = $nowyNrUla, id wpisu w "ule" = ${hive[0].id}, data wybranego przeglądu = $formattedDate, data ostatniego przeglądu =  ${hive[0].przeglad}');
     //print('nowyZasob = $nowyZasob, korpusNr = $korpusNr, nowyNrKorpusu = $nowyNrKorpusu');
     
@@ -2046,8 +2069,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
           matka3,
           matka4,
           matka5,
-          '0', //zapas h1
-          '0', //h2
+          rodzajUla, // h1
+          typUla, //h2
           '0', //h3
           0, //aktualne zasoby
         ).then((_) {
@@ -2084,29 +2107,47 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
       }); //od pobrania ramek z zasobami do aktualizacji 
     }
     
-    //zapis przeglady do info 'inspection"
-    Infos.insertInfo(
-      '$formattedDate.$nowyNrPasieki.$nowyNrUla.inspection.${AppLocalizations.of(context)!.inspection}', //id
-      formattedDate, //data
-      nowyNrPasieki!, //pasiekaNr
-      nowyNrUla!, //ulNr
-      'inspection', //karegoria
-      AppLocalizations.of(context)!.inspection, //parametr
-      ikona, //wartosc
-      '', //miara
-      '',//icon, //ikona pogody
-      '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
-      formatterHm.format(DateTime.now()), //formatedTime, //czas
-      '', //uwagi
-      0 //arch
-    ).then((_) {
-      Provider.of<Infos>(context, listen: false)
-          .fetchAndSetInfosForHive(nowyNrPasieki,nowyNrUla)
-          .then((_) {
-        // print(
-        //     'edit_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
-      });
-    });
+     //zapis info o przegladzie do bazy (podczas przeglądu tylko raz na poczatku przegladu zeby była godzina rozpoczecia przegladu i ewentualnie notatka jesli kiedykolwiek sie pojawi zeby jej nie stracić)
+    //więc jeśli nie zapisywano jeszcze info przegladu lub zpisano info o innym przeglądzie niz obecny określony przez datę
+    if(globals.dataAktualnegoPrzegladu == '' || globals.dataAktualnegoPrzegladu != '$formattedDate' || globals.ulID != nowyNrUla || globals.pasiekaID != nowyNrPasieki){
+      // to pobranie wszystkich info dla ula
+      final infoData = Provider.of<Infos>(context, listen: false);
+      //pobranie info o tym przeglądzie jezeli jest (czyli zgadza się data, nr ula, kategoria i parametr)
+      List<Info> info = infoData.items.where((element) { 
+        return element.data == formattedDate && element.ulNr == nowyNrUla && element.kategoria == 'inspection' && element.parametr == '${AppLocalizations.of(context)!.inspection}'; //data, nr ula, kategoria i parametr
+      }).toList();
+      //i jezeli wpis o przeglądzie juz jest to
+      if(info.isNotEmpty){ 
+        //to zapisz w globals datę tego przeglądu
+        globals.dataAktualnegoPrzegladu = '$formattedDate';
+        //print('info = ${info[0].id}, kategoria = ${info[0].kategoria}, czas = ${info[0].czas}');
+      }else{ //a jezeli jeszcze nie ma takego wpisu
+        //print('jeszcze nie ma wpisu');
+        //to zapis przegladu do info 'inspection"
+        Infos.insertInfo(
+          '$formattedDate.$nowyNrPasieki.$nowyNrUla.inspection.${AppLocalizations.of(context)!.inspection}', //id
+          formattedDate, //data
+          nowyNrPasieki!, //pasiekaNr
+          nowyNrUla!, //ulNr
+          'inspection', //karegoria
+          AppLocalizations.of(context)!.inspection, //parametr
+          ikona, //wartosc
+          '', //miara
+          '',//icon, //ikona pogody
+          '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+          formatterHm.format(DateTime.now()), //formatedTime, //czas
+          '', //uwagi
+          0 //arch
+        ).then((_) {
+          Provider.of<Infos>(context, listen: false)
+              .fetchAndSetInfosForHive(nowyNrPasieki,nowyNrUla)
+              .then((_) {
+            // print(
+            //     'edit_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
+          });
+        });
+      }
+    }else{print('juz jest wpis = ${globals.dataAktualnegoPrzegladu}');}
 
   }
 
@@ -2604,7 +2645,9 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
                             MaterialButton(
                               
                               height: 50,
-                              shape: const StadiumBorder(),
+                              shape: const StadiumBorder(
+                                side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                                ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
                                  
@@ -2665,7 +2708,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
                                   (AppLocalizations.of(context)!.saveZ) +
                                   '   '), //Zapisz
                               color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
+                              textColor: Colors.black,
                               disabledColor: Colors.grey,
                               disabledTextColor: Colors.white,
                             ),

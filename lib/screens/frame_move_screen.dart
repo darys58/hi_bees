@@ -47,20 +47,23 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
   String nowaWartosc = '0';
 
   List<Frame> ramka = [];
-  List<Hive> hive = [];
-
+  List<Hive> hiveZ = [];
+  List<Hive> hiveDo = [];
   TextEditingController dateController = TextEditingController();
   
   int dzielnik = 2; //do ustawiania proporcji klawiszy klawiatur numeru ramki i ilości zasobów
 
   //dla hive
   String ikona = 'green'; //pobierana z aktualnego ula
-  int ramekZ = 10; //pobierane z ula z którego przenoszona jest ramka
+  int ramekZ = 10; //ilośc ramek w ulu Z którego przenoszona jest ramka
+  int ramekDo = 10; //ilośc ramek w ulu Do którego przenoszona jest ramka
   int korpusNr = 0;
   
-  List<int> gridItems = [];//tworzona lista klawiszy klawiatury wyboru numeru ramki
+  List<int> gridItemsZ = [];//tworzona lista klawiszy klawiatury wyboru numeru ramki Z
+   List<int> gridItemsDo = [];//tworzona lista klawiszy klawiatury wyboru numeru ramki Do
   List<int> gridItemsKorpus = [1,2,3,4,5,6,7,8,9]; //lista klawiszy klawiatury wyboru numeru korpusu
- 
+  List<int> gridItemsHive = [];//tworzona lista klawiszy klawiatury wyboru numeru ula 
+
 
   
   
@@ -99,23 +102,44 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
         nowaWartosc = '1'; //wartość dla toDo i isDone ustawiana dalej...
         //tempNowaWartosc = nowaWartosc;
        
-      //pobranie danych o ulu z którego przenoszona jest ramka
+      //pobranie danych o ulach z wybranej pasieki
       Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrPasieki)
             .then((_) {
-        final hiveData = Provider.of<Hives>(context, listen: false);
-        hive = hiveData.items.where((element) {
-          //to wczytanie danych edytowanego ula
-          return element.id.contains('$nrPasieki.${globals.nrUlaPrzeniesZ}');
+       final hiveData = Provider.of<Hives>(context, listen: false);
+        
+        //dane ula Z którego przenosimy
+        hiveZ = hiveData.items.where((element) {
+          return element.id == ('$nrPasieki.${globals.nrUlaPrzeniesZ}');
         }).toList();
-        
-        ramekZ = hive[0].ramek; //liczba ramek w ulu
-        
-        //utworzenie klwiatury wyboru numeru ramki
-        gridItems=[];
-        for(int i = 0; i <= ramekZ; i++){
-          gridItems.add(i);
+        //liczba ramek w ulu z którego przenosimy
+        ramekZ = hiveZ[0].ramek; 
+        //utworzenie klwiatury wyboru numeru ramki Z
+        gridItemsZ=[];
+        for(int i = 1; i <= ramekZ; i++){
+          gridItemsZ.add(i);
         // print('i = ${gridItems}');
         } 
+
+        //dane ula Do którego przenosimy
+        hiveDo = hiveData.items.where((element) {
+          return element.id == ('$nrPasieki.${globals.nrUlaPrzeniesDo}');
+        }).toList();
+        //liczba ramek w ulu Do którego przenosimy
+        ramekDo = hiveDo[0].ramek; 
+        //utworzenie klwiatury wyboru numeru ramki Do
+        gridItemsDo=[];
+        for(int i = 1; i <= ramekDo; i++){
+          gridItemsDo.add(i);
+        // print('i = ${gridItems}');
+        } 
+        
+        //numery uli w pasiece
+        for(int i = 0; i < hiveData.items.length; i++){
+          gridItemsHive.add(hiveData.items[i].ulNr);
+         print('i = ${hiveData.items[i].ulNr}');
+         print('length = ${hiveData.items.length}');
+        } 
+      
       });
       
       
@@ -135,7 +159,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
 
   
   //wybór numeru ramki 
-  void _showAlertNr(String wybor, int przycisk) {
+  void _showAlertNr(String wybor, List<int> gridItems, int przycisk) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -146,7 +170,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
           children: <Widget>[           
             SizedBox(
               //height: 200.0,
-              height: 340,
+              height: 355,
               width: 300,
               child:GridView.count(
                 physics: NeverScrollableScrollPhysics(),
@@ -156,7 +180,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                 childAspectRatio: (3 / dzielnik), //proporcje boków kafli
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                children: gridItems
+                children: gridItems //Z lub Do w zalezności od argumentu wywołania funkcji
                   .map((data) => InkWell(
                     onTap: () {
                       switch (przycisk) {
@@ -322,34 +346,67 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
           mainAxisSize: MainAxisSize.min, //okno ściśniete w pionie
           children: <Widget>[           
             SizedBox(
-              height: 230,
+              height: 355,
               width: 300,
               child:GridView.count(
-                physics: NeverScrollableScrollPhysics(),
+                //physics: NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
                 padding: const EdgeInsets.all(15.0),
                 crossAxisCount: 3, //ilość kolumn
                 childAspectRatio: (3 / dzielnik), //proporcje boków kafli
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                children: gridItemsKorpus
+                children: gridItemsHive //lista numerów ula 
                   .map((data) => InkWell(
                     onTap: () {
-
                        switch (przycisk) {
                         case 1:
                           setState(() {
                             globals.nrUlaPrzeniesZ = data;
+                            //pobranie danych o ulach z wybranej pasieki
+                            Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrPasieki)
+                                  .then((_) {
+                              final hiveData = Provider.of<Hives>(context, listen: false);
+                                                                  //dane ula Do którego przenosimy
+                              hiveDo = hiveData.items.where((element) {
+                                return element.id == ('$nrPasieki.${globals.nrUlaPrzeniesZ}');
+                              }).toList();
+                              //liczba ramek w ulu Do którego przenosimy
+                              ramekZ = hiveZ[0].ramek; 
+                              //utworzenie klwiatury wyboru numeru ramki Do
+                              gridItemsZ=[];
+                              for(int i = 1; i <= ramekZ; i++){
+                                gridItemsZ.add(i);
+                              // print('i = ${gridItems}');
+                              } 
+                             });
                           });
                           break;
                         case 2:
                           setState(() {
                             globals.nrUlaPrzeniesDo = data;
+                            //pobranie danych o ulach z wybranej pasieki
+                            Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrPasieki)
+                                  .then((_) {
+                              final hiveData = Provider.of<Hives>(context, listen: false);
+                              //dane ula Do którego przenosimy
+                              hiveDo = hiveData.items.where((element) {
+                                return element.id == ('$nrPasieki.${globals.nrUlaPrzeniesDo}');
+                              }).toList();
+                              //liczba ramek w ulu Do którego przenosimy
+                              ramekDo = hiveDo[0].ramek; 
+                              //utworzenie klwiatury wyboru numeru ramki Do
+                              gridItemsDo=[];
+                              for(int i = 1; i <= ramekDo; i++){
+                                gridItemsDo.add(i);
+                              // print('i = ${gridItems}');
+                              } 
+                            });
                           });
                           break;                         
                         default:
                       }
-                      Navigator.of(context).pop();
+                      Navigator.of(context).pop(true);
                       //getGridViewSelectedItem(context, data);
                     },
                     splashColor: Theme.of(context).primaryColor,
@@ -774,7 +831,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       Text(AppLocalizations.of(context)!.fRame),
                                       OutlinedButton(
                                             style: buttonStyle,
-                                            onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberBefore,1);},
+                                            onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberBefore, gridItemsZ, 1);},
                                             child: Text('${globals.nrRamkiPrzeniesZ}',
                                               style: const TextStyle(
                                                 fontSize: 18,
@@ -874,7 +931,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       Text(AppLocalizations.of(context)!.hIve),
                                       OutlinedButton(
                                           style: buttonStyle,
-                                          onPressed: () {_showAlertNrUla(AppLocalizations.of(context)!.hIveNr,2);},
+                                          onPressed: () {_showAlertNrUla(AppLocalizations.of(context)!.hIveNr, 2); },
                                           child: Text('${globals.nrUlaPrzeniesDo}',
                                             style: const TextStyle(
                                               fontSize: 18,
@@ -958,7 +1015,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       Text(AppLocalizations.of(context)!.fRame),
                                       OutlinedButton(
                                             style: buttonStyle,
-                                            onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberAfter,2);},
+                                            onPressed: () {_showAlertNr(AppLocalizations.of(context)!.frameNumberAfter, gridItemsDo, 2);},
                                             child: Text('${globals.nrRamkiPrzeniesDo}',
                                               style: const TextStyle(
                                                 fontSize: 18,
@@ -985,7 +1042,9 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                          
                             MaterialButton(
                               height: 50,
-                              shape: const StadiumBorder(),
+                              shape: const StadiumBorder(
+                                side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                                ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
                                  print('data = ${dateController.text}');
@@ -1112,7 +1171,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                   (AppLocalizations.of(context)!.saveZ) +
                                   '   '), //Zapisz
                               color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
+                              textColor: Colors.black,
                               disabledColor: Colors.grey,
                               disabledTextColor: Colors.white,
                             ),

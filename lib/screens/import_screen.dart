@@ -23,6 +23,7 @@ import '../models/memory.dart';
 import '../models/dodatki1.dart';
 import '../models/harvest.dart';
 import '../models/sale.dart';
+import '../models/queen.dart';
 import '../models/purchase.dart';
 import '../models/note.dart';
 import '../screens/apiarys_screen.dart';
@@ -226,6 +227,7 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
+  //import danych
   void _showAlertImport(BuildContext context, String nazwa, String text) {
     formattedDate = formatter.format(now);
     showDialog(
@@ -270,7 +272,8 @@ class _ImportScreenState extends State<ImportScreen> {
                         .fetchAndSetNotatki();
                   });
 
-                  //import zakupów
+//import zakupów
+//https://www.darys.pl/cbt.php?d=f_zakupy&kod=00012105&tab=0001_zakupy
                   Purchases.fetchZakupyFromSerwer(
                           'https://darys.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zakupy')
                       .then((_) {
@@ -281,7 +284,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         .fetchAndSetZakupy();
                   });
 
-                  //import sprzedazy
+  //import sprzedazy
                   Sales.fetchSprzedazFromSerwer(
                           'https://darys.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_sprzedaz')
                       .then((_) {
@@ -292,7 +295,18 @@ class _ImportScreenState extends State<ImportScreen> {
                         .fetchAndSetSprzedaz();
                   });
 
-                  //import zbiorów
+//import matki
+                  Queens.fetchQueensFromSerwer(
+                          'https://darys.pl/cbt.php?d=f_matki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_matki')
+                      .then((_) {
+                    // setState(() {
+                    //   komunikat = 'Import sprzedazy';
+                    // });
+                    Provider.of<Queens>(context, listen: false)
+                        .fetchAndSetQueens();
+                  });                  
+
+//import zbiorów
                   Harvests.fetchZbioryFromSerwer(
                           'https://darys.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zbiory')
                       .then((_) {
@@ -303,7 +317,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         .fetchAndSetZbiory();
                   });
 
-                  //import ramek
+//import ramek
                   Frames.fetchFramesFromSerwer(
                           'https://darys.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_ramka')
                       .then((_) {
@@ -316,8 +330,8 @@ class _ImportScreenState extends State<ImportScreen> {
                       final framesAllData =
                           Provider.of<Frames>(context, listen: false);
                       final ramki = framesAllData.items;
-                      print('ilość wpisów w tabeli ramka');
-                      print(ramki.length);
+                      //print('ilość wpisów w tabeli ramka');
+                      //print(ramki.length);
                       int i = 0;
                       while (ramki.length > i) {
                         //wpis do tabeli ule na podstawie ramki
@@ -327,7 +341,7 @@ class _ImportScreenState extends State<ImportScreen> {
                           ramki[i].ulNr, //ul nr
                           formattedDate, //przeglad (aktualna data)
                           'green', //ikona
-                          10, //opis - ilość ramek w korpusie
+                          10, //warto≥ść domyślna - ilość ramek w korpusie
                           0,
                           0,
                           0,
@@ -351,7 +365,7 @@ class _ImportScreenState extends State<ImportScreen> {
                           '0',
                           '0',
                           '0',
-                          '0',
+                          AppLocalizations.of(context)!.hIve,//h1 wartosc domyślna rodzaju ula - Ul
                           '0',
                           '0',
                           0, //aktualny - stan po wczytaniu z chmury
@@ -360,7 +374,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         //print('ramki w insertHive $i');
                       }
 
-                      //import info
+ //import info i odbudowa tabeli pasieki i ule
                       Infos.fetchInfosFromSerwer(
                               'https://darys.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_info')
                           .then((_) {
@@ -373,99 +387,104 @@ class _ImportScreenState extends State<ImportScreen> {
                           final infosAllData =
                               Provider.of<Infos>(context, listen: false);
                           final info = infosAllData.items;
-                          print('ilość wpisów w tabeli info');
-                          print(info.length);
+                          //print('ilość wpisów w tabeli info');
+                          //print(info.length);
                           int i = 0;
                           while (info.length > i) {
+                            //print(info[i].parametr);
                             //wpis do tabeli ule na podstawie info
-                            Hives.insertHive(
-                              '${info[i].pasiekaNr}.${info[i].ulNr}',
-                              info[i].pasiekaNr, //pasieka nr
-                              info[i].ulNr, //ul nr
-                              formattedDate, //przeglad (aktualna data)
-                              'green', //ikona
-                              10, //opis - ilość ramek w korpusie
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              '0',
-                              0, //aktualny - stan po wczytaniu z chmury
-                            );
+                            if(info[i].parametr == AppLocalizations.of(context)!.numberOfFrame + ' = ' ){ //jezeli jest rodzaj ula
+                              //print('parametr = ${AppLocalizations.of(context)!.numberOfFrame + ' = '}');
+                              //print('i = $i');
+                              Hives.insertHive(
+                                '${info[i].pasiekaNr}.${info[i].ulNr}',
+                                info[i].pasiekaNr, //pasieka nr
+                                info[i].ulNr, //ul nr
+                                formattedDate, //przeglad (aktualna data)
+                                'green', //ikona
+                                int.parse(info[i].wartosc), //ilość ramek w korpusie
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                '0',
+                                '0',
+                                '0',
+                                '0',
+                                '0',
+                                '0',
+                                '0',
+                                '0',
+                                '0',
+                                '0',
+                                info[i].pogoda,//h1 - rodzaj ula
+                                '0',
+                                '0',
+                                0, //aktualny - stan po wczytaniu z chmury
+                              );
+                            }
                             i++;
                             //print('info w insertHive $i');
                           }
+               
+                          //pobranie danych z tabeli ule (wszystkie ule z wszystkich pasiek)
+                          Provider.of<Hives>(context, listen: false)
+                              .fetchAndSetHivesAll()
+                              .then((_) {
+                            //print('-------------> wszystkie ule z wszystkich pasiek - wpis 0 uli');
+                            final hivesData =
+                                Provider.of<Hives>(context, listen: false);
+                            final hives = hivesData.items;
+                            //int ileUli = hives.length; //źle bo to wszystkie ule a nie dla konkretnej pasieki
+                            //zapis do tabeli "pasieki"
+                            int i = 0;
+                            while (hives.length > i) {
+                              //print('data w apiary po imporcie = $formattedDate');
+                              Apiarys.insertApiary(
+                                '${hives[i].pasiekaNr}',
+                                hives[i].pasiekaNr, //pasieka nr
+                                0, //ile uli - nie wiadomo bo nie ma podziału na pasieki
+                                formattedDate, //przeglad (aktualna data)
+                                'green', //ikona
+                                '??', //opis
+                              );
+                              i++;
+                            }
+                            globals.odswiezBelkiUli = true;
+                            //pobranie danych o pasiekach (jeszcze jest zła ilość uli w pasiece)
+                            Provider.of<Apiarys>(context, listen: false)
+                                .fetchAndSetApiarys()
+                                .then((_) {
+                              Navigator.of(context).pushNamedAndRemoveUntil(
+                                  ApiarysScreen.routeName,
+                                  ModalRoute.withName(ApiarysScreen
+                                      .routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
+                              //komunikat na dole ekranu
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text(AppLocalizations.of(context)!.importEnd),
+                                ),
+                              );
+                              //print('koniec importu');
+                            });
+                          }); //pobranie uli z lokalnej i wpis do pasieki                          
                         }); //pobranie info z z bazy lokalnej i wpis do uli
                       }); //pobranie info z internetu
-
-                      //pobranie danych z tabeli ule (wszystkie ule z wszystkich pasiek)
-                      Provider.of<Hives>(context, listen: false)
-                          .fetchAndSetHivesAll()
-                          .then((_) {
-                        //print(
-                         //   '-------------> wszystkie ule z wszystkich pasiek - wpis 0 uli');
-                        final hivesData =
-                            Provider.of<Hives>(context, listen: false);
-                        final hives = hivesData.items;
-                        //int ileUli = hives.length; //źle bo to wszystkie ule a nie dla konkretnej pasieki
-                        //zapis do tabeli "pasieki"
-                        int i = 0;
-                        while (hives.length > i) {
-                          Apiarys.insertApiary(
-                            '${hives[i].pasiekaNr}',
-                            hives[i].pasiekaNr, //pasieka nr
-                            0, //ile uli - nie wiadomo bo nie ma podziału na pasieki
-                            formattedDate, //przeglad (aktualna data)
-                            'green', //ikona
-                            '??', //opis
-                          );
-                          i++;
-                        }
-                        globals.odswiezBelkiUli = true;
-                        //pobranie danych o pasiekach (jeszcze jest zła ilość uli w pasiece)
-                        Provider.of<Apiarys>(context, listen: false)
-                            .fetchAndSetApiarys()
-                            .then((_) {
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                              ApiarysScreen.routeName,
-                              ModalRoute.withName(ApiarysScreen
-                                  .routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
-                          //komunikat na dole ekranu
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content:
-                                  Text(AppLocalizations.of(context)!.importEnd),
-                            ),
-                          );
-                          //print('koniec importu');
-                        });
-                      }); //pobranie uli z lokalnej i wpis do pasieki
                     }); //pobranie ramek z loklnej i wpis do uli
                   }); //pobranie ramek z internetu
 
                 } else {
-                  print('braaaaaak internetu');
+                  //print('braaaaaak internetu');
                   Navigator.of(context).pop();
                   _showAlertAnuluj(
                       context,
@@ -586,7 +605,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupNotatki(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
 
                           _showAlertAnuluj(
@@ -694,7 +713,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupZakupy(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
 
                           _showAlertAnuluj(
@@ -759,8 +778,8 @@ class _ImportScreenState extends State<ImportScreen> {
                   final sprzedazArchData =
                       Provider.of<Sales>(context, listen: false);
                   final sprzedaz = sprzedazArchData.items;
-                  // print('ilość nowych wpisów w tabeli info');
-                  // print(info.length);
+                   //print('ilość nowych wpisów w tabeli info');
+                   //print(sprzedaz.length);
                   iloscDoWyslania = sprzedaz.length;
                   
                     if (iloscDoWyslania > 0)
@@ -801,7 +820,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupSprzedaz(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                         // print('braaaaaak internetu');
                           Navigator.of(context).pop();
 
                           _showAlertAnuluj(
@@ -835,6 +854,118 @@ class _ImportScreenState extends State<ImportScreen> {
       barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
     );
   }
+
+  //eksport wszystkich danych Matki
+  void _showAlertExportAllMatki(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () async{
+              //print('wysłanie wszystkich danych do chmury ========= ');
+              showLoaderDialog (context, AppLocalizations.of(context)!.eXportData);// wskaźnik wysyłania
+              await Future.delayed(const Duration(seconds: 1)); 
+              iloscDoWyslania = 0;
+
+              //uzyskanie dostępu do danych w pamięci
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli matki - wszystkie
+                Provider.of<Queens>(context, listen: false)
+                    .fetchAndSetQueens()
+                    .then((_) {
+                  final matkiArchData =
+                      Provider.of<Queens>(context, listen: false);
+                  final matki = matkiArchData.items;
+                   //print('ilość nowych wpisów w tabeli matki');
+                   //print(matki.length);
+                  iloscDoWyslania = matki.length;
+                  
+                    if (iloscDoWyslania > 0)
+                      _showAlertOK(
+                          context,
+                          AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.dataToSend +
+                              ' = $iloscDoWyslania');
+                    else
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                        AppLocalizations.of(context)!.noDataToSend);
+                  
+                  if (matki.length > 0) {
+                    String jsonData = '{"matki":[';
+                    int i = 0;
+                    while (matki.length > i) {
+                      jsonData += '{"id": "${matki[i].id}",';
+                      jsonData += '"data": "${matki[i].data}",';
+                      jsonData += '"zrodlo": "${matki[i].zrodlo}",';
+                      jsonData += '"rasa": "${matki[i].rasa}",';
+                      jsonData += '"linia": "${matki[i].linia}",';
+                      jsonData += '"znak": "${matki[i].znak}",';
+                      jsonData += '"napis": "${matki[i].napis}",';
+                      jsonData += '"uwagi": "${matki[i].uwagi}",';
+                      jsonData += '"pasieka": ${matki[i].pasieka},';
+                      jsonData += '"ul": ${matki[i].ul},';
+                      jsonData += '"dataStraty": "${matki[i].dataStraty}",';
+                      jsonData += '"a": "${matki[i].a}",';
+                      jsonData += '"b": "${matki[i].b}",';
+                      jsonData += '"c": "${matki[i].c}",';
+                      jsonData += '"arch": ${matki[i].arch}}';
+                      i++;
+                      if (matki.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${matki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_matki"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    //print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupMatki(jsonData); //jsonData
+                        } else {
+                          //print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+        
+            },
+            child: Text(AppLocalizations.of(context)!.eXport),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
 
   //eksport wszystkich danych Zbiory
   void _showAlertExportAllZbiory(BuildContext context, String nazwa, String text) {
@@ -907,7 +1038,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupZbiory(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
 
                           _showAlertAnuluj(
@@ -955,7 +1086,8 @@ class _ImportScreenState extends State<ImportScreen> {
           ],
         ),
         actions: <Widget>[
-//tylko z biezącego roku
+
+          //tylko z biezącego roku
            TextButton(
             onPressed: () async{
               //print('wysłanie wszystkich danych do chmury ========= ');
@@ -1002,10 +1134,10 @@ class _ImportScreenState extends State<ImportScreen> {
                       jsonData += '"parametr": "${info[i].parametr}",';
                       jsonData += '"wartosc": "${info[i].wartosc}",';
                       jsonData += '"miara": "${info[i].miara}",';
-                      jsonData += '"miara": "${info[i].miara}",';
                       jsonData += '"pogoda": "${info[i].pogoda}",';
                       jsonData += '"temp": "${info[i].temp}",';
                       jsonData += '"czas": "${info[i].czas}",';
+                      jsonData += '"uwagi": "${info[i].uwagi}",';
                       jsonData += '"arch": ${info[i].arch}}';
                       i++;
                       if (info.length > i) jsonData += ',';
@@ -1019,7 +1151,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupInfo(jsonData); //jsonData
                         } else {
-                          print('braaaak internetu');
+                          //print('braaaak internetu');
                           Navigator.of(context).pop();
                           _showAlertAnuluj(
                               context,
@@ -1038,7 +1170,7 @@ class _ImportScreenState extends State<ImportScreen> {
             child: Text(AppLocalizations.of(context)!.oNly + ' $biezacyRok'),
           ),
 
-//wszystkie informacje z wszystkich lat          
+          //wszystkie informacje z wszystkich lat          
           TextButton(
             onPressed: () async{
               //print('wysłanie wszystkich danych do chmury ========= ');
@@ -1082,10 +1214,10 @@ class _ImportScreenState extends State<ImportScreen> {
                       jsonData += '"parametr": "${info[i].parametr}",';
                       jsonData += '"wartosc": "${info[i].wartosc}",';
                       jsonData += '"miara": "${info[i].miara}",';
-                      jsonData += '"miara": "${info[i].miara}",';
                       jsonData += '"pogoda": "${info[i].pogoda}",';
                       jsonData += '"temp": "${info[i].temp}",';
                       jsonData += '"czas": "${info[i].czas}",';
+                      jsonData += '"uwagi": "${info[i].uwagi}",';
                       jsonData += '"arch": ${info[i].arch}}';
                       i++;
                       //print(i);
@@ -1106,7 +1238,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupInfo(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
                           _showAlertAnuluj(
                               context,
@@ -1219,10 +1351,10 @@ class _ImportScreenState extends State<ImportScreen> {
                     _isInternet().then(
                       (inter) {
                         if (inter) {
-                          print('$inter - jest internet');
+                          //print('$inter - jest internet');
                           wyslijBackupRamka(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           // _showAlertAnuluj(
                           //     context,
                           //     AppLocalizations.of(context)!.alert,
@@ -1243,7 +1375,7 @@ class _ImportScreenState extends State<ImportScreen> {
             child: Text(AppLocalizations.of(context)!.oNly + ' $biezacyRok'), //AppLocalizations.of(context)!.eXport),
           ),
   
-  //Dane o ramkach z wszystkich lat        
+          //Dane o ramkach z wszystkich lat        
           TextButton(
             onPressed: () async{
               //print('wysłanie wszystkich danych do chmury ========= ');
@@ -1305,10 +1437,10 @@ class _ImportScreenState extends State<ImportScreen> {
                     _isInternet().then(
                       (inter) {
                         if (inter) {
-                          print('$inter - jest internet');
+                          //print('$inter - jest internet');
                           wyslijBackupRamka(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           // _showAlertAnuluj(
                           //     context,
                           //     AppLocalizations.of(context)!.alert,
@@ -1379,7 +1511,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   final notatki = notatkiArchData.items;
                   // print('ilość nowych wpisów w tabeli notatki');
                   // print(info.length);
-                  iloscDoWyslania = notatki.length;
+                  iloscDoWyslania += notatki.length;
                      
                   //przygotowanie notatek do wysyłki
                   if (notatki.length > 0) {
@@ -1408,7 +1540,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupNotatki(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
 
                           _showAlertAnuluj(
@@ -1434,7 +1566,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   final zakupy = zakupyArchData.items;
                   // print('ilość nowych wpisów w tabeli zakupy');
                   // print(info.length);
-                  iloscDoWyslania = zakupy.length;
+                  iloscDoWyslania += zakupy.length;
                      
                   if (zakupy.length > 0) {
                     String jsonData = '{"zakupy":[';
@@ -1464,7 +1596,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupZakupy(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
 
                           _showAlertAnuluj(
@@ -1489,7 +1621,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   final sprzedaz = sprzedazArchData.items;
                   // print('ilość nowych wpisów w tabeli info');
                   // print(info.length);
-                  iloscDoWyslania = sprzedaz.length;
+                  iloscDoWyslania += sprzedaz.length;
                   
                   if (sprzedaz.length > 0) {
                     String jsonData = '{"sprzedaz":[';
@@ -1519,7 +1651,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupSprzedaz(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
 
                           _showAlertAnuluj(
@@ -1535,7 +1667,66 @@ class _ImportScreenState extends State<ImportScreen> {
                   } //jeśli sa ramki do archiwizacji
                 });
 
-              //BACKUP tabeli zbiory - wszstkie
+              //BACKUP tabeli matki - wszystkie
+                Provider.of<Queens>(context, listen: false)
+                    .fetchAndSetQueens()
+                    .then((_) {
+                  final matkiArchData =
+                      Provider.of<Queens>(context, listen: false);
+                  final matki = matkiArchData.items;
+                  // print('ilość nowych wpisów w tabeli info');
+                  // print(info.length);
+                  iloscDoWyslania += matki.length;
+                  
+                  if (matki.length > 0) {
+                    String jsonData = '{"matki":[';
+                    int i = 0;
+                    while (matki.length > i) {
+                      jsonData += '{"id": "${matki[i].id}",';
+                      jsonData += '"data": "${matki[i].data}",';
+                      jsonData += '"zrodlo": "${matki[i].zrodlo}",';
+                      jsonData += '"rasa": "${matki[i].rasa}",';
+                      jsonData += '"linia": "${matki[i].linia}",';
+                      jsonData += '"znak": "${matki[i].znak}",';
+                      jsonData += '"napis": "${matki[i].napis}",';
+                      jsonData += '"uwagi": "${matki[i].uwagi}",';
+                      jsonData += '"pasieka": ${matki[i].pasieka},';
+                      jsonData += '"ul": ${matki[i].ul},';
+                      jsonData += '"dataStraty": "${matki[i].dataStraty}",';
+                      jsonData += '"a": "${matki[i].a}",';
+                      jsonData += '"b": "${matki[i].b}",';
+                      jsonData += '"c": "${matki[i].c}",';
+                      jsonData += '"arch": ${matki[i].arch}}';
+                      i++;
+                      if (matki.length > i) jsonData += ',';
+                    }
+                    jsonData +=
+                        '],"total":${matki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_matki"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                    //print(jsonData);
+                    _isInternet().then(
+                      (inter) {
+                        if (inter) {
+                          wyslijBackupMatki(jsonData); //jsonData
+                        } else {
+                          //print('braaaaaak internetu');
+                          Navigator.of(context).pop();
+
+                          _showAlertAnuluj(
+                              context,
+                              AppLocalizations.of(context)!.alert,
+                              AppLocalizations.of(context)!.noInternet);
+                        }
+                      },
+                    );
+                  } else {
+                    // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                    //     AppLocalizations.of(context)!.noDataToSend);
+                  } //jeśli sa ramki do archiwizacji
+                });
+
+
+              //BACKUP tabeli zbiory - wszystkie
                 Provider.of<Harvests>(context, listen: false)
                     .fetchAndSetZbiory()
                     .then((_) {
@@ -1544,7 +1735,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   final zbiory = zbioryArchData.items;
                   // print('ilość nowych wpisów w tabeli info');
                   // print(info.length);
-                  iloscDoWyslania = zbiory.length;
+                  iloscDoWyslania += zbiory.length;
                                    
                   if (zbiory.length > 0) {
                     String jsonData = '{"zbiory":[';
@@ -1572,7 +1763,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupZbiory(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
 
                           _showAlertAnuluj(
@@ -1610,10 +1801,10 @@ class _ImportScreenState extends State<ImportScreen> {
                       jsonData += '"parametr": "${info[i].parametr}",';
                       jsonData += '"wartosc": "${info[i].wartosc}",';
                       jsonData += '"miara": "${info[i].miara}",';
-                      jsonData += '"miara": "${info[i].miara}",';
                       jsonData += '"pogoda": "${info[i].pogoda}",';
                       jsonData += '"temp": "${info[i].temp}",';
                       jsonData += '"czas": "${info[i].czas}",';
+                      jsonData += '"uwagi": "${info[i].uwagi}",';
                       jsonData += '"arch": ${info[i].arch}}';
                       i++;
                       if (info.length > i) jsonData += ',';
@@ -1627,7 +1818,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         if (inter) {
                           wyslijBackupInfo(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           Navigator.of(context).pop();
                           _showAlertAnuluj(
                               context,
@@ -1692,10 +1883,10 @@ class _ImportScreenState extends State<ImportScreen> {
                     _isInternet().then(
                       (inter) {
                         if (inter) {
-                          print('$inter - jest internet');
+                         // print('$inter - jest internet');
                           wyslijBackupRamka(jsonData); //jsonData
                         } else {
-                          print('braaaaaak internetu');
+                          //print('braaaaaak internetu');
                           // _showAlertAnuluj(
                           //     context,
                           //     AppLocalizations.of(context)!.alert,
@@ -1731,6 +1922,8 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
+  
+  //eksport wszystkich ale tylko nowych danych
   void _showAlertExportNew(BuildContext context, String nazwa, String text) {
     showDialog(
       context: context,
@@ -1749,7 +1942,8 @@ class _ImportScreenState extends State<ImportScreen> {
 
               showLoaderDialog(
                   context, AppLocalizations.of(context)!.eXportData);
-
+              
+              iloscDoWyslania = 0;
               //uzyskanie dostępu do danych w pamięci
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
@@ -1763,7 +1957,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 final notatki = notatkiArchData.items;
                 // print('ilość nowych wpisów w tabeli notatki');
                 // print(info.length);
-                iloscDoWyslania = notatki.length;
+                iloscDoWyslania += notatki.length;
                 
                 if (notatki.length > 0) {
                   String jsonData = '{"notatki":[';
@@ -1791,7 +1985,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (inter) {
                         wyslijBackupNotatki(jsonData); //jsonData
                       } else {
-                        print('braaaaaak internetu');
+                        //print('braaaaaak internetu');
                         Navigator.of(context).pop();
 
                         _showAlertAnuluj(
@@ -1816,7 +2010,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 final zakupy = zakupyArchData.items;
                 // print('ilość nowych wpisów w tabeli zakupy');
                 // print(info.length);
-                // iloscDoWyslania = zakupy.length;
+                 iloscDoWyslania += zakupy.length;
                 // if (iloscDoWyslania > 0)
                 //   _showAlertOK(
                 //       context,
@@ -1855,7 +2049,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (inter) {
                         wyslijBackupZakupy(jsonData); //jsonData
                       } else {
-                        print('braaaaaak internetu');
+                        //print('braaaaaak internetu');
                         Navigator.of(context).pop();
 
                         _showAlertAnuluj(
@@ -1880,8 +2074,8 @@ class _ImportScreenState extends State<ImportScreen> {
                 final sprzedaz = sprzedazArchData.items;
                 // print('ilość nowych wpisów w tabeli info');
                 // print(info.length);
-                iloscDoWyslania = sprzedaz.length;
-                // if (iloscDoWyslania > 0)
+                iloscDoWyslania += sprzedaz.length;
+                //if (iloscDoWyslania > 0)
                 //   _showAlertOK(
                 //       context,
                 //       AppLocalizations.of(context)!.alert,
@@ -1919,7 +2113,74 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (inter) {
                         wyslijBackupSprzedaz(jsonData); //jsonData
                       } else {
-                        print('braaaaaak internetu');
+                        //print('braaaaaak internetu');
+                        Navigator.of(context).pop();
+
+                        _showAlertAnuluj(
+                            context,
+                            AppLocalizations.of(context)!.alert,
+                            AppLocalizations.of(context)!.noInternet);
+                      }
+                    },
+                  );
+                } else {
+                  // _showAlertAnuluj(context, AppLocalizations.of(context)!.alert,
+                  //     AppLocalizations.of(context)!.noDataToSend);
+                } //jeśli sa ramki do archiwizacji
+              });
+
+              //BACKUP tabeli matki - tylko wpisy z arch=0
+              Provider.of<Queens>(context, listen: false)
+                  .fetchAndSetQueensToArch()
+                  .then((_) {
+                final matkiArchData =
+                    Provider.of<Queens>(context, listen: false);
+                final matki = matkiArchData.items;
+                // print('ilość nowych wpisów w tabeli info');
+                // print(info.length);
+                iloscDoWyslania += matki.length;
+                //if (iloscDoWyslania > 0)
+                //   _showAlertOK(
+                //       context,
+                //       AppLocalizations.of(context)!.alert,
+                //       AppLocalizations.of(context)!.dataToSend +
+                //           ' = $iloscDoWyslania');
+                // else
+                //   _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                //       AppLocalizations.of(context)!.noDataToSend);
+
+                if (matki.length > 0) {
+                  String jsonData = '{"matki":[';
+                  int i = 0;
+                  while (matki.length > i) {
+                    jsonData += '{"id": "${matki[i].id}",';
+                    jsonData += '"data": "${matki[i].data}",';
+                    jsonData += '"zrodlo": "${matki[i].zrodlo}",';
+                    jsonData += '"rasa": "${matki[i].rasa}",';
+                    jsonData += '"linia": "${matki[i].linia}",';
+                    jsonData += '"znak": "${matki[i].znak}",';
+                    jsonData += '"napis": "${matki[i].napis}",';
+                    jsonData += '"uwagi": "${matki[i].uwagi}",';
+                    jsonData += '"pasieka": ${matki[i].pasieka},';
+                    jsonData += '"ul": ${matki[i].ul},';
+                    jsonData += '"dataStraty": "${matki[i].dataStraty}",';
+                    jsonData += '"a": "${matki[i].a}",';
+                    jsonData += '"b": "${matki[i].b}",';
+                    jsonData += '"c": "${matki[i].c}",';
+                    jsonData += '"arch": ${matki[i].arch}}';
+                    i++;
+                    if (matki.length > i) jsonData += ',';
+                  }
+                  jsonData +=
+                      '],"total":${matki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_matki"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+
+                  //print(jsonData);
+                  _isInternet().then(
+                    (inter) {
+                      if (inter) {
+                        wyslijBackupMatki(jsonData); //jsonData
+                      } else {
+                        //print('braaaaaak internetu');
                         Navigator.of(context).pop();
 
                         _showAlertAnuluj(
@@ -1944,7 +2205,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 final zbiory = zbioryArchData.items;
                 // print('ilość nowych wpisów w tabeli info');
                 // print(info.length);
-                iloscDoWyslania = zbiory.length;
+                iloscDoWyslania += zbiory.length;
 
                 if (zbiory.length > 0) {
                   String jsonData = '{"zbiory":[';
@@ -1972,7 +2233,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (inter) {
                         wyslijBackupZbiory(jsonData); //jsonData
                       } else {
-                        print('braaaaaak internetu');
+                        //print('braaaaaak internetu');
                         Navigator.of(context).pop();
 
                         _showAlertAnuluj(
@@ -1996,7 +2257,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 final info = infoArchData.items;
                 // print('ilość nowych wpisów w tabeli info');
                 // print(info.length);
-                iloscDoWyslania = info.length;
+                iloscDoWyslania += info.length;
                 // if (iloscDoWyslania > 0)
                 //   _showAlertOK(
                 //       context,
@@ -2036,7 +2297,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (inter) {
                         wyslijBackupInfo(jsonData); //jsonData
                       } else {
-                        print('braaaaaak internetu');
+                       // print('braaaaaak internetu');
                         Navigator.of(context).pop();
 
                         _showAlertAnuluj(
@@ -2101,10 +2362,10 @@ class _ImportScreenState extends State<ImportScreen> {
                   _isInternet().then(
                     (inter) {
                       if (inter) {
-                        print('$inter - jest internet');
+                        //print('$inter - jest internet');
                         wyslijBackupRamka(jsonData); //jsonData
                       } else {
-                        print('braaaaaak internetu');
+                        //print('braaaaaak internetu');
                         // _showAlertAnuluj(
                         //     context,
                         //     AppLocalizations.of(context)!.alert,
@@ -2171,12 +2432,14 @@ class _ImportScreenState extends State<ImportScreen> {
                         DBHelper.deleteTable('sprzedaz').then((_) {
                           DBHelper.deleteTable('zakupy').then((_) {
                             DBHelper.deleteTable('notatki').then((_) {
-                              //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
-                              //zeby wykasowaćdane o pasiekach z pamięci
-                              Provider.of<Apiarys>(context, listen: false)
-                                  .fetchAndSetApiarys()
-                                  .then((_) {
-                                Navigator.of(context).pop();
+                              DBHelper.deleteTable('matki').then((_) {
+                                //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
+                                //zeby wykasowaćdane o pasiekach z pamięci
+                                Provider.of<Apiarys>(context, listen: false)
+                                    .fetchAndSetApiarys()
+                                    .then((_) {
+                                  Navigator.of(context).pop();
+                                });
                               });
                             });
                           });
@@ -2250,7 +2513,7 @@ class _ImportScreenState extends State<ImportScreen> {
       } else {
         // _showAlertOK(context, AppLocalizations.of(context)!.alert,
         //    AppLocalizations.of(context)!.errorWhileActivating);
-        print('niepowodzenie - $odpPost["success"]');
+        //print('niepowodzenie - $odpPost["success"]');
       }
     } else {
       throw Exception('Failed to create OdpPost.');
@@ -2299,7 +2562,7 @@ class _ImportScreenState extends State<ImportScreen> {
       } else {
         // _showAlertOK(context, AppLocalizations.of(context)!.alert,
         //    AppLocalizations.of(context)!.errorWhileActivating);
-        print('niepowodzenie - $odpPost["success"]');
+        //print('niepowodzenie - $odpPost["success"]');
       }
     } else {
       throw Exception('Failed to create OdpPost.');
@@ -2347,7 +2610,7 @@ class _ImportScreenState extends State<ImportScreen> {
       } else {
         // _showAlertOK(context, AppLocalizations.of(context)!.alert,
         //    AppLocalizations.of(context)!.errorWhileActivating);
-        print('niepowodzenie - $odpPost["success"]');
+        //print('niepowodzenie - $odpPost["success"]');
       }
     } else {
       throw Exception('Failed to create OdpPost.');
@@ -2395,7 +2658,56 @@ class _ImportScreenState extends State<ImportScreen> {
       } else {
         // _showAlertOK(context, AppLocalizations.of(context)!.alert,
         //    AppLocalizations.of(context)!.errorWhileActivating);
-        print('niepowodzenie - $odpPost["success"]');
+        //print('niepowodzenie - $odpPost["success"]');
+      }
+    } else {
+      throw Exception('Failed to create OdpPost.');
+    }
+  }
+
+  //wysyłanie backupu matki
+  Future<void> wyslijBackupMatki(String jsonData1) async {
+    //String jsonData1
+    final http.Response response = await http.post(
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonData1, //tabela info w postaci jsona
+    );
+    //print("response.body:");
+    //print(response.body);
+    if (response.statusCode >= 200 && response.statusCode <= 400) {
+      Map<String, dynamic> odpPost = json.decode(response.body);
+      if (odpPost['success'] == 'ok') {
+        // _showAlertOK(context, AppLocalizations.of(context)!.success,
+        //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
+        //zapis do bazy lokalnej
+        Provider.of<Queens>(context, listen: false)
+            .fetchAndSetQueensToArch()
+            .then((_) {
+          //dla tabeli Matki
+          final matkiArchData = Provider.of<Queens>(context, listen: false);
+          final matki = matkiArchData.items;
+          //print('ilość potrzebnych wpisów arch = 1 w tabeli matki');
+          //print(matki.length);
+          int i = 0;
+          while (matki.length > i) {
+            DBHelper.updateMatkiArch(matki[i].id); //zapis arch = 1
+            i++;
+          }
+
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.queenDataSend),
+            ),
+          );
+        });
+      } else {
+        // _showAlertOK(context, AppLocalizations.of(context)!.alert,
+        //    AppLocalizations.of(context)!.errorWhileActivating);
+        //print('niepowodzenie - $odpPost["success"]');
       }
     } else {
       throw Exception('Failed to create OdpPost.');
@@ -2419,11 +2731,11 @@ class _ImportScreenState extends State<ImportScreen> {
       if (odpPost['success'] == 'ok') {
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
-        //zapis do bazy lokalnej
+  //zapis do bazy lokalnej
         Provider.of<Purchases>(context, listen: false)
             .fetchAndSetZakupyToArch()
             .then((_) {
-          //dla tabeli ZAKUPY
+    //dla tabeli ZAKUPY
           final zakupyArchData = Provider.of<Purchases>(context, listen: false);
           final zakupy = zakupyArchData.items;
           //print('ilość potrzebnych wpisów arch = 1 w tabeli sprzedaz');
@@ -2443,7 +2755,7 @@ class _ImportScreenState extends State<ImportScreen> {
       } else {
         // _showAlertOK(context, AppLocalizations.of(context)!.alert,
         //    AppLocalizations.of(context)!.errorWhileActivating);
-        print('niepowodzenie - $odpPost["success"]');
+        //print('niepowodzenie - $odpPost["success"]');
       }
     } else {
       throw Exception('Failed to create OdpPost.');
@@ -2492,7 +2804,7 @@ class _ImportScreenState extends State<ImportScreen> {
       } else {
         // _showAlertOK(context, AppLocalizations.of(context)!.alert,
         //    AppLocalizations.of(context)!.errorWhileActivating);
-        print('niepowodzenie - $odpPost["success"]');
+        //print('niepowodzenie - $odpPost["success"]');
       }
     } else {
       throw Exception('Failed to create OdpPost.');
@@ -2714,6 +3026,23 @@ class _ImportScreenState extends State<ImportScreen> {
               ),
             ),  
 
+//eksport wybranych danych Matki
+            GestureDetector(
+              onTap: () {               
+                _showAlertExportAllMatki(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.qUeens + '. ' + AppLocalizations.of(context)!.exportDataToCloud)); 
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.qUeens),//(AppLocalizations.of(context)!.exportAllToCloud),
+                  subtitle: Text(AppLocalizations.of(context)!.eXportQueens),
+                ),
+              ),
+            ), 
+
 //eksport wybranych danych Ramki
             GestureDetector(
               onTap: () {               
@@ -2857,7 +3186,7 @@ class _ImportScreenState extends State<ImportScreen> {
               ),
             ),
  */
- //eksport wybranych danych teraz         
+ //eksport wwszystkich danych teraz         
             GestureDetector(
               onTap: () {
                 _showAlertExportAll(
@@ -2991,21 +3320,4 @@ class _ImportScreenState extends State<ImportScreen> {
         ));
   }
 }
-/*
-final String language = allTranslations.currentLanguage;
-final String buttonText = language == 'pl' ? '=> English' : '=> Français'; 
 
-child: Column(
-          children: <Widget>[
-            RaisedButton(
-              child: Text(buttonText),
-              onPressed: () async {
-                await allTranslations.setNewLanguage(language == 'pl' ? 'en' : 'pl');
-                setState((){
-                  //lll
-               });
-              },
-            ),
-            Text(allTranslations.text('ulubione')),
-          ],
-        ),*/

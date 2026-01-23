@@ -120,7 +120,7 @@ class _HarvestItemState extends State<HarvestItem> {
                   onPressed: () => {
                   
                     DBHelper.deleteZbiory(zbior.id).then((_) {
-                      print('3... kasowanie elementu zbioru');
+                      //print('3... kasowanie elementu zbioru');
 
                       Navigator.of(context)
                           .pop(true); //skasowanie elementu listy
@@ -132,7 +132,7 @@ class _HarvestItemState extends State<HarvestItem> {
                       Provider.of<Harvests>(context, listen: false)
                           .fetchAndSetZbiory()
                           .then((_) {
-                        print('4... aktualizacja zbiorow w harvest_item');
+                        //print('4... aktualizacja zbiorow w harvest_item');
                       });
                     }),
                   },

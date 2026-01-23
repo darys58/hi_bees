@@ -97,7 +97,7 @@ class _FramesDetailScreenState extends State<FramesDetailScreen> {
     List<Frame> frames = framesData.items.where((fr) {
      // globals.ileRamek = frames.length;
     //print('ileRamek w czasie pobierania ilości=${globals.ileRamek}');
-      return fr.data.contains('$wybranaData');
+      return fr.data == ('$wybranaData');
     }).toList();
 
     globals.ileRamek = frames.length;

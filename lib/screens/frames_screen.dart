@@ -54,6 +54,8 @@ class _FramesScreenState extends State<FramesScreen> {
   List<Frame> _korpusy = []; //unikalne korpusy
   int przedpo = 2; //wyświetlanie ramek przed (1) albo po (2) przeglądzie
   List<bool> _selectedPrzedPo = <bool>[false, true];
+  double luPa = globals.lupaRamek; //powiększenie widoku ula
+  List<bool> _selectedLupa = <bool>[true, false, false]; // lewa|obie|prawa
 
   bool readyApiary = false; //ustalony numer pasieki
   bool readyHive = false; //ustalony numer ula
@@ -120,10 +122,11 @@ class _FramesScreenState extends State<FramesScreen> {
         //print('data inspekcji ${globals.dataInspekcji}');
         if (globals.dataInspekcji != '') {
           wybranaData = globals.dataInspekcji; //data z elementu listy info
-          globals.dataInspekcji = '';
+          //globals.dataInspekcji = '';
         } else {
           if (_daty.isNotEmpty) {
             //print('wybrana = $wybranaData');
+            globals.dataInspekcji = _daty[0].data;
             wybranaData = _daty[0].data;
           } //najwcześniejsza data pobrana z bazy
         }
@@ -152,6 +155,12 @@ class _FramesScreenState extends State<FramesScreen> {
           // _isLoading = false; //zatrzymanie wskaznika ładowania dań
         });
       });
+     
+      // //ustawienie wielkosci widoku ula
+      luPa == 1.0 ? _selectedLupa[0] = true : _selectedLupa[0] = false;
+      luPa == 1.2 ? _selectedLupa[1] = true : _selectedLupa[1] = false;
+      luPa == 1.4 ? _selectedLupa[2] = true : _selectedLupa[2] = false;
+
     }
     _isInit = false;
     //Provider.of<Rests>(context, listen: false).fetchAndSetRests(); //dostawca restauracji
@@ -373,13 +382,14 @@ class _FramesScreenState extends State<FramesScreen> {
   
             TextButton(onPressed: (){
               globals.dataWpisu = wybranaData; //zeby notatka dotyczyła wybranego przegladu/daty
+              globals.dataInspekcji = wybranaData; //zeby notatka dotyczyła wybranego przegladu/daty ???????
               Navigator.of(context).pop();
               Navigator.of(context).pushNamed(
                   InfosEditScreen.routeName,
                   arguments: {'idInfo': '',
                               'kategoria': 'inspection', 
                               'parametr': AppLocalizations.of(context)!.inspection, //przegląd - parametr wystarczy zeby zapisać uwagę/notatkę do przeglądu
-                              'wartosc': globals.ikonaInspekcji, //pobranie ikony przeglądu zeby sie nie zmieniła przy dodawaniu notatki
+                              'wartosc': globals.ikonaInspekcji, //pobranie koloru ikony przeglądu zeby sie nie zmieniła przy dodawaniu notatki
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
@@ -410,13 +420,22 @@ class _FramesScreenState extends State<FramesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    
+     final ButtonStyle buttonStyle = OutlinedButton.styleFrom(    
+      padding: const EdgeInsets.all(15.0),
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),//Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+      //fixedSize: Size(66.0, 35.0),
+      //textStyle: const TextStyle(color: Color.fromARGB(255, 162, 103, 0),)
+    );
     //przekazanie hiveNr z hives_item za pomocą navigatora
     final hiveNr = ModalRoute.of(context)!.settings.arguments as int;
     //pobranie wszystkich ramek dla ula
     final framesData = Provider.of<Frames>(context);
     //ramki z wybranej daty dla ula
     List<Frame> frames = framesData.items.where((fr) {
-      return fr.data.contains(wybranaData);
+      return fr.data == (wybranaData);
     }).toList();
 
     // print(
@@ -431,17 +450,43 @@ class _FramesScreenState extends State<FramesScreen> {
     //   print('${frames[i].strona},${frames[i].zasob},${frames[i].wartosc}');
     //   print('-----');
     // }
+    String notatka = '';
+    String idNotatki = '';
     final infosData = Provider.of<Infos>(context);
     List<Info> infos = infosData.items.where((inf) {
-      return inf.data.contains(wybranaData);
+      return inf.data == (wybranaData);
     }).toList();
 
-    // for (var i = 0; i < infos.length; i++) {
-    //   print(
-    //       '${infos[i].id},${infos[i].data},${infos[i].pasiekaNr},${infos[i].ulNr},${infos[i].kategoria},${infos[i].parametr},${infos[i].wartosc},${infos[i].miara}');
-    //   print('=======');
-    // }
-
+    //print('infos dla wybranej daty = $wybranaData');
+    for (var i = 0; i < infos.length; i++) {
+      if ((infos[i].data == wybranaData) && (infos[i].parametr == AppLocalizations.of(context)!.inspection)){
+        idNotatki = infos[i].id;
+        notatka = infos[i].uwagi;
+      //   print(
+      //       '${infos[i].id},${infos[i].data},${infos[i].pasiekaNr},${infos[i].ulNr},${infos[i].kategoria},${infos[i].parametr},${infos[i].wartosc},${infos[i].miara},${infos[i].uwagi}');
+      //   print('======='); 
+      // print('wybrana data = $wybranaData  , wartość = ${infos[i].parametr}');
+      // print('notatka = $notatka');
+      } 
+    }
+    
+    // //ustawienie wielkosci widoku ula
+    // luPa == 1.0 ? _selectedLupa[1] = true : _selectedLupa[1] = false;
+    // luPa == 1.2 ? _selectedLupa[0] = true : _selectedLupa[0] = false;
+    // luPa == 1.4 ? _selectedLupa[2] = true : _selectedLupa[2] = false;
+    
+    //ustawienie zmiennej "stronaRamki" w zalezności od ustawienia przełacznika lewa|obie|prawa
+    if(_selectedLupa[0] == true){ //[0]==true to 1.0; 
+      luPa = 1.0; globals.lupaRamek = 1.0;  
+    }
+    if(_selectedLupa[1] == true){ //[1]==true to 1.2
+      luPa = 1.2; globals.lupaRamek = 1.2;
+    }
+    
+    if(_selectedLupa[2] == true){//[2]==true to 1.4
+      luPa = 1.4; globals.lupaRamek = 1.4;
+    }
+    
     //*********** obliczane wielkości płótna dla wszystkich korpusów w ulu ******
     double widthCanvas = 0; //szerokość płótna
     double highCanvas = 0; //wysokość płótna
@@ -456,7 +501,7 @@ class _FramesScreenState extends State<FramesScreen> {
     }).toList();
 
     globals.iloscRamek = hive[0].ramek; //ilość ramek w korpusie zapamiętana w bazie
-    widthCanvas = hive[0].ramek * 20 + 20; //pole "ramek" zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+    widthCanvas = hive[0].ramek * 20 * luPa + 20; //pole "ramek" zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
     //print('hive= ${hive[0].ramek}');
     // print('szerokość = $widthCanvas');
     //*********** */
@@ -565,7 +610,7 @@ class _FramesScreenState extends State<FramesScreen> {
                                       }else{_selectedPrzedPo = [false,true]; 
                                         przedpo=2; //print("DT1 jest po DT2");
                                       }
-                                      
+                                      globals.dataInspekcji = _daty[index].data;
                                       wybranaData = _daty[index].data; //dla filtrowania po dacie
                                     });
                                   });
@@ -621,7 +666,8 @@ class _FramesScreenState extends State<FramesScreen> {
                               width: widthCanvas,
                               high: highCanvas,
                               informacje: infos,
-                              przedPo: przedpo),
+                              przedPo: przedpo,
+                              lupa: luPa),
                           size: Size(widthCanvas, highCanvas),
                         ),
                         margin: EdgeInsets.all(20),
@@ -666,12 +712,96 @@ class _FramesScreenState extends State<FramesScreen> {
                                         ),
                                         isSelected: _selectedPrzedPo,
                                         children: [ //napisy na przełącznikach
-                                          Text(AppLocalizations.of(context)!.framesBefore),
-                                          Text(AppLocalizations.of(context)!.framesAfter),
+                                          Text(' ${AppLocalizations.of(context)!.framesBefore} '),
+                                          Text(' ${AppLocalizations.of(context)!.framesAfter} '),
                                         ],  //przed, po
                                       ),
-                                  ]),
+
+                                      //lupa
+                                      ToggleButtons(
+                                        direction: Axis.horizontal, 
+                                        onPressed: (int index) {
+                                          setState(() {
+                                            // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
+                                            for (int i = 0; i < _selectedLupa.length; i++) {
+                                              _selectedLupa[i] = i == index;
+                                            }
+                                          });
+                                        },
+                                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                        borderColor: Color.fromARGB(255, 162, 103, 0),
+                                        selectedBorderColor: Color.fromARGB(255, 162, 103, 0), //obramowanie wybranego przycisku
+                                        selectedColor: Color.fromARGB(255, 0, 0, 0), //napis wybranego
+                                        fillColor: Theme.of(context).primaryColor, //tło wybranego
+                                        color: Color.fromARGB(255, 78, 78, 78), //napis niewybranego
+                                        constraints: const BoxConstraints(
+                                          minHeight: 33.0,
+                                          minWidth: 65.0,
+                                        ),
+                                        isSelected: _selectedLupa,
+                                        children: [ //napisy na przełącznikach
+                                          Icon(Icons.crop_square,size: 20,),
+                                          Icon(Icons.crop_square,size: 25,),
+                                          Icon(Icons.crop_square,size: 30,)
+                                        ],  //lewa, obie, prawa
+                                      ),  
+                                  ]),                           
                               ]),  
+
+                      
+  //wyświetlenie notatki z pola uwagi
+                  if(notatka  != '')
+                       Container(
+                          margin: EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(AppLocalizations.of(context)!.nOte),
+                              SizedBox(height: 5),
+                              OutlinedButton(
+                                style: buttonStyle,
+                                onPressed: () {
+                                    Navigator.of(context).pushNamed(
+                                    InfosEditScreen.routeName,
+                                    arguments: {'idInfo': idNotatki},
+                                  );                                      
+                                },
+                              child: Text('${notatka}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  color: Color.fromARGB(255, 0, 0,0))),
+                            )]),
+                       ),
+                      
+                      
+                      // Container(
+                      //   padding: const EdgeInsets.only(
+                      //       top: 5, bottom: 5, left: 20, right: 20),
+                      //   alignment: Alignment.topCenter,
+                      //   decoration: BoxDecoration(
+                      //     border: Border.all(
+                      //         //color: Colors.black,
+                      //         width: 1.0,
+                      //         style: BorderStyle.solid),
+                      //     borderRadius: BorderRadius.circular(20),
+                      //     //color: Colors.yellowAccent,
+                      //   ),
+                      //   margin: EdgeInsets.all(20),
+                      //   child: Column(
+                      //     mainAxisAlignment: MainAxisAlignment.center,
+                      //     crossAxisAlignment: CrossAxisAlignment.center,
+                      //     children: [
+                      //       Center(
+                      //         child: Text('$notatka',
+                      //           style: TextStyle(
+                      //             //fontWeight: FontWeight.bold,
+                      //             fontSize: 20,
+                      //             color: Color.fromARGB(255, 0, 0, 0)),
+                      //           textAlign: TextAlign.center)),
+                      //     ],
+                      //   ),
+                      // )
 
 
 
@@ -749,6 +879,7 @@ class MyHive extends CustomPainter {
   double high;
   List<Info> informacje;
   int przedPo;
+  double lupa;
 
   MyHive({
     required this.ramki,
@@ -757,44 +888,59 @@ class MyHive extends CustomPainter {
     required this.high,
     required this.informacje,
     required this.przedPo,
+    required this.lupa,
     // required this.sides, required this.radius, required this.radians
   });
 
   @override
+
   void paint(Canvas canvas, Size size) {
+    int offP1a = 8; //elementy offSet lineDraw
+    int offP1b = 2; //elementy offSet lineDraw
+    double strW = 4; //szerokość słupka zasobu
+    int offStart = 10; //poczatek rysowania ramek w poziomie od krawędzi korpusa
+    int offMatA = 12; //elementu offSet dla matecznków
+    int offMatB = 8;  //elementu offSet dla matecznków
+    double sizMat = 3; //wielkość matki i mateczników
+    int izolA = 1; //element offSet dla izolacji
+    int izolB = 19;//element offSet dla izolacji
+    if(lupa == 1.0) {strW = 4; offStart = 10; offP1a = 8; offP1b = 2; offMatA = 12; offMatB = 8; sizMat = 3; izolA = 1; izolB = 19; };
+    if(lupa == 1.2) {strW = 5; offStart = 12; offP1a = 10; offP1b = 5; offMatA = 15; offMatB = 12; sizMat = 3.5; izolA = 0; izolB = 20; };
+    if(lupa == 1.4) {strW = 6; offStart = 14; offP1a = 12; offP1b = 8; offMatA = 18; offMatB = 17; sizMat = 4; izolA = -2; izolB = 22; };
+
     Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
     Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki krata odgrodowa
     Paint obrysPaint = Paint()
       ..strokeWidth = 1
       ..color = Color.fromARGB(255, 122, 122, 122); //obrys
     Paint honeyPaint = Paint()
-      ..strokeWidth = 4
+      ..strokeWidth = strW
       ..color = Color.fromARGB(255, 222, 156,
           1); //(1) honey / miód, nakrop 255, 252, 193, 104//,255, 206, 144, 1
     Paint sealedPaint = Paint()
-      ..strokeWidth = 4
+      ..strokeWidth = strW
       ..color =
           Color.fromARGB(255, 131, 92, 0); //(2) sealed / zasklep, miód poszyty
     Paint pollenPaint = Paint()
-      ..strokeWidth = 4
+      ..strokeWidth = strW
       ..color = Color.fromARGB(255, 0, 197, 0); //(3) pollen / pierzga
     Paint broodPaint = Paint()
-      ..strokeWidth = 4
+      ..strokeWidth = strW
       ..color = Color.fromARGB(255, 255, 17, 0); //(4) brook / czerw
     Paint larvaePaint = Paint()
-      ..strokeWidth = 4
+      ..strokeWidth = strW
       ..color = Color.fromARGB(255, 253, 195, 192); //(5) larvae / larwy
     Paint eggPaint = Paint()
-      ..strokeWidth = 4
+      ..strokeWidth = strW
       ..color = Color.fromARGB(255, 255, 255, 255); //(6) eggs / jaja
     Paint dronePaint = Paint()
-      ..strokeWidth = 4
+      ..strokeWidth = strW
       ..color = Color.fromARGB(255, 114, 0, 0); //(7) drone / trut
     Paint waxPaint = Paint()
       ..strokeWidth = 1
       ..color = Color.fromARGB(255, 255, 255, 0); //(8) wax / węza
     Paint combPaint = Paint()
-      ..strokeWidth = 4
+      ..strokeWidth = strW
       ..color = Color.fromARGB(
           255, 255, 255, 0); //(9) comb, wax comb / susz, woszczyna
     Paint matkaBlack = Paint()
@@ -845,7 +991,7 @@ class MyHive extends CustomPainter {
     //3.14 - trójkąt w lewo, //1,57(/2) - w dół //(/6) - w górę, 0 - w prawo
     //double wDol = math.pi/2; //1,57 - trójkąt w dół
     var path = Path();
-
+  
     //text
     final textStyle = TextStyle(
       color: Colors.black,
@@ -938,10 +1084,10 @@ class MyHive extends CustomPainter {
         minWidth: 0,
         maxWidth: 20,
       );
-      final offset = Offset(10 + (i * 20) + 6.toDouble(), high + 3);
-      textPainter.paint(canvas, offset); //rysowanie numeru korpusa
-      final offset1 = Offset(10 + (i * 20) + 6.toDouble(),  -16);
-      textPainter.paint(canvas, offset1); //rysowanie numeru korpusa
+      final offset = Offset(offStart + (i * 20 * lupa) + 6.toDouble(), high + 3);
+      textPainter.paint(canvas, offset); //rysowanie numeru ramek pod korpusem
+      final offset1 = Offset(offStart + (i * 20 * lupa) + 6.toDouble(),  -16);
+      textPainter.paint(canvas, offset1); //rysowanie numeru ramek nad korpusem
     }
     
     
@@ -1045,19 +1191,19 @@ class MyHive extends CustomPainter {
           //print('case 1');
           //print('start dla ramki ${ramki[i].ramkaNr} = $start');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 dronePaint); //zasob 1 - drone // dla strony lewej i prawej
 
@@ -1072,19 +1218,19 @@ class MyHive extends CustomPainter {
           //print('case 2');
           //print('start dla ramki ${nrRamki} = $start');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 broodPaint); //zasob 2 - brook // dla strony lewej i prawej
 
@@ -1098,19 +1244,19 @@ class MyHive extends CustomPainter {
         case 3:
           //print('case 3 larwy');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 larvaePaint); //zasob 3 - larvae // dla strony lewej i prawej
       //print('startNastZas $startNastZas');
@@ -1128,19 +1274,19 @@ class MyHive extends CustomPainter {
         case 4:
           //print('case 4');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                  ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 eggPaint); //zasob 4 - egg // dla strony lewej i prawej
 
@@ -1155,20 +1301,20 @@ class MyHive extends CustomPainter {
         case 5:
           //print('case 5');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 pollenPaint); //zasob 5 - pollen // dla strony lewej i prawej
 
@@ -1181,20 +1327,20 @@ class MyHive extends CustomPainter {
         case 6:
           //print('case 6');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas = startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 honeyPaint); //zasob 6 - miód // dla strony lewej i prawej
 
@@ -1207,20 +1353,20 @@ class MyHive extends CustomPainter {
         case 7:
           //print('case 7');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas =  startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 sealedPaint); //zasob 7 - zasklep // dla strony lewej i prawej
 
@@ -1233,20 +1379,20 @@ class MyHive extends CustomPainter {
         case 8:
           //print('case 9');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 waxPaint); //zasob 9 - węza // dla strony lewej i prawej
 
@@ -1259,20 +1405,20 @@ class MyHive extends CustomPainter {
         case 9:
           //print('case 8');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           //kontrola czy zasób nie przekracza łącznie 100%
           startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
           if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
             canvas.drawLine(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas),
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 8) - 2, start + 15 + startZas -
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
                         ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
                 combPaint); //zasob 8 - susz // dla strony lewej i prawej
 
@@ -1286,96 +1432,96 @@ class MyHive extends CustomPainter {
           //print('case 10');
           //canvas.drawCircle(Offset(100, 100), 3, matka);
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           switch (ramki[i].wartosc) {
             case '1':
               canvas.drawCircle(
-                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaBlack);
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaBlack);
               break;
             case '2':
               canvas.drawCircle(
-                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaYellow);
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaYellow);
               break;
             case '3':
               canvas.drawCircle(
-                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaRed);
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaRed);
               break;
             case '4':
               canvas.drawCircle(
-                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaGreen);
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaGreen);
               break;
             case '5':
               canvas.drawCircle(
-                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaBlue);
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaBlue);
               break;
             case '6':
               canvas.drawCircle(
-                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaWhite);
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaWhite);
               break;
             case '7':
               canvas.drawCircle(
-                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaOther);
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaOther);
               break;
             default:
               canvas.drawCircle(
-                  Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + 20), 3, matkaBlack);
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), 4, matkaBlack);
           }
           break;
         case 11:
           //print('case 11');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           double temp = startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! + 5;
           for (var a = 0; a < int.parse(ramki[i].wartosc); a++) {
             canvas.drawCircle(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + temp), 3, matecznik);
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + temp), sizMat, matecznik);
             temp = temp - 10;
           }
           break;
         case 12:
           //print('case 12');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           double temp = startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! + 5;
           for (var a = 0; a < int.parse(ramki[i].wartosc); a++) {
             canvas.drawCircle(
-                Offset(10 + (nrRamki - 1) * 20 + (ramki[i].strona * 12) - 8, start + temp), 3, delMat);
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + temp), sizMat, delMat);
             temp = temp - 10;
           }
           break;
         case 13: //to Do
           //print('case 13');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           switch (ramki[i].wartosc) {
@@ -1383,7 +1529,7 @@ class MyHive extends CustomPainter {
               var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
               radians = math.pi / 4;
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + 6);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 6);
               Offset startPoint = Offset( radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1401,7 +1547,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 6;
               var angle = (math.pi * 2) / sides; //kąt
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + 7);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 7);
               Offset startPoint = Offset( radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1420,7 +1566,7 @@ class MyHive extends CustomPainter {
               radians = 0;
               var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + 6);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 6);
               Offset startPoint = Offset( radiusEx * math.cos(radians), radiusEx * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1439,24 +1585,24 @@ class MyHive extends CustomPainter {
               //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 6, start + 9),
-                  Offset(10 + (nrRamki - 1) * 20 + 14, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 9),
                   linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 6, start + 3),
-                  Offset(10 + (nrRamki - 1) * 20 + 6, start + 10),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 3),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 10),
                   linePaint); // | (kreska pionowa lewa)
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 14, start + 3),
-                  Offset(10 + (nrRamki - 1) * 20 + 14, start + 10),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 3),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 10),
                   linePaint); // | (kreska pionowa prawa)
               break;
             case 'ramka pracy': //ramka pracy
               var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
               radians = math.pi / 4;
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + 6);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 6);
               Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1474,7 +1620,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 6;
               var angle = (math.pi * 2) / sides; //kąt
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + 7);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 7);
               Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1493,7 +1639,7 @@ class MyHive extends CustomPainter {
               radians = 0;
               var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + 6);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 6);
               Offset startPoint = Offset( radiusEx * math.cos(radians), radiusEx * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1512,17 +1658,17 @@ class MyHive extends CustomPainter {
               //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 6, start + 9),
-                  Offset(10 + (nrRamki - 1) * 20 + 14, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 9),
                   linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 6, start + 3),
-                  Offset(10 + (nrRamki - 1) * 20 + 6, start + 10),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 3),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 10),
                   linePaint); // | (kreska pionowa lewa)
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 14, start + 3),
-                  Offset(10 + (nrRamki - 1) * 20 + 14, start + 10),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 3),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 10),
                   linePaint); // | (kreska pionowa prawa)
               break;
           }
@@ -1530,13 +1676,13 @@ class MyHive extends CustomPainter {
         case 14: //is Done
           //print('case 14');
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 4, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 16, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
               linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
           canvas.drawLine(
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + 13),
-              Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 15),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
           switch (ramki[i].wartosc) {
@@ -1545,7 +1691,7 @@ class MyHive extends CustomPainter {
               radians = math.pi; //w lewo
               var angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10 - 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10 - 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
               Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1563,7 +1709,7 @@ class MyHive extends CustomPainter {
               radians = 0; //w prawo
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10 + 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10 + 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
               Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1581,7 +1727,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 6; //w górę
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 10 + 13);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 10 + 13);
               Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1599,7 +1745,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 2; //w dół
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 10 + 11);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 10 + 11);
               Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1614,32 +1760,32 @@ class MyHive extends CustomPainter {
               break;
             case 'insulated': //zaizolowano - załoono izolator
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 1, start + (75 * ramki[i].rozmiar) + 20),
-                  Offset(10 + (nrRamki - 1) * 20 + 19, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 1, start + 9),
-                  Offset(10 + (nrRamki - 1) * 20 + 1, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // | (kreska pionowa lewa)
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 19, start + 9),
-                  Offset(10 + (nrRamki - 1) * 20 + 19, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // | (kreska pionowa prawa)
               break;
             case 'izolacja': //zaizolowano - załoono izolator
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 1, start + (75 * ramki[i].rozmiar) + 20),
-                  Offset(10 + (nrRamki - 1) * 20 + 19, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // - (kreska pozioma) dla poszczególnych ramek
 
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 1, start + 9),
-                  Offset(10 + (nrRamki - 1) * 20 + 1, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // | (kreska pionowa lewa)
               canvas.drawLine(
-                  Offset(10 + (nrRamki - 1) * 20 + 19, start + 9),
-                  Offset(10 + (nrRamki - 1) * 20 + 19, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),
                   linePaint); // | (kreska pionowa prawa)
               break;
             case 'usuń ramka': //wycofano, usunieto
@@ -1647,7 +1793,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 2; //w dół
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 10 + 11);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 10 + 11);
               Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1665,7 +1811,7 @@ class MyHive extends CustomPainter {
               radians = math.pi / 6; //w górę
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10, start + (75 * ramki[i].rozmiar) + 10 + 13);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 10 + 13);
               Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1683,7 +1829,7 @@ class MyHive extends CustomPainter {
               radians = 0; //w prawo
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10 + 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10 + 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
               Offset startPoint = Offset( radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
@@ -1701,7 +1847,7 @@ class MyHive extends CustomPainter {
               radians = math.pi; //w lewo
               var angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
 
-              Offset center = Offset(10 + (nrRamki - 1) * 20 + 10 - 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10 - 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
               Offset startPoint = Offset( radius * math.cos(radians), radius * math.sin(radians));
 
               path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);

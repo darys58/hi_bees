@@ -35,14 +35,38 @@ class _HarvestScreenState extends State<HarvestScreen> {
   @override
   Widget build(BuildContext context) {
     //tworzenie listy lat w których dokonywano zbiory
-    List<String> listaLat = [];
-    int odRoku = 2022; //zeby najstarszym był rok 2023
+    // List<String> listaLat = [];
+    // int odRoku = 2022; //zeby najstarszym był rok 2023
+    // int biezacyRok = int.parse(DateTime.now().toString().substring(0, 4));
+    // while (odRoku < biezacyRok) {
+    //   listaLat.add(biezacyRok.toString());
+    //   biezacyRok = biezacyRok - 1;
+    // }
+
+     //pobranie wszystkich zbiorów
+    final harvestDataAll = Provider.of<Harvests>(context);
+    List<Harvest> zbioryAll = harvestDataAll.items.where((pur) {
+      return pur.data.startsWith('20');
+    }).toList();
+
+    List<String> listaLat = []; //lista lat w których dokonywano zbiorów
+    int odRoku = int.parse(DateTime.now().toString().substring(0, 4)); //biezący rok
+
+    //poszukanie najstarszego roku w którym dokonano zbiorów
+    for (var i = 0; i < zbioryAll.length; i++) {
+      if(odRoku > int.parse(zbioryAll[i].data.substring(0, 4)))
+        odRoku = int.parse(zbioryAll[i].data.substring(0, 4));
+    }
+    
+    //tworzenie listy lat w których dokonywano zbiorów
     int biezacyRok = int.parse(DateTime.now().toString().substring(0, 4));
-    while (odRoku < biezacyRok) {
+    while (odRoku <= biezacyRok) {
       listaLat.add(biezacyRok.toString());
       biezacyRok = biezacyRok - 1;
     }
-    //pobranie wszystkich zbiorow dla ula
+    
+    
+    //pobranie wszystkich zbiorow dla ula z wybranego roku
     final zbioryData = Provider.of<Harvests>(context);
     List<Harvest> zbiory = zbioryData.items.where((zb) {
       return zb.data.startsWith(wybranaData);
@@ -66,13 +90,13 @@ class _HarvestScreenState extends State<HarvestScreen> {
             break;
           case 2:
             zbiory[i].miara == 1
-                ? pylek = pylek + zbiory[i].ilosc
+                ? pylek = pylek + zbiory[i].ilosc 
                 : pylek = pylek + zbiory[i].ilosc * 1.579; //l    1kg = 1.579l
             break;
           case 3:
             zbiory[i].miara == 1
                 ? pierzga = pierzga + zbiory[i].ilosc
-                : pierzga = pierzga + zbiory[i].ilosc * 1.4; //l     1kg = 1.4l ???
+                : pierzga = pierzga + zbiory[i].ilosc * 1.8; //l     1kg = 1.8l 
             break;
           case 4:
             zbiory[i].miara == 1
@@ -88,11 +112,11 @@ class _HarvestScreenState extends State<HarvestScreen> {
         }
     }
 
-    if (miod != 0) wysokoscStatystyk = wysokoscStatystyk + 18;
-    if (pylek != 0) wysokoscStatystyk = wysokoscStatystyk + 18;
-    if (pierzga != 0) wysokoscStatystyk = wysokoscStatystyk + 18;
-    if (wosk != 0) wysokoscStatystyk = wysokoscStatystyk + 18;
-    if (propolis != 0) wysokoscStatystyk = wysokoscStatystyk + 18;
+    if (miod != 0) wysokoscStatystyk = wysokoscStatystyk + 20;
+    if (pylek != 0) wysokoscStatystyk = wysokoscStatystyk + 20;
+    if (pierzga != 0) wysokoscStatystyk = wysokoscStatystyk + 20;
+    if (wosk != 0) wysokoscStatystyk = wysokoscStatystyk + 20;
+    if (propolis != 0) wysokoscStatystyk = wysokoscStatystyk + 20;
 
     return Scaffold(
         appBar: AppBar(
@@ -266,35 +290,154 @@ class _HarvestScreenState extends State<HarvestScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (miod != 0)
-                        globals.jezyk == 'pl_PL'
-                          ? Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.38).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                            style: const TextStyle(fontSize: 16))
-                          : Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2)} l (${(miod * 1.38).toStringAsFixed(2)} kg)',
-                            style: const TextStyle(fontSize: 16)),
+                         RichText(
+                            text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                                  globals.jezyk == 'pl_PL'
+                                  ? TextSpan(
+                                      //miód: ilość w litrach (ilość w kg) - po polsku
+                                      text: AppLocalizations.of(context)!.honey + ': ',
+                                        style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                  : TextSpan(
+                                      //miód: ilość w litrach (ilość w kg) - po angielsku
+                                      text: AppLocalizations.of(context)!.honey + ': ',
+                                        style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+                                  globals.jezyk == 'pl_PL'
+                                  ? TextSpan(
+                                      //miód: ilość w litrach (ilość w kg) - po polsku
+                                      text: '${miod.toStringAsFixed(2).replaceAll('.', ',')} l',
+                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                  : TextSpan(
+                                      //miód: ilość w litrach (ilość w kg) - po angielsku
+                                      text: '${miod.toStringAsFixed(2)} l',
+                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+                                  globals.jezyk == 'pl_PL'
+                                  ? TextSpan(
+                                      //miód: ilość w litrach (ilość w kg) - po polsku
+                                      text: ' (${(miod * 1.38).toStringAsFixed(2).replaceAll('.', ',')} kg)',
+                                        style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                  : TextSpan(
+                                      //miód: ilość w litrach (ilość w kg) - po angielsku
+                                      text: ' (${(miod * 1.38).toStringAsFixed(2)} kg)',
+                                        style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+                                ])),
+
+                        // globals.jezyk == 'pl_PL'
+                        //   ? Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.38).toStringAsFixed(2).replaceAll('.', ',')} kg)',
+                        //     style:  TextStyle(fontSize: 16))
+                        //   : Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2)} l (${(miod * 1.38).toStringAsFixed(2)} kg)',
+                        //     style:  TextStyle(fontSize: 16)),
                       if (pylek != 0)
-                        globals.jezyk == 'pl_PL'
-                          ? Text(AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.67).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                            style: const TextStyle(fontSize: 16))
-                          : Text(AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2)} l (${(pylek * 0.67).toStringAsFixed(2)} kg)',
-                            style: const TextStyle(fontSize: 16)),
+                         RichText(
+                            text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                                  globals.jezyk == 'pl_PL'
+                                  ? TextSpan(
+                                      text: AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
+                                      style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                  : TextSpan(
+                                      text: AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2)} l (${(pylek * 0.67).toStringAsFixed(2)} kg)',
+                                      style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+
+                                ])),
+                      // if (pylek != 0)
+                      //   globals.jezyk == 'pl_PL'
+                      //     ? Text(AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
+                      //       style: TextStyle(fontSize: 16))
+                      //     : Text(AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2)} l (${(pylek * 0.67).toStringAsFixed(2)} kg)',
+                      //       style: TextStyle(fontSize: 16)),
                       if (pierzga != 0)
-                        globals.jezyk == 'pl_PL'
-                          ? Text(AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.73).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                            style: const TextStyle(fontSize: 16))
-                          : Text(AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2)} l (${(pierzga * 0.73).toStringAsFixed(2)} kg)',
-                            style: const TextStyle(fontSize: 16)),
+                         RichText(
+                            text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                                  globals.jezyk == 'pl_PL'
+                                  ? TextSpan(
+                                      text: AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
+                                      style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                  : TextSpan(
+                                      text: AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2)} l (${(pierzga * 0.56).toStringAsFixed(2)} kg)',
+                                      style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+
+                                ])),
+                      // if (pierzga != 0)
+                      //   globals.jezyk == 'pl_PL'
+                      //     ? Text(AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
+                      //       style: TextStyle(fontSize: 16))
+                      //     : Text(AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2)} l (${(pierzga * 0.56).toStringAsFixed(2)} kg)',
+                      //       style: TextStyle(fontSize: 16)),
+                      
                       if (wosk != 0)
-                        globals.jezyk == 'pl_PL'
-                          ? Text(AppLocalizations.of(context)!.wax + ': ${wosk.toString().replaceAll('.', ',')} kg',
-                            style: const TextStyle(fontSize: 16))
-                          : Text(AppLocalizations.of(context)!.wax + ': ${wosk} kg',
-                            style: const TextStyle(fontSize: 16)),
-                      if (propolis != 0)
-                        globals.jezyk == 'pl_PL'
-                          ? Text('propolis: ${propolis.toString().replaceAll('.', ',')} kg',
-                            style: const TextStyle(fontSize: 16))
-                          : Text('propolis: ${propolis} kg',
-                            style: const TextStyle(fontSize: 16)),
+                         RichText(
+                            text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                                  globals.jezyk == 'pl_PL'
+                                  ? TextSpan(
+                                      text: AppLocalizations.of(context)!.wax + ': ${wosk.toString().replaceAll('.', ',')} kg',
+                                      style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                  : TextSpan(
+                                      text: AppLocalizations.of(context)!.wax + ': ${wosk} kg',
+                                      style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+
+                                ])),
+                      // if (wosk != 0)
+                      //   globals.jezyk == 'pl_PL'
+                      //     ? Text(AppLocalizations.of(context)!.wax + ': ${wosk.toString().replaceAll('.', ',')} kg',
+                      //       style: TextStyle(fontSize: 16))
+                      //     : Text(AppLocalizations.of(context)!.wax + ': ${wosk} kg',
+                      //       style: TextStyle(fontSize: 16)),
+                       if (propolis != 0)
+                         RichText(
+                            text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                                  globals.jezyk == 'pl_PL'
+                                  ? TextSpan(
+                                      text: 'propolis: ${propolis.toString().replaceAll('.', ',')} kg',
+                                      style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                  : TextSpan(
+                                      text: 'propolis: ${propolis} kg',
+                                      style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+
+                                ])),
+                      
+                      // if (propolis != 0)
+                      //   globals.jezyk == 'pl_PL'
+                      //     ? Text('propolis: ${propolis.toString().replaceAll('.', ',')} kg',
+                      //       style: TextStyle(fontSize: 16))
+                      //     : Text('propolis: ${propolis} kg',
+                      //       style: TextStyle(fontSize: 16)),
                     ],
                   ),
                 ),

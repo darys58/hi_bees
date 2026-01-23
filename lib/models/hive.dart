@@ -5,8 +5,7 @@ class Hive with ChangeNotifier {
   final int pasiekaNr;
   final int ulNr;
   final String przeglad; //ostatnia data przelądu
-  final String
-      ikona; //1-zielona(ok), 2-zółta(przeznaczenie ?), 3-czerwona (brak matki ?)
+  final String ikona; //1-zielona(ok), 2-zółta(przeznaczenie ?), 3-czerwona (brak matki ?)
   final int ramek; // ilość ramek
   final int korpusNr;
   final int trut;
@@ -31,8 +30,8 @@ class Hive with ChangeNotifier {
   final String matka3;
   final String matka4;
   final String matka5;
-  final String h1; //zapas 1
-  final String h2; //zapas 2
+  final String h1; //rodzaj ula
+  final String h2; //typ ula
   final String h3; //zapas 3
   final int aktual; //0-dane aktualne lub stan po wczytaniu danych z chmury 1-nieaktualne zasoby, 
 
@@ -68,8 +67,8 @@ class Hive with ChangeNotifier {
     required this.matka3,
     required this.matka4,
     required this.matka5,
-    required this.h1,
-    required this.h2,
+    required this.h1, //rodzaj ula: ul, odkład, mini
+    required this.h2, //typ ula; WIELKOPOLSKI, DADANY itp.
     required this.h3,
     required this.aktual,
     //this.isFavorite = false,

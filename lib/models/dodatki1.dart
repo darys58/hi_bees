@@ -6,15 +6,15 @@ import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
 //import '../globals.dart' as globals;
 
 class Dodatki1Item with ChangeNotifier {
-  final String id; //id: 
+  final String id; //id:1 
   final String a; //ustawienie przełacznika - automatyczny eksport danych przy uruchamianiu aplikacji
-  final String b; //
+  final String b; //średnia waga miodu na 1dm2 plastra miodu
   final String c; //
   final String d; //
-  final String e; //średnia waga miodu małej ramki
-  final String f; //średnia waga miodu duzej ramki
+  final String e; //średnia waga miodu małej ramki (dla obliczania ilości miodu w latach 2023-2025)
+  final String f; //średnia waga miodu duzej ramki (dla obliczania ilości miodu w latach 2023-2025)
   final String g; //waga pyłku w jednej miarce/porcji
-  final String h; //
+  final String h; //ilość uli na stronie raportów
 
   Dodatki1Item({
     required this.id,
@@ -54,51 +54,11 @@ class Dodatki1 with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie danych do uruchomienia apki --> Dodatki1 <---');
-    print(_items);
+    //print('wczytanie danych do uruchomienia apki --> Dodatki1 <---');
+    //print(_items);
     notifyListeners();
   }
 
-
-  // //pobranie danych z serwera www
-  // Future<void> fetchMemoryFromSerwer() async {
-  //   var url =
-  //       Uri.parse('https://hibees.pl/cbt.php?d=hi_bees&kod=${globals.kod}');
-  //   print(url);
-  //   try {
-  //     final response = await http.get(url);
-  //     print(json.decode(response.body));
-
-  //     final extractedData = json.decode(response.body) as Map<String, dynamic>;
-  //     // if (extractedData == null) {
-  //     //   return _items = [];
-  //     // }
-  //     final List<MemoryItem> loadedItems = [];
-
-  //     extractedData.forEach((numerId, promocjeData) {
-  //       loadedItems.add(MemoryItem(
-  //         id: numerId,
-  //         email: promocjeData['be_email'],
-  //         dev: promocjeData['be_dev'],
-  //         wer: promocjeData['be_wersja'],
-  //         kod: promocjeData['be_kod'],
-  //         key: promocjeData['be_key'],
-  //         dod: promocjeData['be_od'],
-  //         ddo: promocjeData['be_do'],
-  //       ));
-  //     });
-  //     // _items = loadedRests;
-  //     print('numer id  = ${loadedItems[0].id}');
-  //     notifyListeners();
-
-  //     if (loadedItems[0].id != 'brak ')
-  //       _items = loadedItems;
-  //     else
-  //       _items = [];
-  //   } catch (error) {
-  //     throw (error);
-  //   }
-  // }
 
   //zapisanie danych do bazy lokalnej
   static Future<void> insertDodatki1(

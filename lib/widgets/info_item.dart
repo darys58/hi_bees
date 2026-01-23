@@ -37,8 +37,7 @@ class InfoItem extends StatelessWidget {
     // ];
     List<Hive> hive = [];
     
-   
-    
+ 
     return Dismissible(
       //usuwalny element listy
       key: ValueKey(info.id),
@@ -92,8 +91,7 @@ class InfoItem extends StatelessWidget {
                               Provider.of<Hives>(context, listen: false);
                           hive = hiveData.items.where((element) {
                             //to wczytanie danych edytowanego ula
-                            return element.id.contains(
-                                '${globals.pasiekaID}.${globals.ulID}');
+                            return element.id == ('${globals.pasiekaID}.${globals.ulID}');
                           }).toList();
                           if (hive[0].przeglad == info.data) {
                             Hives.insertHive(
@@ -126,8 +124,8 @@ class InfoItem extends StatelessWidget {
                               hive[0].matka3,
                               hive[0].matka4,
                               hive[0].matka5,
-                              '0',
-                              '0',
+                              hive[0].h1,
+                              hive[0].h2,
                               '0',
                               0,
                             ).then((_) {
@@ -252,8 +250,7 @@ class InfoItem extends StatelessWidget {
                               Provider.of<Hives>(context, listen: false);
                           hive = hiveData.items.where((element) {
                             //to wczytanie danych edytowanego ula
-                            return element.id.contains(
-                                '${globals.pasiekaID}.${globals.ulID}');
+                            return element.id == ('${globals.pasiekaID}.${globals.ulID}');
                           }).toList();
                           if (hive[0].przeglad == info.data) {
                             Hives.insertHive(
@@ -286,8 +283,8 @@ class InfoItem extends StatelessWidget {
                               hive[0].matka3,
                               hive[0].matka4,
                               hive[0].matka5,
-                              '0',
-                              '0',
+                              hive[0].h1, //rodzaj ula
+                              hive[0].h2,
                               '0',
                               0,
                             ).then((_) {
@@ -416,15 +413,18 @@ class InfoItem extends StatelessWidget {
         child: Padding(
             padding: const EdgeInsets.all(1),
             child: 
+//****************************** */
+//lista przegladów              
               info.kategoria == 'inspection' //jezeli przeglądy
                 ? info.parametr == 'likwidacja ula' || info.parametr == 'hive liquidation'  //jezeli jest to usunięcie ula
-                  ? ListTile( //element listy dla usuniętego ula
-                  tileColor: info.wartosc == 'red'
+//element listy dla usuniętego ula                  
+                  ? ListTile( 
+                    tileColor: info.wartosc == 'red'
                               ? const Color.fromARGB(255, 244, 208, 208)
                               : info.data.substring(0, 4) == globals.rokStatystyk 
                                 ? null 
                                 : Colors.grey[200],
-                   onTap: () {
+                    onTap: () {
                       //_showAlert(context, 'Edycja', '${frame.id}');
                       // globals.dataInspekcji = frame.data;
                       Navigator.of(context).pushNamed(
@@ -479,8 +479,8 @@ class InfoItem extends StatelessWidget {
                           )
                         ])),
                     trailing: const Icon(Icons.edit))
-                  
-                  : ListTile( //element listy dla przeglądu normalnego a nie usunięcia ula
+//lista dla przeglądu normalnego a nie usunięcia ula                
+                  : ListTile( 
                     //rokStatystyk = DateTime.now().toString().substring(0, 4)
                     tileColor: info.data.substring(0, 4) == globals.rokStatystyk ? null : Colors.grey[200], 
                       onTap: () {
@@ -554,49 +554,16 @@ class InfoItem extends StatelessWidget {
                                 color: Color.fromARGB(255, 0, 0, 0)),
                           )
                         ])),
-                          
-                          // info.wartosc == 'green'
-                          //     ? Icon(
-                          //         Icons.hive,
-                          //         color: Color.fromARGB(255, 0, 227, 0),
-                          //       )
-                          //     : info.wartosc == 'yellow'
-                          //         ? Icon(
-                          //             Icons.hive,
-                          //             color: Color.fromARGB(255, 233, 229, 1),
-                          //             //size: 20,
-                          //           )
-                          //         : info.wartosc == 'red'
-                          //             ? Icon(
-                          //                 Icons.hive,
-                          //                 color: Color.fromARGB(255, 255, 0, 0),
-                          //                 //size: 20,
-                          //               )
-                          //             : Icon(
-                          //                 Icons.hive,
-                          //                 color:
-                          //                     Color.fromARGB(255, 116, 116, 116),
-                          //                 //size: 20,
-                          //               ),
-                          
-                          // if(info.pogoda != '')
-                          //   Image.network(
-                          //     //obrazek pogody pobierany z neta
-                          //     'https://openweathermap.org/img/w/${info.pogoda}.png', //adres internetowy
-                          //     height: 40, //wysokość obrazka
-                          //     //width: 140,
-                          //     fit: BoxFit.cover, //dopasowanie do pojemnika
-                          //   ),
-                       // ],
-                     // ),
                       trailing: const Icon(Icons.arrow_forward_ios))
-                : ListTile(  //pozostałe info (oprócz przegladu)
+//******************************************* */
+//lista pozostałych info (oprócz przegladu)
+//********************************************/                
+                : ListTile( 
                   tileColor: info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
                               ? const Color.fromARGB(255, 244, 208, 208)
                               : info.data.substring(0, 4) == globals.rokStatystyk 
                                 ? null 
-                                : Colors.grey[200],
-                    
+                                : Colors.grey[200],                    
                     onTap: () {
                       //_showAlert(context, 'Edycja', '${frame.id}');
                       // globals.dataInspekcji = frame.data;
@@ -605,6 +572,7 @@ class InfoItem extends StatelessWidget {
                         arguments: {'idInfo': info.id},
                       );
                     },
+//leading - grafiki                    
                     leading: CircleAvatar(
                         backgroundColor: info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
                                           ? const Color.fromARGB(255, 244, 208, 208)
@@ -630,37 +598,131 @@ class InfoItem extends StatelessWidget {
                                                     Icons.info_rounded,
                                                     color: Colors.black,
                                                   )),
+//*********************************************** */
+//title - pierwszy wiersz: data, czas temperatura
                     title: globals.jezyk == 'pl_PL'
                         ? Text(
                             '${zmienDate(info.data)}  ${info.czas}  ${info.temp}',
                             style: const TextStyle(fontSize: 14))
                         : Text('${info.data}  ${info.czas}  ${info.temp}',
                             style: const TextStyle(fontSize: 14)),
+//drugi wiersz:                   
                     subtitle: RichText(
-                        text: TextSpan(
+                        text:                        
+                          TextSpan(
                             style: TextStyle(color: Colors.black),
                             children: [
-                          TextSpan(
-                            text: ('${info.parametr} '),
-                            style: TextStyle(
+//jezeli to matka to matkaID na poczatku wiersza z pola "pogoda" + parametr                         
+                              info.kategoria == 'queen' 
+                                ? TextSpan(
+                                    text: ('ID${info.pogoda} ${info.parametr} '),
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        //fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 0, 0, 0)),
+                                  )
+//jezeli to nie matka to: sam parametr                         
+                                : TextSpan(
+                                  text: ('${info.parametr} '),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      //fontWeight: FontWeight.bold,
+                                      color: Color.fromARGB(255, 0, 0, 0)),
+                                  ),
+//jezeli to matka (3)unasiennienie to: wartość zmieniana                             
+                            info.parametr == AppLocalizations.of(context)!.queen + " -"
+                              ? info.wartosc == 'dziewica'
+                                ? TextSpan(
+                                  text: (AppLocalizations.of(context)!.virgine1), //nieunasienniona
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color.fromARGB(255, 0, 0, 0)),
+                                )
+                                : info.wartosc == 'naturalna'
+                                  ? TextSpan(
+                                      text: (AppLocalizations.of(context)!.naturallyMated1),//un. naturalnie
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                    : info.wartosc == 'sztuczna' 
+                                      ? TextSpan(
+                                          text: (AppLocalizations.of(context)!.artificiallyInseminated1),//inseminowana
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color.fromARGB(255, 0, 0, 0)),
+                                        )
+                                      : TextSpan(
+                                          text: (AppLocalizations.of(context)!.droneLaying), //trutówka
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color.fromARGB(255, 0, 0, 0)),
+                                        )
+//to jezeli to stan rodziny i wartość "zła"  (agresywna)                                                              
+                              : (info.parametr == AppLocalizations.of(context)!.colony + ' ' + AppLocalizations.of(context)!.isIs) && (info.wartosc == AppLocalizations.of(context)!.aggressive)
+                                ? TextSpan(
+                                  text: (AppLocalizations.of(context)!.aggressive1), //agresywna
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 0, 0, 0)),
+                                  )
+                                : (info.parametr == " " + AppLocalizations.of(context)!.colony + ' ' + AppLocalizations.of(context)!.isIs) && (info.wartosc == AppLocalizations.of(context)!.normal)
+                                  ? TextSpan(
+                                    text: (AppLocalizations.of(context)!.normal1), //normalna
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+//jezeli to nie matka (3) i nie stan rodziny to: wartość  bez modyfikacji                              
+                                  : TextSpan(
+                                    text: ('${info.wartosc.replaceAll('.', ',')} '),
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 0, 0, 0)),
+                                  ),
+ //drugi wiersz cd.: miara lub inne teksty w zalezności od parametru                        
+ //jezeli to "ileRamek =" to nowa linia bo bedzie typ i rodzaj ula
+                          if(info.parametr == AppLocalizations.of(context)!.numberOfFrame + " = ")
+                            TextSpan(text: ('\n')),
+// i warunek tak jak wyzej to: rodzaj ula i typ ula
+                          info.parametr == AppLocalizations.of(context)!.numberOfFrame + " = "
+                          ? TextSpan(
+                              text: (info.pogoda + ' ' + info.miara ), //rodzaj ula
+                              style: TextStyle(
                                 fontSize: 16,
                                 //fontWeight: FontWeight.bold,
                                 color: Color.fromARGB(255, 0, 0, 0)),
-                          ),
-                          TextSpan(
-                            text: ('${info.wartosc.replaceAll('.', ',')} '),
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color.fromARGB(255, 0, 0, 0)),
-                          ),
-                          TextSpan(
-                            text: ('${info.miara}'),
-                            style: TextStyle(
+                            )
+//jezeli to "krata odgrodowa - brak" to zamiast "0" będzie "brak"
+                          :info.parametr == " " + AppLocalizations.of(context)!.excluder + " -"
+                            ? TextSpan(
+                              text: AppLocalizations.of(context)!.lack, //brak kraty
+                              style: TextStyle(
                                 fontSize: 16,
                                 //fontWeight: FontWeight.bold,
                                 color: Color.fromARGB(255, 0, 0, 0)),
-                          ),
+                              )
+//miara                            
+                            : info.parametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"  ||     
+                              info.parametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
+                              ? TextSpan(
+                                  text: (''), //nie wyświetlanie ilości dm2 węzy
+                                )
+                              : TextSpan(
+                                  text: (info.miara ), //np: bez rodzaju ula, bez 0 przy braku kraty,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    //fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+//trzeci wiersz: uwagi                          
                           TextSpan(
                             text: '\n${info.uwagi}',
                             style: TextStyle(

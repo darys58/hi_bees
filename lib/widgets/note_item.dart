@@ -112,7 +112,7 @@ class _NoteItemState extends State<NoteItem> {
                 TextButton(
                   onPressed: () => {
                     DBHelper.deleteNotatki(notatki.id).then((_) {
-                      print('3... kasowanie elementu notatki');
+                      //print('3... kasowanie elementu notatki');
 
                       Navigator.of(context)
                           .pop(true); //skasowanie elementu listy
@@ -124,7 +124,7 @@ class _NoteItemState extends State<NoteItem> {
                       Provider.of<Notes>(context, listen: false)
                           .fetchAndSetNotatki()
                           .then((_) {
-                        print('4... aktualizacja zbiorow w note_item');
+                       // print('4... aktualizacja zbiorow w note_item');
                       });
                     }),
                   },

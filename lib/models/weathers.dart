@@ -34,7 +34,11 @@ class Weathers with ChangeNotifier {
           ),
         )
         .toList();
-    //print('wczytanie wszystkich!!!!!!! informacji o pogodzie--> pogoda <---');
+    //print('wczytanie wszystkich!!!!!!! informacji o pogodzie--> pogoda <--- id = ${_items[0].id}, temp = ${_items[0].temp}');
+   //print('wczytanie wszystkich!!!!!!! informacji o pogodzie--> pogoda <--- id = ${_items[1].id}, temp = ${_items[1].temp}');
+   //print('wczytanie wszystkich!!!!!!! informacji o pogodzie--> pogoda <--- id = ${_items[2].id}, temp = ${_items[2].temp}');
+   //print('wczytanie wszystkich!!!!!!! informacji o pogodzie--> pogoda <--- id = ${_items[3].id}, temp = ${_items[3].temp}');
+   
     //print(_items);
     notifyListeners();
   }

@@ -4,20 +4,24 @@ import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:in_app_purchase/in_app_purchase.dart'; //subskrypcja
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:hi_bees/screens/add_hive_screen.dart';
+import 'package:hi_bees/screens/add_queen_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 //import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:hi_bees/models/dodatki1.dart';
-//import 'package:hi_bees/models/weathers.dart';
-//import 'package:hi_bees/screens/infos_screen.dart';
 import 'package:provider/provider.dart';
 import '../globals.dart' as globals;
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
 //import 'dart:io';
+import '../helpers/db_helper.dart';
+import '../models/dodatki1.dart';
+import '../models/dodatki2.dart';
 import '../models/apiarys.dart';
 import '../models/frames.dart';
 import '../models/note.dart';
+import '../models/memory.dart';
+import '../models/weather.dart';
+import '../models/infos.dart';
 import '../widgets/apiarys_item.dart';
 import '../widgets/note_priorytet_item.dart';
 import '../screens/voice_screen.dart';
@@ -27,13 +31,9 @@ import '../screens/harvest_screen.dart';
 import '../screens/sale_screen.dart';
 import '../screens/purchase_screen.dart';
 import '../screens/note_screen.dart';
-//import '../screens/add_hive_screen.dart';
-import '../models/memory.dart';
+import '../screens/queens_screen.dart';
 import '../models/weathers.dart';
-import '../helpers/db_helper.dart';
-
-import '../models/infos.dart';
-//import '../models/hives.dart';
+import '../models/queen.dart';
 //import '../models/apiarys.dart';
 
 //ekran startowy
@@ -103,11 +103,25 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.8.5.58 06.04.2025 - usunięty błąd w statystykach przy braku wartości parametru (pole wartość puste), blokowanie wygaszania ekranów wszystkich oprócz startowego, oś pozioma raportów zbiorczych pokazuje numer ula a nie kolejny numer słupka
   //1.8.6.59 04.05.2025 - oznaczanie np: > 2025 < w oknie wyboru roku statystyk, zmiana daty ( na dateController.text) przy edycji ramkaPo dla wszystkich zasobów na ramce, w ekranie "Zbiory Pomóz mi" dodanie pyłku w ml, w voice_screen ustawianie ramkaPo=0 dla zasobów ramki przenoszonej do innego korpusa lub ula, matka2=='brak' -> czerwone tło, przy przenoszeniu ramki zerowanie numeru korpusa - komentarz KOM1,
   //1.8.7.60 11.05.2025 - przenoszenie ramek ręczne, błąd w statystykach zbiorów miodu z duzych ramek, likwidacja ula, poprawki tła appBar i dodanie kreski oddzielającej od body
-  
-  final wersja = '1.8.7.60'; //wersja aplikacji na iOS
-  final dataWersji = '2025-05-11';
+  //1.8.8.61 25.05.2025 - poprawka w przenoszeniu ramek - niezalezne daty przeglądów Z i Do, notatki w przegladach ramek, powiększanie widoku ramek ula
+  //1.8.8.62 26.05.2025 - zmiana w Xcode - mozliwość działania na iPad
+  //1.8.9.63 01.06.2025 - zapisywanie info o przeglądzie do bazy tylko raz zeby zachować godzinę rozpoczecia przeglądu, zapisywanie notatki tylko w trybie edycji i bez mozliwośi zmiany daty zeby nie nadpisywać notatki
+  //1.8.10.64 17.06.2025 - poprawka pobierania temperatury z bazy po restarcie apki, dodano info o ostatnich zbiorach miodu a widoku wszystkich uli 
+  //1.8.11.65 01.07.2025 - poprawka informacji o zbiorach w widoku Pasieka (wszystkie ule)
+  //1.8.12.66 28.10.2025 - dodanie zbiorów miodu w kg, stronicowanie raportów przy duzej ilości uli
+  //1.8.13.67 03.11.2025 - zmiana współczynnika przeliczania zbiorów pierzgi litry/kilogramy (harvest_screen), dodano typ i rodzaj ula w wyposazeniu, poprawa wyswietlania ikon w "info",dodano obramowanie wszystkich przycisków "zapisz"
+  //1.9.0.68 11.16.2025 - dodano zarzadzanie matkami - nowa baza matki, likwidacja błędów pojawiających sie kiedy brak danych o przeglądach ramek, poprawa stylistyczna nazw niektórych info
+  //1.9.1.69 30.11.2025 - usunięty bład w raportach warrozy i błąd w voice_screen: "zamknij pomoc" wychodził z voice,
+  //1.9.2.70 19.12.2025 - app_pl, app_en, queen_scerrn - widoki, queen.dart - kolory, add_hive_screen - ilość uli, globals,
+  //1.9.3.71 06.01.2026 - app_en i app_pl - "ramek",raport_screen i raport2_screen - rok w tytule, globals - rokMatki, info_edit_screen - dodano ID matki w tytule, queen_screen - dodatkowy rok "Wsztstkie", info_screen - w rodzina i matka ostatnie infa z wszystkich lat a nie z roku do statystyk, w Notes Zbiory Zakupy Sprzedaz - tylko lata z danymi
+  //1.9.4.72 19.01.2026 - zwiekszenie kafla pasieki i inne dostosowania do systemowego skalowania czcionki, ilość ramek miodu w zbiorach - zmiana z int na liczby dziesiętne
+
+  final wersja = '1.9.3.71'; //wersja aplikacji na iOS
+  final dataWersji = '2026-01-06';
   final now = DateTime.now();
   int aktywnosc = 0;
+  List<Weather>? pogoda;
+  String stopnie = '\u2103';  
 
   @override
   void didChangeDependencies() {
@@ -121,15 +135,20 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
 //DBHelper.deleteBase().then((_) {
       _getId().then((_) {
         //pobranie Id telefonu i zapisanie w globals.deviceId - do identyfikacji uzytkownika apki
-        //pobranie z bazy lokalnej Memory dla tego smartfona
-        print('globals.deviceId = ${globals.deviceId}');
+        //pobranie z bazy lokalnej Memory dla tego smartfona (lub "test" dla sklepów)
+        //print('globals.deviceId = ${globals.deviceId}');
         Provider.of<Memory>(context, listen: false)
             .fetchAndSetMemory(globals.deviceId)
             .then((_) {
-          //memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT, od TEXT, do TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT)');
+          //memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT,dod TEXT, ddo TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT)');
           //uzyskanie dostępu do danych
           final memData = Provider.of<Memory>(context, listen: false);
           final mem = memData.items;
+          //if (mem.isNotEmpty){
+            //print('------------- jest memory: ');
+            //print('${mem[0].id}, ${mem[0].email},${mem[0].dev},${mem[0].wer},${mem[0].kod},${mem[0].key},${mem[0].dod},${mem[0].ddo},${mem[0].memjezyk},${mem[0].mem1},${mem[0].mem2},');
+         // }else{
+            //print('---------------- memory jest puste!!!!!');};
           //print('**************** globals.memJezyk przed pobraniem z bazy = /${globals.memJezyk}/ ');
           // if (mem.isNotEmpty && mem[0].memjezyk != '') globals.memJezyk = mem[0].memjezyk;
           // else globals.memJezyk = 'system';
@@ -162,15 +181,15 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           //print('mem.kod = ${mem[0].kod}');
           if (mem.isNotEmpty && mem[0].wer != wersja) wyslijKod(mem[0].kod);
 
-          //czy jest wpis w bazie dla tego deviceId? - (wpis moze być ale accessKey niekoniecznie!!!)
+          //jezeli jest wpis w bazie dla tego deviceId lub "test" - (wpis moze być ale accessKey niekoniecznie!!!)
           if (mem.isNotEmpty &&
               mem[0].dod != 'bez aktywacji' &&
               mem[0].dod != '') {
-            //jezeli jest i data "od" ma normalny format
+            //jezeli jest taki deviceID i data "od" ma normalny format
             globals.key = mem[0].key; //pobranie klucza
             globals.keyMemory =  mem[0].key; //potrzebne gdyby była rezygnacja z aktywacji
             globals.kod = mem[0].kod; //kod do aktywacji, kod tworzy nazwę tabeli do archiwizacji
-
+//print('jest wpis w bazie dla tego deviceID lub "test" ');
             //sprawdzenie daty do której apka jest aktywna
             final data = DateTime.parse(mem[0].ddo);
             aktywnosc = daysBetween(now, data); //ile dni wazności apki
@@ -185,6 +204,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
               Provider.of<Apiarys>(context, listen: false)
                   .fetchAndSetApiarys()
                   .then((_) {
+                    //print('------------------- wczytanie pasiek Apiarys????? podczas inicjacji');
                 setState(() {
                   _isLoading = false; //zatrzymanie wskaznika ładowania dań
                 });
@@ -269,6 +289,34 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             //print('w else globals.key = ${globals.key}');
             //print('w else memory.dod: ${mem[0].dod}');
           }
+ //DBHelper.deleteTable('dodatki2');
+          //DODATKI2 - ustawienia w aplikacji:
+          Provider.of<Dodatki2>(context, listen: false)
+              .fetchAndSetDodatki2()
+              .then((_) {
+            //uzyskanie dostępu do danych z tabeli dodatki1
+            final dod2Data = Provider.of<Dodatki2>(context, listen: false);
+            final dod2 = dod2Data.items;
+            //inicjacja tabeli dodatki2 jezeli jej nie było
+            //tabela Dodatki1: index,m,n,s,t,u,v,w,z,
+                            //  id; //id:1 
+                            //   m; //TYP A
+                            //   n; //własna nazwa ula
+                            //   s; //szerokość wewnętrzna ramka duza
+                            //   t; //wysokość wewnętrzna ramka duza
+                            //   u; //powierzchnia wnętrza duzej ramki w mm2 (plastra)
+                            //   v; //szerokość wewnętrzna ramka mała
+                            //   w; //wysokość wewnętrzna ramka mała
+                            //   z; //powierzchnia wnętrza małej ramki w mm2 (plastra)
+            
+            //jezeli nie ma tabeli dodatki2
+            if (dod2.length == 0) {
+              Dodatki2.insertDodatki2('1', 'TYP A', 'Wielkopolski A', '335', '235', '78725', '335', '105', '35175');
+              Dodatki2.insertDodatki2('2', 'TYP B', 'Wielkopolski B', '335', '235', '78725', '335', '105', '35175');
+              Dodatki2.insertDodatki2('3', 'TYP C', 'Wielkopolski C', '335', '235', '78725', '335', '105', '35175');
+              Dodatki2.insertDodatki2('4', 'TYP D', 'Wielkopolski D', '335', '235', '78725', '335', '105', '35175');
+            }
+          });
 
           //DODATKI1 - ustawienia w aplikacji:
           //a - 'true'/'false' - uatawienie przełącznika automatycznego eksportu danych
@@ -279,14 +327,27 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             final dod1Data = Provider.of<Dodatki1>(context, listen: false);
             final dod1 = dod1Data.items;
             //inicjacja tabeli dodatki1m jezeli jej nie było
+            //tabela Dodatki1: index,a,b,c,d,e,f,g,h
+                              //id-1
+                              //a-auto wysyłka danych z bazy do chmury,
+                              //b-średnia waga miodu na 1dm2 plastra, 
+                              //c-nic, 
+                              //d-nic, 
+                              //e-waga miodu na duzej ramce, 
+                              //f-waga miodu na małej ramce, 
+                              //g-miarka do pyłku, 
+                              //h-ile uli na stronie raportów
+            
+            //jezeli nie ma tabeli dodatki1
+            // DBHelper.deleteTable('dodatki1');
             if (dod1.length == 0) {
               //jezeli nie ma tabeli dodatki1
-              Dodatki1.insertDodatki1(
-                  '1', 'true', '0', '0', '0', '900', '1900', '100', '1500');
-            } else {
+              Dodatki1.insertDodatki1('1', 'true', '250', '0', '0', '900', '1900', '100', '20');
+              } else {
               //jezeli jest tabela dodatki1
+              globals.raportIleUliNaStronie = int.parse(dod1[0].h);
               if (dod1[0].a == 'true') {
-                //ustawienie przłącznika eksportu danych
+                //ustawienie przłącznika eksportu danych - automatyczne wysłanie danych przy uruchamianiu apki
                 //BACKUP BAZY LOKALNEJ
                 //czy jest wpis w bazie memory dla tego deviceId? kod potrzebny do nazwy tabeli backupu
                 if (mem.isNotEmpty && mem[0].kod != '') {
@@ -369,6 +430,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                         jsonData += '"parametr": "${info[i].parametr}",';
                         jsonData += '"wartosc": "${info[i].wartosc}",';
                         jsonData += '"miara": "${info[i].miara}",';
+                        jsonData += '"pogoda": "${info[i].pogoda}",';
+                        jsonData += '"temp": "${info[i].temp}",';
+                        jsonData += '"czas": "${info[i].czas}",';
                         jsonData += '"uwagi": "${info[i].uwagi}",';
                         jsonData += '"arch": ${info[i].arch}}';
                         i++;
@@ -400,6 +464,71 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       );
                     } //jeśli sa ramki do archiwizacji
                   });
+
+                   //BACKUP tabeli matki - tylko wpisy z arch=0
+                  Provider.of<Queens>(context, listen: false)
+                      .fetchAndSetQueensToArch()
+                      .then((_) {
+                    final matkiArchData =
+                        Provider.of<Queens>(context, listen: false);
+                    final matki = matkiArchData.items;
+                    //print('ilość wpisów w tabeli info');
+                    //print(info.length);
+                    //print(globals.kod);
+                    //final jsonData = jsonEncode(<String, String>{'aaa':'101', 'bbb':'1', 'ccc':'1'});
+                    //'{"ramki":[{"id": "aaa","pasieka":"1", "ul":"1"},{"id":"bbb", "pasieka":"1","ul":"2"}],"total":2}';
+
+                    if (matki.length > 0) {
+                      String jsonData = '{"matki":[';
+                      int i = 0;
+                      while (matki.length > i) {
+                        jsonData += '{"id": "${matki[i].id}",';
+                        jsonData += '"data": "${matki[i].data}",';
+                        jsonData += '"zrodlo": "${matki[i].zrodlo}",';
+                        jsonData += '"rasa": "${matki[i].rasa}",';
+                        jsonData += '"linia": "${matki[i].linia}",';
+                        jsonData += '"znak": "${matki[i].znak}",';
+                        jsonData += '"napis": "${matki[i].napis}",';
+                        jsonData += '"uwagi": "${matki[i].uwagi}",';
+                        jsonData += '"pasieka": ${matki[i].pasieka},';
+                        jsonData += '"ul": ${matki[i].ul},';
+                        jsonData += '"dataStraty": "${matki[i].dataStraty}",';
+                        jsonData += '"a": "${matki[i].a}",';
+                        jsonData += '"b": "${matki[i].b}",';
+                        jsonData += '"c": "${matki[i].c}",';
+                        jsonData += '"arch": ${matki[i].arch}}';
+                        i++;
+                        if (matki.length > i) jsonData += ',';
+                      }
+                      jsonData +=
+                          '],"total":${matki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_matki"}'; //pierwsze cztery cyfry kodu XXXX_ramka
+
+                      //print(jsonData);
+                      _isInternet().then(
+                        (inter) {
+                          if (inter) {
+                            wyslijBackupMatki(jsonData); //jsonData
+                          } else {
+                            //print('braaaaaak internetu');
+                            //komunikat na dole ekranu
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    AppLocalizations.of(context)!.unablaToSend),
+                              ),
+                            );
+                            // _showAlertOK(
+                            //     context,
+                            //     AppLocalizations.of(context)!.alert,
+                            //     AppLocalizations.of(context)!.noInternet);
+                          }
+                        },
+                      );
+                    } //jeśli sa ramki do archiwizacji
+                  });
+
+                  
+
                 } //id ifa - czy jest kod?
               } //ustawienie przłącznika eksportu danych
             } //od jezeli jest tabela dodatki1 i a==true
@@ -410,7 +539,41 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
 
           //pobranie danych o pogodzie dla pasieki
           Provider.of<Weathers>(context, listen: false)
-              .fetchAndSetWeathers(); //.then((_) { });
+              .fetchAndSetWeathers().then((_) {
+                 final pogodaData = Provider.of<Weathers>(context, listen: false);
+                  pogoda = pogodaData.items.where((ap) {
+                    return ap.id == (globals.pasiekaID.toString());
+                  }).toList();
+                  // setState(() {
+                  //jezeli są jakieś dane dla pasieki
+                  if (pogoda != null && pogoda!.isNotEmpty) {
+                    //print('apiarys_screen: temp pierwsza pobrana z bazy= ${pogoda![0].temp}');
+                    if((pogoda![0].temp).isNotEmpty) globals.aktualTemp = double.parse(pogoda![0].temp);
+                    switch (pogoda![0].units) {
+                      case 1:
+                        //units = 'metric';
+                        stopnie = "\u2103";
+                        break;
+                      case 2:
+                        //units = 'standard';
+                        stopnie = "\u212A";
+                        break;
+                      case 3:
+                       // units = 'imperial';
+                        stopnie = "\u2109";
+                        break;
+                      default:
+                        //units = 'metric';
+                        stopnie = "\u2103";
+                    }
+                    globals.stopnie = stopnie;
+                  } else {
+                    //print('Brak danych pogodowych dla pasieki');
+                    stopnie = "\u2103"; // Default to Celsius
+                    globals.stopnie = stopnie;
+                  }
+                
+              });
 
           setState(() {
             _isLoading = false; //zatrzymanie wskaznika ładowania danych
@@ -439,10 +602,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //     return false;
   //   }
   // }
-  
+
   //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async { 
-    final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+  Future<bool> _isInternet() async {
+      final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult.contains(ConnectivityResult.mobile)) {
       // Mobile network available.
       return true;
@@ -460,8 +623,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       // No available network types
       return false;
     }else return false;
-  } 
-                    
+  }
+
   //obliczanie róznicy miedzy dwoma datami
   int daysBetween(DateTime from, DateTime to) {
     from = DateTime(from.year, from.month, from.day);
@@ -479,8 +642,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       //return iosDeviceInfo.identifierForVendor; // unique ID on iOS
     } else {
       AndroidDeviceInfo androidDeviceInfo = await deviceInfo.androidInfo;
-      globals.deviceId = 'and_' +
-          androidDeviceInfo.device; //androidId!; // + '_' + androidDeviceInfo.model;
+      globals.deviceId = 'and_' + androidDeviceInfo.device; //androidId!; // + '_' + androidDeviceInfo.model;
       //wersja[0] + wersja[1] + wersja[2] + wersja[3]; //androidDeviceInfo.model
       //return androidDeviceInfo.androidId; // unique ID on Android
     }
@@ -581,6 +743,56 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       throw Exception('Failed to create OdpPost.');
     }
   }
+
+  //wysyłanie backupu matki
+  Future<void> wyslijBackupMatki(String jsonData1) async {
+    //String jsonData1
+    final http.Response response = await http.post(
+      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonData1, //tabela info w postaci jsona
+    );
+    //print("response.body:");
+    //print(response.body);
+    if (response.statusCode >= 200 && response.statusCode <= 400) {
+      Map<String, dynamic> odpPost = json.decode(response.body);
+      if (odpPost['success'] == 'ok') {
+        // _showAlertOK(context, AppLocalizations.of(context)!.success,
+        //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
+        //zapis do bazy lokalnej
+        Provider.of<Queens>(context, listen: false)
+            .fetchAndSetQueensToArch()
+            .then((_) {
+          //dla tabeli Matki
+          final matkiArchData = Provider.of<Queens>(context, listen: false);
+          final matki = matkiArchData.items;
+          //print('ilość potrzebnych wpisów arch = 1 w tabeli matki');
+          //print(matki.length);
+          int i = 0;
+          while (matki.length > i) {
+            DBHelper.updateMatkiArch(matki[i].id); //zapis arch = 1
+            i++;
+          }
+
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.queenDataSend),
+            ),
+          );
+        });
+      } else {
+        // _showAlertOK(context, AppLocalizations.of(context)!.alert,
+        //    AppLocalizations.of(context)!.errorWhileActivating);
+        //print('niepowodzenie - $odpPost["success"]');
+      }
+    } else {
+      throw Exception('Failed to create OdpPost.');
+    }
+  }
+
 
   //wysyłanie kodu
   Future<void> wyslijKod(String kod) async {
@@ -686,6 +898,65 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     );
   }
 
+  //dodawanie ula lub matki
+  void _showAlertAdd(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        //title: Text(AppLocalizations.of(context)!.selectEntryType),
+        content: Column(
+          //zeby tekst był wyśrodkowany w poziomie
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+//dodawanie ula      
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(AddHiveScreen.routeName);               
+            }, child: Text((AppLocalizations.of(context)!.aDdHive),style: TextStyle(fontSize: 18)) //zasoby
+            ), 
+          
+          
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(AddQueenScreen.routeName);  
+            }, child: Text((AppLocalizations.of(context)!.aDdQueen),style: TextStyle(fontSize: 18)) //zasoby +
+            ), 
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+               Navigator.of(context).pushNamed(
+                  QueenScreen.routeName, 
+                    arguments: {'idInfo': '',
+                              'kategoria': 'queen', 
+                              'parametr': AppLocalizations.of(context)!.queenIs, //Start
+                              'wartosc': AppLocalizations.of(context)!.freed, //wartość domyślna
+                              'idPasieki': 0, 
+                              'idUla':0,}, //przy wejściu z Apiary do ZARZADZANIA MATKAMI numer ula jest zerowany
+                  );
+            }, child: Text((AppLocalizations.of(context)!.aDdingQueen),style: TextStyle(fontSize: 18)) //zasoby +
+            ),  
+      
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible:
+          false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }    
+
   void _showAlertOK(BuildContext context, String nazwa, String text) {
     showDialog(
       context: context,
@@ -734,10 +1005,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   @override
   Widget build(BuildContext context) {
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
-        backgroundColor:
-            Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      side: BorderSide(color: Colors.grey),
+        backgroundColor:Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)));
 
     final apiarysData = Provider.of<Apiarys>(context);
@@ -792,6 +1062,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
 
 // print('globals.deviceId = ${globals.deviceId}');
 // print('globals.key = ${globals.key}');
+ //print('temperatura = ${globals.aktualTemp}');
 
     return Scaffold(
       //localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -810,7 +1081,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
               onPressed: () =>
-                  Navigator.of(context).pushNamed(AddHiveScreen.routeName),
+                apiarys.length == 0 
+                  ? Navigator.of(context).pushNamed(AddHiveScreen.routeName)
+                  : _showAlertAdd(context),
             ),
 //pomoc w przeglądarce
           IconButton(
@@ -927,7 +1200,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                           //Aktywuj
                           MaterialButton(
                             height: 50,
-                            shape: const StadiumBorder(),
+                            shape: const StadiumBorder(
+                              side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                              ),
                             onPressed: () {
                               if (_formKey2.currentState!.validate()) {
                                 //jezeli formularz wypełniony poprawnie
@@ -953,7 +1228,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                 (AppLocalizations.of(context)!.activate) +
                                 '   '), //AKTYWUJ===========================
                             color: Theme.of(context).primaryColor,
-                            textColor: Colors.white,
+                            textColor: Colors.black,
                             disabledColor: Colors.grey,
                             disabledTextColor: Colors.white,
                           ),
@@ -1152,10 +1427,13 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                         child: Container(
                                             padding: const EdgeInsets.all(10),
                                             decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.grey,
+                                                width: 1, //      
+                                              ),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Color.fromARGB(
-                                                          255, 115, 115, 115)
+                                                  color: Color.fromARGB(255, 119, 87, 87)
                                                       .withValues(alpha:0.5),
                                                   spreadRadius: 1,
                                                   blurRadius: 4,
@@ -1203,7 +1481,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
 //pasieki
                       Container(
                           //height: 170 * ((apiarys.length ~/ 2) + (apiarys.length % 2)),//1  dla 1 i 2 pasiek, 2 dla 3 i 4 pasiek, itd
-                          height: 145,
+                          height: 160,
                           child: GridView.builder(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.only(
@@ -1216,7 +1494,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                             ),
                             gridDelegate:
                                 const SliverGridDelegateWithMaxCrossAxisExtent(
-                              mainAxisExtent: 160,
+                              mainAxisExtent: 180, //długośc kafelka
                               maxCrossAxisExtent: 200,
                               childAspectRatio: 7 / 5,
                               crossAxisSpacing: 20,

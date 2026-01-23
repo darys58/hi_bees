@@ -13,10 +13,11 @@ import 'package:flutter/services.dart';
 // import '../models/infos.dart';
 // import '../screens/activation_screen.dart';
 // import '../models/frames.dart';
-//import '../models/hive.dart';
+import '../models/queen.dart';
 // import 'frames_detail_screen.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
+import '../models/dodatki2.dart';
 
 class InfosEditScreen extends StatefulWidget {
   static const routeName = '/infos_edit';
@@ -37,8 +38,13 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   String nowaKategoria = '0';
   String nowyParametr = '0';
   String nowyWartosc = '0';
+  String typUla = 'WIELKOPOLSKI'; //wielkopolski, dadant itp
+  String rodzajUla = ''; //ul, odkład, mini
+  int matkaID = 0; //numer id matki - index z tabeli "matka"
   String? nowyMiara;
   String? nowyUwagi;
+  String? nowyTemp;
+  String? nowyCzas;
   bool edycja = false;
   String tytulEkranu = '';
   List<Info> info = [];
@@ -62,44 +68,167 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     final idUla = routeArgs['idUla'];
     //final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
-    print('idInfo= $idInfo||');
-     print('wartosc= $wartosc||');
-      print('ikona ula= ${globals.ikonaUla}||');
-    print('dataWpisu= ${globals.dataWpisu}||');
-    print('dataInspekcji= ${globals.dataInspekcji}||');
+    //print('idInfo= $idInfo||');
+    // print('wartosc= $wartosc||');
+     // print('ikona ula= ${globals.ikonaUla}||');
+    //print('dataWpisu= ${globals.dataWpisu}||');
+    //print('dataInspekcji= ${globals.dataInspekcji}||');
+    
+    //uzyskanie dostępu do danych w tabeli Dodatki2 - typy własne uli
+    final dod2Data = Provider.of<Dodatki2>(context);
+    final dod2 = dod2Data.items;
+
+    
     //jezeli edycja istniejącego wpisu to wczytanie danych zbioru
     if (idInfo != '') {
       edycja = true;
       final infoData = Provider.of<Infos>(context, listen: false);
       info = infoData.items.where((element) { 
-        return element.id.toString().contains('$idInfo');
+        return element.id.toString() == ('$idInfo');
       }).toList();
+      
       dateController.text = info[0].data;
       nowaPasieka = info[0].pasiekaNr;
       nowyUl = info[0].ulNr;
       nowaKategoria = info[0].kategoria;
       nowyParametr = info[0].parametr;
       nowyWartosc = info[0].wartosc;
-      nowyMiara = info[0].miara;
+      nowyMiara = info[0].miara;  
+      if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {
+        typUla = info[0].miara; //dla iloscRamek =
+        globals.typUla = typUla;
+        rodzajUla = info[0].pogoda; //dane tylko dla iloscRamek =
+      }
+      if(nowaKategoria == 'queen' && info[0].pogoda != '') matkaID = int.parse(info[0].pogoda);
+      else{
+          //pobranie matek dla tego ula bo edytowane info nie ma jeszcze ID matki
+          final queensData = Provider.of<Queens>(context);
+          List<Queen> queens = queensData.items.where((qu) {
+            return qu.pasieka == globals.pasiekaID && qu.ul == globals.ulID ;
+          }).toList();
+          if(queens.isNotEmpty) matkaID = queens[0].id;//jest matka podłączona do ula
+          else matkaID = 0; //nie ma matki połaczonej z ulem
+      }
+      nowyTemp = info[0].temp;
+      nowyCzas = info[0].czas;
       nowyUwagi = info[0].uwagi;
       tytulEkranu = AppLocalizations.of(context)!.editingInfo;
     }else { //a jezeli dodanie nowego info
       edycja = false;
-      if(nowyParametr == AppLocalizations.of(context)!.inspection)
-        dateController.text = globals.dataInspekcji; //zeby wpis(notatka) dotyczył wybranego przegladu 
-      else dateController.text = globals.dataWpisu; //ostatnio wybrana data      DateTime.now().toString().substring(0, 10);
+      dateController.text = globals.dataWpisu; //ostatnio wybrana data      DateTime.now().toString().substring(0, 10);
       nowaPasieka = int.parse(idPasieki.toString());
       nowyUl = int.parse(idUla.toString());
       nowaKategoria = kategoria.toString();
       nowyParametr = parametr.toString();
       nowyWartosc = wartosc.toString();
-      nowyMiara = '';
+      if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {//pole "miara" = typ ula
+        nowyMiara = typUla;//wartość domyślna typUla
+        rodzajUla = AppLocalizations.of(context)!.hIve; //wartość domyślna rodzajUla //pole "pogoda" = rodzaj ula    
+      }else if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x" ){      
+                      //nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
+          switch (globals.typUla) {
+            case 'WIELKOPOLSKI': nowyMiara = '35175'; //dm2, węza: 335x105 (mała ramka: 360x130)
+              break;
+            case 'DADANT': nowyMiara = '49680';       //dm2, węza: 414x120 (mała ramka: 435x145)
+              break;
+            case 'OSTROWSKIEJ': nowyMiara = '68675';  //dm2, węza: 335x205 (ramka: 360x230)
+              break;
+            case 'WARSZAWSKI ZWYKŁY': nowyMiara = '28600';  //dm2, węza: 220x130 (mała ramka: 240x160)
+              break;
+            case 'WARSZAWSKI POSZERZANY': nowyMiara = '35175';  //dm2, węza: 335x105 (mała ramka: 360x130)
+              break;
+            case 'APIPOL': nowyMiara = '37260';  //dm2, węza: 414x90 (ramka: 435x115)
+              break;
+            case 'LANGSTROTH': nowyMiara = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
+              break;
+            case 'ZANDER': nowyMiara = '74100';  //dm2, węza: 390x190 (ramka: 420x220)
+              break;
+            case 'GERSTUNG': nowyMiara = '39100';  //dm2, węza: 230x170 (mała ramka: 260x200)
+              break;
+            case 'APIMAYE': nowyMiara = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
+              break;
+            case 'DEUTSCH NORMAL': nowyMiara = '49680'; //dm2, węza: 414x120 (mała ramka: 435x145)
+              break;
+            case 'NORMALMASS': nowyMiara = '84000';  //dm2, węza: 400x210 (ramka: 435x240)
+              break;
+            case 'FRANKENBEUTE': nowyMiara = '50600';  //dm2, węza: 440x115 (mała ramka: 470x145)
+              break;
+            case 'NATIONAL': nowyMiara = '88150';  //dm2, węza: 430x205 (ramka: 460x235)
+              break;
+            case 'WBC': nowyMiara = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
+              break;
+            case 'WIELKOPOLSKI GÓRSKI': nowyMiara = '51925';  //dm2, węza: 335x155 (ramka: 360x180)
+              break;
+            case 'TYP A': nowyMiara = dod2[0].z;  //dm2, ramka mała własna TYP A
+              break;
+            case 'TYP B': nowyMiara = dod2[1].z;  //dm2, ramka mała własna TYP B
+              break;
+            case 'TYP C': nowyMiara = dod2[2].z;  //dm2, ramka mała własna TYP C
+              break;
+            case 'TYP D': nowyMiara = dod2[3].z;  //dm2, ramka mała własna TYP D
+              break;
+            default: nowyMiara = '0';// dla typów innych niz powyzsze
+          }          
+      }else if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x"  ){                   
+          print('globals.typUla = ${globals.typUla}');
+          switch (globals.typUla) {
+            case 'WIELKOPOLSKI': nowyMiara = '78725'; //dm2, węza: 335x235 (duza ramka: 360x260)
+              break;
+            case 'DADANT': nowyMiara = '109710'; //dm2, węza: 414x265 (duza ramka: 435x300)
+              break;
+            case 'OSTROWSKIEJ': nowyMiara = '68675';  //dm2, węza: 335x205 (ramka: 360x230)
+              break;
+            case 'WARSZAWSKI ZWYKŁY': nowyMiara = '88000';  //dm2, węza: 220x400 (duza ramka: 240x435)
+              break;
+            case 'WARSZAWSKI POSZERZANY': nowyMiara = '112000';  //dm2, węza: 280x400 (duza ramka: 300x435)
+              break;
+            case 'APIPOL': nowyMiara = '37260';  //dm2, węza: 414x90 (ramka: 435x115)
+              break;
+            case 'LANGSTROTH': nowyMiara = '84870';  //dm2, węza: 414x205 (duza ramka: 435x230)
+              break;
+            case 'ZANDER': nowyMiara = '74100';  //dm2, węza: 390x190 (ramka: 420x220)
+              break;
+            case 'GERSTUNG': nowyMiara = '64400';  //dm2, węza: 280x230 (duza ramka: 410x260)
+              break;
+            case 'APIMAYE': nowyMiara = '86820';  //dm2, węza: 424x205 (duza ramka: 448x232)
+              break;
+            case 'DEUTSCH NORMAL': nowyMiara = '109710'; //dm2, węza: 414x265 (duza ramka: 435x300)
+              break;
+            case 'NORMALMASS': nowyMiara = '84000';  //dm2, węza: 400x210 (ramka: 435x240)
+              break;
+            case 'FRANKENBEUTE': nowyMiara = '118800';  //dm2, węza: 440x270 (duza ramka: 470x300)
+              break;
+            case 'NATIONAL': nowyMiara = '88150';  //dm2, węza: 430x205 (ramka: 460x235)
+              break;
+            case 'WBC': nowyMiara = '84870';  //dm2, węza: 414x205 (duza ramka: 435x230)
+              break;
+            case 'WIELKOPOLSKI GÓRSKI': nowyMiara = '51925';  //dm2, węza: 335x155 (ramka: 360x180)
+              break;
+            case 'TYP A': nowyMiara = dod2[0].u;  //dm2, ramka duza własna TYP A
+              break;
+            case 'TYP B': nowyMiara = dod2[1].u;  //dm2, ramka duza własna TYP B
+              break;
+            case 'TYP C': nowyMiara = dod2[2].u;  //dm2, ramka duza własna TYP C
+              break;
+            case 'TYP D': nowyMiara = dod2[3].u;  //dm2, ramka duza własna TYP D
+              break;
+            default: nowyMiara = '0';// dla typów innych niz powyzsze
+          }          
+      }else nowyMiara = '';
+//print('nowyMiara = $nowyMiara');
       nowyUwagi = '';
       tytulEkranu = AppLocalizations.of(context)!.addInfo;
-
-      
+      if(nowaKategoria == 'queen') {
+        //pobranie matek dla tego ula
+          final queensData = Provider.of<Queens>(context);
+          List<Queen> queens = queensData.items.where((qu) {
+            return qu.pasieka == globals.pasiekaID && qu.ul == globals.ulID ;
+          }).toList();
+          matkaID = queens[0].id;  
+      }
       if(nowyWartosc == AppLocalizations.of(context)!.onBodyNumber) nowyMiara = '1';//wartość domyslna korpusu dla kraty odgrodowej przy dodawaniu wpisu
-      if(nowyParametr == " " + AppLocalizations.of(context)!.excluder + " -") nowyMiara = '0';//wartość domyslna dla usunietej kraty odgrodowej
+      if(nowyParametr == " " + AppLocalizations.of(context)!.excluder + " -") nowyMiara = '0';//wartość domyslna dla usunietej kraty odgrodowej, musi być 0 bo jest zameniana na int w frames_screen
+      if(nowyParametr == AppLocalizations.of(context)!.honey + " = ") nowyMiara = 'kg'; //wartość domyslna dla miodu w kg
       if(nowyParametr == AppLocalizations.of(context)!.beePollen + " = ") nowyMiara = 'ml'; //wartość domyslna dla pyłku w ml
       if(nowyParametr ==  " " + AppLocalizations.of(context)!.beePollen + " =  ") nowyMiara = 'l'; //wartość domyslna dla pyłku w l
       if(nowyParametr == AppLocalizations.of(context)!.deadBees) nowyMiara = 'ml';//wartość domyslna dla osypu pszczół
@@ -109,8 +238,31 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       if(nowyParametr ==  AppLocalizations.of(context)!.candy) nowyMiara = 'kg'; //wartość domyslna dla ciasta
       if(nowyParametr ==  'apivarol') nowyMiara = AppLocalizations.of(context)!.dose; //wartość domyslna dla apivarol
       if(nowyParametr ==  'biovar') nowyMiara = AppLocalizations.of(context)!.belts; //wartość domyslna dla biovar
-      if(nowyParametr == AppLocalizations.of(context)!.acid) nowyMiara = 'ml'; //wartość domyslna dla kwasuw ml
+      if(nowyParametr == AppLocalizations.of(context)!.acid) nowyMiara = 'ml'; //wartość domyslna dla kwasu w ml
+      if(nowyParametr == " " + AppLocalizations.of(context)!.acid) nowyMiara = 'g'; //wartość domyslna dla kwasu w g
       if(nowyParametr ==  'varroa') nowyMiara = AppLocalizations.of(context)!.mites; //wartość domyslna dla varroa
+      
+      //zeby wpis(notatka) z przeglądu dotyczył tylko wybranego przegladu i nie zmieniał czasu
+      if(nowyParametr == AppLocalizations.of(context)!.inspection){
+        // to pobranie wszystkich info dla ula
+        final infoData = Provider.of<Infos>(context, listen: false);
+        //pobranie info o tym przeglądzie bo powinien być (czyli zgadza się data, nr ula, kategoria i parametr)
+        info = infoData.items.where((element) { 
+          return element.data == globals.dataInspekcji && element.ulNr == idUla && element.kategoria == 'inspection' && element.parametr == '${AppLocalizations.of(context)!.inspection}'; //data, nr ula, kategoria i parametr
+        }).toList();
+        dateController.text = info[0].data;
+        nowaPasieka = info[0].pasiekaNr;
+        nowyUl = info[0].ulNr;
+        nowaKategoria = info[0].kategoria;
+        nowyParametr = info[0].parametr;
+        nowyWartosc = info[0].wartosc;
+        nowyMiara = info[0].miara;
+        nowyTemp = info[0].temp;
+        nowyCzas = info[0].czas;
+        nowyUwagi = info[0].uwagi;
+        tytulEkranu = AppLocalizations.of(context)!.editingInfo;
+        edycja = true; //to jest to defacto edycja notatki
+      }
     }
     // print('idInfo === $idInfo|');
     // print('id === ${info[0].id}|');
@@ -126,7 +278,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
       shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(150.0, 35.0),
+      fixedSize: Size(170.0, 35.0),
+      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
+    );
+     final ButtonStyle dataButtonStyleNote = OutlinedButton.styleFrom(
+      backgroundColor: Color.fromARGB(255, 211, 211, 211),
+      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+      fixedSize: Size(170.0, 35.0),
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
     // final ButtonStyle buttonStyle = OutlinedButton.styleFrom(
@@ -145,6 +304,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       fixedSize: Size(85.0, 35.0),
       textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
     );
+
+    // //uzyskanie dostępu do danych w tabeli Dodatki2 - typy własne uli
+    // final dod22Data = Provider.of<Dodatki2>(context);
+    // final dod22 = dod22Data.items;
 
     return Scaffold(
       appBar: AppBar(
@@ -188,7 +351,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             ),
                         if(nowaKategoria == 'queen')
                           Text(
-                              AppLocalizations.of(context)!.oMatce,
+                              AppLocalizations.of(context)!.oMatce + ' ID' + matkaID.toString(),
                               style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
                             ),
                         if(nowaKategoria == 'harvest')
@@ -221,7 +384,19 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(AppLocalizations.of(context)!.noteDate),
-                            OutlinedButton(
+                            //czy info dotyczy przegladu czyli edycji notatki
+                            nowyParametr == AppLocalizations.of(context)!.inspection
+                            ? OutlinedButton(
+                                style: dataButtonStyleNote,
+                                onPressed: null,
+                                child: Text(dateController.text,
+                                  style: const TextStyle(
+                                    //fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Color.fromARGB(255, 0, 0,0))),
+                              )
+                            
+                            : OutlinedButton(
                               style: dataButtonStyle,
                               onPressed: () async {
                                 DateTime? pickedDate =
@@ -261,7 +436,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             ),
                         ]),  
                         SizedBox(width: 10),
-//ten ul czy wszystkie - dla ddawaia dokarmiania lub leczenia
+//ten ul czy wszystkie - dla dodawaia dokarmiania lub leczenia
                         if(edycja == false && (nowaKategoria == 'feeding' || nowaKategoria == 'treatment')) //jezeli dodawanie dokarmiania lub leczenia
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -319,515 +494,20 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     SizedBox(
                       height: 20,
                     ),
+//******************************************** */
+// dodatkowe pola dla wyposazenia - ilość ramek: typ i rodzaj ula
 //********************************************* */
-                    //** */ parametr
- //******************************************** */                      
-                    if (nowyParametr !=  AppLocalizations.of(context)!.beePollen + " = " &&  //oprócz pyłek w ml
-                        nowyParametr !=  " " + AppLocalizations.of(context)!.beePollen + " =  " &&//oprócz pyłek w l
-                        nowyParametr !=  AppLocalizations.of(context)!.deadBees &&
-                        nowyParametr !=  AppLocalizations.of(context)!.syrup + " 1:1" && //oprócz dokarmianie syrop 1:1 w l
-                        nowyParametr !=  AppLocalizations.of(context)!.syrup + " 3:2" && //oprócz dokarmianie syrop 3:2 w l
-                        nowyParametr !=  AppLocalizations.of(context)!.invert && //oprócz dokarmianie invert w l
-                        nowyParametr !=  AppLocalizations.of(context)!.candy && //oprócz dokarmianie ciasto w kg
-                        nowyParametr !=  AppLocalizations.of(context)!.removedFood && //oprócz dokarmianie usunieto pokarm
-                        nowyParametr !=  AppLocalizations.of(context)!.leftFood && //oprócz dokarmianie pozostało pokarm
-                        nowyParametr !=  'apivarol' &&
-                        nowyParametr !=  'biovar' &&
-                        nowyParametr !=  AppLocalizations.of(context)!.acid &&
-                        nowyParametr !=  'varroa') 
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( nowyParametr,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
 
-    
-    //parametr dla pyłek w l               
-                    if (nowyParametr ==  " " + AppLocalizations.of(context)!.beePollen + " =  ")
+//rodzaj ula: ul, odkład, mini              
+                  if (nowaKategoria == 'equipment')    
+                    if (nowyParametr ==  AppLocalizations.of(context)!.numberOfFrame + " = ")
                       Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.beePollen + " (l) = ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
-//parametr dla pyłek w ml               
-                    if (nowyParametr ==  AppLocalizations.of(context)!.beePollen + " = ")
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.beePollen + " (ml) = ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
- //parametr dla osypu pszczół w ml               
-                    if (nowyParametr ==  AppLocalizations.of(context)!.deadBees)
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.deadBees + " (ml) = ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
-//parametr dla dokarmianie - syrop 1:1 w l               
-                    if (nowyParametr ==  AppLocalizations.of(context)!.syrup + " 1:1")
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.syrup + " 1:1" + " (l) = ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),                      
-//parametr dla dokarmianie - syrop 3:2 w l               
-                    if (nowyParametr ==  AppLocalizations.of(context)!.syrup + " 3:2")
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.syrup + " 3:2" + " (l) = ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),  
-//parametr dla dokarmianie - syrop - invert w l               
-                    if (nowyParametr ==  AppLocalizations.of(context)!.invert)
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.invert + " (l) = ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),  
-//parametr dla dokarmianie - ciasto w kg              
-                    if (nowyParametr ==  AppLocalizations.of(context)!.candy)
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.candy + " (kg) = ",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),  
-//parametr dla dokarmianie - usunięto ciasto w %              
-                    if (nowyParametr ==  AppLocalizations.of(context)!.removedFood)
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.removedFood + " (%)",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
-//parametr dla dokarmianie - pozostało ciasto w %              
-                    if (nowyParametr ==  AppLocalizations.of(context)!.leftFood)
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.leftFood + " (%)",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
-//parametr dla leczenie - apivarol             
-                    if (nowyParametr == 'apivarol')
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( "apivarol (" + AppLocalizations.of(context)!.dose + ")",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
-//parametr dla leczenie - biovar            
-                    if (nowyParametr == 'biovar')
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( "biovar (" + AppLocalizations.of(context)!.belts + ")",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
-//parametr dla leczenie - biovar            
-                    if (nowyParametr == 'varroa')
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( "varroa (" + AppLocalizations.of(context)!.mites+ ")",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
-//parametr dla leczenie - kwas          
-                    if (nowyParametr == AppLocalizations.of(context)!.acid)
-                      Row(
-                        //mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 65,
-                            child: Text(AppLocalizations.of(context)!.pArametr + ':',
-                              style: TextStyle(
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          SizedBox(
-                            width: 200,
-                            child: Text( AppLocalizations.of(context)!.acid + " (ml)",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
-                              ),
-                              softWrap: true, //zawijanie tekstu
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        ]
-                      ),
-
-
-
-                   SizedBox(height: 20), //przed wartością
- //*********************************************************** */                  
-                   //** */ Wartość - lista wyboru
-//************************************************************ */
-//dla matka1 Quality
-                    if (nowaKategoria == 'queen')    
-                      if (nowyParametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) //Quality
-                        Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             SizedBox(
-                          width: 65,
-                          child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                          width: 80,
+                          child: Text(AppLocalizations.of(context)!.kIndHive + ':',
                             style: TextStyle(
                               //fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -841,6 +521,733 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             Container(
                               height: 50,
                               width: 200,
+                              margin: EdgeInsets.only(top: 0, bottom: 0),
+                              child: DropdownButton(
+                                isExpanded: true,
+                                style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
+                                value: rodzajUla,  
+                                items: [
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.hIve),
+                                                  value: AppLocalizations.of(context)!.hIve),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.nUc),
+                                                  value: AppLocalizations.of(context)!.nUc),
+                                  DropdownMenuItem(child: Text('Mini'),
+                                                  value: 'Mini'),                                                                                                        
+                                ], //lista elementów do wyboru
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    rodzajUla = newValue!.toString(); 
+                                  });
+                                }, //onChangeDropdownItem
+                              ),
+                            )
+                          ]
+                        ),
+
+
+//typ ula              
+                  if (nowaKategoria == 'equipment')    
+                    if (nowyParametr ==  AppLocalizations.of(context)!.numberOfFrame + " = ")
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            SizedBox(
+                          width: 80,
+                          child: Text(AppLocalizations.of(context)!.hIveType + ':',
+                            style: TextStyle(
+                              //fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.black,
+                            ),
+                            softWrap: true, //zawijanie tekstu
+                            overflow: TextOverflow.fade,
+                          ),
+                        ),
+                        SizedBox(width: 20),
+                            Container(
+                              height: 50,
+                              width: 200,
+                              margin: EdgeInsets.only(top: 0, bottom: 0),
+                              child: DropdownButton(
+                                isExpanded: true,
+                                style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
+                                value: typUla,  
+                                items: [
+                                  DropdownMenuItem(child: Text('WIELKOPOLSKI'),
+                                                  value: 'WIELKOPOLSKI'),
+                                  DropdownMenuItem(child: Text('DADANT'),
+                                                  value: 'DADANT'),
+                                  DropdownMenuItem(child: Text('OSTROWSKIEJ'),
+                                                  value: 'OSTROWSKIEJ'),
+                                  DropdownMenuItem(child: Text('WARSZAWSKI ZWYKŁY'),
+                                                  value: 'WARSZAWSKI ZWYKŁY'),
+                                  DropdownMenuItem(child: Text('WARSZAWSKI POSZERZANY'),
+                                                  value: 'WARSZAWSKI POSZERZANY'),
+                                  DropdownMenuItem(child: Text('APIPOL'),
+                                                  value: 'APIPOL'),
+                                  DropdownMenuItem(child: Text('LANGSTROTH'),
+                                                  value: 'LANGSTROTH'),
+                                  DropdownMenuItem(child: Text('ZANDER'),
+                                                  value: 'ZANDER'),
+                                  DropdownMenuItem(child: Text('GERSTUNG'),
+                                                  value: 'GERSTUNG'),
+                                  DropdownMenuItem(child: Text('APIMAYE'),
+                                                  value: 'APIMAYE'),
+                                  DropdownMenuItem(child: Text('DEUTSCH NORMAL'),
+                                                  value: 'DEUTSCH NORMAL'),
+                                  DropdownMenuItem(child: Text('NORMALMASS'),
+                                                  value: 'NORMALMASS'),
+                                  DropdownMenuItem(child: Text('FRANKENBEUTE'),
+                                                  value: 'FRANKENBEUTE'),
+                                  DropdownMenuItem(child: Text('NATIONAL'),
+                                                  value: 'NATIONAL'),
+                                  DropdownMenuItem(child: Text('WBC'),
+                                                  value: 'WBC'),
+                                  DropdownMenuItem(child: Text('WIELKOPOLSKI GÓRSKI'),
+                                                  value: 'WIELKOPOLSKI GÓRSKI'),
+                                  DropdownMenuItem(child: Text('TYP A'), //własna nazwa ula TYP A
+                                                  value: 'TYP A'), 
+                                  DropdownMenuItem(child: Text('TYP B'),
+                                                  value: 'TYP B'),
+                                  DropdownMenuItem(child: Text('TYP C'),
+                                                  value: 'TYP C'),
+                                  DropdownMenuItem(child: Text('TYP D'),
+                                                  value: 'TYP D'),
+                                  DropdownMenuItem(child: Text('MINI PLUS'),
+                                                  value: 'MINI PLUS'),                                  
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.wEeddingHive),
+                                                  value: AppLocalizations.of(context)!.wEeddingHive),                                                                                                         
+                                ], //lista elementów do wyboru
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    typUla = newValue!.toString(); 
+                                    nowyMiara = typUla;
+                                    globals.typUla = typUla;
+                                  });
+                                }, //onChangeDropdownItem
+                              ),
+                            )
+                          ]
+                        ),
+                  
+                  if (nowaKategoria == 'equipment')    
+                    if (nowyParametr ==  AppLocalizations.of(context)!.numberOfFrame + " = ")
+                      SizedBox(height: 10),
+
+
+  //********************************************* */
+                    //** */ parametr (Cecha:)
+ //******************************************** */ 
+      // dla parametrów które nie są w tym miejscu modyfikowane np. przez (ml), (kg), (sztuki) itp. dodatkowe opisy                   
+                    if (nowyParametr !=  AppLocalizations.of(context)!.honey + " = " &&  //oprócz miód w kg
+                        nowyParametr !=  AppLocalizations.of(context)!.beePollen + " = " &&  //oprócz pyłek w ml
+                        nowyParametr !=  " " + AppLocalizations.of(context)!.beePollen + " =  " &&//oprócz pyłek w l
+                        nowyParametr !=  AppLocalizations.of(context)!.deadBees &&
+                        nowyParametr !=  AppLocalizations.of(context)!.syrup + " 1:1" && //oprócz dokarmianie syrop 1:1 w l
+                        nowyParametr !=  AppLocalizations.of(context)!.syrup + " 3:2" && //oprócz dokarmianie syrop 3:2 w l
+                        nowyParametr !=  AppLocalizations.of(context)!.invert && //oprócz dokarmianie invert w l
+                        nowyParametr !=  AppLocalizations.of(context)!.candy && //oprócz dokarmianie ciasto w kg
+                        nowyParametr !=  AppLocalizations.of(context)!.removedFood && //oprócz dokarmianie usunieto pokarm
+                        nowyParametr !=  AppLocalizations.of(context)!.leftFood && //oprócz dokarmianie pozostało pokarm
+                        nowyParametr !=  'apivarol' &&
+                        nowyParametr !=  'biovar' &&
+                        nowyParametr !=  AppLocalizations.of(context)!.acid &&
+                        nowyParametr !=  " " + AppLocalizations.of(context)!.acid &&
+                        nowyParametr !=  'varroa') 
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':', // Cecha:
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 300,
+                          //   child: 
+    //cecha - nazwa cechy - wyśrodkowana                      
+                            Text( nowyParametr,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                          // ),
+                        ]
+                      ),
+
+    
+    //parametr dla miód w kg              
+                    if (nowyParametr ==  AppLocalizations.of(context)!.honey + " = ")
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                         // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.honey + " (kg) = ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                        //  ),
+                        ]
+                      ),
+
+    //parametr dla pyłek w l               
+                    if (nowyParametr ==  " " + AppLocalizations.of(context)!.beePollen + " =  ")
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                            // width: 200,
+                            // child:
+                             Text( AppLocalizations.of(context)!.beePollen + " (l) = ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                         // ),
+                        ]
+                      ),
+//parametr dla pyłek w ml               
+                    if (nowyParametr ==  AppLocalizations.of(context)!.beePollen + " = ")
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.beePollen + " (ml) = ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                         // ),
+                        ]
+                      ),
+ //parametr dla osypu pszczół w ml               
+                    if (nowyParametr ==  AppLocalizations.of(context)!.deadBees)
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.deadBees + " (ml) = ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                        //  ),
+                        ]
+                      ),
+//parametr dla dokarmianie - syrop 1:1 w l               
+                    if (nowyParametr ==  AppLocalizations.of(context)!.syrup + " 1:1")
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.syrup + " 1:1" + " (l) = ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                          // ),
+                        ]
+                      ),                      
+//parametr dla dokarmianie - syrop 3:2 w l               
+                    if (nowyParametr ==  AppLocalizations.of(context)!.syrup + " 3:2")
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.syrup + " 3:2" + " (l) = ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                        //  ),
+                        ]
+                      ),  
+//parametr dla dokarmianie - syrop - invert w l               
+                    if (nowyParametr ==  AppLocalizations.of(context)!.invert)
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child:
+                             Text( AppLocalizations.of(context)!.invert + " (l) = ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                         // ),
+                        ]
+                      ),  
+//parametr dla dokarmianie - ciasto w kg              
+                    if (nowyParametr ==  AppLocalizations.of(context)!.candy)
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.candy + " (kg) = ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                        //  ),
+                        ]
+                      ),  
+//parametr dla dokarmianie - usunięto ciasto w %              
+                    if (nowyParametr ==  AppLocalizations.of(context)!.removedFood)
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.removedFood + " (%)",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                         // ),
+                        ]
+                      ),
+//parametr dla dokarmianie - pozostało ciasto w %              
+                    if (nowyParametr ==  AppLocalizations.of(context)!.leftFood)
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.leftFood + " (%)",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                         // ),
+                        ]
+                      ),
+//parametr dla leczenie - apivarol             
+                    if (nowyParametr == 'apivarol')
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( "apivarol (" + AppLocalizations.of(context)!.dose + ")",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                         // ),
+                        ]
+                      ),
+//parametr dla leczenie - biovar            
+                    if (nowyParametr == 'biovar')
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( "biovar (" + AppLocalizations.of(context)!.belts + ")",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                        //  ),
+                        ]
+                      ),
+//parametr dla leczenie - biovar            
+                    if (nowyParametr == 'varroa')
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child:
+                             Text( "varroa (" + AppLocalizations.of(context)!.mites+ ")",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                        //  ),
+                        ]
+                      ),
+//parametr dla leczenie - kwas          
+                    if (nowyParametr == AppLocalizations.of(context)!.acid)
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.acid + " (ml)",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                        //  ),
+                        ]
+                      ),
+//parametr dla leczenie - kwas w g         
+                    if (nowyParametr == " " + AppLocalizations.of(context)!.acid)
+                      Row(
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          // SizedBox(
+                          //   width: 65,
+                          //   child: Text(AppLocalizations.of(context)!.pArametr + ':',
+                          //     style: TextStyle(
+                          //       //fontWeight: FontWeight.bold,
+                          //       fontSize: 15,
+                          //       color: Colors.black,
+                          //     ),
+                          //     softWrap: true, //zawijanie tekstu
+                          //     overflow: TextOverflow.fade,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 20),
+                          // SizedBox(
+                          //   width: 200,
+                          //   child: 
+                            Text( AppLocalizations.of(context)!.acid + " (g)",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                              softWrap: true, //zawijanie tekstu
+                              overflow: TextOverflow.fade,
+                            ),
+                         // ),
+                        ]
+                      ),
+
+
+
+
+                   SizedBox(height: 20), //przed wartością
+ //*********************************************************** */                  
+                   //** */ Wartość - lista wyboru
+//************************************************************ */
+//dla matka1 Quality
+                    if (nowaKategoria == 'queen')    
+                      if (nowyParametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) //Quality
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                        //     SizedBox(
+                        //   width: 65,
+                        //   child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                        //     style: TextStyle(
+                        //       //fontWeight: FontWeight.bold,
+                        //       fontSize: 15,
+                        //       color: Colors.black,
+                        //     ),
+                        //     softWrap: true, //zawijanie tekstu
+                        //     overflow: TextOverflow.fade,
+                        //   ),
+                        // ),
+                        // SizedBox(width: 20),
+                            Container(
+                              height: 50,
+                              width: 200,
                               margin: EdgeInsets.only(bottom: 15),
                               child: DropdownButton(
                                 isExpanded: true,
@@ -850,8 +1257,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.veryGood),
                                                   value:AppLocalizations.of(context)!.veryGood),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.good),
-                                                  value:AppLocalizations.of(context)!.good),
-                                  
+                                                  value:AppLocalizations.of(context)!.good),                                 
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.big),
                                                   value:AppLocalizations.of(context)!.big),
                                   DropdownMenuItem(child: Text('ok'),value: 'ok'),
@@ -877,22 +1283,22 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     if (nowaKategoria == 'queen')    
                       if (nowyParametr ==  " " + AppLocalizations.of(context)!.queen) //Mark + number
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            SizedBox(
-                          width: 65,
-                          child: Text(AppLocalizations.of(context)!.vAlue + ':',
-                            style: TextStyle(
-                              //fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black,
-                            ),
-                            softWrap: true, //zawijanie tekstu
-                            overflow: TextOverflow.fade,
-                          ),
-                        ),
-                        SizedBox(width: 20),
+                        //     SizedBox(
+                        //   width: 65,
+                        //   child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                        //     style: TextStyle(
+                        //       //fontWeight: FontWeight.bold,
+                        //       fontSize: 15,
+                        //       color: Colors.black,
+                        //     ),
+                        //     softWrap: true, //zawijanie tekstu
+                        //     overflow: TextOverflow.fade,
+                        //   ),
+                        // ),
+                        // SizedBox(width: 20),
                             Container(
                               height: 50,
                               width: 200,
@@ -902,7 +1308,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
                                 items: [
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.unmarked),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.unmarked1),
                                                   value:AppLocalizations.of(context)!.unmarked),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedWhite),
                                                   value:AppLocalizations.of(context)!.markedWhite),
@@ -916,9 +1322,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value:AppLocalizations.of(context)!.markedBlue),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedOther),
                                                   value:AppLocalizations.of(context)!.markedOther),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.missing),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.missing1),
                                                   value:AppLocalizations.of(context)!.missing),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gone),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gone1),
                                                   value:AppLocalizations.of(context)!.gone),                                                                        
                                 ], //lista elementów do wyboru
                                 onChanged: (newValue) {
@@ -934,22 +1340,22 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     if (nowaKategoria == 'queen')    
                       if (nowyParametr ==  AppLocalizations.of(context)!.queen + " -") //State
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            SizedBox(
-                          width: 65,
-                          child: Text(AppLocalizations.of(context)!.vAlue + ':',
-                            style: TextStyle(
-                              //fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black,
-                            ),
-                            softWrap: true, //zawijanie tekstu
-                            overflow: TextOverflow.fade,
-                          ),
-                        ),
-                        SizedBox(width: 20),
+                        //     SizedBox(
+                        //   width: 65,
+                        //   child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                        //     style: TextStyle(
+                        //       //fontWeight: FontWeight.bold,
+                        //       fontSize: 15,
+                        //       color: Colors.black,
+                        //     ),
+                        //     softWrap: true, //zawijanie tekstu
+                        //     overflow: TextOverflow.fade,
+                        //   ),
+                        // ),
+                        // SizedBox(width: 20),
                             Container(
                               height: 50,
                               width: 200,
@@ -959,12 +1365,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
                                 items: [
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.virgine),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.virgine1),
                                                   value:AppLocalizations.of(context)!.virgine),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.naturallyMated),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.naturallyMated1),
                                                   value:AppLocalizations.of(context)!.naturallyMated),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.artificiallyInseminated),
-                                                  value:AppLocalizations.of(context)!.artificiallyInseminated),                                                                        
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.artificiallyInseminated1),
+                                                  value:AppLocalizations.of(context)!.artificiallyInseminated),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.droneLaying),
+                                                  value:AppLocalizations.of(context)!.droneLaying),                                                                         
                                 ], //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
@@ -979,22 +1387,22 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     if (nowaKategoria == 'queen')    
                       if (nowyParametr ==  AppLocalizations.of(context)!.queenIs) //Start
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            SizedBox(
-                          width: 65,
-                          child: Text(AppLocalizations.of(context)!.vAlue + ':',
-                            style: TextStyle(
-                              //fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black,
-                            ),
-                            softWrap: true, //zawijanie tekstu
-                            overflow: TextOverflow.fade,
-                          ),
-                        ),
-                        SizedBox(width: 20),
+                        //     SizedBox(
+                        //   width: 65,
+                        //   child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                        //     style: TextStyle(
+                        //       //fontWeight: FontWeight.bold,
+                        //       fontSize: 15,
+                        //       color: Colors.black,
+                        //     ),
+                        //     softWrap: true, //zawijanie tekstu
+                        //     overflow: TextOverflow.fade,
+                        //   ),
+                        // ),
+                        // SizedBox(width: 20),
                             Container(
                               height: 50,
                               width: 200,
@@ -1009,7 +1417,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inCage),
                                                   value:AppLocalizations.of(context)!.inCage),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inInsulator),
-                                                  value:AppLocalizations.of(context)!.inInsulator),                                                                        
+                                                  value:AppLocalizations.of(context)!.inInsulator), 
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.isolated),
+                                                  value:AppLocalizations.of(context)!.isolated),                                                                        
                                 ], //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
@@ -1026,41 +1436,43 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     if (nowaKategoria == 'colony')    
                       if (nowyParametr ==  AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) //colonyState
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            SizedBox(
-                          width: 65,
-                          child: Text(AppLocalizations.of(context)!.vAlue + ':',
-                            style: TextStyle(
-                              //fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black,
-                            ),
-                            softWrap: true, //zawijanie tekstu
-                            overflow: TextOverflow.fade,
-                          ),
-                        ),
-                        SizedBox(width: 20),
+                        //     SizedBox(
+                        //   width: 65,
+                        //   child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                        //     style: TextStyle(
+                        //       //fontWeight: FontWeight.bold,
+                        //       fontSize: 15,
+                        //       color: Colors.black,
+                        //     ),
+                        //     softWrap: true, //zawijanie tekstu
+                        //     overflow: TextOverflow.fade,
+                        //   ),
+                        // ),
+                        // SizedBox(width: 20),
                             Container(
                               height: 50,
-                              width: 200,
+                              width: 250,
                               margin: EdgeInsets.only(top: 15, bottom: 15),
                               child: DropdownButton(
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
                                 items: [
+                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.aggressive1),
+                                                  value:AppLocalizations.of(context)!.aggressive),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gentle),
                                                   value:AppLocalizations.of(context)!.gentle),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.aggressive),
-                                                  value:AppLocalizations.of(context)!.aggressive),
                                   DropdownMenuItem(child: Text('ok'),
                                                   value:'ok'),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.swarmingMood),
                                                   value:AppLocalizations.of(context)!.swarmingMood),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inCluster),
                                                   value:AppLocalizations.of(context)!.inCluster),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.droneBees),
+                                                  value:AppLocalizations.of(context)!.droneBees),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.dead),
                                                   value:AppLocalizations.of(context)!.dead),                                                                        
                                 ], //lista elementów do wyboru
@@ -1078,22 +1490,22 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     if (nowaKategoria == 'colony')    
                       if (nowyParametr ==  " " + AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) //colonyForce
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            SizedBox(
-                          width: 65,
-                          child: Text(AppLocalizations.of(context)!.vAlue + ':',
-                            style: TextStyle(
-                              //fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black,
-                            ),
-                            softWrap: true, //zawijanie tekstu
-                            overflow: TextOverflow.fade,
-                          ),
-                        ),
-                        SizedBox(width: 20),
+                        //     SizedBox(
+                        //   width: 65,
+                        //   child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                        //     style: TextStyle(
+                        //       //fontWeight: FontWeight.bold,
+                        //       fontSize: 15,
+                        //       color: Colors.black,
+                        //     ),
+                        //     softWrap: true, //zawijanie tekstu
+                        //     overflow: TextOverflow.fade,
+                        //   ),
+                        // ),
+                        // SizedBox(width: 20),
                             Container(
                               height: 50,
                               width: 200,
@@ -1107,7 +1519,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value:AppLocalizations.of(context)!.veryStrong),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.strong),
                                                   value:AppLocalizations.of(context)!.strong),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.normal),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.normal1),
                                                   value:AppLocalizations.of(context)!.normal),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.weak),
                                                   value:AppLocalizations.of(context)!.weak),
@@ -1125,7 +1537,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                         ),                     
  //dla colony deadBees - osyp pszczół - edycja standardowa pola "wartość"  
                     
-//dla wyposazenia - ilość ramek - edycjs standardowa pola "wartość" , bez pola "miara"                  
+//dla wyposazenia - ilość ramek - edycja standardowa pola "wartość" , bez pola "miara"                  
+
 //dla wyposazenia - krata na korpus nr - 
                     if (nowaKategoria == 'equipment')    
                       if (nowyParametr ==  AppLocalizations.of(context)!.excluder)
@@ -1149,7 +1562,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           SizedBox(width: 20),
                           SizedBox(
                             width: 200,
-                            child: Text( AppLocalizations.of(context)!.onBodyNumber,
+                            child: Text( AppLocalizations.of(context)!.onBodyNumber, //na korpusie numer
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -1161,7 +1574,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           ),
                         ]
                       ),
-//dla wyposazenia - krata odgrodowa - brak
+//dla wyposazenia - krata odgrodowa - brak. nowyWartosc jest pusta a nowyMiara = 0
                     if (nowaKategoria == 'equipment')    
                       if (nowyParametr ==  " " + AppLocalizations.of(context)!.excluder + " -")
                        Row(
@@ -1184,7 +1597,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           SizedBox(width: 20),
                           SizedBox(
                             width: 200,
-                            child: Text( " " + AppLocalizations.of(context)!.lack,
+                            child: Text( " " + AppLocalizations.of(context)!.lack, //brak
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -1200,22 +1613,22 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     if (nowaKategoria == 'equipment')    
                       if (nowyParametr ==  AppLocalizations.of(context)!.bottomBoard +  " " + AppLocalizations.of(context)!.isIs) //dennica
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            SizedBox(
-                          width: 65,
-                          child: Text(AppLocalizations.of(context)!.vAlue + ':',
-                            style: TextStyle(
-                              //fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black,
-                            ),
-                            softWrap: true, //zawijanie tekstu
-                            overflow: TextOverflow.fade,
-                          ),
-                        ),
-                        SizedBox(width: 20),
+                        //     SizedBox(
+                        //   width: 65,
+                        //   child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                        //     style: TextStyle(
+                        //       //fontWeight: FontWeight.bold,
+                        //       fontSize: 15,
+                        //       color: Colors.black,
+                        //     ),
+                        //     softWrap: true, //zawijanie tekstu
+                        //     overflow: TextOverflow.fade,
+                        //   ),
+                        // ),
+                        // SizedBox(width: 20),
                             Container(
                               height: 50,
                               width: 200,
@@ -1245,22 +1658,22 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     if (nowaKategoria == 'equipment')    
                       if (nowyParametr ==  AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs) //poławiacz
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            SizedBox(
-                          width: 65,
-                          child: Text(AppLocalizations.of(context)!.vAlue + ':',
-                            style: TextStyle(
-                              //fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black,
-                            ),
-                            softWrap: true, //zawijanie tekstu
-                            overflow: TextOverflow.fade,
-                          ),
-                        ),
-                        SizedBox(width: 20),
+                        //     SizedBox(
+                        //   width: 65,
+                        //   child: Text(AppLocalizations.of(context)!.vAlue + ':',
+                        //     style: TextStyle(
+                        //       //fontWeight: FontWeight.bold,
+                        //       fontSize: 15,
+                        //       color: Colors.black,
+                        //     ),
+                        //     softWrap: true, //zawijanie tekstu
+                        //     overflow: TextOverflow.fade,
+                        //   ),
+                        // ),
+                        // SizedBox(width: 20),
                             Container(
                               height: 50,
                               width: 200,
@@ -1270,6 +1683,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
                                 items: [
+                                                                                                                                              
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.open),
                                                   value: AppLocalizations.of(context)!.open),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.close),
@@ -1284,6 +1698,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value: AppLocalizations.of(context)!.delete), 
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.remove),
                                                   value: AppLocalizations.of(context)!.remove),                                                                       
+                                
                                 ], //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
@@ -1335,11 +1750,12 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                       nowyParametr == 'apivarol' ||  //dawka 
                       nowyParametr == 'biovar' ||
                       nowyParametr == AppLocalizations.of(context)!.acid ||  //kwas w ml
+                      nowyParametr == " " + AppLocalizations.of(context)!.acid || //kwas w g
                       nowyParametr == 'varroa' || //ilość roztoczy
                       nowyParametr == AppLocalizations.of(context)!.queenWasBornIn ||  //rocznik matki
                       nowyParametr == AppLocalizations.of(context)!.deadBees || //osyp pszczół
-                      nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"  ||     
-                      nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" ||
+                      //nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"  ||     
+                      //nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" ||
                       nowyParametr == AppLocalizations.of(context)!.beePollen + " = "  || //pyłek w ml
                       nowyParametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.miarka + " x" //pyłem w miarce
                     )
@@ -1371,7 +1787,11 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                       nowyParametr == AppLocalizations.of(context)!.syrup + " 3:2" ||
                       nowyParametr == AppLocalizations.of(context)!.candy ||
                       nowyParametr == AppLocalizations.of(context)!.invert ||
-                      nowyParametr == " " + AppLocalizations.of(context)!.beePollen + " =  " //pyłek w litravh
+                      nowyParametr == " " + AppLocalizations.of(context)!.beePollen + " =  " || //pyłek w litravh
+                      nowyParametr == AppLocalizations.of(context)!.honey + " = " || //w kg
+                      nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"  ||     
+                      nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
+                     
                    )
                     TextFormField(
                       initialValue: nowyWartosc,
@@ -1418,7 +1838,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                   //     nowyParametr !=  AppLocalizations.of(context)!.candy &&
                   //     nowyParametr !=  AppLocalizations.of(context)!.removedFood &&
                   //     nowyParametr !=  AppLocalizations.of(context)!.leftFood)
-                   
+  
+
+  //jezeli jest to:                 
                   if (nowyParametr ==  AppLocalizations.of(context)!.excluder || //numer korpusu na którym jest krata odgrodowa
                       nowyParametr ==  " " + AppLocalizations.of(context)!.queen)  //numer opalitka  
                     SizedBox(height: 10),
@@ -1451,6 +1873,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                   //     nowyParametr !=  AppLocalizations.of(context)!.removedFood &&
                   //     nowyParametr !=  AppLocalizations.of(context)!.leftFood)
 
+//to dla:
                   if (nowyParametr ==  AppLocalizations.of(context)!.excluder)  //numer korpusu na którym jest krata odgrodowa
                     TextFormField(
                       initialValue: nowyMiara,
@@ -1473,7 +1896,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                         return null;
                       }
                     ),
-                    if (nowyParametr ==  " " + AppLocalizations.of(context)!.queen) 
+    //to dla:                
+                    if (nowyParametr ==  " " + AppLocalizations.of(context)!.queen) //numer opalitka
                     TextFormField(
                       initialValue: nowyMiara,
                       keyboardType: TextInputType.name,
@@ -1515,7 +1939,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                       keyboardType: TextInputType.text,
                       decoration: InputDecoration(enabledBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.grey)),
                         focusedBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.blue)),
-                        labelText: (AppLocalizations.of(context)!.cOmments),
+                        labelText: (AppLocalizations.of(context)!.nOte),
                         labelStyle: TextStyle(color: Colors.black),
                           // hintText:
                           //     (AppLocalizations.of(context)!
@@ -1546,11 +1970,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     //** */ zmień
                   MaterialButton(
                     height: 50,
-                    shape: const StadiumBorder(),
+                    shape: const StadiumBorder(
+                      side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                      ),                
                     onPressed: () {
                       if (_formKey1.currentState!.validate()) {
-                        if(nowyWartosc != '') //jezeli wartość nie jest pusta
+                        if(nowyParametr != '') //było: jezeli wartość nie jest pusta, jest: jezeli parametr...
                           if (edycja) {
+                            //print('edycja info - rodzaj ula = $rodzajUla');
                             DBHelper.deleteInfo(info[0].id).then((_) {
                               Infos.insertInfo(
                                 '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
@@ -1560,8 +1987,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 nowaKategoria,
                                 nowyParametr,
                                 nowyWartosc,
-                                nowyMiara!,
-                                info[0].pogoda,
+                                nowyMiara!, //ewentualny typ ula ustawiony wczesniej
+                                
+                                //pole pogoda moze mieć wartość "matkaID", "rodzaj ula" lub nic
+                                nowaKategoria == 'queen' 
+                                  ? matkaID.toString() 
+                                  : nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = " 
+                                    ? rodzajUla //rodzajUla, //tylko dla ilość ramek =
+                                    : '',
                                 info[0].temp,
                                 info[0].czas,
                                 nowyUwagi!,
@@ -1575,6 +2008,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             });
                           }else{
                             if(_selectedZakresUli[0] == true){ //dodawanie info tylko dla tego ula
+                              //print('dodawanie info - rodzaj ula = $rodzajUla');
+                              //print('usunieto pokarm - nowaWartość = $nowyWartosc');
                               Infos.insertInfo(
                                 '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
                                 dateController.text,
@@ -1583,8 +2018,15 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 nowaKategoria,
                                 nowyParametr,
                                 nowyWartosc,
+                                //dodawanie miodobrania: nowyMiara = ile dm2 ma ramka ula (zalezne od typu ula i wielkości ramki)
                                 nowyMiara!,
-                                '',//info[0].pogoda,
+                                //info[0].pogoda,
+                                //pole pogoda moze mieć wartość "matkaID", "rodzaj ula" lub nic
+                                nowaKategoria == 'queen' 
+                                  ? matkaID.toString() 
+                                  : nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = " 
+                                    ? rodzajUla //rodzajUla,//tylko dla ilość ramek = 
+                                    : '',
                                 '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
                                 formatterHm.format(DateTime.now()),
                                 nowyUwagi!,
@@ -1627,14 +2069,15 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             }
                           }
 
-                        //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki
+                        //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki lub wyposazenia
                         if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'queen' || nowaKategoria == 'equipment') {
                           //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli (belki)
                           final hiveData = Provider.of<Hives>(context,listen: false);
                           final hive = hiveData.items.where((element) {
                             //to wczytanie danych edytowanego ula
-                            return element.id.contains('$nowaPasieka.$nowyUl');
+                            return element.id == ('$nowaPasieka.$nowyUl');
                           }).toList();
+                          //print('zeby nie stracic info przed - rodzaj ula = $rodzajUla');
                           String ikona = hive[0].ikona;
                           int ramek = hive[0].ramek;
                           int korpusNr = hive[0].korpusNr; //obecna belka pozostaje
@@ -1660,8 +2103,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           String matka3 = hive[0].matka3;
                           String matka4 = hive[0].matka4;
                           String matka5 = hive[0].matka5;
-
-                           
+                          if(nowyParametr != AppLocalizations.of(context)!.numberOfFrame + " = " && hive[0].h1 != '') rodzajUla = hive[0].h1; //nie zachowuj starego rodzaju ula jezeli jest jakiś nowy rodzaj  
+                          if(nowyParametr != AppLocalizations.of(context)!.numberOfFrame + " = " && hive[0].h2 != '') typUla = hive[0].h2; //nie zachowuj starego typu ula jezeli jest jakiś nowy typ 
+                         //print('zeby nie stracic info po - rodzaj ula = $rodzajUla'); 
                           //jezeli wpis  dotyczy leczenia lub dokarmiania
                           if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment'){                        
                             //to jezeli edytowano info ula z datą taką jak ostatnie (lub pózniejszą) info ula to modyfikacja danych
@@ -1675,7 +2119,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               miara = nowyMiara!;
                             }
                           }
-                          //jezeli info jest o matce to zmiana parametrów matki w belce
+     //jezeli info jest o matce to zmiana parametrów matki w belce
                           if (nowaKategoria == 'queen') {                                          
                           
   //** */ Quality - matka1
@@ -1690,8 +2134,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 if (matka2 == 'brak') matka2 = '';
                               } else {
                                 matka1 = 'ok';
-                                if (ikona == 'red') {  //bo był brak matki               
-                                  ikona = 'orange';
+                                if (ikona == 'red' || ikona == 'orange') {  //bo był brak matki               
+                                  ikona = 'green';
                                   //globals.ikonaPasieki = 'orange';
                                 }
                                 if (matka2 == 'brak') matka2 = '';
@@ -1699,33 +2143,33 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
  //** */ Mark + Number matka2
                             if (nowyParametr == " " + AppLocalizations.of(context)!.queen)
                               switch (nowyWartosc) {
-                                case 'nie ma znak': matka2 = 'niez'; //nieznaczona
+                                case 'nie ma znak': matka2 = 'niez'; ikona = 'green';//nieznaczona
                                   break;
-                                case 'unmarked': matka2 = 'niez'; //nieznaczona
+                                case 'unmarked': matka2 = 'niez'; ikona = 'green';//nieznaczona
                                   break;
-                                case 'ma inny znak': matka2 = 'inny ' + nowyMiara!; //kolor + numer matki
+                                case 'ma inny znak': matka2 = 'inny ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'marked other': matka2 = 'inny ' + nowyMiara!; //kolor + numer matki
+                                case 'marked other': matka2 = 'inny ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'ma biały znak': matka2 = 'biał ' + nowyMiara!; //kolor + numer matki
+                                case 'ma biały znak': matka2 = 'biał ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'marked white': matka2 = 'biał ' + nowyMiara!; //kolor + numer matki
+                                case 'marked white': matka2 = 'biał ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'ma żółty znak': matka2 = 'żółt ' + nowyMiara!; //kolor + numer matki
+                                case 'ma żółty znak': matka2 = 'żółt ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'marked yellow': matka2 = 'żółt ' + nowyMiara!; //kolor + numer matki
+                                case 'marked yellow': matka2 = 'żółt ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'ma czerwony znak': matka2 = 'czer ' + nowyMiara!; //kolor + numer matki
+                                case 'ma czerwony znak': matka2 = 'czer ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'marked red': matka2 = 'czer ' + nowyMiara!; //kolor + numer matki
+                                case 'marked red': matka2 = 'czer ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'ma zielony znak': matka2 = 'ziel ' + nowyMiara!; //kolor + numer matki
+                                case 'ma zielony znak': matka2 = 'ziel ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'marked green': matka2 = 'ziel ' + nowyMiara!; //kolor + numer matki
+                                case 'marked green': matka2 = 'ziel ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'ma niebieski znak': matka2 = 'nieb ' + nowyMiara!; //kolor + numer matki
+                                case 'ma niebieski znak': matka2 = 'nieb ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
-                                case 'marked blue': matka2 = 'nieb ' + nowyMiara!; //kolor + numer matki
+                                case 'marked blue': matka2 = 'nieb ' + nowyMiara!; ikona = 'green';//kolor + numer matki
                                   break;
                                 case 'nie ma': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
                                   ikona = 'red';
@@ -1746,21 +2190,29 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               }
 //** */ State matka3 - czy unasienniona?
                             if (nowyParametr == AppLocalizations.of(context)!.queen + " -") //State
-                              if (nowyWartosc == 'dziewica' || nowyWartosc == 'virgine') {
-                                matka3 = 'nieunasienniona';
-                                if (ikona == 'red') { //bo był brak matki
-                                  ikona = 'orange';
-                                  //globals.ikonaPasieki = 'orange';
-                                }
-                                if (matka2 == 'brak') matka2 = '';
-                              } else {
-                                matka3 = 'unasienniona';
-                                if (ikona != 'yellow') { //jezeli nie toDo
-                                  ikona = 'green';
-                                  //globals.ikonaPasieki = 'green'; 
-                                }
-                                if (matka2 == 'brak') matka2 = '';
-                              }
+                                if (nowyWartosc == 'dziewica' || nowyWartosc == 'virgine') {
+                                    matka3 = 'nieunasienniona';
+                                    if (ikona == 'red') { //bo był brak matki
+                                      ikona = 'orange';
+                                      //globals.ikonaPasieki = 'orange';
+                                    }
+                                    if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
+                                } else if (nowyWartosc == 'trutówka' || nowyWartosc == 'drone laying') {
+                                    matka3 = 'trutowa';
+                                    if (ikona == 'red') { //bo był brak matki
+                                      ikona = 'orange';
+                                      //globals.ikonaPasieki = 'orange';
+                                    }
+                                    if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
+                                } else {
+                                    matka3 = 'unasienniona';
+                                    if (ikona != 'yellow') { //jezeli nie toDo
+                                      ikona = 'green';
+                                      //globals.ikonaPasieki = 'green'; 
+                                    }
+                                    if (matka2 == 'brak') matka2 = '';
+                                  }
+                                                                                   
     //** */ Start matka4  - czy ograniczona?
                             if (nowyParametr == AppLocalizations.of(context)!.queenIs) //Start
                               if (nowyWartosc == 'wolna' || nowyWartosc == 'freed'){
@@ -1796,7 +2248,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               globals.iloscRamek = ramek; //nie wiem czy potrzeba ???
                             }
                            }
-                                    
+                          //print('zapis do hive - rodzaj ula = $rodzajUla');          
                           Hives.insertHive(
                             '$nowaPasieka.$nowyUl',
                             nowaPasieka, //pasieka nr
@@ -1827,8 +2279,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             matka3,
                             matka4,
                             matka5,
-                            '0',
-                            '0',
+                            rodzajUla, //h1 - rodzaj ula
+                            typUla, //h2 - typ ula
                             '0',
                             0,// aktualne bo aktualizowane na biezaco
                           ).then((_) {
@@ -1889,7 +2341,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                     },//onPressed
                     child: Text('   ' + (AppLocalizations.of(context)!.saveZ) +'   '), //Zapisz
                     color: Theme.of(context).primaryColor,
-                    textColor: Colors.white,
+                    textColor: Colors.black,
                     disabledColor: Colors.grey,
                     disabledTextColor: Colors.white,
                   ),

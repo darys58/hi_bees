@@ -6,15 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 //import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
-//import '../helpers/db_helper.dart';
- import '../models/apiarys.dart';
-// import '../models/frame.dart';
- import '../models/hives.dart';
-// import '../models/infos.dart';
-// import '../screens/activation_screen.dart';
-// import '../models/frames.dart';
-// import '../models/hive.dart';
-// import 'frames_detail_screen.dart';
+import '../models/apiarys.dart';
+import '../models/hives.dart';
+//import '../models/dodatki2.dart';
 import '../models/harvest.dart';
 import 'package:flutter/services.dart';
 
@@ -34,70 +28,117 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
   
   int nowyNrPasieki = 1;
   int nowyNrUla = 1;
+  int ileUli = 0; //ilość uli w pasiece
+  int iloscUli = 1; //ilość uli do dodania
   //double? nowyIlosc;
   String ileRamek = '10';
+  String typUla = 'WIELKOPOLSKI';//wielkopolski, dadant itp
+  String rodzajUla = ''; //ul, odkład, mini
   String nowyUwagi = '';
   bool edycja = false;
   String tytulEkranu = '';
   List<Harvest> zbior = [];
   TextEditingController dateController = TextEditingController();
+  DateTime? _selectedDate = DateTime.now(); // domyślnie dziś ; //wybrana data
 
   @override
   void didChangeDependencies() {
-    // final routeArgs =
-    //     ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
-    // final idZbioru = routeArgs['idZbioru'];
-    // final temp =
-    //     routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
-    // print('idZbioru= $idZbioru');
-
-    // if (idZbioru != null) {
-    //   edycja = true;
-    //   //jezeli edycja istniejącego wpisu
-    //   final zbiorData = Provider.of<Harvests>(context, listen: false);
-    //   zbior = zbiorData.items.where((element) {
-    //     //to wczytanie danych zbioru
-    //     return element.id.toString().contains('$idZbioru');
-    //   }).toList();
-    //   dateController.text = zbior[0].data;
-    //   // nowyRok = zbior[0].data.substring(0, 4);
-    //   // nowyMiesiac = zbior[0].data.substring(5, 7);
-    //   // nowyDzien = zbior[0].data.substring(8);
-    //   nowyNrPasieki = zbior[0].pasiekaNr;
-    //   nowyZasobId = zbior[0].zasobId;
-    //   nowyIlosc = zbior[0].ilosc;
-    //   nowyMiara = zbior[0].miara;
-    //   nowyUwagi = zbior[0].uwagi;
-    //   tytulEkranu = AppLocalizations.of(context)!.editingHarvest;
-    // } else {
       edycja = false;
-      //jezeli dodanie nowego zbioru
-      dateController.text = DateTime.now().toString().substring(0, 10);
-      // nowyRok = DateFormat('yyyy').format(DateTime.now());
-      // nowyMiesiac = DateFormat('MM').format(DateTime.now());
-      // nowyDzien = DateFormat('dd').format(DateTime.now());
-      // nowyNrPasieki = 1;
-      // nowyNrUla = 1;
-      // ileRamek = 10;
-      //nowyMiara = 1;
-      //nowyUwagi = '';
+      dateController.text = DateTime.now().toString().substring(0, 10);     
       tytulEkranu = AppLocalizations.of(context)!.aDdHive;
-  //  }
+      rodzajUla = AppLocalizations.of(context)!.hIve;
 
     super.didChangeDependencies();
   }
 
+  //kalendarz wyboru daty 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate , // domyślnie dziś
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+        dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate); // np. 2025-11-01
+      });
+    }
+  }
+
+ //tworzenie wielu uli - kolejność wywoływania funkcji osiągana przez awaitowanie
+  Future<void>  dodajUle(int numerUlaDoDodania) async{   
+    await Infos.insertInfo(
+      '${dateController.text}.$nowyNrPasieki.$numerUlaDoDodania.equipment.' + AppLocalizations.of(context)!.numberOfFrame + " = ",
+      dateController.text,
+      nowyNrPasieki,
+      numerUlaDoDodania,
+      'equipment',
+      AppLocalizations.of(context)!.numberOfFrame + " = ",
+      ileRamek,
+      typUla, //miara - tu typ ula
+      rodzajUla, //pogoda - tu rodzaj ula
+      '', //temp
+      formatterHm.format(DateTime.now()), //czas
+      nowyUwagi,
+      0, //info[0].arch,
+    );
+
+    await Hives.insertHive(
+      '$nowyNrPasieki.$numerUlaDoDodania',
+      nowyNrPasieki, //pasieka nr
+      numerUlaDoDodania, //ul nr
+      dateController.text, //przeglad
+      'green', //ikona
+      int.parse(ileRamek), //opis - ilość ramek w korpusie
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      rodzajUla,//h1 - rodzaj ula
+      typUla, //h2 - typ ula
+      '',
+      0, //aktualny bo dopiero utworzony
+    );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
 
-    final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
-      backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
-      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(150.0, 35.0),
-      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
-    );
+    // final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
+    //   backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+    //   shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+    //   side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+    //   fixedSize: Size(150.0, 35.0),
+    //   textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
+    // );
+
+    // //uzyskanie dostępu do danych w tabeli Dodatki2 - typy własne uli
+    // final dod2Data = Provider.of<Dodatki2>(context);
+    // final dod2 = dod2Data.items;
 
     return Scaffold(
         appBar: AppBar(
@@ -127,188 +168,31 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-  //data 
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [     
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                
-                                      Text(AppLocalizations.of(context)!.noteDate),
-                                      OutlinedButton(
-                                        style: dataButtonStyle,
-                                        onPressed: () async {
-                                          DateTime? pickedDate =
-                                            await showDatePicker(
-                                              context: context,
-                                              initialDate: DateTime.parse(dateController.text),
-                                              firstDate: DateTime(2000),
-                                              lastDate: DateTime(2101),
-                                              builder:(context , child){
-                                                return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
-                                                  colorScheme: ColorScheme.light(
-                                                    primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
-                                                    onPrimary: Colors.white, // titles and 
-                                                    onSurface: Colors.black, // Month days , years 
-                                                  ),
-                                                  textButtonTheme: TextButtonThemeData(
-                                                    style: TextButton.styleFrom(
-                                                      foregroundColor: Colors.black, // ok , cancel    buttons
-                                                    ),
-                                                  ),
-                                                ),  child: child!   );  // pass child to this child
-                                              }
-                                            );
-                                          if (pickedDate != null) {
-                                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-                                            setState(() {
-                                              dateController.text = formattedDate;
-                                              print(dateController.text );
-                                             // globals.dataWpisu = formattedDate;
-                                            });
-                                          } else {print("Date is not selected");}
-                                        },
-  
-                                         child: Text(dateController.text ,
-                                          style: const TextStyle(
-                                            color: Color.fromARGB(255, 0, 0, 0),
-                                            fontSize: 15),),   
+ 
+ //data 
+                              SizedBox(height: 10,),
+                              Padding(
+                                padding: const EdgeInsets.all(0.0),
+                                child: TextFormField(
+                                  controller: dateController,
+                                  readOnly: true, // blokuje ręczne wpisywanie
+                                  decoration: InputDecoration(                        
+                                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                                    focusedBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.blue)),
+                                    labelText: AppLocalizations.of(context)!.dAteAcquisition,
+                                    labelStyle: TextStyle(color: Colors.black),
+                                    hintText: AppLocalizations.of(context)!.sElectDate,
+                                    suffixIcon: Icon(Icons.calendar_today),
+                                  ),
+                                  onTap: () => _selectDate(context),
+                                ),
                                       ),
-                                  ]),  
-                                ]),
+ 
   
-  //data
-                              // TextField(
-                              //     controller:
-                              //         dateController, //editing controller of this TextField
-                              //     decoration:  InputDecoration(
-                              //         icon: Icon(Icons
-                              //             .calendar_today), //icon of text field
-                              //         labelText: AppLocalizations.of(context)!.noteDate
-                              //         ),
-                              //     readOnly:
-                              //         true, // when true user cannot edit text
-                              //     onTap: () async {
-                              //       DateTime? pickedDate = await showDatePicker(
-                              //         context: context,
-                              //         initialDate: DateTime.parse(dateController.text),
-                              //         firstDate: DateTime(2000), 
-                              //         lastDate: DateTime(2101));
-                              //       if (pickedDate != null) {
-                              //         String formattedDate =
-                              //             DateFormat('yyyy-MM-dd').format( pickedDate); 
-
-                              //         setState(() {
-                              //           dateController.text = formattedDate; 
-                              //         });
-                              //       } else {
-                              //         print("Date is not selected");
-                              //       }
-                              //     }),                           
-
-// // pasieka
-//                               Row(
-//                                   //mainAxisAlignment: MainAxisAlignment.center,
-//                                   mainAxisAlignment: MainAxisAlignment.start,
-//                                   crossAxisAlignment: CrossAxisAlignment.end,
-//                                   children: <Widget>[
-//                                     SizedBox(
-//                                       width: 70,
-//                                       child: Text(
-//                                         AppLocalizations.of(context)!.apiaryNr +
-//                                             ':',
-//                                         style: TextStyle(
-//                                           //fontWeight: FontWeight.bold,
-//                                           fontSize: 15,
-//                                           color: Colors.black,
-//                                         ),
-//                                         softWrap: true, //zawijanie tekstu
-//                                         overflow: TextOverflow.fade,
-//                                       ),
-//                                     ),
-//                                     SizedBox(width: 20),
-//                                     SizedBox(
-//                                       width: 180,
-//                                       child: TextFormField(
-//                                           initialValue:
-//                                               nowyNrPasieki.toString(),
-//                                           keyboardType: TextInputType.number,
-//                                           decoration: InputDecoration(
-//                                             labelText: (''),
-//                                             labelStyle:
-//                                                 TextStyle(color: Colors.black),
-//                                             hintText:
-//                                                 (AppLocalizations.of(context)!
-//                                                     .apiaryNr),
-//                                           ),
-//                                           validator: (value) {
-//                                             if (value!.isEmpty) {
-//                                               return (AppLocalizations.of(
-//                                                           context)!
-//                                                       .enter +
-//                                                   ' ' +
-//                                                   AppLocalizations.of(context)!
-//                                                       .apiaryNr);
-//                                             }
-//                                             nowyNrPasieki = int.parse(value);
-//                                             return null;
-//                                           }),
-//                                     ),
-//                                   ]),
-// // ul
-//                               Row(
-//                                   //mainAxisAlignment: MainAxisAlignment.center,
-//                                   mainAxisAlignment: MainAxisAlignment.start,
-//                                   crossAxisAlignment: CrossAxisAlignment.end,
-//                                   children: <Widget>[
-//                                     SizedBox(
-//                                       width: 70,
-//                                       child: Text(
-//                                         AppLocalizations.of(context)!.hiveNr +
-//                                             ':',
-//                                         style: TextStyle(
-//                                           //fontWeight: FontWeight.bold,
-//                                           fontSize: 15,
-//                                           color: Colors.black,
-//                                         ),
-//                                         softWrap: true, //zawijanie tekstu
-//                                         overflow: TextOverflow.fade,
-//                                       ),
-//                                     ),
-//                                     SizedBox(width: 20),
-//                                     SizedBox(
-//                                       width: 180,
-//                                       child: TextFormField(
-//                                           initialValue:
-//                                               nowyNrUla.toString(),
-//                                           keyboardType: TextInputType.number,
-//                                           decoration: InputDecoration(
-//                                             labelText: (''),
-//                                             labelStyle:
-//                                                 TextStyle(color: Colors.black),
-//                                             hintText:
-//                                                 (AppLocalizations.of(context)!
-//                                                     .apiaryNr),
-//                                           ),
-//                                           validator: (value) {
-//                                             if (value!.isEmpty) {
-//                                               return (AppLocalizations.of(
-//                                                           context)!
-//                                                       .enter +
-//                                                   ' ' +
-//                                                   AppLocalizations.of(context)!
-//                                                       .apiaryNr);
-//                                             }
-//                                             nowyNrUla = int.parse(value);
-//                                             return null;
-//                                           }),
-//                                     ),
-//                                   ]),
+                             
 //numer pasieki
                               SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               TextFormField(
                                 initialValue: nowyNrPasieki.toString(),
@@ -334,7 +218,7 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
 
 //numer ula
                               SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               TextFormField(
                                 initialValue: nowyNrUla.toString(),
@@ -357,6 +241,166 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                                   return null;
                                 }
                               ),
+
+//ilość uli do dodania
+                              SizedBox(
+                                height: 15,
+                              ),
+                              TextFormField(
+                                initialValue: '1',
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                decoration: InputDecoration(
+                                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                                  focusedBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.blue)),
+                                  labelText: (AppLocalizations.of(context)!.nUmberHives),
+                                  labelStyle: TextStyle(color: Colors.black),
+                                  // hintText:
+                                  //     (AppLocalizations.of(context)!
+                                  //         .vAlue),
+                                ),
+                                validator: (value) {
+                                  // if (value!.isEmpty) {
+                                  //   return ('uwagi');
+                                  // }
+                                  iloscUli = int.parse(value!);
+                                  return null;
+                                }
+                              ),                              
+
+//rodzaj ula: ul, odkład, mini
+                      SizedBox(
+                        height: 10,
+                      ),              
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            SizedBox(
+                          width: 80,
+                          child: Text(AppLocalizations.of(context)!.kIndHive + ':',
+                            style: TextStyle(
+                              //fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.black,
+                            ),
+                            softWrap: true, //zawijanie tekstu
+                            overflow: TextOverflow.fade,
+                          ),
+                        ),
+                        SizedBox(width: 20),
+                            Container(
+                              height: 50,
+                              width: 200,
+                              margin: EdgeInsets.only(top: 0, bottom: 0),
+                              child: DropdownButton(
+                                isExpanded: true,
+                                style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
+                                value: rodzajUla,  
+                                items: [
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.hIve),
+                                                  value: AppLocalizations.of(context)!.hIve),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.nUc),
+                                                  value: AppLocalizations.of(context)!.nUc),
+                                  DropdownMenuItem(child: Text('Mini'),
+                                                  value: 'Mini'),                                                                                                        
+                                ], //lista elementów do wyboru
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    rodzajUla = newValue!.toString(); 
+                                  });
+                                }, //onChangeDropdownItem
+                              ),
+                            )
+                          ]
+                        ),
+
+
+//typ ula              
+                        
+                       Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            SizedBox(
+                          width: 80,
+                          child: Text(AppLocalizations.of(context)!.hIveType + ':',
+                            style: TextStyle(
+                              //fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.black,
+                            ),
+                            softWrap: true, //zawijanie tekstu
+                            overflow: TextOverflow.fade,
+                          ),
+                        ),
+                        SizedBox(width: 20),
+                            Container(
+                              height: 50,
+                              width: 220,
+                              margin: EdgeInsets.only(top: 0, bottom: 0),
+                              child: DropdownButton(
+                                isExpanded: true,
+                                style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
+                                value: typUla,  
+                                items: [
+                                  DropdownMenuItem(child: Text('WIELKOPOLSKI'),
+                                                  value: 'WIELKOPOLSKI'),
+                                  DropdownMenuItem(child: Text('DADANT'),
+                                                  value: 'DADANT'),
+                                  DropdownMenuItem(child: Text('OSTROWSKIEJ'),
+                                                  value: 'OSTROWSKIEJ'), 
+                                  DropdownMenuItem(child: Text('WARSZAWSKI ZWYKŁY'),
+                                                  value: 'WARSZAWSKI ZWYKŁY'),
+                                  DropdownMenuItem(child: Text('WARSZAWSKI POSZERZANY'),
+                                                  value: 'WARSZAWSKI POSZERZANY'),
+                                  DropdownMenuItem(child: Text('APIPOL'),
+                                                  value: 'APIPOL'),
+                                  DropdownMenuItem(child: Text('LANGSTROTH'),
+                                                  value: 'LANGSTROTH'),
+                                  DropdownMenuItem(child: Text('ZANDER'),
+                                                  value: 'ZANDER'),
+                                  DropdownMenuItem(child: Text('GERSTUNG'),
+                                                  value: 'GERSTUNG'),
+                                  DropdownMenuItem(child: Text('APIMAYE'),
+                                                  value: 'APIMAYE'),
+                                  DropdownMenuItem(child: Text('DEUTSCH NORMAL'),
+                                                  value: 'DEUTSCH NORMAL'),
+                                  DropdownMenuItem(child: Text('NORMALMASS'),
+                                                  value: 'NORMALMASS'),
+                                  DropdownMenuItem(child: Text('FRANKENBEUTE'),
+                                                  value: 'FRANKENBEUTE'),
+                                  DropdownMenuItem(child: Text('NATIONAL'),
+                                                  value: 'NATIONAL'),
+                                  DropdownMenuItem(child: Text('WBC'),
+                                                  value: 'WBC'),
+                                  DropdownMenuItem(child: Text('WIELKOPOLSKI GÓRSKI'),
+                                                  value: 'WIELKOPOLSKI GÓRSKI'),
+                                  DropdownMenuItem(child: Text('TYP A'), //własna nazwa ula TYP A
+                                                  value: 'TYP A'), 
+                                  DropdownMenuItem(child: Text('TYP B'),
+                                                  value: 'TYP B'),
+                                  DropdownMenuItem(child: Text('TYP C'),
+                                                  value: 'TYP C'),
+                                  DropdownMenuItem(child: Text('TYP D'),
+                                                  value: 'TYP D'),
+                                  DropdownMenuItem(child: Text('MINI PLUS'),
+                                                  value: 'MINI PLUS'),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.wEeddingHive),
+                                                  value: AppLocalizations.of(context)!.wEeddingHive), 
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.oTHER),
+                                                  value: AppLocalizations.of(context)!.oTHER),                                                                                                        
+                                ], //lista elementów do wyboru
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    typUla = newValue!.toString(); 
+                                  });
+                                }, //onChangeDropdownItem
+                              ),
+                            )
+                          ]
+                        ),
+
 
 
 //ile ramek
@@ -385,9 +429,10 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                                 }
                               ),
 
+
 //uwagi
                               SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               // Row(
                               //     mainAxisAlignment: MainAxisAlignment.start,
@@ -436,100 +481,58 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                             //zmień
                             MaterialButton(
                               height: 50,
-                              shape: const StadiumBorder(),
-                              onPressed: () {
+                              shape: const StadiumBorder(
+                                side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),),                    
+                              onPressed: () async {
                                 if (_formKey1.currentState!.validate()) {
-                                  
-                                  Infos.insertInfo(
-                                    '${dateController.text}.$nowyNrPasieki.$nowyNrUla.equipment.' + AppLocalizations.of(context)!.numberOfFrame + " = ",
-                                    dateController.text,
-                                    nowyNrPasieki,
-                                    nowyNrUla,
-                                    'equipment',
-                                    AppLocalizations.of(context)!.numberOfFrame + " = ",
-                                    ileRamek,
-                                    '',
-                                    '',
-                                    '',
-                                    formatterHm.format(DateTime.now()),
-                                    nowyUwagi,
-                                    0, //info[0].arch,
-                                  ).then((_) {
-                                     Hives.insertHive(
-                                      '$nowyNrPasieki.$nowyNrUla',
-                                      nowyNrPasieki, //pasieka nr
-                                      nowyNrUla, //ul nr
-                                      dateController.text, //przeglad
-                                      'green', //ikona
-                                      int.parse(ileRamek), //opis - ilość ramek w korpusie
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      '',
-                                      0, //aktualny bo dopiero utworzony
-                                    ).then((_) {
-                                      //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
-                                      Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowyNrPasieki,)
-                                        .then((_) {
-                                          final hivesData = Provider.of<Hives>(context,listen: false);
-                                          final hives = hivesData.items;
-                                          int ileUli = hives.length;
+                                   
+                                   List<int> items = []; 
+                                    for (var i = nowyNrUla; i < nowyNrUla + iloscUli; i++) { 
+                                      items.add(i); //utworzenie listy numerów wszystkich uli do dodania - dla pętli for asynchronicznej
+                                    }
 
-                                          //zapis do tabeli "pasieki"
-                                          Apiarys.insertApiary(
-                                            '${nowyNrPasieki}',
-                                            nowyNrPasieki, //pasieka nr
-                                            ileUli, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
-                                            dateController.text, //przeglad
-                                            'green', //ikona
-                                            '??', //opis
-                                          ).then((_) {
-                                            Provider.of<Apiarys>(context,listen: false).fetchAndSetApiarys()
+                                    for (var item in items) {
+                                      await dodajUle(item); //tworzenie uli
+                                      print('tworze ul nr = $item');
+                                    }
+
+                              
+                                  //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
+                                  await Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowyNrPasieki,)
+                                    .then((_) {
+                                      final hivesData = Provider.of<Hives>(context,listen: false);
+                                      final hives = hivesData.items;
+                                      int ileUli = hives.length;
+                                      //print('ile uli w pasiece = $ileUli');
+               
+                                      //zapis do tabeli "pasieki"
+                                      Apiarys.insertApiary(
+                                        '${nowyNrPasieki}',
+                                        nowyNrPasieki, //pasieka nr
+                                        ileUli, //ileUli + iloscUli, //ile uli + 
+                                        dateController.text, //przeglad
+                                        'green', //ikona
+                                        '??', //opis
+                                      ).then((_) {
+                                        Provider.of<Apiarys>(context,listen: false).fetchAndSetApiarys()
+                                        .then((_) {
+                                          Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowyNrPasieki, nowyNrUla)
                                             .then((_) {
-                                              Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowyNrPasieki, nowyNrUla)
-                                                .then((_) {
-                                                  Navigator.of(context).pop();
-                                              });
-                                            });
+                                              Navigator.of(context).pop();
                                           });
                                         });
+                                      });
                                     });
-                                    // Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowyNrPasieki, nowyNrUla)
-                                    // .then((_) {
-                                    //   Navigator.of(context).pop();
-                                    // });
-                                  }); //arch
                                 }      
                               },
                               child: Text('   ' +
                                   (AppLocalizations.of(context)!.saveZ) +
                                   '   '), //Modyfikuj
                               color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
+                              textColor: Colors.black,
                               disabledColor: Colors.grey,
                               disabledTextColor: Colors.white,
+                              
                             ),
                           ]),
                     ]))));

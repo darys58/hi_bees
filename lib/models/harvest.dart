@@ -12,7 +12,7 @@ class Harvest with ChangeNotifier {
   final double ilosc; //
   final int miara; //1-l, 2-kg
   final String uwagi; //
-  final String g; //
+  final String g; //średnia waga 1dm2 miodu w tym miodobraniu
   final String h; //
   final int arch; //0-niezarchiwizowane, 1-przesłane do chmury, 2-zaimportowane z chmury
 
@@ -42,7 +42,7 @@ class Harvests with ChangeNotifier {
     //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
-      print(json.decode(response.body));
+      //print(json.decode(response.body));
 
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
       // if (extractedData == null) {
@@ -91,8 +91,8 @@ class Harvests with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie danych do uruchomienia apki --> Zbiory <---');
-    print(_items);
+    //print('wczytanie danych do uruchomienia apki --> Zbiory <---');
+    //print(_items);
     notifyListeners();
   }
 
@@ -115,51 +115,12 @@ class Harvests with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich nowych zbiorów --> Zbiory <---');
+    //print('wczytanie wszystkich nowych zbiorów --> Zbiory <---');
     //print(_items);
     notifyListeners();
   }
 
 
-  // //pobranie danych z serwera www
-  // Future<void> fetchMemoryFromSerwer() async {
-  //   var url =
-  //       Uri.parse('https://hibees.pl/cbt.php?d=hi_bees&kod=${globals.kod}');
-  //   print(url);
-  //   try {
-  //     final response = await http.get(url);
-  //     print(json.decode(response.body));
-
-  //     final extractedData = json.decode(response.body) as Map<String, dynamic>;
-  //     // if (extractedData == null) {
-  //     //   return _items = [];
-  //     // }
-  //     final List<MemoryItem> loadedItems = [];
-
-  //     extractedData.forEach((numerId, promocjeData) {
-  //       loadedItems.add(MemoryItem(
-  //         id: numerId,
-  //         email: promocjeData['be_email'],
-  //         dev: promocjeData['be_dev'],
-  //         wer: promocjeData['be_wersja'],
-  //         kod: promocjeData['be_kod'],
-  //         key: promocjeData['be_key'],
-  //         dod: promocjeData['be_od'],
-  //         ddo: promocjeData['be_do'],
-  //       ));
-  //     });
-  //     // _items = loadedRests;
-  //     print('numer id  = ${loadedItems[0].id}');
-  //     notifyListeners();
-
-  //     if (loadedItems[0].id != 'brak ')
-  //       _items = loadedItems;
-  //     else
-  //       _items = [];
-  //   } catch (error) {
-  //     throw (error);
-  //   }
-  // }
 
   //zapisanie danych do bazy lokalnej
   static Future<void> insertZbiory(

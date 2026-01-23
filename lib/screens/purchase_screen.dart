@@ -205,20 +205,34 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
     razemWartoscUSD = 0;
     wysokoscStatystyk = 15;
 
+    //pobranie wszystkich zakupów
+    final purchaseDataAll = Provider.of<Purchases>(context);
+    List<Purchase> zakupyAll = purchaseDataAll.items.where((pur) {
+      return pur.data.startsWith('20');
+    }).toList();
+
+    List<String> listaLat = []; //lista lat w których dokonywano zakupy
+    int odRoku = int.parse(DateTime.now().toString().substring(0, 4)); //biezący rok
+
+    //poszukanie najstarszego roku w którym dokonano zakupów
+    for (var i = 0; i < zakupyAll.length; i++) {
+      if(odRoku > int.parse(zakupyAll[i].data.substring(0, 4)))
+        odRoku = int.parse(zakupyAll[i].data.substring(0, 4));
+    }
+    
     //tworzenie listy lat w których dokonywano zakupy
-    List<String> listaLat = [];
-    int odRoku = 2022; //zeby najstarszym był rok 2023
     int biezacyRok = int.parse(DateTime.now().toString().substring(0, 4));
-    while (odRoku < biezacyRok) {
+    while (odRoku <= biezacyRok) {
       listaLat.add(biezacyRok.toString());
       biezacyRok = biezacyRok - 1;
     }
-    //pobranie wszystkich zakupów
+
+    //pobranie wszystkich zakupów z wybranego roku
     final purchaseData = Provider.of<Purchases>(context);
     List<Purchase> zakupy = purchaseData.items.where((pur) {
       return pur.data.startsWith(wybranaData);
     }).toList();
-
+    
     //dla kazdego rodzaju kategorii -  podliczenie roczne zakupów
     for (var i = 0; i < zakupy.length; i++) {
       if (zakupy[i].data.substring(0, 4) == wybranaData) //dla wybranego roku

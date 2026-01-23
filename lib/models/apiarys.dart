@@ -29,7 +29,7 @@ class Apiarys with ChangeNotifier {
           ),
         )
         .toList();
-    print('wczytanie wszystkich!!!!!!! danych o pasiekach --> Apiarys <---');
+    //print('wczytanie wszystkich!!!!!!! danych o pasiekach --> Apiarys <---');
     //print(_items);
     notifyListeners();
   }

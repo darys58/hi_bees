@@ -13,8 +13,7 @@ class Note with ChangeNotifier {
   final int status; //
   final String priorytet; //
   final String uwagi; //
-  final int
-      arch; //0-niezarchiwizowane, 1-przesłane do chmury, 2-zaimportowane z chmury
+  final int arch; //0-niezarchiwizowane, 1-przesłane do chmury, 2-zaimportowane z chmury
 
   Note({
     required this.id,

@@ -53,7 +53,7 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
       });
       final pogodaData = Provider.of<Weathers>(context, listen: false);
       List<Weather> pogoda = pogodaData.items.where((ap) {
-        return ap.id.contains(globals.pasiekaID.toString());
+        return ap.id == (globals.pasiekaID.toString());
         //'numerPasieki'; // jest ==  a było contains ale dla typu String
       }).toList();
       // print('pasieka = ${globals.pasiekaID}');
@@ -101,7 +101,7 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
         (inter) {
           if (inter) {
             // print('$inter - jest internet');
-            print('pobranie danych o pogodzie');
+            //print('pobranie danych o pogodzie');
             if (latitude != '' && longitude != '') {
               getCurrentWeatherCoord(idPasieki.toString(), latitude!, longitude!);
             } else if (miasto != '') {
@@ -111,8 +111,8 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
                 });
               });
             }
-            print('ikona po pobraniu');
-            print(icon);
+            //print('ikona po pobraniu');
+            //print(icon);
           } else {
             // print('braaaaaak internetu');
             //komunikat na dole ekranu
@@ -172,10 +172,10 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
     //  print(body);
     temp = body["list"][5]["main"]["temp"];
     icon = body["list"][5]["weather"][0]["icon"];
-    print('$temp, $icon');
+    //print('$temp, $icon');
     //String teraz = formatterPogoda.format(now);
-     print('ikona przed zapisem w miasto');
-     print(icon);
+     //print('ikona przed zapisem w miasto');
+     //print(icon);
   //   Weathers.insertWeather(
   //     idPasieki!,
   //     miasto!,
@@ -234,7 +234,7 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
         .then((_) {
       final pogodaData = Provider.of<Weathers>(context, listen: false);
       pogoda = pogodaData.items.where((ap) {
-        return ap.id.contains(idPasieki.toString());
+        return ap.id == (idPasieki.toString());
         //'numerPasieki'; // jest ==  a było contains ale dla typu String
       }).toList();
       // setState(() {

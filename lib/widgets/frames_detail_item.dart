@@ -600,20 +600,19 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                 ),
                 TextButton(
                   onPressed: () => {
-                    print('ile ramek zostało do skasowania = '),
-                    print(globals.ileRamek),
+                    //print('ile ramek zostało do skasowania = '),
+                    //print(globals.ileRamek),
                     if (globals.ileRamek > 1)
                       {
                         DBHelper.deleteFrame(frame.id).then((_) {
-                          print('3... kasowanie elementu inspekcji');
+                         // print('3... kasowanie elementu inspekcji');
 
                           //zeby nie stracić danych zebranych podczas przeglądu w widoku zbirczym uli
                           final hiveData =
                               Provider.of<Hives>(context, listen: false);
                           hive = hiveData.items.where((element) {
                             //to wczytanie danych edytowanego ula
-                            return element.id
-                                .contains('${frame.pasiekaNr}.${frame.ulNr}');
+                            return element.id == ('${frame.pasiekaNr}.${frame.ulNr}');
                           }).toList();
                           String ikona = hive[0].ikona;
                           int korpusNr = hive[0].korpusNr;
@@ -635,6 +634,8 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                           String matka3 = hive[0].matka3;
                           String matka4 = hive[0].matka4;
                           String matka5 = hive[0].matka5;
+                          String rodzajUla = hive[0].h1;
+                          String typUla = hive[0].h2;
 
                           // jezeli usuwano wpis z przeglądu ula z datą taką jak ostatni przegląd ula to modyfikacja danych
                           if ('${frame.pasiekaNr}.${frame.ulNr}' ==
@@ -744,8 +745,8 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                             matka3,
                             matka4,
                             matka5,
-                            '0',
-                            '0',
+                            rodzajUla,
+                            typUla,
                             '0',
                             1, //nieaktualne zasoby bo mogła być zmiana ???
                           ).then((_) {
@@ -782,14 +783,14 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                               .fetchAndSetFramesForHive(
                                   globals.pasiekaID, globals.ulID)
                               .then((_) {
-                            print('4... aktualizacja ramek w frames.item');
+                            //print('4... aktualizacja ramek w frames.item');
                           });
                         }),
                       }
                     else
                       {
-                        print('details_item - ileRamek=${globals.ileRamek}'),
-                        print('5... nie mozna usunąć oststniego elementu'),
+                        //print('details_item - ileRamek=${globals.ileRamek}'),
+                        //print('5... nie mozna usunąć oststniego elementu'),
                         Navigator.of(context).pop(false),
                         showDialog(
                           context: context,

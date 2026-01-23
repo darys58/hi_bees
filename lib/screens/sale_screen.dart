@@ -18,8 +18,7 @@ class _SaleScreenState extends State<SaleScreen> {
   bool _isInit = true;
   String wybranaData = DateTime.now().toString().substring(0, 4); //aktualny rok
   double miod = 0; //ilość w l
-  double miodWartoscInnaPLN =
-      0; //wartość miodu w nietypowym opakowaniu (miara = '')
+  double miodWartoscInnaPLN = 0; //wartość miodu w nietypowym opakowaniu (miara = '')
   double miodWartoscInnaEUR = 0;
   double miodWartoscInnaUSD = 0;
   double miodWartoscPLN = 0; //wartość
@@ -168,15 +167,38 @@ class _SaleScreenState extends State<SaleScreen> {
     razemWartoscUSD = 0;
     wysokoscStatystyk = 15;
 
-    //tworzenie listy lat w których dokonywano sprzedaz
-    List<String> listaLat = [];
-    int odRoku = 2022; //zeby najstarszym był rok 2023
+    // //tworzenie listy lat w których dokonywano sprzedaz
+    // List<String> listaLat = [];
+    // int odRoku = 2022; //zeby najstarszym był rok 2023
+    // int biezacyRok = int.parse(DateTime.now().toString().substring(0, 4));
+    // while (odRoku < biezacyRok) {
+    //   listaLat.add(biezacyRok.toString());
+    //   biezacyRok = biezacyRok - 1;
+    // }
+    
+    //pobranie wszystkich sprzedazy
+    final saleDataAll = Provider.of<Sales>(context);
+    List<Sale> sprzedazAll = saleDataAll.items.where((pur) {
+      return pur.data.startsWith('20');
+    }).toList();
+
+    List<String> listaLat = []; //lista lat w których dokonywano sprzedazy
+    int odRoku = int.parse(DateTime.now().toString().substring(0, 4)); //biezący rok
+
+    //poszukanie najstarszego roku w którym dokonano sprzedazy
+    for (var i = 0; i < sprzedazAll.length; i++) {
+      if(odRoku > int.parse(sprzedazAll[i].data.substring(0, 4)))
+        odRoku = int.parse(sprzedazAll[i].data.substring(0, 4));
+    }
+    
+    //tworzenie listy lat w których dokonywano sprzedazy
     int biezacyRok = int.parse(DateTime.now().toString().substring(0, 4));
-    while (odRoku < biezacyRok) {
+    while (odRoku <= biezacyRok) {
       listaLat.add(biezacyRok.toString());
       biezacyRok = biezacyRok - 1;
     }
-    //pobranie wszystkich sprzedazy
+    
+    //pobranie wszystkich sprzedazy z wybranego roku
     final saleData = Provider.of<Sales>(context);
     List<Sale> sprzedaz = saleData.items.where((sa) {
       return sa.data.startsWith(wybranaData);
@@ -473,6 +495,9 @@ class _SaleScreenState extends State<SaleScreen> {
             woskWartoscUSD +
             propolisWartoscUSD;
       }
+      //print('miod = $miod');
+      //print('pylek = $pylek');
+      //print('pierzga = $pierzga');
     }
 
     if (miod != 0) wysokoscStatystyk = wysokoscStatystyk + 18;
@@ -667,7 +692,7 @@ class _SaleScreenState extends State<SaleScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      //sprzedaz miodu
+        //sprzedaz miodu
                       if (miod != 0)
                         RichText(
                             text: TextSpan(
@@ -747,7 +772,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                 ),
                             ])),
 
-                      //sprzedaz miodu w innych opakowaniach
+      //sprzedaz miodu w innych opakowaniach
                       if (miodWartoscInnaPLN != 0 ||
                           miodWartoscInnaEUR != 0 ||
                           miodWartoscInnaUSD != 0)
@@ -827,7 +852,7 @@ class _SaleScreenState extends State<SaleScreen> {
                       //           AppLocalizations.of(context)!.beePollen +
                       //               ': ${pylek.toStringAsFixed(2)} l (${(pylek * 0.634).toStringAsFixed(2)} kg) ${pylekWartoscPLN.toStringAsFixed(2)} PLN',
                       //           style: const TextStyle(fontSize: 16)),
-                      //sprzedaz pyłku
+      //sprzedaz pyłku
                       if (pylek != 0)
                         RichText(
                             text: TextSpan(
@@ -847,7 +872,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                   : TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po angielsku
                                       text: (AppLocalizations.of(context)!
-                                              .honey +
+                                              .beePollen +
                                           ': ${pylek.toStringAsFixed(1)} l (${(pylek * 0.634).toStringAsFixed(1)} kg)'),
                                       style: TextStyle(
                                           fontSize: 16,
@@ -907,7 +932,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                 ),
                             ])),
 
-                      //sprzedaz pyleku w innych opakowaniach
+//sprzedaz pyleku w innych opakowaniach
                       if (pylekWartoscInnaPLN != 0 ||
                           pylekWartoscInnaEUR != 0 ||
                           pylekWartoscInnaUSD != 0)
@@ -916,7 +941,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                 style: TextStyle(color: Colors.black),
                                 children: [
                               TextSpan(
-                                text: (AppLocalizations.of(context)!.honey +
+                                text: (AppLocalizations.of(context)!.beePollen +
                                     ': ' +
                                     AppLocalizations.of(context)!.otherSales),
                                 style: TextStyle(
@@ -988,7 +1013,7 @@ class _SaleScreenState extends State<SaleScreen> {
                       //               ': ${pierzga.toStringAsFixed(2)} l (${(pierzga * 0.75).toStringAsFixed(2)} kg) ${pierzgaWartoscPLN.toStringAsFixed(2)} PLN',
                       //           style: const TextStyle(fontSize: 16)),
 
-                      //sprzedaz pierzgi
+  //sprzedaz pierzgi
                       if (pierzga != 0)
                         RichText(
                             text: TextSpan(
@@ -998,8 +1023,8 @@ class _SaleScreenState extends State<SaleScreen> {
                                   ? TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po polsku
                                       text: (AppLocalizations.of(context)!
-                                              .pollen +
-                                          ': ${pierzga.toStringAsFixed(1).replaceAll('.', ',')} l (${(pierzga * 0.634).toStringAsFixed(1).replaceAll('.', ',')} kg)'),
+                                              .perga +
+                                          ': ${pierzga.toStringAsFixed(1).replaceAll('.', ',')} l (${(pierzga * 0.555).toStringAsFixed(1).replaceAll('.', ',')} kg)'),
                                       style: TextStyle(
                                           fontSize: 16,
                                           //fontWeight: FontWeight.bold,
@@ -1008,8 +1033,8 @@ class _SaleScreenState extends State<SaleScreen> {
                                   : TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po angielsku
                                       text: (AppLocalizations.of(context)!
-                                              .pollen +
-                                          ': ${pierzga.toStringAsFixed(1)} l (${(pierzga * 0.634).toStringAsFixed(1)} kg)'),
+                                              .perga +
+                                          ': ${pierzga.toStringAsFixed(1)} l (${(pierzga * 0.555).toStringAsFixed(1)} kg)'),
                                       style: TextStyle(
                                           fontSize: 16,
                                           //fontWeight: FontWeight.bold,
@@ -1068,7 +1093,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                 ),
                             ])),
 
-                      //sprzedaz pierzgau w innych opakowaniach
+  //sprzedaz pierzgi w innych opakowaniach
                       if (pierzgaWartoscInnaPLN != 0 ||
                           pierzgaWartoscInnaEUR != 0 ||
                           pierzgaWartoscInnaUSD != 0)
@@ -1077,7 +1102,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                 style: TextStyle(color: Colors.black),
                                 children: [
                               TextSpan(
-                                text: (AppLocalizations.of(context)!.pollen +
+                                text: (AppLocalizations.of(context)!.perga +
                                     ': ' +
                                     AppLocalizations.of(context)!.otherSales),
                                 style: TextStyle(
@@ -1137,7 +1162,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                       color: Color.fromARGB(255, 0, 0, 0)),
                                 ),
                             ])),
-                      //sprzedaz wosku
+  //sprzedaz wosku
 
                       if (woskWartoscPLN != 0 ||
                           woskWartoscEUR != 0 ||
@@ -1206,7 +1231,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                       color: Color.fromARGB(255, 0, 0, 0)),
                                 ),
                             ])),
-                      //sprzedaz propolisu
+  //sprzedaz propolisu
                       if (propolisWartoscPLN != 0 ||
                           propolisWartoscEUR != 0 ||
                           propolisWartoscUSD != 0)
@@ -1273,7 +1298,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                       color: Color.fromARGB(255, 0, 0, 0)),
                                 ),
                             ])),
-                      //RAZEM
+  //RAZEM
                       SizedBox(height: 5),
                       RichText(
                           text: TextSpan(

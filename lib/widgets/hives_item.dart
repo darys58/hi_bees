@@ -34,7 +34,7 @@ class HivesItem extends StatelessWidget {
       const Color.fromARGB(255, 104, 187, 254),
       const Color.fromARGB(255, 83, 215, 88),
       const Color.fromARGB(255, 203, 174, 85),
-      const Color.fromARGB(255, 253, 182, 76),
+      const Color.fromARGB(255, 248, 168, 48),
       const Color.fromARGB(255, 255, 86, 74),
       const Color.fromARGB(255, 71, 170, 251),
       Color.fromARGB(255, 61, 214, 66),
@@ -81,6 +81,18 @@ class HivesItem extends StatelessWidget {
     //   return fr.data.contains(wybranaData);
     // }).toList();
 
+    String shorten(String text) {
+      final parts = text.trim().split(RegExp(r'\s+'));
+
+      if (parts.length >= 2) {
+        final first = parts[0].characters.take(3).toString();
+        final second = parts[1].characters.take(2).toString();
+        return '$first $second';
+      } else {
+        return text.characters.take(5).toString();
+      }
+    }
+
     return Container(
       child: Card(
          shape: RoundedRectangleBorder(
@@ -102,6 +114,8 @@ class HivesItem extends StatelessWidget {
               // },
               onTap: () {
                 globals.ulID = hive.ulNr;
+                globals.typUla = hive.h2; //zapamiętanie typu ula - potrzebne przy dodawaniu zbioru kilku ramek z miodem
+                globals.dataAktualnegoPrzegladu = ''; //wazne dla dodawania lub nie info z przeglądu
                 Navigator.of(context).pushNamed(
                   InfoScreen.routeName,
                   arguments: hive.ulNr,
@@ -117,20 +131,38 @@ class HivesItem extends StatelessWidget {
               ),
 //Ul 1 / 15 dni  
               title: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      AppLocalizations.of(context)!.hIve + ' ${hive.ulNr}',
+                      // AppLocalizations.of(context)!.hIve + ' ${hive.ulNr}',
+      //rodzaj ula                
+                      '${hive.h1} ',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black,
+                        ),
+                      ),
+      //typ ula                
+                      hive.h2.isNotEmpty
+                      //? Text('(${hive.h2.substring(0, hive.h2.length < 5 ? hive.h2.length : 5)} ',
+                      ? Text('(' + shorten('${hive.h2}'),
+                          style: const TextStyle(
+                            //fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.black,
+                          ),
+                        )
+                      : Text('('),
+       //ilość ramek               
+                      Text(' ${hive.ramek})',
                       style: const TextStyle(
-                        // fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 12,
                         color: Colors.black,
                       ),
-                      softWrap: true, //zawijanie tekstu
-                      maxLines: 2, //ilość wierszy opisu
-                      overflow: TextOverflow.ellipsis, //skracanie tekstu
                     ),
                     Text(' / '),
+      //ilość dni od przegladu           
                     difference > 365
                       ? Text(
                           '? ',
@@ -260,13 +292,37 @@ class HivesItem extends StatelessWidget {
                           overflow: TextOverflow.ellipsis, //skracanie tekstu),
                         ),
 
+//tekst info - ikona zbiory
+                      if (hive.korpusNr == 0 && hive.kategoria == 'harvest')
+                          Image.asset('assets/image/zbiory.png',
+                            width: 20, height: 20, fit: BoxFit.fill)
+                            ,
+                        
+                      if (hive.korpusNr == 0 && hive.kategoria == 'harvest') 
+                        SizedBox(width: 5),
+
+//info o zbiorach miodu               
+                      if (hive.korpusNr == 0 && hive.kategoria == 'harvest' )
+                        Text(
+                          '${hive.parametr} ${hive.wartosc}' + ' kg',// ${hive.miara}',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Color.fromARGB(255, 69, 69, 69),
+                          ),
+                          softWrap: true, //zawijanie tekstu
+                          maxLines: 2, //ilość wierszy opisu
+                          overflow: TextOverflow.ellipsis, //skracanie tekstu),
+                        ),
+
+
+
 //info o matce jezeli nie ma belki             
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))
 //czy jest ograniczona
                         if(hive.matka4 == 'wolna')
-                          Image.asset('assets/image/matka1.png',
+                          Image.asset('assets/image/matka12.png',
                              width: 27, height: 16, fit: BoxFit.fill)
                         else if (hive.matka4 == 'ograniczona')
                           Image.asset('assets/image/matka11.png',
@@ -292,12 +348,10 @@ class HivesItem extends StatelessWidget {
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))  
-                        if(hive.matka3 == 'unasienniona')                   
-                          Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
-                        else if(hive.matka3 == 'nieunasienniona') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),), 
-                      if (hive.korpusNr == 0 &&
-                          (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment' && (hive.matka3 == 'unasienniona' || hive.matka3 == 'nieunasienniona')))  
+                        if(hive.matka3 == 'unasienniona') Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
+                        else if(hive.matka3 == 'nieunasienniona') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),) 
+                        else if(hive.matka3 == 'trutowa') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),), 
+                        if (hive.korpusNr == 0 && (hive.kategoria != 'feeding' && hive.kategoria != 'treatment' ))  
                         if(hive.matka3 != '' && hive.matka3 != '0')
                           SizedBox(width: 5),
 //znak? numer?     
@@ -368,7 +422,7 @@ class HivesItem extends StatelessWidget {
                               hive.kategoria != 'treatment'))
 //czy jest ograniczona
                         if(hive.matka4 == 'wolna')
-                          Image.asset('assets/image/matka1.png',
+                          Image.asset('assets/image/matka12.png',
                              width: 27, height: 16, fit: BoxFit.fill)
                         else if (hive.matka4 == 'ograniczona')
                           Image.asset('assets/image/matka11.png',
@@ -394,12 +448,10 @@ class HivesItem extends StatelessWidget {
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))  
-                        if(hive.matka3 == 'unasienniona')                   
-                          Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
-                        else if(hive.matka3 == 'nieunasienniona') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),), 
-                      if (hive.korpusNr > 0 &&
-                          (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment' && hive.matka3 == 'unasienniona'))  
+                        if(hive.matka3 == 'unasienniona') Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
+                        else if(hive.matka3 == 'nieunasienniona') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),) 
+                        else if(hive.matka3 == 'trutowa') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),), 
+                        if (hive.korpusNr > 0 && (hive.kategoria != 'feeding' && hive.kategoria != 'treatment' ))  
                         if(hive.matka3 != '' && hive.matka3 != '0')
                           SizedBox(width: 5),
 //znak? numer?     
@@ -421,7 +473,7 @@ class HivesItem extends StatelessWidget {
                         else if(hive.matka2 != '' && hive.matka2 != '0') if(hive.matka2.substring(0, 4) == 'ziel')
                           Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
                         else if(hive.matka2 != '' && hive.matka2 != '0') if(hive.matka2.substring(0, 4) == 'nieb')
-                          Icon(Icons.check_circle_rounded, size: 20.0,color: Color.fromARGB(255, 0, 102, 255),),
+                          Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),),
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))   

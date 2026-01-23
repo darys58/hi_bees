@@ -35,14 +35,37 @@ class _NoteScreenState extends State<NoteScreen> {
   @override
   Widget build(BuildContext context) {
     //tworzenie listy lat w których dokonywano notatki
-    List<String> listaLat = [];
-    int odRoku = 2022; //zeby najstarszym był rok 2023
+    // List<String> listaLat = [];
+    // int odRoku = 2022; //zeby najstarszym był rok 2023
+    // int biezacyRok = int.parse(DateTime.now().toString().substring(0, 4));
+    // while (odRoku < biezacyRok) {
+    //   listaLat.add(biezacyRok.toString());
+    //   biezacyRok = biezacyRok - 1;
+    // }
+
+    //pobranie wszystkich notatek
+    final noteDataAll = Provider.of<Notes>(context);
+    List<Note> notatkiAll = noteDataAll.items.where((pur) {
+      return pur.data.startsWith('20');
+    }).toList();
+
+    List<String> listaLat = []; //lista lat w których dokonywano notatek
+    int odRoku = int.parse(DateTime.now().toString().substring(0, 4)); //biezący rok
+
+    //poszukanie najstarszego roku w którym dokonano notatek
+    for (var i = 0; i < notatkiAll.length; i++) {
+      if(odRoku > int.parse(notatkiAll[i].data.substring(0, 4)))
+        odRoku = int.parse(notatkiAll[i].data.substring(0, 4));
+    }
+    
+    //tworzenie listy lat w których dokonywano notatek
     int biezacyRok = int.parse(DateTime.now().toString().substring(0, 4));
-    while (odRoku < biezacyRok) {
+    while (odRoku <= biezacyRok) {
       listaLat.add(biezacyRok.toString());
       biezacyRok = biezacyRok - 1;
     }
-    //pobranie wszystkich notatek 
+   
+    //pobranie wszystkich notatek z wybranego roku
     final notatkiData = Provider.of<Notes>(context);
     List<Note> notatki = notatkiData.items.where((no) {
       return no.data.startsWith(wybranaData); //z datą zaczynajacą się od wybranego roku

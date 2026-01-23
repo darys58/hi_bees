@@ -59,7 +59,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
     //   //uzyskanie dostępu do danych z tabeli 'pogoda'
       final pogodaData = Provider.of<Weathers>(context, listen: false);
       List<Weather> pogoda = pogodaData.items.where((ap) {
-        return ap.id.contains(idPasieki.toString());
+        return ap.id == (idPasieki.toString());
         //'numerPasieki'; // jest ==  a było contains ale dla typu String
       }).toList();
       // print(pogodaData);
@@ -188,7 +188,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
         .then((_) {
       final pogodaData = Provider.of<Weathers>(context, listen: false);
       pogoda = pogodaData.items.where((ap) {
-        return ap.id.contains(idPasieki.toString());
+        return ap.id == (idPasieki.toString());
         //'numerPasieki'; // jest ==  a było contains ale dla typu String
       }).toList();
       // setState(() {
@@ -509,7 +509,9 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                             //zmień
                             MaterialButton(
                               height: 50,
-                              shape: const StadiumBorder(),
+                              shape: const StadiumBorder(
+                                side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                                ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
                                   //print('$idPasieki,$miasto,$latitude,$longitude,$units,$lang');
@@ -576,7 +578,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                                   (AppLocalizations.of(context)!.saveZ) +
                                   '   '), //Modyfikuj
                               color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
+                              textColor: Colors.black,
                               disabledColor: Colors.grey,
                               disabledTextColor: Colors.white,
                             ),

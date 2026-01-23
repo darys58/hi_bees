@@ -60,51 +60,11 @@ class Memory with ChangeNotifier {
           ),
         )
         .toList();
-    // print('wczytanie danych do uruchomienia apki --> Memory <---');
+     //print('wczytanie danych do uruchomienia apki --> Memory <---');
     // print(_items);
     notifyListeners();
   }
 
-
-  //pobranie danych z serwera www
-  // Future<void> fetchMemoryFromSerwer() async {
-  //   var url =
-  //       Uri.parse('https://hibees.pl/cbt.php?d=hi_bees&kod=${globals.kod}');
-  //   print(url);
-  //   try {
-  //     final response = await http.get(url);
-  //     print(json.decode(response.body));
-
-  //     final extractedData = json.decode(response.body) as Map<String, dynamic>;
-  //     // if (extractedData == null) {
-  //     //   return _items = [];
-  //     // }
-  //     final List<MemoryItem> loadedItems = [];
-
-  //     extractedData.forEach((numerId, promocjeData) {
-  //       loadedItems.add(MemoryItem(
-  //         id: numerId,
-  //         email: promocjeData['be_email'],
-  //         dev: promocjeData['be_dev'],
-  //         wer: promocjeData['be_wersja'],
-  //         kod: promocjeData['be_kod'],
-  //         key: promocjeData['be_key'],
-  //         dod: promocjeData['be_od'],
-  //         ddo: promocjeData['be_do'],
-  //       ));
-  //     });
-  //     // _items = loadedRests;
-  //     print('numer id  = ${loadedItems[0].id}');
-  //     notifyListeners();
-
-  //     if (loadedItems[0].id != 'brak ')
-  //       _items = loadedItems;
-  //     else
-  //       _items = [];
-  //   } catch (error) {
-  //     throw (error);
-  //   }
-  // }
 
   //zapisanie danych do bazy lokalnej
   static Future<void> insertMemory(

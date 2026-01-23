@@ -5,7 +5,7 @@ description: A new Flutter project.
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.8.7+60
+version: 1.9.3+71
 
 environment:
   sdk: '>=2.18.5 <3.0.0'
@@ -48,7 +48,7 @@ dev_dependencies:
   url_launcher: ^6.1.10
   fl_chart: ^0.70.1
   picovoice_flutter: ^3.0.3
-
+  nfc_manager: ^4.1.1
 
 
 
@@ -87,6 +87,7 @@ flutter:
     - assets/rhino/rhino_params_en_US.pv
     - assets/image/matka1.png
     - assets/image/matka11.png
+    - assets/image/matka12.png
     - assets/image/hi_bees_1024.png
     - assets/image/apivarol1.png
     - assets/image/invert.png

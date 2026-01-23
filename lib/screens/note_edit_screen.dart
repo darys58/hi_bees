@@ -37,7 +37,8 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   bool isChecked = false;
   List<Note> notatki = [];
   TextEditingController dateController = TextEditingController();
-String test = 'test start';
+  DateTime? _selectedDate = DateTime.now(); // domyślnie dziś ; //wybrana data
+  String test = 'test start';
   // @override
   // void initState() {
   //   dateController.text = DateTime.now().toString().substring(0, 10);
@@ -52,7 +53,7 @@ String test = 'test start';
       final idNotatki = routeArgs['idNotatki'];
       //final temp = routeArgs['temp']; //ślepy argument bo jest błąd jak jest nowy wpis
 
-      print('idNotatki= $idNotatki');
+      //print('idNotatki= $idNotatki');
 
       if (idNotatki != null) {
         edycja = true;
@@ -60,7 +61,7 @@ String test = 'test start';
         final notatkiData = Provider.of<Notes>(context, listen: false);
         notatki = notatkiData.items.where((element) {
           //to wczytanie danych notatkiu
-          return element.id.toString().contains('$idNotatki');
+          return element.id.toString() == '$idNotatki';
         }).toList();
 
         if (notatki[0].priorytet == 'true') {
@@ -103,16 +104,32 @@ String test = 'test start';
     super.didChangeDependencies();
   }
 
+  //kalendarz wyboru daty 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate , // domyślnie dziś
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+        dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate); // np. 2025-11-01
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
-    final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
-      backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
-      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
-      fixedSize: Size(150.0, 35.0),
-      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
-    );
+    // final ButtonStyle dataButtonStyle = OutlinedButton.styleFrom(
+    //   backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+    //   shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+    //   side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+    //   fixedSize: Size(150.0, 35.0),
+    //   textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0),)
+    // );
 
     return Scaffold(
         appBar: AppBar(
@@ -142,193 +159,28 @@ String test = 'test start';
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
- //data
-                               Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
+ 
  //data 
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                
-                                      Text(AppLocalizations.of(context)!.noteDate),
-                                      OutlinedButton(
-                                        style: dataButtonStyle,
-                                        onPressed: () async {
-                                          DateTime? pickedDate =
-                                            await showDatePicker(
-                                              context: context,
-                                              initialDate: DateTime.parse(dateController.text),
-                                              firstDate: DateTime(2000),
-                                              lastDate: DateTime(2101),
-                                              builder:(context , child){
-                                                return Theme( data: Theme.of(context).copyWith(  // override MaterialApp ThemeData
-                                                  colorScheme: ColorScheme.light(
-                                                    primary: Color.fromARGB(255, 236, 167, 63),//header and selced day background color
-                                                    onPrimary: Colors.white, // titles and 
-                                                    onSurface: Colors.black, // Month days , years 
-                                                  ),
-                                                  textButtonTheme: TextButtonThemeData(
-                                                    style: TextButton.styleFrom(
-                                                      foregroundColor: Colors.black, // ok , cancel    buttons
-                                                    ),
-                                                  ),
-                                                ),  child: child!   );  // pass child to this child
-                                              }
-                                            );
-                                          if (pickedDate != null) {
-                                            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-                                            setState(() {
-                                              dateController.text = formattedDate;
-                                              print(dateController.text );
-                                              test = 'zmiana';
-                                             // globals.dataWpisu = formattedDate;
-                                            });
-                                          } else {print("Date is not selected");}
-                                        },
-  
-                                         child: Text(dateController.text ,
-                                          style: const TextStyle(
-                                            color: Color.fromARGB(255, 0, 0, 0),
-                                            fontSize: 15),),   
-                                      ),
-                                  ]),  
-                                ]),
-                              // TextField(
-                              //     controller:
-                              //         dateController, //editing controller of this TextField
-                              //     decoration:  InputDecoration(
-                              //         icon: Icon(Icons
-                              //             .calendar_today), //icon of text field
-                              //         labelText: AppLocalizations.of(context)!.noteDate
-                              //         ),
-                              //     readOnly:
-                              //         true, // when true user cannot edit text
-                              //     onTap: () async {
-                              //       DateTime? pickedDate = await showDatePicker(
-                              //         context: context,
-                              //         initialDate: DateTime.parse(dateController.text),
-                              //         firstDate: DateTime(2000), 
-                              //         lastDate: DateTime(2101));
-                              //       if (pickedDate != null) {
-                              //         String formattedDate =
-                              //             DateFormat('yyyy-MM-dd').format( pickedDate); 
-
-                              //         setState(() {
-                              //           dateController.text = formattedDate; 
-                              //         });
-                              //       } else {
-                              //         print("Date is not selected");
-                              //       }
-                              //     }),
-
-
-                              // Row(
-                              //   mainAxisAlignment: MainAxisAlignment.start,
-                              //   crossAxisAlignment: CrossAxisAlignment.end,
-                              //   children: <Widget>[
-                              //     SizedBox(
-                              //       width: 70,
-                              //       child: Text(
-                              //         AppLocalizations.of(context)!
-                              //                 .harvestDate +
-                              //             ':',
-                              //         style: TextStyle(
-                              //           //fontWeight: FontWeight.bold,
-                              //           fontSize: 15,
-                              //           color: Colors.black,
-                              //         ),
-                              //         softWrap: true, //zawijanie tekstu
-                              //         overflow: TextOverflow.fade,
-                              //       ),
-                              //     ),
-                              //     SizedBox(width: 20),
-                              //     SizedBox(
-                              //       width: 50,
-                              //       child: TextFormField(
-                              //           initialValue: nowyRok,
-                              //           keyboardType: TextInputType.number,
-                              //           decoration: InputDecoration(
-                              //             labelText:
-                              //                 (AppLocalizations.of(context)!
-                              //                     .year),
-                              //             labelStyle:
-                              //                 TextStyle(color: Colors.black),
-                              //             hintText:
-                              //                 (AppLocalizations.of(context)!
-                              //                     .yYYY),
-                              //           ),
-                              //           validator: (value) {
-                              //             if (value!.isEmpty) {
-                              //               return (AppLocalizations.of(
-                              //                           context)!
-                              //                       .enter +
-                              //                   ' ' +
-                              //                   AppLocalizations.of(context)!
-                              //                       .year);
-                              //             }
-                              //             nowyRok = value;
-                              //             return null;
-                              //           }),
-                              //     ),
-                              //     SizedBox(width: 15),
-                              //     SizedBox(
-                              //       width: 60,
-                              //       child: TextFormField(
-                              //           initialValue: nowyMiesiac,
-                              //           keyboardType: TextInputType.number,
-                              //           decoration: InputDecoration(
-                              //             labelText:
-                              //                 (AppLocalizations.of(context)!
-                              //                     .month),
-                              //             labelStyle:
-                              //                 TextStyle(color: Colors.black),
-                              //             hintText: ('MM'),
-                              //           ),
-                              //           validator: (value) {
-                              //             if (value!.isEmpty) {
-                              //               return (AppLocalizations.of(
-                              //                           context)!
-                              //                       .enter +
-                              //                   ' ' +
-                              //                   AppLocalizations.of(context)!
-                              //                       .month);
-                              //             }
-                              //             nowyMiesiac = value;
-                              //             return null;
-                              //           }),
-                              //     ),
-                              //     SizedBox(width: 15),
-                              //     SizedBox(
-                              //       width: 50,
-                              //       child: TextFormField(
-                              //           initialValue: nowyDzien,
-                              //           keyboardType: TextInputType.number,
-                              //           decoration: InputDecoration(
-                              //             labelText:
-                              //                 (AppLocalizations.of(context)!
-                              //                     .day),
-                              //             labelStyle:
-                              //                 TextStyle(color: Colors.black),
-                              //             hintText: ('DD'),
-                              //           ),
-                              //           validator: (value) {
-                              //             if (value!.isEmpty) {
-                              //               return (AppLocalizations.of(
-                              //                           context)!
-                              //                       .enter +
-                              //                   ' ' +
-                              //                   AppLocalizations.of(context)!
-                              //                       .day);
-                              //             }
-                              //             nowyDzien = value;
-                              //             return null;
-                              //           }),
-                              //     ),
-                              //   ],
-                              // ),
-
+                              SizedBox(height: 10,),
+                              Padding(
+                                padding: const EdgeInsets.all(0.0),
+                                child: TextFormField(
+                                  controller: dateController,
+                                  readOnly: true, // blokuje ręczne wpisywanie
+                                  decoration: InputDecoration(                        
+                                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                                    focusedBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.blue)),
+                                    labelText: AppLocalizations.of(context)!.noteDate,
+                                    labelStyle: TextStyle(color: Colors.black),
+                                    hintText: AppLocalizations.of(context)!.sElectDate,
+                                    suffixIcon: Icon(Icons.calendar_today),
+                                  ),
+                                  onTap: () => _selectDate(context),
+                                ),
+                              ),
+ 
+ 
+                          
 // pasieka
                              SizedBox(
                                 height: 20,
@@ -353,8 +205,7 @@ String test = 'test start';
                                               borderSide: BorderSide(color: Colors.blue)),
                                           labelText: (AppLocalizations.of(context)!.apiaryNr),
                                           labelStyle: TextStyle(color: Colors.black),
-                                          hintText:
-                                              (AppLocalizations.of(context)!.apiaryNr),
+                                          //hintText:  (AppLocalizations.of(context)!.apiaryNr),
                                         ),
                                         validator: (value) {
                                           if (value!.isEmpty) {
@@ -365,46 +216,7 @@ String test = 'test start';
                                         }
                                       ),
                                     ),
-                                    // SizedBox(
-                                    //   width: 70,
-                                    //   child: Text(
-                                    //     AppLocalizations.of(context)!.apiaryNr +
-                                    //         ':',
-                                    //     style: TextStyle(
-                                    //       //fontWeight: FontWeight.bold,
-                                    //       fontSize: 15,
-                                    //       color: Colors.black,
-                                    //     ),
-                                    //     softWrap: true, //zawijanie tekstu
-                                    //     overflow: TextOverflow.fade,
-                                    //   ),
-                                    // ),
-                                    // SizedBox(width: 20),
-                                    // SizedBox(
-                                    //   width: 40,
-                                    //   child: TextFormField(
-                                    //       initialValue:
-                                    //           nowyNrPasieki.toString(),
-                                    //       keyboardType: TextInputType.number,
-                                    //       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                                    //       decoration: InputDecoration(
-                                    //         labelText: (''),
-                                    //         labelStyle:
-                                    //             TextStyle(color: Colors.black),
-                                    //         //hintText:
-                                    //         //   (AppLocalizations.of(context)!
-                                    //         //       .apiaryNr),
-                                    //       ),
-                                    //       validator: (value) {
-                                    //         // if (value!.isEmpty) {
-                                    //         //   return (AppLocalizations.of(
-                                    //         //           context)!
-                                    //         //       .enter);
-                                    //         // }
-                                    //         nowyNrPasieki = int.parse(value!);
-                                    //         return null;
-                                    //       }),
-                                    // ),
+                                   
 //numer ula
                                   SizedBox(
                                     width: 150,
@@ -424,8 +236,7 @@ String test = 'test start';
                                         labelText:
                                             (AppLocalizations.of(context)!.hIveNr),
                                         labelStyle: TextStyle(color: Colors.black),
-                                        hintText:
-                                            (AppLocalizations.of(context)!.hIveNr),
+                                        //hintText:(AppLocalizations.of(context)!.hIveNr),
                                       ),
                                       validator: (value) {
                                         if (value!.isEmpty) {
@@ -436,46 +247,7 @@ String test = 'test start';
                                      }
                                     ), 
                                   ),
-                                    // SizedBox(width: 20),
-                                    // SizedBox(
-                                    //   width: 70,
-                                    //   child: Text(
-                                    //     AppLocalizations.of(context)!.hIveNr +
-                                    //         ':',
-                                    //     style: TextStyle(
-                                    //       //fontWeight: FontWeight.bold,
-                                    //       fontSize: 15,
-                                    //       color: Colors.black,
-                                    //     ),
-                                    //     softWrap: true, //zawijanie tekstu
-                                    //     overflow: TextOverflow.fade,
-                                    //   ),
-                                    // ),
-                                    // SizedBox(width: 20),
-                                    // SizedBox(
-                                    //   width: 40,
-                                    //   child: TextFormField(
-                                    //       initialValue: nowyNrUla.toString(),
-                                    //       keyboardType: TextInputType.number,
-                                    //       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                                    //       decoration: InputDecoration(
-                                    //         labelText: (''),
-                                    //         labelStyle:
-                                    //             TextStyle(color: Colors.black),
-                                    //         //hintText:
-                                    //         //   (AppLocalizations.of(context)!
-                                    //         //       .hiveNr),
-                                    //       ),
-                                    //       validator: (value) {
-                                    //         // if (value!.isEmpty) {
-                                    //         //   return (AppLocalizations.of(
-                                    //         //           context)!
-                                    //         //       .enter);
-                                    //         // }
-                                    //         nowyNrUla = int.parse(value!);
-                                    //         return null;
-                                    //       }),
-                                    // ),
+                                    
                                   ]),
 //tytul
                                SizedBox(
@@ -506,52 +278,7 @@ String test = 'test start';
                                     nowyTytul = value;
                                     return null;
                                   }),
-                              
-                              
-                              // Row(
-                              //     //mainAxisAlignment: MainAxisAlignment.center,
-                              //     mainAxisAlignment: MainAxisAlignment.start,
-                              //     crossAxisAlignment: CrossAxisAlignment.end,
-                              //     children: <Widget>[
-                              //       SizedBox(
-                              //         width: 60,
-                              //         child: Text(
-                              //           AppLocalizations.of(context)!.tItle +
-                              //               ':',
-                              //           style: TextStyle(
-                              //             //fontWeight: FontWeight.bold,
-                              //             fontSize: 15,
-                              //             color: Colors.black,
-                              //           ),
-                              //           softWrap: true, //zawijanie tekstu
-                              //           overflow: TextOverflow.fade,
-                              //         ),
-                              //       ),
-                              //       SizedBox(width: 20),
-                              //       SizedBox(
-                              //         width: 200,
-                              //         child: TextFormField(
-                              //             initialValue: nowyTytul.toString(),
-                              //             keyboardType: TextInputType.text,
-                              //             decoration: InputDecoration(
-                              //               labelText: (''),
-                              //               labelStyle:
-                              //                   TextStyle(color: Colors.black),
-                              //               //hintText:
-                              //               //   (AppLocalizations.of(context)!
-                              //               //       .apiaryNr),
-                              //             ),
-                              //             validator: (value) {
-                              //               // if (value!.isEmpty) {
-                              //               //   return (AppLocalizations.of(
-                              //               //           context)!
-                              //               //       .enter);
-                              //               // }
-                              //               nowyTytul = value;
-                              //               return null;
-                              //             }),
-                              //       ),
-                              //     ]),
+    
 
 //notatka
                               SizedBox(
@@ -610,134 +337,7 @@ String test = 'test start';
                                     Text(AppLocalizations.of(context)!.toDo),
                                   ]),
 
-// //zasób
 
-//                               Row(
-//                                   mainAxisAlignment: MainAxisAlignment.start,
-//                                   crossAxisAlignment: CrossAxisAlignment.end,
-//                                   children: <Widget>[
-//                                     DropdownButton(
-//                                       style: TextStyle(
-//                                         fontSize: 18,
-//                                         color: Colors.black54,
-//                                       ),
-//                                       value: nowyZasobId, //
-//                                       items: [
-//                                         DropdownMenuItem(
-//                                             child: Text(
-//                                                 AppLocalizations.of(context)!
-//                                                     .honey),
-//                                             value: 1),
-//                                         DropdownMenuItem(
-//                                             child: Text(
-//                                                 AppLocalizations.of(context)!
-//                                                     .beePollen),
-//                                             value: 2),
-//                                         DropdownMenuItem(
-//                                             child: Text(
-//                                                 AppLocalizations.of(context)!
-//                                                     .perga),
-//                                             value: 3),
-//                                         DropdownMenuItem(
-//                                             child: Text(
-//                                                 AppLocalizations.of(context)!
-//                                                     .wax),
-//                                             value: 4),
-//                                         DropdownMenuItem(
-//                                             child: Text('propolis'), value: 5),
-
-//                                         // DropdownMenuItem(
-//                                         //     child: Text(
-//                                         //         AppLocalizations.of(context)!
-//                                         //             .toDo),
-//                                         //     value: 13),
-//                                         // DropdownMenuItem(
-//                                         //     child: Text(
-//                                         //         AppLocalizations.of(context)!
-//                                         //             .isDone),
-//                                         //     value: 14),
-//                                       ], //lista elementów do wyboru
-//                                       onChanged: (newValue) {
-//                                         //wybrana nowa wartość - nazwa dodatku
-//                                         setState(() {
-//                                           nowyZasobId =
-//                                               newValue!; // ustawienie nowej wybranej nazwy dodatku
-//                                           //print('nowy zasób = $nowyZasobId');
-//                                         });
-//                                       }, //onChangeDropdownItemWar1,
-//                                     ),
-
-//ilość
-
-                              //   SizedBox(
-                              //     width: 20,
-                              //   ),
-
-                              //   //if (nowyZasob < 13)
-                              //   SizedBox(
-                              //     width: 70,
-                              //     child: TextFormField(
-                              //         initialValue: nowyIlosc.toString(),
-                              //         keyboardType: TextInputType.number,
-                              //         decoration: InputDecoration(
-                              //           labelText:
-                              //               (AppLocalizations.of(context)!
-                              //                   .quantity),
-                              //           labelStyle:
-                              //               TextStyle(color: Colors.black),
-                              //           hintText: (''),
-                              //         ),
-                              //         validator: (value) {
-                              //           if (value!.isEmpty ||
-                              //               value == '0') {
-                              //             return (AppLocalizations.of(
-                              //                         context)!
-                              //                     .enter +
-                              //                 ' ' +
-                              //                 AppLocalizations.of(context)!
-                              //                     .quantity);
-                              //           }
-                              //           //print('nowaWartosc = $nowaWartosc');
-                              //           nowyIlosc = double.parse(value);
-                              //           return null;
-                              //         }),
-                              //   ),
-
-                              //   SizedBox(
-                              //     width: 20,
-                              //   ),
-                              //   nowyZasobId! <
-                              //           4 //dla miodu, pyłku i pierzgi
-                              //       ? DropdownButton(
-                              //           style: TextStyle(
-                              //             fontSize: 18,
-                              //             color: Colors.black54,
-                              //           ),
-                              //           value: nowyMiara, //
-                              //           items: [
-                              //             DropdownMenuItem(
-                              //                 child: Text('l'), value: 1),
-                              //             DropdownMenuItem(
-                              //                 child: Text('kg'), value: 2),
-                              //           ], //lista elementów do wyboru
-                              //           onChanged: (newValue) {
-                              //             //wybrana nowa wartość - nazwa dodatku
-                              //             setState(() {
-                              //               nowyMiara =
-                              //                   newValue; // ustawienie nowej wybranej nazwy dodatku
-                              //               //print('nowy miara = $nowyMiara');
-                              //             });
-                              //           }, //onChangeDropdownItemWar1,
-                              //         )
-                              //       //dla wosku i propolisu tylko w kg
-                              //       : Text(
-                              //           'kg',
-                              //           style: TextStyle(
-                              //             fontSize: 18,
-                              //             color: Colors.grey,
-                              //           ),
-                              //         ),
-                              // ]),
 //uwagi
                               SizedBox(
                                 height: 20,
@@ -791,7 +391,9 @@ String test = 'test start';
                             //zmień
                             MaterialButton(
                               height: 50,
-                              shape: const StadiumBorder(),
+                              shape: const StadiumBorder(
+                                side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                                ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
                                   // if (nowyZasobId! >= 4) nowyMiara = 2;
@@ -843,7 +445,7 @@ String test = 'test start';
                                   (AppLocalizations.of(context)!.saveZ) +
                                   '   '), //Modyfikuj
                               color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
+                              textColor: Colors.black,
                               disabledColor: Colors.grey,
                               disabledTextColor: Colors.white,
                             ),

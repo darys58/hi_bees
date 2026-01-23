@@ -37,7 +37,7 @@ import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/weather.dart';
 import '../models/weathers.dart';
-import '../models/dodatki1.dart';
+//import '../models/dodatki1.dart';
 //void main() {
 //  runApp(MyApp());
 //}
@@ -180,6 +180,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
   String matka3 = '';
   String matka4 = '';
   String matka5 = '';
+  String rodzajUla = '';
+  String typUla = '';
 
   int _korpusNr = 0; //aktualny numer korpusa
   int _typ = 0; //2-korpus, 1-półkorpus
@@ -273,9 +275,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
     if (_isInit) {
       formattedDate = formatter.format(now);
 
-      final dod1Data = Provider.of<Dodatki1>(context);
-      final dod1 = dod1Data.items;
-      zwloka = int.parse(dod1[0].h);
+      // final dod1Data = Provider.of<Dodatki1>(context);
+      // final dod1 = dod1Data.items;
+      // zwloka = int.parse(dod1[0].h);
       //Locale myLocale = Localizations.localeOf(context);
       //print(myLocale);
       // Provider.of<Frames>(context, listen: false).fetchAndSetFrames().then((_) {
@@ -4163,7 +4165,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
       //uzyskanie dostępu do danych z tabeli 'pogoda'
       final pogodaData = Provider.of<Weathers>(context, listen: false);
       List<Weather> pogoda = pogodaData.items.where((ap) {
-        return ap.id.contains(numerPasieki.toString());
+        return ap.id == (numerPasieki.toString());
         //'numerPasieki'; // jest ==  a było contains ale dla typu String
       }).toList();
 
@@ -4314,7 +4316,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
         //pobranie danych o ulu bo mogą byc dane do których trzeba dopisać dodaną wartość do belki
         final hiveData = Provider.of<Hives>(context, listen: false);
         hive = hiveData.items.where((element) {
-          return element.id.contains('$nrXXOfApiary.$nrXXOfHive');
+          return element.id == ('$nrXXOfApiary.$nrXXOfHive');
         }).toList();
 
       //jezeli ul istnieje
@@ -4343,6 +4345,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
         matka3 = hive[0].matka3;
         matka4 = hive[0].matka4;
         matka5 = hive[0].matka5;
+        rodzajUla = hive[0].h1;
+        typUla = hive[0].h2;
       } else {
         ikona = 'green'; //hive[0].ikona;
         ramek = hive[0].ramek;
@@ -4365,6 +4369,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
         matka3 = hive[0].matka3;
         matka4 = hive[0].matka4;
         matka5 = hive[0].matka5;
+        rodzajUla = hive[0].h1;
+        typUla = hive[0].h2;
       }
       // print(
       //     'przeglad hive poczatek korpus ${korpusNr}: t${trut}, c${czerw}, l${larwy}, j${jaja}, p${pierzga}, m${miod}, d${dojrzaly},w${weza}, s${susz}, m${matka}, mt${mateczniki}, dm${usunmat} , td${todo} m1${matka1} m2${matka2} m3${matka3} m4${matka4} m5${matka5}');
@@ -4750,8 +4756,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
       matka3,
       matka4,
       matka5,
-      '0',
-      '0',
+      rodzajUla,
+      typUla,
       '0',
       1, //nieaktualne - zmiana zasobu
     ).then((_) {
@@ -4788,20 +4794,64 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
     // zapisInfoDoBazy('inspection', AppLocalizations.of(context)!.inspection,
     //     globals.ikonaUla, '');
-    Infos.insertInfo(
-        '$formattedDate.$nrXXOfApiary.$nrXXOfHive.inspection.${AppLocalizations.of(context)!.inspection}', //id
-        formattedDate, //data
-        nrXXOfApiary, //pasiekaNr
-        nrXXOfHive, //ulNr
-        'inspection', //karegoria
-        AppLocalizations.of(context)!.inspection, //parametr
-        globals.ikonaUla, //wartosc
-        '', //miara
-        icon, //ikona pogody
-        '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
-        formatedTime, //czas
-        '', //uwagi
-        0); //niezarchiwizowane
+    
+    //zapis info o przegladzie do bazy (podczas przeglądu tylko raz na poczatku przegladu zeby była godzina rozpoczecia przegladu i ewentualnie notatka jesli kiedykolwiek sie pojawi zeby jej nie stracić)
+    //więc jeśli nie zapisywano jeszcze info przegladu lub zpisano info o innym przeglądzie niz obecny określony przez datę
+    if(globals.dataAktualnegoPrzegladu == '' || globals.dataAktualnegoPrzegladu != '$formattedDate' || globals.ulID != nrXXOfHive || globals.pasiekaID != nrXXOfApiary){
+      // to pobranie wszystkich info dla ula
+      final infoData = Provider.of<Infos>(context, listen: false);
+      //pobranie info o tym przeglądzie jezeli jest (czyli zgadza się data, nr ula, kategoria i parametr)
+      List<Info> info = infoData.items.where((element) { 
+        return element.data == formattedDate && element.ulNr == nrXXOfHive && element.kategoria == 'inspection' && element.parametr == '${AppLocalizations.of(context)!.inspection}'; //data, nr ula, kategoria i parametr
+      }).toList();
+      //i jezeli wpis o przeglądzie juz jest to
+      if(info.isNotEmpty){ 
+        //to zapisz w globals datę tego przeglądu
+        globals.dataAktualnegoPrzegladu = '$formattedDate';
+        //print('info = ${info[0].id}, kategoria = ${info[0].kategoria}, czas = ${info[0].czas}');
+      }else{ //a jezeli jeszcze nie ma takego wpisu
+        //print('jeszcze nie ma wpisu');
+        //to zapis przegladu do info 'inspection"
+        Infos.insertInfo(
+          '$formattedDate.$nrXXOfApiary.$nrXXOfHive.inspection.${AppLocalizations.of(context)!.inspection}', //id
+          formattedDate, //data
+          nrXXOfApiary, //pasiekaNr
+          nrXXOfHive, //ulNr
+          'inspection', //karegoria
+          AppLocalizations.of(context)!.inspection, //parametr
+          ikona, //wartosc
+          '', //miara
+          '',//icon, //ikona pogody
+          '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+          formatterHm.format(DateTime.now()), //formatedTime, //czas
+          '', //uwagi
+          0 //arch
+        ).then((_) {
+          Provider.of<Infos>(context, listen: false)
+              .fetchAndSetInfosForHive(nrXXOfApiary,nrXXOfHive)
+              .then((_) {
+            // print(
+            //     'edit_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
+          });
+        });
+      }
+    }//else{print('juz jest wpis = ${globals.dataAktualnegoPrzegladu}');}
+    
+    
+    // Infos.insertInfo(
+    //     '$formattedDate.$nrXXOfApiary.$nrXXOfHive.inspection.${AppLocalizations.of(context)!.inspection}', //id
+    //     formattedDate, //data
+    //     nrXXOfApiary, //pasiekaNr
+    //     nrXXOfHive, //ulNr
+    //     'inspection', //karegoria
+    //     AppLocalizations.of(context)!.inspection, //parametr
+    //     globals.ikonaUla, //wartosc
+    //     '', //miara
+    //     icon, //ikona pogody
+    //     '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+    //     formatedTime, //czas
+    //     '', //uwagi
+    //     0); //niezarchiwizowane
 
     platform == 'android'
         ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
@@ -4859,7 +4909,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               final hiveData = Provider.of<Hives>(context, listen: false);
               hive = hiveData.items.where((element) {
                 //to wczytanie danych ula
-                return element.id.contains('$nrXXOfApiary.${hives[i].ulNr}');
+                return element.id == ('$nrXXOfApiary.${hives[i].ulNr}');
               }).toList();
 
               if (hive.isNotEmpty) {
@@ -4884,6 +4934,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 matka3 = hive[0].matka3;
                 matka4 = hive[0].matka4;
                 matka5 = hive[0].matka5;
+                rodzajUla = hive[0].h1;
+                typUla = hive[0].h2;
               }
             });
             // print(
@@ -4919,8 +4971,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
               matka3, //?????????/
               matka4,
               matka5,
-              '0',
-              '0',
+              rodzajUla,
+              typUla,
               '0',
               0,
             );
@@ -4976,7 +5028,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
           final hiveData = Provider.of<Hives>(context, listen: false);
           hive = hiveData.items.where((element) {
             //to wczytanie danych ula
-            return element.id.contains('$nrXXOfApiary.$nrXXOfHive');
+            return element.id == ('$nrXXOfApiary.$nrXXOfHive');
           }).toList();
   
         if (hive.isNotEmpty) {
@@ -5002,6 +5054,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
           matka3 = hive[0].matka3;
           matka4 = hive[0].matka4;
           matka5 = hive[0].matka5;
+          rodzajUla = hive[0].h1;
+          typUla = hive[0].h2;
         } else {
           korpusNr = 0;
         }
@@ -5150,8 +5204,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
           matka3,
           matka4,
           matka5,
-          '0',
-          '0',
+          rodzajUla,
+          typUla,
           '0',
           0,
         ).then((_) {
@@ -6285,6 +6339,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -6456,6 +6511,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -6600,6 +6656,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -6697,6 +6754,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -6785,6 +6843,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -6861,6 +6920,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -6986,6 +7046,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -7097,6 +7158,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -7209,6 +7271,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -7417,7 +7480,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
             TextButton(
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.pop(context);
+                //Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -7484,6 +7549,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -7554,11 +7620,11 @@ class _VoiceScreenState extends State<VoiceScreen> {
     List<Frame> frames = [];
     if(_ulPo)
       frames = framesData.items.where((fr) {
-        return fr.data.contains(wybranaData) && fr.ramkaNrPo > 0; //tylko ramki "Po" 
+        return fr.data == (wybranaData) && fr.ramkaNrPo > 0; //tylko ramki "Po" 
       }).toList();
     else
       frames = framesData.items.where((fr) {
-        return fr.data.contains(wybranaData) && fr.ramkaNr > 0; //tylko ramki "Po" 
+        return fr.data == (wybranaData) && fr.ramkaNr > 0; //tylko ramki "Po" 
       }).toList();
     // print(
     //     'frames_screen - ilość stron ramek w pasiece ${globals.pasiekaID} ulu ${globals.ulID}');
@@ -7576,7 +7642,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
     //info z wybranej daty dla ula
     final infosData = Provider.of<Infos>(context, listen: false);
     List<Info> infos = infosData.items.where((inf) {
-      return inf.data.contains(wybranaData);
+      return inf.data == (wybranaData);
     }).toList();
     // print(' infos  - dane z bazy::::::::::::::::::::');
     // for (var i = 0; i < infos.length; i++) {
@@ -7632,6 +7698,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               child: Text(AppLocalizations.of(context)!.closeHelp),
               onPressed: () {
                 Navigator.of(context).pop();
+                openDialog = false;
               },
             ),
           ],
@@ -7651,12 +7718,11 @@ class _VoiceScreenState extends State<VoiceScreen> {
     //final hiveId = ModalRoute.of(context)!.settings.arguments as String; // is the id!
 
     final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
-        //backgroundColor: const Color.fromRGBO(55, 125, 255, 1),
-        backgroundColor:
-            Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)));
+      //backgroundColor: const Color.fromRGBO(55, 125, 255, 1),
+      backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)));
 
 //dla mniejszych ekranów zmiana wysokośći wiersza  'Save' - zapis zasobu do bazy
 //sony Z3 592px, mały ios 568px
@@ -7699,7 +7765,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
         final hiveData = Provider.of<Hives>(context, listen: false);
         hive = hiveData.items.where((element) {
           //to wczytanie danych ula jezeli został otwarty
-          return element.id.contains('$nrXXOfApiary.$nrXXOfHive');
+          return element.id == ('$nrXXOfApiary.$nrXXOfHive');
         }).toList();
             // print('voice hive (${hive[0].matka1} != '' || ${hive[0].matka2} != '' || ${hive[0].matka3} != '' || ${hive[0].matka4} != '' || ${hive[0].matka5} != '' )');
             // print(
@@ -7709,6 +7775,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
       }); 
     }
 
+print('openDialog = $openDialog');
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(

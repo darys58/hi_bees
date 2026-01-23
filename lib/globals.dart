@@ -4,11 +4,14 @@ library cobytu.globals;
 int pasiekaID = 1; //aktualnie wybrana pasieka - numer pasieki
 int ulID = 1; //aktualnie wybrany ul  - numer ula
 int iloscRamek = 10; //ilość ramek w korpusie ula
+String typUla = 'WIELKOPOLSKI'; //typ aktualnie wybranego ula
 String dataInspekcji = ''; //data inspekcji dla wybranego elementu listy info
 String ikonaInspekcji = ''; //ikona inspekcji dla wybranego elementu listy info
 int ileRamek = 0; //ile ramek w "edit inspection" - szczegóły inspekcji
 String aktualnaKategoriaInfo = 'inspection'; //aktualnie wybrana kategoria Info
+String dataAktualnegoPrzegladu = ''; //zeby nie nadpisywać info o przeglądzie by nie usuwać godziny rozpoczęcia przegladu i notatki
 String rokStatystyk = DateTime.now().toString().substring(0, 4); //rok wybrany w Info do ststystyk\
+String rokMatek = '20'; //rok wybrany w ZARZADZANIE MATKAMI
 double aktualTemp = 0.0; //aktualna temperatura
 String stopnie = '\u2103'; //nazwa jednostki temperatury
 
@@ -21,6 +24,7 @@ String jezyk = ''; //język obsługiwany przez aplikację
 //String memJezyk = 'system'; //język z systemu "system" lub z ustawień w aplikacji 
 String ikonaUla = 'green'; //
 String ikonaPasieki = 'green'; //
+String widokMatek = 'activ'; //lista matek w ZARZADZANIE MATKAMI (all, activ, living, lost) 
 
 var nieaktualnaPogoda = DateTime(2024,6,1,0,0,0); //czas kiedy wyświetlił się ostatni komunikat o braku aktualnej pogody
 String dataWpisu = DateTime.now().toString().substring(0, 10);
@@ -42,12 +46,17 @@ int korpus = 2;
 int rozmiarRamki = 2;
 int stronaRamki = 2;
 int numeryWieluRamek = 1; //0- xx/0 , 1- xx/xx, 2- 0/xx  (przy dodawaniu/edycji wielu ramek)
+double lupaRamek = 1.0; //powiększanie widoku ula
 
 bool odswiezBelkiUli = false;//czy odswiezyć belki po imporcie danych lub ręcznie ikoną odswiezania
 bool odswiezBelkiUliDL = false;//czy odswiezyć ręcznie ikoną odswiezania
+bool odswiezBelkiUliZ = false;//czy odswiezyć ręcznie ikoną odswiezania
 
 String wykresZbiory = 'miod'; //wyświetlany wykres "miod" lub "pylek"
 
+int raportNrStrony = 1; //numer strony dla wykresu raportu zbiorów lub leczenia
+int raportIleUliNaStronie = 20; //ilość uli na stronie w raporcie zbiorów lub leczenia (od 1 do 20)
+String rokRaportow = 'wszystkie'; //DateTime.now().toString().substring(0, 4); //rok wybrany w Info do raportów
 
 //z/do tabeli Memory
 //String id = '';

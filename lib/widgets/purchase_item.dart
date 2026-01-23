@@ -138,7 +138,7 @@ class _PurchaseItemState extends State<PurchaseItem> {
                 TextButton(
                   onPressed: () => {
                     DBHelper.deleteZakupy(zakup.id).then((_) {
-                      print('3... kasowanie elementu zakupu');
+                      //print('3... kasowanie elementu zakupu');
 
                       Navigator.of(context)
                           .pop(true); //skasowanie elementu listy
@@ -150,7 +150,7 @@ class _PurchaseItemState extends State<PurchaseItem> {
                       Provider.of<Purchases>(context, listen: false)
                           .fetchAndSetZakupy()
                           .then((_) {
-                        print('4... aktualizacja zakupow w sale_item');
+                        //print('4... aktualizacja zakupow w sale_item');
                       });
                     }),
                   },
