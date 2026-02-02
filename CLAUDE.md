@@ -184,6 +184,26 @@ Główne:
 
 ---
 
+## Budowanie i testowanie
+
+**Zakaz budowania w kontenerach:**
+- NIGDY nie próbuj budować projektu w kontenerach Docker ani tworzyć obrazów Docker. Użytkownik testuje kod lokalnie na swoim urządzeniu.
+
+**Weryfikacja kompilacji:**
+- Zamiast pełnego buildu (`flutter build`), sprawdzaj poprawność kodu za pomocą:
+  ```bash
+  flutter pub get
+  flutter analyze
+  ```
+- Te komendy wystarczą do wykrycia błędów składniowych i problemów z zależnościami.
+
+**Standardy kodu:**
+- Każda zmiana MUSI przechodzić analizę statyczną (`flutter analyze`) bez błędów.
+- Nie wprowadzaj błędów składniowych, które uniemożliwiłyby użytkownikowi manualne uruchomienie projektu.
+- Przed zakończeniem pracy nad zmianą, upewnij się, że kod kompiluje się poprawnie.
+
+---
+
 ## Uruchomienie projektu
 
 ```bash
