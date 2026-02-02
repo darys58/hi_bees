@@ -1253,7 +1253,23 @@
     "nfcTagReadError3": "Błąd odczytu tagu NFC 3",
     "@nfcTagReadError3": {},
     "nfcTagReadError4": "Błąd odczytu tagu NFC 4",
-    "@nfcTagReadError4": {}
-    
+    "@nfcTagReadError4": {},
+    "calculator": "Calculator",
+    "@calculator": {},
+    "sugarSyrup32": "Sugar syrup 3:2",
+    "@sugarSyrup32": {},
+    "sugar": "Sugar",
+    "@sugar": {},
+    "water": "Water",
+    "@water": {},
+    "result": "Result",
+    "@result": {},
+    "resultLiters": "Result in liters",
+    "@resultLiters": {},
+    "resultKilograms": "Result in kilograms",
+    "@resultKilograms": {},
+    "syrupCalculator": "Syrup calculator",
+    "@syrupCalculator": {}
+
 }
     

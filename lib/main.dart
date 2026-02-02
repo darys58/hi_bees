@@ -40,6 +40,8 @@ import './screens/add_queen_screen.dart';
 import './screens/apiary_weather_5days.dart';
 import './screens/raport_screen.dart';
 import './screens/raport2_screen.dart';
+import './screens/calculator_screen.dart';
+import './screens/syrup_calculator_screen.dart';
 //import './screens/languages_screen.dart';
 
 import './models/apiarys.dart';
@@ -251,6 +253,8 @@ class _MyAppState extends State<MyApp> {
           Weather5DaysScreen.routeName: (ctx) => Weather5DaysScreen(),
           RaportScreen.routeName: (ctx) => RaportScreen(),
           Raport2Screen.routeName: (ctx) => Raport2Screen(),
+          CalculatorScreen.routeName: (ctx) => CalculatorScreen(),
+          SyrupCalculatorScreen.routeName: (ctx) => SyrupCalculatorScreen(),
          // LanguagesScreen.routeName: (ctx) => LanguagesScreen(),
           //FiltersScreen.routeName: (ctx) => FiltersScreen(_filters, _setFilters),
         },

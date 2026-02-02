@@ -626,6 +626,14 @@
     "nfcTagReadError1": "Błąd odczytu tagu NFC 1",
     "nfcTagReadError2": "Błąd odczytu tagu NFC 2",
     "nfcTagReadError3": "Błąd odczytu tagu NFC 3",
-    "nfcTagReadError4": "Błąd odczytu tagu NFC 4"
+    "nfcTagReadError4": "Błąd odczytu tagu NFC 4",
+    "calculator": "Kalkulator",
+    "sugarSyrup32": "Syrop cukrowy 3:2",
+    "sugar": "Cukier",
+    "water": "Woda",
+    "result": "Wynik",
+    "resultLiters": "Wynik w litrach",
+    "resultKilograms": "Wynik w kilogramach",
+    "syrupCalculator": "Kalkulator syropu"
 
 }

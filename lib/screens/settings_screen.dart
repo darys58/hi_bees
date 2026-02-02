@@ -7,6 +7,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../screens/import_screen.dart';
 import '../screens/about_screen.dart';
 import '../screens/parametr_screen.dart';
+import '../screens/calculator_screen.dart';
 //import '../screens/languages_screen.dart';
 //import '../models/memory.dart';
 
@@ -180,6 +181,19 @@ class SettingsScreen extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(Icons.tune),
                   title: Text(AppLocalizations.of(context)!.pArameterization),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
+//kalkulator
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushNamed(CalculatorScreen.routeName);
+              },
+              child: Card(
+                child: ListTile(
+                  leading: Icon(Icons.calculate),
+                  title: Text(AppLocalizations.of(context)!.calculator),
                   trailing: Icon(Icons.chevron_right),
                 ),
               ),
