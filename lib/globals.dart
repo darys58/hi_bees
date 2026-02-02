@@ -1,5 +1,5 @@
 library cobytu.globals;
-
+String? status = 'xxx';
 //bool isInit = false; //true jezeli była modyfikowana baza - 'ramka'
 int pasiekaID = 1; //aktualnie wybrana pasieka - numer pasieki
 int ulID = 1; //aktualnie wybrany ul  - numer ula

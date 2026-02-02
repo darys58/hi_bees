@@ -611,8 +611,21 @@
     "hEight": "Wysokość",
     "dImensionsSmallFrame": "Wymiary wewnętrzne małej ramki",
     "dImensionsBigFrame": "Wymiary wewnętrzne dużej ramki",
-    "pArametersDetermine": "Parametry określają rozmiar wewnętrzny ramek używanych w ulu TYP A, który wykorzystany zostanie do obliczania zbiorów miodu na podstawie ilości odebranych ramek z tego ula."
-    
-
+    "pArametersDetermine": "Parametry określają rozmiar wewnętrzny ramek używanych w ulu TYP A, który wykorzystany zostanie do obliczania zbiorów miodu na podstawie ilości odebranych ramek z tego ula.",
+    "nfcScanning": "Skanowanie NFC",
+    "nfcHoldNearTag": "Przyłóż telefon do tagu NFC",
+    "nfcNotAvailable": "NFC nie jest dostępne na tym urządzeniu",
+    "nfcTagReadError": "Błąd odczytu tagu NFC",
+    "nfcAssignTag": "Przypisz tag do ula",
+    "nfcSelectApiary": "Wybierz pasiekę",
+    "nfcSelectHive": "Wybierz ul",
+    "nfcAssign": "Przypisz",
+    "nfcTagAssigned": "Tag NFC został przypisany do ula",
+    "nfcNoHivesWithoutTag": "Brak uli bez przypisanego tagu NFC",
+    "nfcButton": "NFC",
+    "nfcTagReadError1": "Błąd odczytu tagu NFC 1",
+    "nfcTagReadError2": "Błąd odczytu tagu NFC 2",
+    "nfcTagReadError3": "Błąd odczytu tagu NFC 3",
+    "nfcTagReadError4": "Błąd odczytu tagu NFC 4"
 
 }

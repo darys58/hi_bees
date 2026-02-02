@@ -36,8 +36,8 @@ class InfoItem extends StatelessWidget {
     //   Color.fromARGB(255, 210, 170, 49),
     // ];
     List<Hive> hive = [];
+   
     
- 
     return Dismissible(
       //usuwalny element listy
       key: ValueKey(info.id),
@@ -126,7 +126,7 @@ class InfoItem extends StatelessWidget {
                               hive[0].matka5,
                               hive[0].h1,
                               hive[0].h2,
-                              '0',
+                              hive[0].h3,
                               0,
                             ).then((_) {
                               //pobranie do Hives_items z tabeli ule
@@ -238,9 +238,30 @@ class InfoItem extends StatelessWidget {
                             ),
                           );
                         }),
-                      }
-                    else //jezeli to nie jest inspection (kasowanie innych info)
-                      {
+                      }else if(info.kategoria == 'equipment' && info.parametr == 'tag NFC'){
+                       print('usuwanie info.id = ${info.id}'),
+                        //usuniecie innfo otagu NFC
+                        DBHelper.deleteInfo(info.id).then((_) {
+                        print('usuniecie info z NFC');
+
+                        //usunięcie identyfikatora tagu NFC z danych o ulu
+                        DBHelper.updateUle('${globals.pasiekaID}.${globals.ulID}', 'h3', '').then((_) {
+                        print('kasowane h3 w ulu ${globals.ulID}');
+
+                          //odświerzenie danych o ulach po modyfikacji pola h3
+                          Provider.of<Hives>(context, listen: false)
+                            .fetchAndSetHives(globals.pasiekaID)
+                            .then((_) async{
+  print('odświeenie danych o ulu');
+
+                            });
+                          });
+
+                        }),        
+                      
+                      
+                      }else{ //jezeli to nie jest inspection (kasowanie innych info)
+                      
                         //usuwanie info dla pozostałych kategorii - dla pasieki i ula
                         DBHelper.deleteInfo(info.id).then((_) {
                           //print('1.1... kasowanie info');
@@ -285,7 +306,7 @@ class InfoItem extends StatelessWidget {
                               hive[0].matka5,
                               hive[0].h1, //rodzaj ula
                               hive[0].h2,
-                              '0',
+                              hive[0].h3,
                               0,
                             ).then((_) {
                               //pobranie do Hives_items z tabeli ule
@@ -563,14 +584,16 @@ class InfoItem extends StatelessWidget {
                               ? const Color.fromARGB(255, 244, 208, 208)
                               : info.data.substring(0, 4) == globals.rokStatystyk 
                                 ? null 
-                                : Colors.grey[200],                    
+                                : Colors.grey[200],
                     onTap: () {
                       //_showAlert(context, 'Edycja', '${frame.id}');
                       // globals.dataInspekcji = frame.data;
-                      Navigator.of(context).pushNamed(
-                        InfosEditScreen.routeName,
-                        arguments: {'idInfo': info.id},
-                      );
+                     info.parametr == 'tag NFC' 
+                      ? null
+                      : Navigator.of(context).pushNamed(
+                          InfosEditScreen.routeName,
+                          arguments: {'idInfo': info.id},
+                        );
                     },
 //leading - grafiki                    
                     leading: CircleAvatar(
@@ -615,12 +638,12 @@ class InfoItem extends StatelessWidget {
 //jezeli to matka to matkaID na poczatku wiersza z pola "pogoda" + parametr                         
                               info.kategoria == 'queen' 
                                 ? TextSpan(
-                                    text: ('ID${info.pogoda} ${info.parametr} '),
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        //fontWeight: FontWeight.bold,
-                                        color: Color.fromARGB(255, 0, 0, 0)),
-                                  )
+                                  text: ('ID${info.pogoda} ${info.parametr} '),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      //fontWeight: FontWeight.bold,
+                                      color: Color.fromARGB(255, 0, 0, 0)),
+                                )
 //jezeli to nie matka to: sam parametr                         
                                 : TextSpan(
                                   text: ('${info.parametr} '),
@@ -628,7 +651,7 @@ class InfoItem extends StatelessWidget {
                                       fontSize: 16,
                                       //fontWeight: FontWeight.bold,
                                       color: Color.fromARGB(255, 0, 0, 0)),
-                                  ),
+                                ),
 //jezeli to matka (3)unasiennienie to: wartość zmieniana                             
                             info.parametr == AppLocalizations.of(context)!.queen + " -"
                               ? info.wartosc == 'dziewica'
@@ -680,21 +703,31 @@ class InfoItem extends StatelessWidget {
                                       color: Color.fromARGB(255, 0, 0, 0)),
                                     )
 //jezeli to nie matka (3) i nie stan rodziny to: wartość  bez modyfikacji                              
-                                  : TextSpan(
-                                    text: ('${info.wartosc.replaceAll('.', ',')} '),
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color.fromARGB(255, 0, 0, 0)),
-                                  ),
+                                  : info.parametr == 'tag NFC' 
+                                    ? TextSpan(
+                                      text: ('\nUID: ${info.wartosc}'), //UID taga NFC
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          //fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                    :TextSpan(
+                                      text: ('${info.wartosc.replaceAll('.', ',')} '),
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+ 
+ 
  //drugi wiersz cd.: miara lub inne teksty w zalezności od parametru                        
- //jezeli to "ileRamek =" to nowa linia bo bedzie typ i rodzaj ula
+                          //jezeli to "ileRamek =" to nowa linia bo bedzie typ i rodzaj ula
                           if(info.parametr == AppLocalizations.of(context)!.numberOfFrame + " = ")
                             TextSpan(text: ('\n')),
 // i warunek tak jak wyzej to: rodzaj ula i typ ula
                           info.parametr == AppLocalizations.of(context)!.numberOfFrame + " = "
                           ? TextSpan(
-                              text: (info.pogoda + ' ' + info.miara ), //rodzaj ula
+                            text: (info.pogoda + ' ' + info.miara ), //rodzaj ula
                               style: TextStyle(
                                 fontSize: 16,
                                 //fontWeight: FontWeight.bold,
@@ -715,13 +748,13 @@ class InfoItem extends StatelessWidget {
                               ? TextSpan(
                                   text: (''), //nie wyświetlanie ilości dm2 węzy
                                 )
-                              : TextSpan(
-                                  text: (info.miara ), //np: bez rodzaju ula, bez 0 przy braku kraty,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    //fontWeight: FontWeight.bold,
-                                    color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
+                            : TextSpan(
+                              text: (info.miara ), //np: bez rodzaju ula, bez 0 przy braku kraty,
+                            style: TextStyle(
+                                fontSize: 16,
+                                //fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 0, 0, 0)),
+                          ),
 //trzeci wiersz: uwagi                          
                           TextSpan(
                             text: '\n${info.uwagi}',
@@ -734,7 +767,9 @@ class InfoItem extends StatelessWidget {
                     //     '${info.parametr} ${info.wartosc} ${info.miara}',
                     //     style:
                     //         const TextStyle(fontSize: 18, color: Colors.black)),
-                    trailing: const Icon(Icons.edit)
+                    trailing: info.parametr == 'tag NFC' 
+                                ? null //brak ikony edit dla taga NFC - mozna go tylko skasować
+                                : const Icon(Icons.edit)
                 )
         ),
       ),

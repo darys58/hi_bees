@@ -34,6 +34,7 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
   String ileRamek = '10';
   String typUla = 'WIELKOPOLSKI';//wielkopolski, dadant itp
   String rodzajUla = ''; //ul, odkład, mini
+  String tagNFC = '';
   String nowyUwagi = '';
   bool edycja = false;
   String tytulEkranu = '';
@@ -118,7 +119,7 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
       '',
       rodzajUla,//h1 - rodzaj ula
       typUla, //h2 - typ ula
-      '',
+      tagNFC, //h3 - jeszcze nie przypisany
       0, //aktualny bo dopiero utworzony
     );
   }

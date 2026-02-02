@@ -303,8 +303,8 @@ class _QueenItemState extends State<QueenItem> {
                 height:70,
                 //alignment: Alignment.center,
                 child: 
-                  Text('ID\n${matki.id}',
-                    style: const TextStyle(color: Colors.black, fontSize: 18)),
+                    Text('ID\n${matki.id}',
+                      style: const TextStyle(color: Colors.black, fontSize: 18)),
                 
                ),
               // globals.jezyk == 'pl_PL'

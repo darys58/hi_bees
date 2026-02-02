@@ -30,6 +30,7 @@ class _InfoScreenState extends State<InfoScreen> {
   String rokStatystyk = globals.rokStatystyk; //DateTime.now().toString().substring(0, 4);
   String typUla = '';
   String rodzajUla = '';
+  String tagNFC = '';
   String uwagiUla = '';
   String nazwaWlasna = '';
 
@@ -206,6 +207,7 @@ class _InfoScreenState extends State<InfoScreen> {
 
     rodzajUla = '';
     typUla = '';
+    tagNFC = '';
 
     //pobranie danych matki z wybranej kategorii dla tego ula
     final queensData = Provider.of<Queens>(context);
@@ -2176,7 +2178,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-    //dla trzeciej matki podłączonej do ula
+  //dla trzeciej matki podłączonej do ula
                     if(queens.length > 2)
                       if(queens[2].dataStraty =='') //jezeli matka zyje
                         RichText(
@@ -2326,7 +2328,7 @@ class _InfoScreenState extends State<InfoScreen> {
                       SizedBox(height: 5),    
                             
                     
-          //dla pierwszej matki podłączonej do ula
+  //dla pierwszej matki podłączonej do ula
           //pierwszy wiersz: ID, linia, rasa
                     if(queens.length > 0)
                       if(queens[0].dataStraty =='') //jezeli matka zyje

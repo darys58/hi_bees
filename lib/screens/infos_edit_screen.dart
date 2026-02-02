@@ -93,7 +93,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowaKategoria = info[0].kategoria;
       nowyParametr = info[0].parametr;
       nowyWartosc = info[0].wartosc;
-      nowyMiara = info[0].miara;  
+      nowyMiara = info[0].miara;
       if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {
         typUla = info[0].miara; //dla iloscRamek =
         globals.typUla = typUla;
@@ -617,7 +617,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   DropdownMenuItem(child: Text('MINI PLUS'),
                                                   value: 'MINI PLUS'),                                  
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.wEeddingHive),
-                                                  value: AppLocalizations.of(context)!.wEeddingHive),                                                                                                         
+                                                  value: AppLocalizations.of(context)!.wEeddingHive), 
                                 ], //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
@@ -636,9 +636,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                       SizedBox(height: 10),
 
 
-  //********************************************* */
+//********************************************* */
                     //** */ parametr (Cecha:)
- //******************************************** */ 
+ //******************************************** */                      
       // dla parametrów które nie są w tym miejscu modyfikowane np. przez (ml), (kg), (sztuki) itp. dodatkowe opisy                   
                     if (nowyParametr !=  AppLocalizations.of(context)!.honey + " = " &&  //oprócz miód w kg
                         nowyParametr !=  AppLocalizations.of(context)!.beePollen + " = " &&  //oprócz pyłek w ml
@@ -726,7 +726,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                         //  ),
                         ]
                       ),
-
+    
     //parametr dla pyłek w l               
                     if (nowyParametr ==  " " + AppLocalizations.of(context)!.beePollen + " =  ")
                       Row(
@@ -1257,7 +1257,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.veryGood),
                                                   value:AppLocalizations.of(context)!.veryGood),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.good),
-                                                  value:AppLocalizations.of(context)!.good),                                 
+                                                  value:AppLocalizations.of(context)!.good),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.big),
                                                   value:AppLocalizations.of(context)!.big),
                                   DropdownMenuItem(child: Text('ok'),value: 'ok'),
@@ -1370,7 +1370,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.naturallyMated1),
                                                   value:AppLocalizations.of(context)!.naturallyMated),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.artificiallyInseminated1),
-                                                  value:AppLocalizations.of(context)!.artificiallyInseminated),
+                                                  value:AppLocalizations.of(context)!.artificiallyInseminated),                                                                        
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.droneLaying),
                                                   value:AppLocalizations.of(context)!.droneLaying),                                                                         
                                 ], //lista elementów do wyboru
@@ -1417,7 +1417,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inCage),
                                                   value:AppLocalizations.of(context)!.inCage),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inInsulator),
-                                                  value:AppLocalizations.of(context)!.inInsulator), 
+                                                  value:AppLocalizations.of(context)!.inInsulator),                                                                        
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.isolated),
                                                   value:AppLocalizations.of(context)!.isolated),                                                                        
                                 ], //lista elementów do wyboru
@@ -1747,6 +1747,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
 
 //z klawiatura numeryczną bez przecinka                                      
                   if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = " || //ilość ramek 
+                     // nowyParametr == 'tag NFC' ||
                       nowyParametr == 'apivarol' ||  //dawka 
                       nowyParametr == 'biovar' ||
                       nowyParametr == AppLocalizations.of(context)!.acid ||  //kwas w ml
@@ -1838,7 +1839,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                   //     nowyParametr !=  AppLocalizations.of(context)!.candy &&
                   //     nowyParametr !=  AppLocalizations.of(context)!.removedFood &&
                   //     nowyParametr !=  AppLocalizations.of(context)!.leftFood)
-  
+                   
 
   //jezeli jest to:                 
                   if (nowyParametr ==  AppLocalizations.of(context)!.excluder || //numer korpusu na którym jest krata odgrodowa
@@ -2103,9 +2104,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           String matka3 = hive[0].matka3;
                           String matka4 = hive[0].matka4;
                           String matka5 = hive[0].matka5;
-                          if(nowyParametr != AppLocalizations.of(context)!.numberOfFrame + " = " && hive[0].h1 != '') rodzajUla = hive[0].h1; //nie zachowuj starego rodzaju ula jezeli jest jakiś nowy rodzaj  
+                          if(nowyParametr != AppLocalizations.of(context)!.numberOfFrame + " = " && hive[0].h1 != '') rodzajUla = hive[0].h1; //nie zachowuj starego rodzaju ula jezeli jest jakiś nowy rodzaj 
                           if(nowyParametr != AppLocalizations.of(context)!.numberOfFrame + " = " && hive[0].h2 != '') typUla = hive[0].h2; //nie zachowuj starego typu ula jezeli jest jakiś nowy typ 
-                         //print('zeby nie stracic info po - rodzaj ula = $rodzajUla'); 
+                          String tagNFC = hive[0].h3;
+                          //print('zeby nie stracic info po - rodzaj ula = $rodzajUla'); 
                           //jezeli wpis  dotyczy leczenia lub dokarmiania
                           if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment'){                        
                             //to jezeli edytowano info ula z datą taką jak ostatnie (lub pózniejszą) info ula to modyfikacja danych
@@ -2119,7 +2121,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               miara = nowyMiara!;
                             }
                           }
-     //jezeli info jest o matce to zmiana parametrów matki w belce
+                          //jezeli info jest o matce to zmiana parametrów matki w belce
                           if (nowaKategoria == 'queen') {                                          
                           
   //** */ Quality - matka1
@@ -2127,16 +2129,12 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               if (nowyWartosc == 'mała' || nowyWartosc == 'słaba' || nowyWartosc == 'zła' || nowyWartosc == 'stara' ||
                                   nowyWartosc == 'small' || nowyWartosc == 'to exchange' || nowyWartosc == 'canceled' || nowyWartosc == 'weak' ) {
                                 matka1 = 'zła';
-                                if (ikona == 'red') { //bo był brak matki
-                                  ikona = 'orange';
-                                  //globals.ikonaPasieki = 'orange';
-                                }
+                                ikona = 'orange';                              
                                 if (matka2 == 'brak') matka2 = '';
                               } else {
                                 matka1 = 'ok';
                                 if (ikona == 'red' || ikona == 'orange') {  //bo był brak matki               
                                   ikona = 'green';
-                                  //globals.ikonaPasieki = 'orange';
                                 }
                                 if (matka2 == 'brak') matka2 = '';
                               }
@@ -2173,45 +2171,36 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   break;
                                 case 'nie ma': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
                                   ikona = 'red';
-                                  //globals.ikonaPasieki = 'red';
                                   break;
                                 case 'gone': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
                                   ikona = 'red';
-                                  //globals.ikonaPasieki = 'red';
                                   break;
                                 case 'brak': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = ''; matka5 = '';
                                   ikona = 'red';
-                                  //globals.ikonaPasieki = 'red';
                                   break;
                                 case 'missing': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
                                   ikona = 'red';
-                                  //globals.ikonaPasieki = 'red';
                                   break;
                               }
 //** */ State matka3 - czy unasienniona?
                             if (nowyParametr == AppLocalizations.of(context)!.queen + " -") //State
-                                if (nowyWartosc == 'dziewica' || nowyWartosc == 'virgine') {
-                                    matka3 = 'nieunasienniona';
-                                    if (ikona == 'red') { //bo był brak matki
-                                      ikona = 'orange';
-                                      //globals.ikonaPasieki = 'orange';
-                                    }
-                                    if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
-                                } else if (nowyWartosc == 'trutówka' || nowyWartosc == 'drone laying') {
-                                    matka3 = 'trutowa';
-                                    if (ikona == 'red') { //bo był brak matki
-                                      ikona = 'orange';
-                                      //globals.ikonaPasieki = 'orange';
-                                    }
-                                    if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
-                                } else {
-                                    matka3 = 'unasienniona';
-                                    if (ikona != 'yellow') { //jezeli nie toDo
-                                      ikona = 'green';
-                                      //globals.ikonaPasieki = 'green'; 
-                                    }
-                                    if (matka2 == 'brak') matka2 = '';
-                                  }
+                              if (nowyWartosc == 'dziewica' || nowyWartosc == 'virgine') {
+                                matka3 = 'nieunasienniona';
+                                if (ikona == 'red') { //bo był brak matki
+                                  ikona = 'orange';
+                                }
+                                if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
+                              } else if (nowyWartosc == 'trutówka' || nowyWartosc == 'drone laying') {
+                                matka3 = 'trutowa';
+                                ikona = 'orange';
+                                if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
+                              } else {
+                                matka3 = 'unasienniona';
+                                if (ikona != 'yellow') { //jezeli nie toDo
+                                  ikona = 'green'; 
+                                }
+                                if (matka2 == 'brak') matka2 = '';
+                              }
                                                                                    
     //** */ Start matka4  - czy ograniczona?
                             if (nowyParametr == AppLocalizations.of(context)!.queenIs) //Start
@@ -2219,24 +2208,20 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 matka4 = 'wolna';
                                 if (ikona == 'red') {//bo był brak matki
                                   ikona = 'orange';
-                                  //globals.ikonaPasieki = 'orange';
                                 }
                                 if (matka2 == 'brak') matka2 = '';
                               } else{
                                 matka4 = 'ograniczona';
                                 if (ikona == 'red') {  //bo był brak matki
                                   ikona = 'orange';
-                                  //globals.ikonaPasieki = 'orange';
                                 }
                                 if (matka2 == 'brak') matka2 = '';
                               }
      //** */ Born matka5  - rocznik
                             if (nowyParametr == AppLocalizations.of(context)!.queenWasBornIn){ //Born
                               matka5 = nowyWartosc;
-                              if (ikona == 'red') {
-                                //bo był brak matki
+                              if (ikona == 'red') { //bo był brak matki
                                 ikona = 'orange';
-                                //globals.ikonaPasieki = 'orange';
                               }
                               if (matka2 == 'brak') matka2 = '';
                             }
@@ -2248,6 +2233,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               globals.iloscRamek = ramek; //nie wiem czy potrzeba ???
                             }
                            }
+                          
                           //print('zapis do hive - rodzaj ula = $rodzajUla');          
                           Hives.insertHive(
                             '$nowaPasieka.$nowyUl',
@@ -2281,7 +2267,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             matka5,
                             rodzajUla, //h1 - rodzaj ula
                             typUla, //h2 - typ ula
-                            '0',
+                            tagNFC, //h3
                             0,// aktualne bo aktualizowane na biezaco
                           ).then((_) {
                             //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis

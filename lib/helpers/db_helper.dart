@@ -271,7 +271,7 @@ class DBHelper {
     String z, 
   ) async {
     final db = await DBHelper.database();
-    print('db_helpers: update dodatki2 - id = $id, m = $m, n = $n, s = $s');
+    //print('db_helpers: update dodatki2 - id = $id, m = $m, n = $n, s = $s');
     db.update(
         'dodatki2',
         {
@@ -438,6 +438,12 @@ class DBHelper {
     return db.rawQuery(
         'SELECT * FROM ule WHERE  pasiekaNr = ? ORDER BY ulNr ASC',
         [nrPasieki]);
+  }
+
+  //odczyt z tabeli ule - ul po tagu NFC (h3) - dla nfc_helper
+  static Future<List<Map<String, dynamic>>> getHiveByH3(String h3Value) async {
+    final db = await DBHelper.database();
+    return db.rawQuery('SELECT * FROM ule WHERE h3 = ?', [h3Value]);
   }
 
   //odczyt z bazy ramka z unikalnymi datami dla danego ula i pasieki - dla frames_screen
@@ -656,7 +662,7 @@ class DBHelper {
   //usuniecie rekordu z tabeli info - dla frame_screen
   static Future<void> deleteInfo(String id) async {
     final db = await DBHelper.database();
-  //  print('DBhelper: delete info id = $id');
+    //print('DBhelper: delete info id = $id');
     db.delete('info', where: 'id= ?', whereArgs: [id]);
   }
 

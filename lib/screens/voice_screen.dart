@@ -182,6 +182,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   String matka5 = '';
   String rodzajUla = '';
   String typUla = '';
+  String tagNFC = '';
 
   int _korpusNr = 0; //aktualny numer korpusa
   int _typ = 0; //2-korpus, 1-półkorpus
@@ -4347,6 +4348,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
         matka5 = hive[0].matka5;
         rodzajUla = hive[0].h1;
         typUla = hive[0].h2;
+        tagNFC = hive[0].h3;
       } else {
         ikona = 'green'; //hive[0].ikona;
         ramek = hive[0].ramek;
@@ -4371,6 +4373,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
         matka5 = hive[0].matka5;
         rodzajUla = hive[0].h1;
         typUla = hive[0].h2;
+        tagNFC = hive[0].h3;
       }
       // print(
       //     'przeglad hive poczatek korpus ${korpusNr}: t${trut}, c${czerw}, l${larwy}, j${jaja}, p${pierzga}, m${miod}, d${dojrzaly},w${weza}, s${susz}, m${matka}, mt${mateczniki}, dm${usunmat} , td${todo} m1${matka1} m2${matka2} m3${matka3} m4${matka4} m5${matka5}');
@@ -4758,7 +4761,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
       matka5,
       rodzajUla,
       typUla,
-      '0',
+      tagNFC,
       1, //nieaktualne - zmiana zasobu
     ).then((_) {
       //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
@@ -4936,6 +4939,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 matka5 = hive[0].matka5;
                 rodzajUla = hive[0].h1;
                 typUla = hive[0].h2;
+                tagNFC = hive[0].h3;
               }
             });
             // print(
@@ -4973,7 +4977,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               matka5,
               rodzajUla,
               typUla,
-              '0',
+              tagNFC,
               0,
             );
           }
@@ -5056,6 +5060,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
           matka5 = hive[0].matka5;
           rodzajUla = hive[0].h1;
           typUla = hive[0].h2;
+          tagNFC = hive[0].h3;
         } else {
           korpusNr = 0;
         }
@@ -5206,7 +5211,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
           matka5,
           rodzajUla,
           typUla,
-          '0',
+          tagNFC,
           0,
         ).then((_) {
           //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis

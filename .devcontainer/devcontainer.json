@@ -1,11 +1,20 @@
 {
-  "name": "Claude Code Environment",
-  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "name": "Hi Bees Flutter Environment",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
+    "ghcr.io/anthropics/devcontainer-features/flutter:1": {},
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
     }
   },
-  "postCreateCommand": "npm install -g @anthropic-ai/claude-code",
-  "remoteUser": "vscode"
+  "postCreateCommand": "npm install -g @anthropic-ai/claude-code && flutter doctor",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Dart-Code.dart-code",
+        "Dart-Code.flutter"
+      ]
+    }
+  }
 }

@@ -150,7 +150,7 @@ class _NoteItemState extends State<NoteItem> {
         child: Padding(
             padding: const EdgeInsets.all(1),
             child: ListTile(
-              tileColor: notatki.priorytet == 'true'  ? Colors.yellow : null, 
+              tileColor: notatki.priorytet == 'true'  ? Colors.yellow : null,
               onTap: () {
                 //_showAlert(context, 'Edycja', '${frame.id}');
                 // globals.dataInspekcji = frame.data;

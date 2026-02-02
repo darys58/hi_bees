@@ -81,6 +81,7 @@ class HivesItem extends StatelessWidget {
     //   return fr.data.contains(wybranaData);
     // }).toList();
 
+    //skracanie nazw typu uli
     String shorten(String text) {
       final parts = text.trim().split(RegExp(r'\s+'));
 

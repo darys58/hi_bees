@@ -91,6 +91,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   String matka5 = '';
   String rodzajUla = '';
   String typUla = '';
+  String tagNFC = '';
   List<int> gridItems = [];//tworzona lista klawiszy klawiatury wyboru numeru ramki
   List<int> gridItemsKorpus = [1,2,3,4,5,6,7,8,9]; //lista klawiszy klawiatury wyboru numeru korpusu
   List<int> gridItemsZasob = [0,5,10,15,20,25,30,35,40,50,60,70,80,90,100]; //lista klawiszy klawiatury ilosci zasobu do dodania
@@ -1229,6 +1230,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
     matka5 = hive[0].matka5;
     rodzajUla = hive[0].h1;
     typUla = hive[0].h2;
+    tagNFC = hive[0].h3;
     //print('nowyNrPasieki = $nowyNrPasieki, nowyNrUla = $nowyNrUla, id wpisu w "ule" = ${hive[0].id}, data wybranego przeglądu = $formattedDate, data ostatniego przeglądu =  ${hive[0].przeglad}');
     //print('nowyZasob = $nowyZasob, korpusNr = $korpusNr, nowyNrKorpusu = $nowyNrKorpusu');
     
@@ -1405,7 +1407,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
           matka5,
           rodzajUla, //h1 - rodzaj ula: ul, odlład, mini
           typUla, //h2 - WIELKOPOLSKI itp
-          '0', //h3
+          tagNFC, //h3
           0, //aktualne zasoby
         ).then((_) {
           //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis

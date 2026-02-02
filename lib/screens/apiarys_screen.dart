@@ -34,6 +34,7 @@ import '../screens/note_screen.dart';
 import '../screens/queens_screen.dart';
 import '../models/weathers.dart';
 import '../models/queen.dart';
+import '../helpers/nfc_helper.dart';
 //import '../models/apiarys.dart';
 
 //ekran startowy
@@ -114,10 +115,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.1.69 30.11.2025 - usunięty bład w raportach warrozy i błąd w voice_screen: "zamknij pomoc" wychodził z voice,
   //1.9.2.70 19.12.2025 - app_pl, app_en, queen_scerrn - widoki, queen.dart - kolory, add_hive_screen - ilość uli, globals,
   //1.9.3.71 06.01.2026 - app_en i app_pl - "ramek",raport_screen i raport2_screen - rok w tytule, globals - rokMatki, info_edit_screen - dodano ID matki w tytule, queen_screen - dodatkowy rok "Wsztstkie", info_screen - w rodzina i matka ostatnie infa z wszystkich lat a nie z roku do statystyk, w Notes Zbiory Zakupy Sprzedaz - tylko lata z danymi
-  //1.9.4.72 19.01.2026 - zwiekszenie kafla pasieki i inne dostosowania do systemowego skalowania czcionki, ilość ramek miodu w zbiorach - zmiana z int na liczby dziesiętne
+  //1.9.4.72 31.01.2026 - zwiekszenie kafla pasieki i inne dostosowania do systemowego skalowania czcionki, ilość ramek miodu w zbiorach - zmiana z int na liczby dziesiętne, zbiór miodu zalezy od powierzchni ramki w dm2, obsługa tagów NFC
+  //1.9.5.74 01.02.2025 - bład przy wyświetlaniu w hive_screen danych o matkach bez belki zasobów,
 
-  final wersja = '1.9.3.71'; //wersja aplikacji na iOS
-  final dataWersji = '2026-01-06';
+  final wersja = '1.9.5.74'; //wersja aplikacji na iOS
+  final dataWersji = '2026-02-01';
   final now = DateTime.now();
   int aktywnosc = 0;
   List<Weather>? pogoda;
@@ -1168,7 +1170,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                   //color: Colors.grey,
                                 ),
                               )),
-//wprowadzenie kodu kub e-maila
+//wprowadzenie kodu lub e-maila
                     Form(
                       key: _formKey2,
                       child: Container(
@@ -1191,7 +1193,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                             }),
                       ),
                     ),
-                    //Przyciski
+      //Przyciski
                     Container(
                       height: 90,
                       child: Row(
@@ -1233,7 +1235,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                             disabledTextColor: Colors.white,
                           ),
                           SizedBox(width: 10),
-                          //Bez aktywacji
+        //Bez aktywacji
                           if (mem1.isNotEmpty)
                             MaterialButton(
                               height: 50,
@@ -1505,6 +1507,13 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       //wiadomosci priorytetowe
                       //SizedBox(height: 10),
 
+          // Container(
+          //   child: Text(
+          //       'Status: ${globals.status}',
+          //       style: const TextStyle(fontSize: 16),
+          //     ),
+          // ),
+
 //wiadomosci priorytetowe
                       Container(
                         margin: EdgeInsets.only(top: 5),
@@ -1523,7 +1532,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       SizedBox(height: 100),
                     ])),
       //=== stopka
-      bottomSheet: globals.key == '' || globals.key == "bez_klucza"
+      bottomSheet: globals.key == ''// || globals.key == "bez_klucza"
           ? null
           : Container(
               //margin:  EdgeInsets.only(bottom:15),
@@ -1546,13 +1555,14 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       const SizedBox(
                         width: 9,
                       ),
-                      SizedBox(
+                      if(globals.key != '' && globals.key != "bez_klucza")//jezeli jest accessKey lub testowanie
+                        SizedBox(
                           width: 220,
                           height: 50,
                           child: ElevatedButton(
                             style: buttonStyle,
                             onPressed: () {
-                              globals.key == '' || globals.key == "bez_klucza"//jezeli brak accessKey
+                              globals.key != '' && globals.key != "bez_klucza"//jezeli jest accessKey lub testowanie
                                   ? null
                                   : {
                                       //_isInit = true,
@@ -1569,7 +1579,29 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                     color: Color.fromARGB(255, 0, 0, 0))),
                           )),
                       const SizedBox(
-                        width: 15,
+                        width: 10,
+                      ),
+    // Przycisk NFC
+                      SizedBox(
+                          width: 100,
+                          height: 50,
+                          child: ElevatedButton(
+                            style: buttonStyle,
+                            onPressed: () {
+                              // globals.key == '' || globals.key == "bez_klucza"
+                              //     ? null
+                              //     : 
+                                  NfcHelper.handleNfcScan(context);
+                            },
+                            child: Text(
+                                AppLocalizations.of(context)!.nfcButton,
+                                style: TextStyle(
+                                    height: 1.0,
+                                    fontSize: 14,
+                                    color: Color.fromARGB(255, 0, 0, 0))),
+                          )),
+                      const SizedBox(
+                        width: 9,
                       ), //interpolacja ciągu znaków
                     ],
                   )

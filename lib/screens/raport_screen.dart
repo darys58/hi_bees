@@ -552,7 +552,7 @@ class _RaportScreenState extends State<RaportScreen> {
             }
             if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
-              miod2023 = allMiod2023 + (double.parse(infos[i].wartosc) * 1000).toInt();             
+              miod2023 = miod2023 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
             if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
             infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
@@ -850,6 +850,10 @@ class _RaportScreenState extends State<RaportScreen> {
               else dm = double.parse(infos[i].miara);
               miod = miod + (double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000);
               miod2026 = miod2026 + (double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000);             
+            }
+            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+              miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
+              miod2026 = miod2026 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
             if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
             infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){

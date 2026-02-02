@@ -56,6 +56,7 @@ class _ImportScreenState extends State<ImportScreen> {
   // bool archOstatniRok = true;
   String test = 'start';
   double count = 0;
+  Map<String, String> _nfcTags = {}; // Przechowywanie tagow NFC podczas importu
   
   
   @override
@@ -261,6 +262,16 @@ class _ImportScreenState extends State<ImportScreen> {
                   // Navigator.of(context).pop();
                   showLoaderDialog( context, AppLocalizations.of(context)!.dataImport);
 
+                  // Zapisanie tagow NFC przed importem
+                  DBHelper.getData('ule').then((hives) {
+                    _nfcTags.clear();
+                    for (var hive in hives) {
+                      if (hive['h3'] != null && hive['h3'] != '0' && hive['h3'] != '') {
+                        _nfcTags[hive['id']] = hive['h3'];
+                      }
+                    }
+                  });
+
                   //import notatek
                   Notes.fetchNotatkiFromSerwer(
                           'https://darys.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_notatki')
@@ -427,7 +438,7 @@ class _ImportScreenState extends State<ImportScreen> {
                                 '0',
                                 '0',
                                 info[i].pogoda,//h1 - rodzaj ula
-                                '0',
+                                info[i].miara, //h2 - typ ula
                                 '0',
                                 0, //aktualny - stan po wczytaniu z chmury
                               );
@@ -460,6 +471,15 @@ class _ImportScreenState extends State<ImportScreen> {
                               i++;
                             }
                             globals.odswiezBelkiUli = true;
+
+                            // Przywrocenie tagow NFC po imporcie
+                            Future<void> restoreNfcTags() async {
+                              for (var entry in _nfcTags.entries) {
+                                await DBHelper.updateUle(entry.key, 'h3', entry.value);
+                              }
+                            }
+                            restoreNfcTags().then((_) {
+
                             //pobranie danych o pasiekach (jeszcze jest zła ilość uli w pasiece)
                             Provider.of<Apiarys>(context, listen: false)
                                 .fetchAndSetApiarys()
@@ -477,7 +497,8 @@ class _ImportScreenState extends State<ImportScreen> {
                               );
                               //print('koniec importu');
                             });
-                          }); //pobranie uli z lokalnej i wpis do pasieki                          
+                          }); //przywrocenie tagow NFC
+                          }); //pobranie uli z lokalnej i wpis do pasieki
                         }); //pobranie info z z bazy lokalnej i wpis do uli
                       }); //pobranie info z internetu
                     }); //pobranie ramek z loklnej i wpis do uli

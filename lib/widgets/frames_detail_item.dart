@@ -636,6 +636,7 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                           String matka5 = hive[0].matka5;
                           String rodzajUla = hive[0].h1;
                           String typUla = hive[0].h2;
+                          String tagNFC = hive[0].h3;
 
                           // jezeli usuwano wpis z przeglądu ula z datą taką jak ostatni przegląd ula to modyfikacja danych
                           if ('${frame.pasiekaNr}.${frame.ulNr}' ==
@@ -747,7 +748,7 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                             matka5,
                             rodzajUla,
                             typUla,
-                            '0',
+                            tagNFC,
                             1, //nieaktualne zasoby bo mogła być zmiana ???
                           ).then((_) {
                             //ustawienie szarej ikony w info o przeglądzie
