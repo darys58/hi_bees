@@ -1268,8 +1268,22 @@
     "@resultLiters": {},
     "resultKilograms": "Result in kilograms",
     "@resultKilograms": {},
+    "syrupLiters": "Syrup in liters",
+    "@syrupLiters": {},
+    "syrupKilograms": "Syrup in kilograms",
+    "@syrupKilograms": {},
+    "cakeKilograms": "Cake in kilograms",
+    "@cakeKilograms": {},
     "syrupCalculator": "Syrup calculator",
-    "@syrupCalculator": {}
+    "@syrupCalculator": {},
+    "sugarSyrup21": "Sugar syrup 2:1",
+    "@sugarSyrup21": {},
+    "sugarSyrup11": "Sugar syrup 1:1",
+    "@sugarSyrup11": {},
+    "honeySugarCake": "Honey-sugar cake",
+    "@honeySugarCake": {},
+    "powderedSugar": "Powdered\nsugar",
+    "@powderedSugar": {}
 
 }
     

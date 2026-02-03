@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class SyrupCalculatorScreen extends StatefulWidget {
-  static const routeName = '/syrup-calculator';
+class Syrup21CalculatorScreen extends StatefulWidget {
+  static const routeName = '/syrup-calculator-21';
 
   @override
-  State<SyrupCalculatorScreen> createState() => _SyrupCalculatorScreenState();
+  State<Syrup21CalculatorScreen> createState() =>
+      _Syrup21CalculatorScreenState();
 }
 
-class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
+class _Syrup21CalculatorScreenState extends State<Syrup21CalculatorScreen> {
   final TextEditingController _sugarController = TextEditingController();
   final TextEditingController _waterController = TextEditingController();
   final TextEditingController _litersController = TextEditingController();
   final TextEditingController _kgController = TextEditingController();
 
-  // Proporcja 3:2 → 3 kg cukru na 2 L wody
-  // Gęstość syropu 60% ≈ 1.29 kg/L
-  static const double _density = 1.29;
+  // Proporcja 2:1 → 2 kg cukru na 1 L wody
+  // Gęstość syropu ~66.7% ≈ 1.33 kg/L
+  static const double _density = 1.33;
   static const double _maxLiters = 50.0;
-  static const double _maxKg = 64.5; // ~50 * 1.29
+  static const double _maxKg = 66.5; // ~50 * 1.33
 
   double _resultLiters = 0.0;
   double _resultKg = 0.0;
@@ -39,7 +40,7 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
     _isUpdating = true;
 
     final s = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
-    final w = s * 2 / 3;
+    final w = s * 1 / 2;
     final mass = s + w;
     final volume = mass / _density;
 
@@ -59,7 +60,7 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
     _isUpdating = true;
 
     final w = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
-    final s = w * 3 / 2;
+    final s = w * 2;
     final mass = s + w;
     final volume = mass / _density;
 
@@ -79,8 +80,8 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
     _isUpdating = true;
 
     final mass = liters * _density;
-    final s = mass * 3 / 5;
-    final w = mass * 2 / 5;
+    final s = mass * 2 / 3;
+    final w = mass * 1 / 3;
 
     setState(() {
       _resultKg = mass;
@@ -99,8 +100,8 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
     _isUpdating = true;
 
     final volume = kg / _density;
-    final s = kg * 3 / 5;
-    final w = kg * 2 / 5;
+    final s = kg * 2 / 3;
+    final w = kg * 1 / 3;
 
     setState(() {
       _resultKg = kg;
@@ -120,8 +121,8 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
 
     final liters = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
     final mass = liters * _density;
-    final s = mass * 3 / 5;
-    final w = mass * 2 / 5;
+    final s = mass * 2 / 3;
+    final w = mass * 1 / 3;
 
     setState(() {
       _resultKg = mass;
@@ -140,8 +141,8 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
 
     final kg = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
     final volume = kg / _density;
-    final s = kg * 3 / 5;
-    final w = kg * 2 / 5;
+    final s = kg * 2 / 3;
+    final w = kg * 1 / 3;
 
     setState(() {
       _resultKg = kg;
@@ -163,7 +164,7 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
         iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         title: Text(
-          '${loc.syrupCalculator} 3:2',
+          '${loc.syrupCalculator} 2:1',
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
         bottom: PreferredSize(
@@ -180,7 +181,6 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(height: 20),
-            // Cukier i Woda - dwa pola obok siebie
             Row(
               children: [
                 Expanded(
@@ -215,7 +215,6 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
 
             SizedBox(height: 32),
 
-            // Wynik w litrach - edytowalny
             Row(
               children: [
                 Expanded(
@@ -256,7 +255,6 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
 
             SizedBox(height: 16),
 
-            // Wynik w kg - edytowalny
             Row(
               children: [
                 Expanded(
@@ -290,59 +288,10 @@ class _SyrupCalculatorScreenState extends State<SyrupCalculatorScreen> {
               value: _resultKg.clamp(0.0, _maxKg),
               min: 0,
               max: _maxKg,
-              divisions: 645,
+              divisions: 665,
               label: '${_resultKg.toStringAsFixed(1)} kg',
               onChanged: _updateFromKgSlider,
             ),
-
-            // SizedBox(height: 32),
-
-            // // Podsumowanie
-            // Card(
-            //   elevation: 2,
-            //   child: Padding(
-            //     padding: const EdgeInsets.all(16.0),
-            //     child: Column(
-            //       children: [
-            //         Text(
-            //           loc.sugarSyrup32,
-            //           style:
-            //               TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            //         ),
-            //         SizedBox(height: 12),
-            //         Row(
-            //           mainAxisAlignment: MainAxisAlignment.spaceAround,
-            //           children: [
-            //             Column(
-            //               children: [
-            //                 Icon(Icons.square, color: Colors.brown[300], size: 32),
-            //                 SizedBox(height: 4),
-            //                 Text(loc.sugar),
-            //                 Text(
-            //                   '${_sugar.toStringAsFixed(2)} kg',
-            //                   style: TextStyle(
-            //                       fontSize: 16, fontWeight: FontWeight.bold),
-            //                 ),
-            //               ],
-            //             ),
-            //             Column(
-            //               children: [
-            //                 Icon(Icons.water_drop, color: Colors.blue, size: 32),
-            //                 SizedBox(height: 4),
-            //                 Text(loc.water),
-            //                 Text(
-            //                   '${_water.toStringAsFixed(2)} l',
-            //                   style: TextStyle(
-            //                       fontSize: 16, fontWeight: FontWeight.bold),
-            //                 ),
-            //               ],
-            //             ),
-            //           ],
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       ),

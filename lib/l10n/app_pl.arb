@@ -634,6 +634,13 @@
     "result": "Wynik",
     "resultLiters": "Wynik w litrach",
     "resultKilograms": "Wynik w kilogramach",
-    "syrupCalculator": "Kalkulator syropu"
+    "syrupLiters": "Syrop w litrach",
+    "syrupKilograms": "Syrop w kilogramach",
+    "cakeKilograms": "Ciasto w kilogramach",
+    "syrupCalculator": "Kalkulator syropu",
+    "sugarSyrup21": "Syrop cukrowy 2:1",
+    "sugarSyrup11": "Syrop cukrowy 1:1",
+    "honeySugarCake": "Ciasto miodowo-cukrowe",
+    "powderedSugar": "Cukier\npuder"
 
 }
