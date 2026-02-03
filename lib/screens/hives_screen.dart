@@ -1431,7 +1431,7 @@ class _HivesScreenState extends State<HivesScreen> {
     var body = jsonDecode(response.body);
     // print('dane o pogodzie z miasta -----------------------');
     // print(body);
-    temp = body["main"]["temp"];
+    temp = (body["main"]["temp"] as num).toDouble();
     icon = body["weather"][0]["icon"];
     //print('hives_screen: getCurrentWeather: temp = $temp, $icon');
     //print('$temp, $icon');
@@ -1454,7 +1454,7 @@ class _HivesScreenState extends State<HivesScreen> {
     var body = jsonDecode(response.body);
     // print('dane o pogodzie z koordynatów -----------------------');
     // print(body);
-    temp = body["main"]["temp"];
+    temp = (body["main"]["temp"] as num).toDouble();
     icon = body["weather"][0]["icon"];
     //print('hives_screen: getCurrentWeatherCoord: temp = $temp, $icon');
     String teraz = formatterPogoda.format(now);

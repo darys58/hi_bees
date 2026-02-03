@@ -187,20 +187,18 @@ Główne:
 ## Budowanie i testowanie
 
 **Zakaz budowania w kontenerach:**
-- NIGDY nie próbuj budować projektu w kontenerach Docker ani tworzyć obrazów Docker. Użytkownik testuje kod lokalnie na swoim urządzeniu.
+- NIGDY nie próbuj budować projektu w kontenerach Docker ani tworzyć obrazów Docker.
+- NIGDY nie uruchamiaj komend `flutter analyze`, `flutter pub get`, `flutter build` ani innych komend Flutter - Flutter SDK nie jest zainstalowany w kontenerze.
+- Użytkownik testuje kod lokalnie na swoim urządzeniu.
 
-**Weryfikacja kompilacji:**
-- Zamiast pełnego buildu (`flutter build`), sprawdzaj poprawność kodu za pomocą:
-  ```bash
-  flutter pub get
-  flutter analyze
-  ```
-- Te komendy wystarczą do wykrycia błędów składniowych i problemów z zależnościami.
+**Po zakończeniu zmian w kodzie:**
+- NIE pytaj o uruchomienie analizy statycznej - nie możesz jej wykonać.
+- Zamiast tego napisz: **"Kod jest gotowy do sprawdzenia lokalnego."**
+- Użytkownik sam uruchomi `flutter analyze` i testy na swoim urządzeniu.
 
 **Standardy kodu:**
-- Każda zmiana MUSI przechodzić analizę statyczną (`flutter analyze`) bez błędów.
 - Nie wprowadzaj błędów składniowych, które uniemożliwiłyby użytkownikowi manualne uruchomienie projektu.
-- Przed zakończeniem pracy nad zmianą, upewnij się, że kod kompiluje się poprawnie.
+- Dbaj o poprawność składni Dart i struktury plików ARB (JSON).
 
 ---
 

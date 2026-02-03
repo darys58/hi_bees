@@ -57,6 +57,9 @@ class _FramesScreenState extends State<FramesScreen> {
   double luPa = globals.lupaRamek; //powiększenie widoku ula
   List<bool> _selectedLupa = <bool>[true, false, false]; // lewa|obie|prawa
 
+  // ScrollController dla listy dat
+  final ScrollController _dateScrollController = ScrollController();
+
   bool readyApiary = false; //ustalony numer pasieki
   bool readyHive = false; //ustalony numer ula
   bool readyBody = false; //ustalony numer korpusu
@@ -106,6 +109,57 @@ class _FramesScreenState extends State<FramesScreen> {
   }
 
   @override
+  void dispose() {
+    _dateScrollController.dispose();
+    super.dispose();
+  }
+
+  // Stała szerokość karty z datą (używana w ListView i obliczeniach scroll)
+  static const double _dateCardWidth = 130.0;
+
+  // Przewija listę dat do wybranej daty (na środek ekranu)
+  void _scrollToSelectedDate({int attempt = 0}) {
+    if (_daty.isEmpty || wybranaData.isEmpty) return;
+
+    // Znajdź indeks wybranej daty
+    int selectedIndex = _daty.indexWhere((d) => d.data == wybranaData);
+    if (selectedIndex < 0) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_dateScrollController.hasClients) {
+        // Pobierz rzeczywistą szerokość ekranu
+        double screenWidth = MediaQuery.of(context).size.width;
+
+        // Oblicz pozycję środka wybranej karty
+        double cardCenterPosition = (selectedIndex * _dateCardWidth) + (_dateCardWidth / 2);
+
+        // Oblicz offset tak, żeby środek karty był na środku ekranu
+        double offset = cardCenterPosition - (screenWidth / 2);
+
+        // Ogranicz offset do dozwolonego zakresu
+        double maxScroll = _dateScrollController.position.maxScrollExtent;
+
+        // Przy pierwszym wejściu maxScrollExtent może być jeszcze 0 - spróbuj ponownie
+        if (maxScroll == 0 && _daty.length > 1 && attempt < 3) {
+          Future.delayed(Duration(milliseconds: 100), () {
+            _scrollToSelectedDate(attempt: attempt + 1);
+          });
+          return;
+        }
+
+        if (offset < 0) offset = 0;
+        if (offset > maxScroll) offset = maxScroll;
+
+        _dateScrollController.animateTo(
+          offset,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     // print('frames_screen - didChangeDependencies');
     // print('frames_screen - _isInit = $_isInit');
@@ -148,6 +202,9 @@ class _FramesScreenState extends State<FramesScreen> {
             setState(() {
               // _isLoading = false; //zatrzymanie wskaznika ładowania dań
             });
+
+            // Przewiń do wybranej daty po setState i zbudowaniu widoku
+            _scrollToSelectedDate();
           });
         });
 
@@ -155,7 +212,7 @@ class _FramesScreenState extends State<FramesScreen> {
           // _isLoading = false; //zatrzymanie wskaznika ładowania dań
         });
       });
-     
+
       // //ustawienie wielkosci widoku ula
       luPa == 1.0 ? _selectedLupa[0] = true : _selectedLupa[0] = false;
       luPa == 1.2 ? _selectedLupa[1] = true : _selectedLupa[1] = false;
@@ -587,32 +644,36 @@ class _FramesScreenState extends State<FramesScreen> {
 //daty przeglądów
                     Container(
                       padding:
-                          EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
+                          EdgeInsets.symmetric(horizontal: 0.0, vertical: 1.0),
                       height: 46, //MediaQuery.of(context).size.height * 0.35,
                       child: ListView.builder(
+                          controller: _dateScrollController,
                           scrollDirection: Axis.horizontal,
                           itemCount: _daty.length,
+                          itemExtent: _dateCardWidth, // stała szerokość każdej karty
                           itemBuilder: (context, index) {
-                            return Container(
-                              //width: MediaQuery.of(context).size.width * 0.6,
+                            return SizedBox(
+                              width: _dateCardWidth,
                               child: GestureDetector(
                                 onTap: () {
                                   dt1 = DateTime.parse(wybranaData);
                                   dt2 = DateTime.parse(_daty[index].data);
-                                  
+
                                   getKorpusy(globals.pasiekaID, globals.ulID, _daty[index].data)
                                         .then((_) {
                                     setState(() {
                                       //ustawianie widoku przd lub po w zaleznosci od tego czy wybrana data jest wczesniejsza czy późniejsza od poprzednio wybranej
                                       if(dt1.compareTo(dt2) < 0){
-                                        _selectedPrzedPo = [true,false]; 
+                                        _selectedPrzedPo = [true,false];
                                         przedpo = 1; //print("DT1 jest przed DT2");
-                                      }else{_selectedPrzedPo = [false,true]; 
+                                      }else{_selectedPrzedPo = [false,true];
                                         przedpo=2; //print("DT1 jest po DT2");
                                       }
                                       globals.dataInspekcji = _daty[index].data;
                                       wybranaData = _daty[index].data; //dla filtrowania po dacie
                                     });
+                                    // Wyśrodkuj klikniętą datę
+                                    _scrollToSelectedDate();
                                   });
                                 },
                                 child: wybranaData == _daty[index].data
