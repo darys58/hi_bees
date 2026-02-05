@@ -555,6 +555,7 @@
     "onPage": "Na stronie",
     "hivesOnSite": "Ilość uli na stronie raportu",
     "hivesOnSiteReport": "Ilość uli na jednej stronie prezentowanego raportu. Ilość ta nie powinna przekraczać 20.",
+    "hiveNumbers": "Numery uli",
     "selectReportYear": "Wybierz rok raportu",
     "hIveType": "Typ ula",
     "kIndHive": "Rodzaj ula",
@@ -641,6 +642,12 @@
     "sugarSyrup21": "Syrop cukrowy 2:1",
     "sugarSyrup11": "Syrop cukrowy 1:1",
     "honeySugarCake": "Ciasto miodowo-cukrowe",
-    "powderedSugar": "Cukier\npuder"
+    "powderedSugar": "Cukier\npuder",
+    "total": "Razem",
+    "sendEmail": "Wyślij mailem",
+    "noEmailConfigured": "Brak skonfigurowanego adresu email w aplikacji",
+    "sendReportToEmail": "Czy wysłać raport na adres:",
+    "send": "Wyślij",
+    "attachedPdf": "Raport PDF w załączniku."
 
 }

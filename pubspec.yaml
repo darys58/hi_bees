@@ -48,6 +48,9 @@ dev_dependencies:
   fl_chart: ^0.70.1
   picovoice_flutter: ^3.0.3
   nfc_manager: ^3.5.0
+  pdf: ^3.10.8
+  printing: ^5.12.0
+  share_plus: ^7.2.2
 
 
 

@@ -1110,6 +1110,8 @@
     "@hivesOnSite":{},
     "hivesOnSiteReport": "The number of hives per page of the presented report should not exceed 20.",
     "@hivesOnSiteReport":{},
+    "hiveNumbers": "Hive numbers",
+    "@hiveNumbers":{},
     "selectReportYear": "Select the year of the report",
     "@selectReportYear":{},
     "hIveType": "Type of hive",
@@ -1283,7 +1285,17 @@
     "honeySugarCake": "Honey-sugar cake",
     "@honeySugarCake": {},
     "powderedSugar": "Powdered\nsugar",
-    "@powderedSugar": {}
-
+    "@powderedSugar": {},
+    "total": "Total",
+    "@total": {},
+    "sendEmail": "Send by email",
+    "@sendEmail": {},
+    "noEmailConfigured": "No email address configured in the app",
+    "@noEmailConfigured": {},
+    "sendReportToEmail": "Send report to:",
+    "@sendReportToEmail": {},
+    "send": "Send",
+    "@send": {},
+    "attachedPdf": "PDF report attached.",
+    "@attachedPdf": {}
 }
-    

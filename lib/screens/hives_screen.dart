@@ -26,6 +26,7 @@ import '../screens/apiary_weather_5Days.dart';
 import '../screens/apiarys_weather_edit_screen.dart';
 import '../screens/raport2_screen.dart';
 import '../screens/raport_screen.dart';
+import '../screens/raport_color_screen.dart';
 import '../widgets/hives_item.dart';
 
 class HivesScreen extends StatefulWidget {
@@ -1549,7 +1550,16 @@ class _HivesScreenState extends State<HivesScreen> {
                     arguments: {'numerPasieki': globals.pasiekaID },
                   );
               }, child: Text((AppLocalizations.of(context)!.hArvestReports),style: TextStyle(fontSize: 18))
-              ),  
+              ),
+
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed(
+                    RaportColorScreen.routeName,
+                    arguments: {'numerPasieki': globals.pasiekaID },
+                  );
+              }, child: Text((AppLocalizations.of(context)!.hArvestReports + ' +'),style: TextStyle(fontSize: 18))
+              ),
 
               TextButton(onPressed: (){
                 Navigator.of(context).pop();

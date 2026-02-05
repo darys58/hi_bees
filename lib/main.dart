@@ -39,6 +39,7 @@ import './screens/add_hive_screen.dart';
 import './screens/add_queen_screen.dart';
 import './screens/apiary_weather_5days.dart';
 import './screens/raport_screen.dart';
+import './screens/raport_color_screen.dart';
 import './screens/raport2_screen.dart';
 import './screens/calculator_screen.dart';
 import './screens/syrup_calculator_screen.dart';
@@ -255,6 +256,7 @@ class _MyAppState extends State<MyApp> {
           AddQueenScreen.routeName: (ctx) => AddQueenScreen(),
           Weather5DaysScreen.routeName: (ctx) => Weather5DaysScreen(),
           RaportScreen.routeName: (ctx) => RaportScreen(),
+          RaportColorScreen.routeName: (ctx) => RaportColorScreen(),
           Raport2Screen.routeName: (ctx) => Raport2Screen(),
           CalculatorScreen.routeName: (ctx) => CalculatorScreen(),
           SyrupCalculatorScreen.routeName: (ctx) => SyrupCalculatorScreen(),
