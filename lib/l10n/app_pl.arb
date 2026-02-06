@@ -649,6 +649,15 @@
     "sendReportToEmail": "Czy wysłać raport na adres:",
     "send": "Wyślij",
     "attachedPdf": "Raport PDF w załączniku.",
-    "noLimits": "bez ograniczeń"
+    "noLimits": "bez ograniczeń",
+    "summary": "Podsumowanie",
+    "sinceLastInspection": "dni od ostatniego przeglądu",
+    "nfcSettings": "Obsługa NFC",
+    "nfcModeOff": "Wyłącz obsługę NFC",
+    "nfcModeOffDesc": "Przycisk NFC zostanie ukryty na stronie startowej",
+    "nfcModeInfo": "Otwieraj informacje szczegółowe",
+    "nfcModeInfoDesc": "Po odczytaniu tagu NFC zostaną otwarte szczegółowe informacje o ulu",
+    "nfcModeSummary": "Otwieraj podsumowanie",
+    "nfcModeSummaryDesc": "Po odczytaniu tagu NFC zostanie otwarte podsumowanie ula"
 
 }

@@ -8,6 +8,7 @@ import '../screens/import_screen.dart';
 import '../screens/about_screen.dart';
 import '../screens/parametr_screen.dart';
 import '../screens/calculator_screen.dart';
+import '../screens/nfc_settings_screen.dart';
 //import '../screens/languages_screen.dart';
 //import '../models/memory.dart';
 
@@ -211,6 +212,19 @@ class SettingsScreen extends StatelessWidget {
             //     ),
             //   ),
             // ),
+//Obsługa NFC
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushNamed(NfcSettingsScreen.routeName);
+              },
+              child: Card(
+                child: ListTile(
+                  leading: Icon(Icons.nfc),
+                  title: Text(AppLocalizations.of(context)!.nfcSettings),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
 //Subskrypcja aplikacji
             GestureDetector(
               onTap: () {

@@ -7,6 +7,7 @@ import 'dart:math' as math;
 //import 'dart:ui' as ui;
 //import '../models/frames.dart';
 import '../screens/infos_screen.dart';
+import '../screens/summary_screen.dart';
 import '../globals.dart' as globals;
 import '../models/hive.dart';
 //import '../models/info.dart';
@@ -94,7 +95,17 @@ class HivesItem extends StatelessWidget {
       }
     }
 
-    return Container(
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        if (details.velocity.pixelsPerSecond.dx < -300) {
+          globals.ulID = hive.ulNr;
+          Navigator.of(context).pushNamed(
+            SummaryScreen.routeName,
+            arguments: {'ulNr': hive.ulNr, 'pasiekaNr': hive.pasiekaNr},
+          );
+        }
+      },
+      child: Container(
       child: Card(
          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5),
@@ -528,6 +539,7 @@ class HivesItem extends StatelessWidget {
                             ),
             )),
       ),
+    ),
     );
   }
 }

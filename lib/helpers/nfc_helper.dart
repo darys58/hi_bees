@@ -2,9 +2,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 import '../helpers/db_helper.dart';
 import '../globals.dart' as globals;
+import '../models/hives.dart';
 import '../screens/infos_screen.dart';
+import '../screens/summary_screen.dart';
 import '../widgets/nfc_hive_selection_dialog.dart';
 
 class NfcHelper {
@@ -32,9 +35,7 @@ class NfcHelper {
         onDiscovered: (NfcTag tag) async {
           try {
             String? tagId = _extractTagId(tag); // Wyodrebnienie ID z tagu NFC
-// print(tagId);
 
-// globals.status = tagId;
             if (tagId == null) {
               Navigator.of(context).pop(); // Zamknij dialog skanowania jezeli nie odczytano taga
               _showErrorDialog(context, AppLocalizations.of(context)!.nfcTagReadError1);
@@ -131,10 +132,22 @@ class NfcHelper {
     globals.typUla = hiveData['h2'] ?? '0';
     globals.dataAktualnegoPrzegladu = '';
 
-    Navigator.of(context).pushNamed(
-      InfoScreen.routeName,
-      arguments: hiveData['ulNr'],
-    );
+    if (globals.nfcMode == 'summary') {
+
+      // Pobierz dane uli dla pasieki przed nawigacją do podsumowania
+      await Provider.of<Hives>(context, listen: false)
+          .fetchAndSetHives(hiveData['pasiekaNr']).then((_) {
+        Navigator.of(context).pushNamed(
+          SummaryScreen.routeName,
+          arguments: <String, int>{'ulNr': hiveData['ulNr'] as int, 'pasiekaNr': hiveData['pasiekaNr'] as int},
+        );
+      });
+    } else {
+      Navigator.of(context).pushNamed(
+        InfoScreen.routeName,
+        arguments: hiveData['ulNr'],
+      );
+    }
   }
 
   // Dialog podczas skanowania

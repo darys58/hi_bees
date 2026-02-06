@@ -349,6 +349,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
               } else {
               //jezeli jest tabela dodatki1
               globals.raportIleUliNaStronie = int.parse(dod1[0].h);
+              //odczytanie trybu NFC z bazy
+              if (dod1[0].c != '0' && dod1[0].c != '') {
+                globals.nfcMode = dod1[0].c;
+              }
               if (dod1[0].a == 'true') {
                 //ustawienie przłącznika eksportu danych - automatyczne wysłanie danych przy uruchamianiu apki
                 //BACKUP BAZY LOKALNEJ
@@ -1583,6 +1587,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                         width: 10,
                       ),
     // Przycisk NFC
+                      if (globals.nfcMode != 'off')
                       SizedBox(
                           width: 100,
                           height: 50,
@@ -1591,7 +1596,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                             onPressed: () {
                               // globals.key == '' || globals.key == "bez_klucza"
                               //     ? null
-                              //     : 
+                              //     :
                                   NfcHelper.handleNfcScan(context);
                             },
                             child: Text(

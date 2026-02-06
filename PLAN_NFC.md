@@ -208,3 +208,70 @@ SELECT id, ulNr, h3 FROM ule WHERE h3 != '0';
 - `lib/helpers/db_helper.dart` (linia 220) - metoda updateUle
 - `lib/screens/import_screen.dart` (linie 370, 431, 2429) - miejsca gdzie h3 jest ustawiane na '0'
 - `ios/Runner/Info.plist` - NFCReaderUsageDescription już skonfigurowane
+
+---
+
+## Faza 2 - Ustawienia NFC (tryb działania przycisku NFC)
+
+### Cel
+Dodanie ekranu ustawień NFC w Ustawieniach aplikacji, umożliwiającego konfigurację działania przycisku NFC na stronie startowej. Trzy tryby:
+1. **Wyłącz obsługę NFC** (`off`) - ukrywa przycisk NFC na stronie startowej
+2. **Otwieraj informacje szczegółowe** (`info`) - domyślne, dotychczasowe działanie (nawigacja do `InfoScreen`)
+3. **Otwieraj podsumowanie** (`summary`) - po odczytaniu tagu NFC otwiera ekran `SummaryScreen`
+
+### Przechowywanie ustawienia
+- Pole `c` w tabeli `dodatki1` (dotychczas nieużywane, inicjalizowane jako `'0'`)
+- Wartości: `'off'`, `'info'`, `'summary'`
+- Domyślna wartość gdy `c == '0'` lub puste: `'info'`
+- Zmienna globalna: `globals.nfcMode`
+
+### Nowy plik
+- **`lib/screens/nfc_settings_screen.dart`** - ekran z 3 opcjami RadioListTile, route: `/nfc-settings`
+
+### Zmodyfikowane pliki
+
+| Plik | Zmiana |
+|------|--------|
+| `lib/globals.dart` | Dodana zmienna `String nfcMode = 'info'` |
+| `lib/l10n/app_en.arb` | Dodane klucze: `nfcSettings`, `nfcModeOff`, `nfcModeOffDesc`, `nfcModeInfo`, `nfcModeInfoDesc`, `nfcModeSummary`, `nfcModeSummaryDesc` |
+| `lib/l10n/app_pl.arb` | Dodane te same klucze po polsku |
+| `lib/screens/settings_screen.dart` | Dodany panel "Obsługa NFC" (ikona `Icons.nfc`) nad panelem "O aplikacji" |
+| `lib/main.dart` | Import `nfc_settings_screen.dart`, rejestracja trasy `/nfc-settings` |
+| `lib/helpers/nfc_helper.dart` | Import `provider`, `Hives`, `SummaryScreen`; metoda `_navigateToHive` sprawdza `globals.nfcMode` i nawiguje do `InfoScreen` lub `SummaryScreen` |
+| `lib/screens/apiarys_screen.dart` | Odczyt trybu NFC z `dodatki1.c` przy starcie; ukrywanie przycisku NFC gdy `nfcMode == 'off'` |
+| `lib/screens/summary_screen.dart` | Konwersja z `StatelessWidget` na `StatefulWidget` z pobieraniem danych uli (`fetchAndSetHives`) w `didChangeDependencies` |
+
+### Przepływ danych
+
+```
+Uruchomienie apki
+  → fetchAndSetDodatki1()
+  → odczyt dodatki1.c → globals.nfcMode
+
+Ekran ustawień NFC (NfcSettingsScreen)
+  → użytkownik wybiera opcję
+  → globals.nfcMode = wartość
+  → DBHelper.updateDodatki1('c', wartość)
+
+Przycisk NFC na stronie startowej (apiarys_screen)
+  → widoczny tylko gdy globals.nfcMode != 'off'
+  → NfcHelper.handleNfcScan(context)
+
+NfcHelper._navigateToHive()
+  → jeśli nfcMode == 'summary':
+      → fetchAndSetHives(pasiekaNr)
+      → nawigacja do SummaryScreen z argumentami {ulNr, pasiekaNr}
+  → jeśli nfcMode == 'info':
+      → nawigacja do InfoScreen (dotychczasowe działanie)
+
+SummaryScreen (StatefulWidget)
+  → didChangeDependencies: sprawdza czy dane uli są w Providerze
+  → jeśli brak → fetchAndSetHives(pasiekaNr)
+  → wyświetla podsumowanie ula
+```
+
+### Naprawiony problem: brak danych dla pasiek innych niż pierwsza
+- `SummaryScreen` przekształcony z `StatelessWidget` na `StatefulWidget`
+- W `didChangeDependencies` sprawdza czy dane uli są dostępne w Providerze
+- Jeśli brak danych (inna pasieka) - automatycznie pobiera z bazy (`fetchAndSetHives`)
+- Pokazuje `CircularProgressIndicator` podczas ładowania
