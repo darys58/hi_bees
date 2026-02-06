@@ -122,9 +122,10 @@ class AboutScreen extends StatelessWidget {
               ? Card(
                   child: ListTile(
                     //leading: Icon(Icons.settings),
-                    title: globals.jezyk == 'pl_PL'
-                    ? Text(AppLocalizations.of(context)!.subscryptionTo + zmienDate(mem[0].ddo))
-                    : Text(AppLocalizations.of(context)!.subscryptionTo + mem[0].ddo),
+                    title:Text(AppLocalizations.of(context)!.subscryptionTo + AppLocalizations.of(context)!.noLimits),
+                    // title: globals.jezyk == 'pl_PL'
+                    // ? Text(AppLocalizations.of(context)!.subscryptionTo + zmienDate(mem[0].ddo))
+                    // : Text(AppLocalizations.of(context)!.subscryptionTo + mem[0].ddo),
                     subtitle: Text(mem[0].key.substring(0, 10)),
                     //trailing: Icon(Icons.chevron_right),
                   ),

@@ -1297,5 +1297,7 @@
     "send": "Send",
     "@send": {},
     "attachedPdf": "PDF report attached.",
-    "@attachedPdf": {}
+    "@attachedPdf": {},
+    "noLimits": "no limits",
+    "@noLimits": {}
 }

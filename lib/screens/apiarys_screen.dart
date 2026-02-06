@@ -117,7 +117,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.3.71 06.01.2026 - app_en i app_pl - "ramek",raport_screen i raport2_screen - rok w tytule, globals - rokMatki, info_edit_screen - dodano ID matki w tytule, queen_screen - dodatkowy rok "Wsztstkie", info_screen - w rodzina i matka ostatnie infa z wszystkich lat a nie z roku do statystyk, w Notes Zbiory Zakupy Sprzedaz - tylko lata z danymi
   //1.9.4.72 31.01.2026 - zwiekszenie kafla pasieki i inne dostosowania do systemowego skalowania czcionki, ilość ramek miodu w zbiorach - zmiana z int na liczby dziesiętne, zbiór miodu zalezy od powierzchni ramki w dm2, obsługa tagów NFC
   //1.9.5.74 01.02.2025 - bład przy wyświetlaniu w hive_screen danych o matkach bez belki zasobów,
-  //1.9.5.75 03.02.2026 - litry miodu w legendzie zbiorów (1l=1.45kg), legenda miodobrań w kolumnie, przycisk PDF przy wykresach zbiorów miodu i pyłku
+  //1.9.5.75 03.02.2026 - raport_color_screen -> litry miodu w legendzie zbiorów (1l=1.45kg), legenda miodobrań w kolumnie, przycisk PDF przy wykresach zbiorów miodu i pyłku
 
   final wersja = '1.9.5.74'; //wersja aplikacji na iOS
   final dataWersji = '2026-02-01';
@@ -196,42 +196,42 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             //sprawdzenie daty do której apka jest aktywna
             final data = DateTime.parse(mem[0].ddo);
             aktywnosc = daysBetween(now, data); //ile dni wazności apki
-            if (aktywnosc < 30 && aktywnosc >= 0) {
-              _showAlert(
-                  context,
-                  AppLocalizations.of(context)!.alert,
-                  AppLocalizations.of(context)!.subscriptionEndsIn +
-                      " $aktywnosc " +
-                      AppLocalizations.of(context)!.days);
-              //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
-              Provider.of<Apiarys>(context, listen: false)
-                  .fetchAndSetApiarys()
-                  .then((_) {
-                    //print('------------------- wczytanie pasiek Apiarys????? podczas inicjacji');
-                setState(() {
-                  _isLoading = false; //zatrzymanie wskaznika ładowania dań
-                });
-              });
-            } else if (aktywnosc <= -1) {
-              //*** Wygasła subskrypcja
-              //wymuszenie trybu "bez aktywacji"
-              //print('333333333333 aktywnosc < -1');
+            // if (aktywnosc < 30 && aktywnosc >= 0) {
+            //   _showAlert(
+            //       context,
+            //       AppLocalizations.of(context)!.alert,
+            //       AppLocalizations.of(context)!.subscriptionEndsIn +
+            //           " $aktywnosc " +
+            //           AppLocalizations.of(context)!.days);
+            //   //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
+            //   Provider.of<Apiarys>(context, listen: false)
+            //       .fetchAndSetApiarys()
+            //       .then((_) {
+            //         //print('------------------- wczytanie pasiek Apiarys????? podczas inicjacji');
+            //     setState(() {
+            //       _isLoading = false; //zatrzymanie wskaznika ładowania dań
+            //     });
+            //   });
+            // } else if (aktywnosc <= -1) {
+            //   //*** Wygasła subskrypcja
+            //   //wymuszenie trybu "bez aktywacji"
+            //   //print('333333333333 aktywnosc < -1');
 
-              DBHelper.updateActivate(globals.deviceId, 'bez aktywacji')
-                  .then((_) {
-                // print(
-                //     'w bez i \'\' aktywność < -1 globals.key = ${globals.key}');
-                // print('w bez i \'\' aktywność < -1 memory.dod: ${mem[0].dod}');
-                //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
-                Provider.of<Apiarys>(context, listen: false)
-                    .fetchAndSetApiarys()
-                    .then((_) {
-                  setState(() {
-                    _isLoading = false; //zatrzymanie wskaznika ładowania dań
-                  });
-                });
-              });
-            } else {
+            //   DBHelper.updateActivate(globals.deviceId, 'bez aktywacji')
+            //       .then((_) {
+            //     // print(
+            //     //     'w bez i \'\' aktywność < -1 globals.key = ${globals.key}');
+            //     // print('w bez i \'\' aktywność < -1 memory.dod: ${mem[0].dod}');
+            //     //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
+            //     Provider.of<Apiarys>(context, listen: false)
+            //         .fetchAndSetApiarys()
+            //         .then((_) {
+            //       setState(() {
+            //         _isLoading = false; //zatrzymanie wskaznika ładowania dań
+            //       });
+            //     });
+            //   });
+            // } else {
               //*** Jest aktywna subskrypcja
               //print('44444444444 aktywnoscok');
               //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
@@ -243,7 +243,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                 });
               });
               //print('Apka aktywna');
-            }
+    //        }
 
             //jezeli uzytkownik wybrał "bez aktywacji" ma dostęp ale bez "voice control"
           } else if (mem.isNotEmpty && mem[0].dod == 'bez aktywacji') {
@@ -262,12 +262,12 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             aktywnosc = daysBetween(now, data); //ile dni wazności apki
             //print('aktywnisc = $data - $now = $aktywnosc ');
 
-            _showAlert(
-                context,
-                AppLocalizations.of(context)!.alert,
-                AppLocalizations.of(context)!.subscriptionEndsIn +
-                    " $aktywnosc " +
-                    AppLocalizations.of(context)!.days);
+            // _showAlert(
+            //     context,
+            //     AppLocalizations.of(context)!.alert,
+            //     AppLocalizations.of(context)!.subscriptionEndsIn +
+            //         " $aktywnosc " +
+            //         AppLocalizations.of(context)!.days);
           } else {
             //jezeli uzytkownik chce aktywować bo wybrał "Aktywuj"
             if (mem.isNotEmpty)

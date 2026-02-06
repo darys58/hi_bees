@@ -648,6 +648,7 @@
     "noEmailConfigured": "Brak skonfigurowanego adresu email w aplikacji",
     "sendReportToEmail": "Czy wysłać raport na adres:",
     "send": "Wyślij",
-    "attachedPdf": "Raport PDF w załączniku."
+    "attachedPdf": "Raport PDF w załączniku.",
+    "noLimits": "bez ograniczeń"
 
 }
