@@ -1317,5 +1317,15 @@
     "nfcModeSummary": "Open summary",
     "@nfcModeSummary": {},
     "nfcModeSummaryDesc": "After reading the NFC tag, a summary of the hive will be opened",
-    "@nfcModeSummaryDesc": {}
+    "@nfcModeSummaryDesc": {},
+    "queenSeen": "queen seen",
+    "@queenSeen": {},
+    "queenCellsCount": "queen cells",
+    "@queenCellsCount": {},
+    "removedCellsCount": "removed cells",
+    "@removedCellsCount": {},
+    "inspectionNote": "Note",
+    "@inspectionNote": {},
+    "frameReview": "Frame review",
+    "@frameReview": {}
 }

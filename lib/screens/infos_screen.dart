@@ -300,7 +300,7 @@ class _InfoScreenState extends State<InfoScreen> {
           
           if(infos[i].miara == '') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
           else dm = double.parse(infos[i].miara);
-           print('dod1[0].b = ${dod1[0].b}');
+          //print('dod1[0].b = ${dod1[0].b}');
           miod = miod + double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000;//np: 1(ilość ramek) x 245(waga 1dm2) x 78725/10000(ilość dm2 wezy w ramce)
           //dane do wykresu
           if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
