@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../models/hive.dart';
+//import '../models/hive.dart';
 import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/queen.dart';
-import '../models/harvest.dart';
+import '../models/dodatki1.dart';
 import '../models/note.dart';
 import '../globals.dart' as globals;
 import '../widgets/hives_item.dart';
@@ -27,7 +27,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
   String _colonyState = '';
   Info? _lastFeeding;
   Info? _lastTreatment;
-  Harvest? _lastHarvest;
+  double _lastHarvestHoneyKg = 0;
+  String _lastHarvestDate = '';
   List<Note> _hiveNotes = [];
 
   @override
@@ -109,13 +110,44 @@ class _SummaryScreenState extends State<SummaryScreen> {
           }
         }
 
-        // Last harvest for this apiary
-        final harvestsData = Provider.of<Harvests>(context, listen: false);
-        await harvestsData.fetchAndSetZbiory();
-        final apiaryHarvests = harvestsData.items.where((h) =>
-            h.pasiekaNr == pasiekaNr).toList();
-        if (apiaryHarvests.isNotEmpty) {
-          _lastHarvest = apiaryHarvests.first;
+        // Last honey harvest from info records (same formula as chart in infos_screen)
+        final loc = AppLocalizations.of(context)!;
+        final dod1Data = Provider.of<Dodatki1>(context, listen: false);
+        final dod1 = dod1Data.items;
+        if (dod1.isNotEmpty) {
+          final paramSmall = '${loc.honey} = ${loc.small} ${loc.frame} x';
+          final paramBig = '${loc.honey} = ${loc.big} ${loc.frame} x';
+          final paramKg = '${loc.honey} = ';
+          // Find the latest harvest date for honey
+          String latestDate = '';
+          for (final info in infosData.items) {
+            if (info.kategoria == 'harvest' && info.wartosc.isNotEmpty &&
+                (info.parametr == paramSmall || info.parametr == paramBig || info.parametr == paramKg)) {
+              if (latestDate.isEmpty || info.data.compareTo(latestDate) > 0) {
+                latestDate = info.data;
+              }
+            }
+          }
+          // Sum all honey from the latest date (small frames + big frames + kg)
+          if (latestDate.isNotEmpty) {
+            double totalGrams = 0;
+            final wagaDm2 = int.parse(dod1[0].b);
+            for (final info in infosData.items) {
+              if (info.kategoria == 'harvest' && info.data == latestDate && info.wartosc.isNotEmpty) {
+                if (info.parametr == paramSmall) {
+                  double dm = info.miara.isEmpty ? 35175 : double.parse(info.miara);
+                  totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
+                } else if (info.parametr == paramBig) {
+                  double dm = info.miara.isEmpty ? 78725 : double.parse(info.miara);
+                  totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
+                } else if (info.parametr == paramKg) {
+                  totalGrams += double.parse(info.wartosc) * 1000;
+                }
+              }
+            }
+            _lastHarvestHoneyKg = totalGrams / 1000;
+            _lastHarvestDate = latestDate;
+          }
         }
 
         // Notes for this hive
@@ -239,16 +271,33 @@ class _SummaryScreenState extends State<SummaryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Wiersz 1: ikona + pasieka/ul
+                  // Wiersz 1: ikona + ul/pasieka + kółko koloru pasieki
                   Row(
                     children: [
                       hiveIcon,
                       const SizedBox(width: 12),
                       Text(
-                        '${AppLocalizations.of(context)!.aPiary} ${hive.pasiekaNr}  ${AppLocalizations.of(context)!.hIve} ${hive.ulNr}',
+                        '${AppLocalizations.of(context)!.hIve} ${hive.ulNr}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        '${AppLocalizations.of(context)!.aPiary} ${hive.pasiekaNr}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _apiaryColor(hive.pasiekaNr),
                         ),
                       ),
                     ],
@@ -284,8 +333,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
           ),
 
-          if (hasFrameReviewData)
-            const SizedBox(height: 8),
+          // if (hasFrameReviewData)
+          //   const SizedBox(height: 8),
 
           // --- Segment 2: Ramki ---
           if (hasFrameReviewData)
@@ -429,8 +478,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
           ),
 
           // --- Segment: Rodzina ---
-          if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
-            const SizedBox(height: 8),
+          // if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
+          //   const SizedBox(height: 8),
           if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
             Card(
               shape: RoundedRectangleBorder(
@@ -462,8 +511,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Matka ---
-          if (_queens.isNotEmpty)
-            const SizedBox(height: 8),
+          // if (_queens.isNotEmpty)
+          //   const SizedBox(height: 8),
           if (_queens.isNotEmpty)
             Card(
               shape: RoundedRectangleBorder(
@@ -615,9 +664,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Zbiory ---
-          if (_lastHarvest != null)
-            const SizedBox(height: 8),
-          if (_lastHarvest != null)
+          // --- Segment: Zbiory ---
+          if (_lastHarvestHoneyKg > 0)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -641,10 +689,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${_harvestName(context, _lastHarvest!.zasobId)} '
-                            '${globals.jezyk == 'pl_PL' ? _lastHarvest!.ilosc.toString().replaceAll('.', ',') : _lastHarvest!.ilosc.toString()} '
-                            '${_lastHarvest!.miara == 1 ? 'l' : 'kg'} '
-                            '(${_zmienDateCala(_lastHarvest!.data)})',
+                            '${AppLocalizations.of(context)!.honey} '
+                            '${globals.jezyk == 'pl_PL' ? _lastHarvestHoneyKg.toStringAsFixed(1).replaceAll('.', ',') : _lastHarvestHoneyKg.toStringAsFixed(1)} '
+                            'kg '
+                            '(${_zmienDateCala(_lastHarvestDate)})',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -656,8 +704,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Dokarmianie ---
-          if (_lastFeeding != null)
-            const SizedBox(height: 8),
+          // if (_lastFeeding != null)
+          //   const SizedBox(height: 8),
           if (_lastFeeding != null)
             Card(
               shape: RoundedRectangleBorder(
@@ -695,8 +743,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Leczenie ---
-          if (_lastTreatment != null)
-            const SizedBox(height: 8),
+          // if (_lastTreatment != null)
+          //   const SizedBox(height: 8),
           if (_lastTreatment != null)
             Card(
               shape: RoundedRectangleBorder(
@@ -733,8 +781,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Notatki ---
-          if (_hiveNotes.isNotEmpty)
-            const SizedBox(height: 8),
+          // if (_hiveNotes.isNotEmpty)
+          //   const SizedBox(height: 8),
           if (_hiveNotes.isNotEmpty)
             Card(
               shape: RoundedRectangleBorder(
@@ -788,15 +836,24 @@ class _SummaryScreenState extends State<SummaryScreen> {
     );
   }
 
-  String _harvestName(BuildContext context, int zasobId) {
-    switch (zasobId) {
-      case 1: return AppLocalizations.of(context)!.honey;
-      case 2: return AppLocalizations.of(context)!.beePollen;
-      case 3: return AppLocalizations.of(context)!.perga;
-      case 4: return AppLocalizations.of(context)!.wax;
-      case 5: return 'propolis';
-      default: return '';
+  Color _apiaryColor(int pasiekaNr) {
+    const colory = [
+      Color.fromARGB(255, 252, 193, 104),
+      Color.fromARGB(255, 255, 114, 104),
+      Color.fromARGB(255, 104, 187, 254),
+      Color.fromARGB(255, 83, 215, 88),
+      Color.fromARGB(255, 203, 174, 85),
+      Color.fromARGB(255, 248, 168, 48),
+      Color.fromARGB(255, 255, 86, 74),
+      Color.fromARGB(255, 71, 170, 251),
+      Color.fromARGB(255, 61, 214, 66),
+      Color.fromARGB(255, 210, 170, 49),
+    ];
+    int idx = pasiekaNr;
+    while (idx > 10) {
+      idx = idx - 10;
     }
+    return colory[idx - 1];
   }
 
   String _zmienDatePelna(String data) {

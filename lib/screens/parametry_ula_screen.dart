@@ -35,7 +35,7 @@ class _ParametryUlaScreenState extends State<ParametryUlaScreen> {
     indexX = (routeArgs['indexX']).toString(); //dod2[indexX] dla listy dod2 [0] - id=1, [1] - id=2 itd
     //print('pole= $pole');
    // print('wartosc= $wartosc');
-    print('indexX didChange... = $indexX');
+    //print('indexX didChange... = $indexX');
     super.didChangeDependencies();
   }
 
@@ -50,7 +50,7 @@ class _ParametryUlaScreenState extends State<ParametryUlaScreen> {
     }).toList();
     
     
-    print('indexX build = $indexX');
+    //print('indexX build = $indexX');
     
     return Scaffold(
         appBar: AppBar(

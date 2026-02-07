@@ -657,12 +657,12 @@
     "nfcModeOffDesc": "Przycisk NFC zostanie ukryty na stronie startowej",
     "nfcModeInfo": "Otwieraj informacje szczegółowe",
     "nfcModeInfoDesc": "Po odczytaniu tagu NFC zostaną otwarte szczegółowe informacje o ulu",
-    "nfcModeSummary": "Otwieraj podsumowanie",
-    "nfcModeSummaryDesc": "Po odczytaniu tagu NFC zostanie otwarte podsumowanie ula",
+    "nfcModeSummary": "Otwieraj ostatnie informacje",
+    "nfcModeSummaryDesc": "Po odczytaniu tagu NFC nastąpi przejście do ekranu z ostatnimi informacjami ze wszystkich kategorii oraz notatkami z Notesa dotyczącymi wybranego ula",
     "queenSeen": "matka widziana",
     "queenCellsCount": "mateczniki",
     "removedCellsCount": "usunięte mat.",
-    "inspectionNote": "Notatka",
+    "inspectionNote": "Notatki",
     "frameReview": "Przegląd ramek"
 
 }

@@ -84,8 +84,8 @@ class _ParametrScreenState extends State<ParametrScreen> {
     // int i = 2;
     // print( '${dod2[i].id}, ${dod2[i].m}, ${dod2[i].n}, ${dod2[i].s}, ${dod2[i].t}, ${dod2[i].u}, ${dod2[i].v}, ${dod2[i].w}, ${dod2[i].z}');
     //  i = 3;
-    print('i = $i');
-    print( '${dod2[i].id}, ${dod2[i].m}, ${dod2[i].n}, ${dod2[i].s}, ${dod2[i].t}, ${dod2[i].u}, ${dod2[i].v}, ${dod2[i].w}, ${dod2[i].z}');
+    //print('i = $i');
+    //print( '${dod2[i].id}, ${dod2[i].m}, ${dod2[i].n}, ${dod2[i].s}, ${dod2[i].t}, ${dod2[i].u}, ${dod2[i].v}, ${dod2[i].w}, ${dod2[i].z}');
     }
 //  i = 4;
 //     print( '${dod2[i].id}, ${dod2[i].m}, ${dod2[i].n}, ${dod2[i].s}, ${dod2[i].t}, ${dod2[i].u}, ${dod2[i].v}, ${dod2[i].w}, ${dod2[i].z}');
