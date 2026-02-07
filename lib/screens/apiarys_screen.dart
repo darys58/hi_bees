@@ -1128,11 +1128,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                   }),
           ),
 //ustawienia
-          if(globals.key != '') 
+          if(globals.key != '')
             IconButton(
               icon: Icon(Icons.settings),
               onPressed: () => Navigator.of(context)
-                  .pushNamed(SettingsScreen.routeName), //arguments: {
+                  .pushNamed(SettingsScreen.routeName).then((_) => setState(() {})), //arguments: {
               //   'ul': globals.ulID,
               //   'data': wybranaData,
               // }),
@@ -1537,18 +1537,20 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       SizedBox(height: 100),
                     ])),
       //=== stopka
-      bottomSheet: globals.key == ''// || globals.key == "bez_klucza"
+      bottomSheet: globals.key == '' // bo wtedy jest ekran Aktywacji || globals.key == "bez_klucza"
           ? null
-          : Container(
-              //margin:  EdgeInsets.only(bottom:15),
-              height: 100,
-              color: Colors.white,
-              //width: MediaQuery.of(context).size.width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
+          : globals.key != '' && globals.nfcMode == 'off' && globals.key == "bez_klucza"
+            ? null
+            : Container(
+                //margin:  EdgeInsets.only(bottom:15),
+                height: 100,
+                color: Colors.white,
+                //width: MediaQuery.of(context).size.width,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
                       // ElevatedButton(
                       //   child: Text('English'),
                       //   onPressed: () => _changeLanguage(Locale('en')),

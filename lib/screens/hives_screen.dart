@@ -203,8 +203,8 @@ class _HivesScreenState extends State<HivesScreen> {
               listaDatZkg.addAll({numerUla : _datyInfoZkg[0].data});
               tempDataZkg = _datyInfoZkg[0].data; //data ostatniego wpisu o zbiorach w kg              
             } else tempDataZkg = '0000-00-00'; 
-              print(' ul = $numerUla, tempDataZkg = $tempDataZkg, getDatyInfoZkg _____________ ile dat  = ${_datyInfoZkg.length}');
-              print('listaDatZkg $listaDatZkg');
+              //print(' ul = $numerUla, tempDataZkg = $tempDataZkg, getDatyInfoZkg _____________ ile dat  = ${_datyInfoZkg.length}');
+              //print('listaDatZkg $listaDatZkg');
       
           //ZBIORY //lista dat info ula zeby uzyskac datę ostatniego wpisu o zbiorach z małej ramki
           //lista jest tworzona od razu dla wszystkich uli i później porównywana z datami dla duzych ramek
@@ -219,8 +219,8 @@ class _HivesScreenState extends State<HivesScreen> {
                 listaDatZmr.addAll({numerUla : _datyInfoZmr[0].data});
                 tempDataZmr = _datyInfoZmr[0].data; //data ostatniego wpisu o zbiorach małych ramek
               } else tempDataZmr = '0000-00-00'; 
-                print(' ul = $numerUla, tempDataZmr = $tempDataZmr, getDatyInfoZmr _____________ ile dat  = ${_datyInfoZmr.length}');
-                print('listaDatZmr $listaDatZmr');
+                //print(' ul = $numerUla, tempDataZmr = $tempDataZmr, getDatyInfoZmr _____________ ile dat  = ${_datyInfoZmr.length}');
+                //print('listaDatZmr $listaDatZmr');
             
                 //ZBIORY //lista dat info ula zeby uzyskac datę ostatniego wpisu o zbiorach z duzej ramki
                getDatyInfoZdr(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey +
@@ -232,18 +232,18 @@ class _HivesScreenState extends State<HivesScreen> {
                   if(_datyInfoZdr.isNotEmpty){
                     tempDataZdr = _datyInfoZdr[0].data; //data ostatniego wpisu o zbiorach duzych ramek
                   } else tempDataZdr = '0000-00-00';
-                 print(' ul = $numerUla, tempDataZdr = $tempDataZdr, getDatyInfoZdr _____________ ile dat  = ${_datyInfoZdr.length}');
+                 //print(' ul = $numerUla, tempDataZdr = $tempDataZdr, getDatyInfoZdr _____________ ile dat  = ${_datyInfoZdr.length}');
         
         //zamiana "null" na "0000-00-00" - bo inaczej wali bład formatu daty
         String dataZkgOK = '0000-00-00';
         if(listaDatZkg[numerUla] == null) dataZkgOK = '0000-00-00'; else dataZkgOK = listaDatZkg[numerUla]!;  //jezeli nie ma w kg
-        print('ul = $numerUla, daty: kg = $dataZkgOK,') ; 
+        //print('ul = $numerUla, daty: kg = $dataZkgOK,') ; 
                               
         
         //zamiana "null" na "0000-00-00" - bo inaczej wali bład formatu daty
         String dataZmrOK = '0000-00-00';
         if(listaDatZmr[numerUla] == null) dataZmrOK = '0000-00-00'; else dataZmrOK = listaDatZmr[numerUla]!;  //jezeli nie ma małych ramek dla ula 
-        print('ul = $numerUla, daty: mała = $dataZmrOK, duza = $tempDataZdr') ; 
+        //print('ul = $numerUla, daty: mała = $dataZmrOK, duza = $tempDataZdr') ; 
                               
         
         dataZbioru = '0000-00-00'; //zerowanie daty dla zbiorów na ramkach
@@ -268,7 +268,7 @@ class _HivesScreenState extends State<HivesScreen> {
             else dm_mr = double.parse(infosZ_mr[0].miara); //wielkość plastra w uzytej ramce w dm2
             wartoscDouble = double.parse(infosZ_mr[0].wartosc) * int.parse(dod1[0].b) * dm_mr/10000;// zbiór tylko dla małych ramek
             wartosc = (wartoscDouble/1000).toStringAsFixed(2);
-            print('tylko małe = $wartosc');
+            //print('tylko małe = $wartosc');
             dataZbioru = dataZmrOK;
           } else if((DateTime.parse(dataZmrOK)).compareTo(DateTime.parse(tempDataZdr)) < 0){ //sa to tylko duze ramki z ostatnich zbiorów
             //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach duzych ramek
@@ -280,12 +280,12 @@ class _HivesScreenState extends State<HivesScreen> {
                             AppLocalizations.of(context)!.frame +
                             " x" ; 
             }).toList();
-            print('ul = $numerUla, wartość tylko dr = ${infosZ_dr[0].wartosc}');
+            //print('ul = $numerUla, wartość tylko dr = ${infosZ_dr[0].wartosc}');
             if(infosZ_dr[0].miara == '') dm_dr = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
             else dm_dr = double.parse(infosZ_dr[0].miara); //wielkość plastra w uzytej ramce w dm2
             wartoscDouble = double.parse(infosZ_dr[0].wartosc) * int.parse(dod1[0].b) * dm_dr/10000;// zbiór tylko dla duzych ramek
             wartosc = (wartoscDouble/1000).toStringAsFixed(2);
-            print('tylko duze = $wartosc');
+            //print('tylko duze = $wartosc');
             dataZbioru = tempDataZdr;
           } else { //są to małe i duze ramki z ostatnich zbiorów 
             //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach małych ramek 
@@ -309,15 +309,15 @@ class _HivesScreenState extends State<HivesScreen> {
             
             //wartość sumy małych i duzych ramek
             if(infosZ_mr.isNotEmpty || infosZ_dr.isNotEmpty){
-               print('ul = $numerUla, wartość mr = ${infosZ_mr[0].wartosc}');
-               print('ul = $numerUla, wartość dr = ${infosZ_dr[0].wartosc}');
+               //print('ul = $numerUla, wartość mr = ${infosZ_mr[0].wartosc}');
+               //print('ul = $numerUla, wartość dr = ${infosZ_dr[0].wartosc}');
               if(infosZ_mr[0].miara == '') dm_mr = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm_mr = double.parse(infosZ_mr[0].miara); //wielkość plastra w uzytej ramce w dm2
               if(infosZ_dr[0].miara == '') dm_dr = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm_dr = double.parse(infosZ_dr[0].miara); //wielkość plastra w uzytej ramce w dm2
               wartoscDouble = (double.parse(infosZ_mr[0].wartosc) * int.parse(dod1[0].b) * dm_mr/10000) + (double.parse(infosZ_dr[0].wartosc) * int.parse(dod1[0].b) * dm_dr/10000);//infosZ[0].wartosc;
               wartosc = (wartoscDouble/1000).toStringAsFixed(2);
-              print('tylko duze i małe = $wartosc');
+              //print('tylko duze i małe = $wartosc');
               dataZbioru = dataZmrOK;
             }
           }            
@@ -325,24 +325,24 @@ class _HivesScreenState extends State<HivesScreen> {
 
         if(dataZkgOK != '0000-00-00' ){ //jezeli są zbiory w kg
           //POROWNYWANIE DAT wyniku z zbiorów ramek i dat zbiorów w kg
-          print('+++++++++ jest porównywanie z kg');
-          print('dataZkgOK = $dataZkgOK');
-          print('dataZbioru = $dataZbioru');
+          //print('+++++++++ jest porównywanie z kg');
+          //print('dataZkgOK = $dataZkgOK');
+          //print('dataZbioru = $dataZbioru');
           if((DateTime.parse(dataZbioru)).compareTo(DateTime.parse(dataZkgOK)) > 0){ //są tylko ramki z ostatnich zbiorów
-            print('tylko ramki - nie ma kg - dataZkgOK = $dataZkgOK');
+            //print('tylko ramki - nie ma kg - dataZkgOK = $dataZkgOK');
             //wartosc i dataZbioru wyliczona wyzej pozostaje bez zmian !!!!!! 
             //nic nie trzeba robić !!!!!! wyjście z porównywania z kg 
-            print('ul = $numerUla, wartość tylko dla ramek = $wartosc');//wyliczona wyzej          
+            //print('ul = $numerUla, wartość tylko dla ramek = $wartosc');//wyliczona wyzej          
           
           } else if((DateTime.parse(dataZbioru)).compareTo(DateTime.parse(dataZkgOK)) < 0){ //sa to zbiory tylko w kg z ostatnich zbiorów 
-            print('tylko kg - nie ma ramek');
+            //print('tylko kg - nie ma ramek');
             //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach w kg
             List<Info> infosZ_kg = hivesInfo.where((inf_kg) {
               return  inf_kg.data == dataZkgOK && inf_kg.kategoria == 'harvest' && inf_kg.parametr ==  AppLocalizations.of(context)!.honey + " = "; 
             }).toList();
             //print('ul = $numerUla, wartość tylko kg = ${infosZ_kg[0].wartosc}');
             wartosc = (double.parse(infosZ_kg[0].wartosc)).toString(); // zbiór tylko w kg
-            print('tylko w kg = $wartosc');
+            //print('tylko w kg = $wartosc');
             dataZbioru = dataZkgOK;
             
             } else { //są zbiory ramkowe i w kg z ostatnich zbiorów 
@@ -356,7 +356,7 @@ class _HivesScreenState extends State<HivesScreen> {
                 //print('ul = $numerUla, wartość ramek = $wartoscDouble');
                 //print('ul = $numerUla, wartość kg = ${infosZ_kg[0].wartosc}');
                 wartosc = (wartoscDouble/1000 + (double.parse(infosZ_kg[0].wartosc))).toStringAsFixed(2);//infosZ[0].wartosc;
-                print('sa ramki i kg = $wartosc');
+                //print('sa ramki i kg = $wartosc');
                 dataZbioru = dataZkgOK; 
               } 
             } 
@@ -366,7 +366,7 @@ class _HivesScreenState extends State<HivesScreen> {
             parametr = AppLocalizations.of(context)!.honey;
             //wartosc = wyliczona wyzej
             miara = 'kg'; //infosZ[0].miara;
-            print('!!!!!!!!!!!!!!!!! do belki $numerUla = $kategoria $parametr $wartosc $miara'); 
+            //print('!!!!!!!!!!!!!!!!! do belki $numerUla = $kategoria $parametr $wartosc $miara'); 
             
               
             //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli (belka)

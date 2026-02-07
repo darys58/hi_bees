@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 // import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -107,14 +108,23 @@ class AboutScreen extends StatelessWidget {
                   //trailing: Icon(Icons.chevron_right),
                 ),
               ),
- //kod    
+ //kod
             if(mem.isNotEmpty)
               Card(
                 child: ListTile(
-                  //leading: Icon(Icons.settings),
                   title: Text(AppLocalizations.of(context)!.activationCode + mem[0].kod),
-                  
-                  //trailing: Icon(Icons.chevron_right),
+                  trailing: IconButton(
+                    icon: Icon(Icons.copy, size: 20),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: mem[0].kod));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(mem[0].kod),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
  //subskrypcja do:     

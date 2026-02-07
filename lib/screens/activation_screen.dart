@@ -49,7 +49,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
         //print('wysłano e-mail ale nie zapisał się');
       } else if (odpPost['success'] == 'ok') {
         _showAlertOK(context, AppLocalizations.of(context)!.success,
-            AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
+            AppLocalizations.of(context)!.willBeActiveUntil); // + odpPost['be_do']);
         //zapis do bazy lokalnej z bazy www
         DBHelper.deleteTable('memory').then((_) {
           //kasowanie tabeli bo będzie nowy wpis

@@ -6,6 +6,8 @@ import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/queen.dart';
+import '../models/harvest.dart';
+import '../models/note.dart';
 import '../globals.dart' as globals;
 import '../widgets/hives_item.dart';
 
@@ -25,6 +27,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
   String _colonyState = '';
   Info? _lastFeeding;
   Info? _lastTreatment;
+  Harvest? _lastHarvest;
+  List<Note> _hiveNotes = [];
 
   @override
   void didChangeDependencies() {
@@ -104,6 +108,21 @@ class _SummaryScreenState extends State<SummaryScreen> {
             }
           }
         }
+
+        // Last harvest for this apiary
+        final harvestsData = Provider.of<Harvests>(context, listen: false);
+        await harvestsData.fetchAndSetZbiory();
+        final apiaryHarvests = harvestsData.items.where((h) =>
+            h.pasiekaNr == pasiekaNr).toList();
+        if (apiaryHarvests.isNotEmpty) {
+          _lastHarvest = apiaryHarvests.first;
+        }
+
+        // Notes for this hive
+        final notesData = Provider.of<Notes>(context, listen: false);
+        await notesData.fetchAndSetNotatki();
+        _hiveNotes = notesData.items.where((n) =>
+            n.pasiekaNr == pasiekaNr && n.ulNr == ulNr).toList();
       }
 
       if (hiveList.isEmpty) {
@@ -134,7 +153,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.summary),
+          title: Text(AppLocalizations.of(context)!.ostatnieInformacje),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -149,7 +168,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     if (hiveList.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.summary),
+          title: Text(AppLocalizations.of(context)!.ostatnieInformacje),
         ),
         body: Center(
           child: Text(AppLocalizations.of(context)!.nOData),
@@ -199,7 +218,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.summary),
+        title: Text(AppLocalizations.of(context)!.ostatnieInformacje),
       ),
       body: GestureDetector(
         onHorizontalDragEnd: (details) {
@@ -280,12 +299,18 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Tytuł "Przegląd ramek"
-                  Text(
-                    AppLocalizations.of(context)!.frameReview,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                  Row(
+                    children: [
+                      Image.asset('assets/image/hi_bees.png', width: 22, height: 22, fit: BoxFit.fill),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(context)!.frameReview,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
 
@@ -393,23 +418,9 @@ class _SummaryScreenState extends State<SummaryScreen> {
                   if (_inspectionNote.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${AppLocalizations.of(context)!.inspectionNote}: ',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              _inspectionNote,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        _inspectionNote,
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                 ],
@@ -417,7 +428,40 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
           ),
 
-          // --- Segment 3: Matka ---
+          // --- Segment: Rodzina ---
+          if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
+            const SizedBox(height: 8),
+          if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${AppLocalizations.of(context)!.cOlony}  ',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      TextSpan(
+                        text: [
+                          if (_colonyForce.isNotEmpty) _colonyForce,
+                          if (_colonyState.isNotEmpty) _colonyState,
+                        ].join(', '),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // --- Segment: Matka ---
           if (_queens.isNotEmpty)
             const SizedBox(height: 8),
           if (_queens.isNotEmpty)
@@ -570,40 +614,48 @@ class _SummaryScreenState extends State<SummaryScreen> {
               ),
             ),
 
-          // --- Segment 4: Rodzina ---
-          if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
+          // --- Segment: Zbiory ---
+          if (_lastHarvest != null)
             const SizedBox(height: 8),
-          if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
+          if (_lastHarvest != null)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '${AppLocalizations.of(context)!.cOlony}  ',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.hArvests,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Image.asset('assets/image/zbiory.png', width: 22, height: 22, fit: BoxFit.fill),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${_harvestName(context, _lastHarvest!.zasobId)} '
+                            '${globals.jezyk == 'pl_PL' ? _lastHarvest!.ilosc.toString().replaceAll('.', ',') : _lastHarvest!.ilosc.toString()} '
+                            '${_lastHarvest!.miara == 1 ? 'l' : 'kg'} '
+                            '(${_zmienDateCala(_lastHarvest!.data)})',
+                            style: const TextStyle(fontSize: 14),
+                          ),
                         ),
-                      ),
-                      TextSpan(
-                        text: [
-                          if (_colonyForce.isNotEmpty) _colonyForce,
-                          if (_colonyState.isNotEmpty) _colonyState,
-                        ].join(', '),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
 
-          // --- Segment 5: Dokarmianie ---
+          // --- Segment: Dokarmianie ---
           if (_lastFeeding != null)
             const SizedBox(height: 8),
           if (_lastFeeding != null)
@@ -642,7 +694,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
               ),
             ),
 
-          // --- Segment 6: Leczenie ---
+          // --- Segment: Leczenie ---
           if (_lastTreatment != null)
             const SizedBox(height: 8),
           if (_lastTreatment != null)
@@ -679,10 +731,84 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 ),
               ),
             ),
+
+          // --- Segment: Notatki ---
+          if (_hiveNotes.isNotEmpty)
+            const SizedBox(height: 8),
+          if (_hiveNotes.isNotEmpty)
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.nOtes,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    for (int ni = 0; ni < _hiveNotes.length; ni++) ...[
+                      if (ni > 0) const Divider(height: 12),
+                      Row(
+                        children: [
+                          Text(
+                            '${_zmienDatePelna(_hiveNotes[ni].data)} ',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          Expanded(
+                            child: Text(
+                              _hiveNotes[ni].tytul,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_hiveNotes[ni].notatka.isNotEmpty)
+                        Text(
+                          _hiveNotes[ni].notatka,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
       ),
     );
+  }
+
+  String _harvestName(BuildContext context, int zasobId) {
+    switch (zasobId) {
+      case 1: return AppLocalizations.of(context)!.honey;
+      case 2: return AppLocalizations.of(context)!.beePollen;
+      case 3: return AppLocalizations.of(context)!.perga;
+      case 4: return AppLocalizations.of(context)!.wax;
+      case 5: return 'propolis';
+      default: return '';
+    }
+  }
+
+  String _zmienDatePelna(String data) {
+    if (data.length < 10) return data;
+    String rok = data.substring(0, 4);
+    String miesiac = data.substring(5, 7);
+    String dzien = data.substring(8, 10);
+    if (globals.jezyk == 'pl_PL') {
+      return '$dzien.$miesiac.$rok';
+    } else {
+      return '$rok-$miesiac-$dzien';
+    }
   }
 
   String _zmienDateCala(String data) {

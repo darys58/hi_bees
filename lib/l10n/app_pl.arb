@@ -96,7 +96,7 @@
     "activationCodeWillBeSent": "Dziękujemy za przesłanie adresu email. Kod aktywacyjny do aplikacji został wysłany na podany adres.",
     "sendAgain": "Wystąpił błąd podczas wysyłania. Wyślij ponownie.",
     "success": "Aktywacja",
-    "willBeActiveUntil": "Aplikacja będzie aktywna do ",
+    "willBeActiveUntil": "Aplikacja aktywna ",
     "errorWhileActivating": "Wystapił błąd podczas aktywacji aplikacji.",
     "activate": "Aktywacja",
     "cancel": "Anuluj",
