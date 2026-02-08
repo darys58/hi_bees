@@ -79,12 +79,12 @@ class _NotePriorytetItemState extends State<NotePriorytetItem> {
         final taskDate = DateTime.parse(notatki.pole1);
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
-        if (!taskDate.isBefore(today)) {
-          // data zadania >= dziś → czerwone tło
-          cardColor = Color(0xFFEF9A9A); // jasny czerwony
-        } else {
-          // data zadania < dziś → pomarańczowe tło
+        if (taskDate.isAfter(today)) {
+          // data zadania > dziś → pomarańczowe tło
           cardColor = Color(0xFFFFCC80); // jasny pomarańczowy
+        } else {
+          // data zadania <= dziś → czerwone tło
+          cardColor = Color(0xFFEF9A9A); // jasny czerwony
         }
       } catch (_) {
         cardColor = Color(0xFFFFCC80);

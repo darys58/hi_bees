@@ -119,9 +119,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.5.74 01.02.2025 - bład przy wyświetlaniu w hive_screen danych o matkach bez belki zasobów,
   //1.9.6.75 07.02.2026 - raport_color_screen -> litry miodu w legendzie zbiorów (1l=1.45kg), legenda miodobrań w kolumnie, przycisk PDF przy wykresach zbiorów miodu i pyłku, summary_screen - Ostatnie informacje (zbiorcze) na dodatkowym ekranie + Notes, ustawianie obsługi przycisku NFC, usuniecie daty obowiązywania subskrypcji
   //1.9.6.76 07.02.2026 - AppStore udrzucił wersję 1.9.6.75, zmieniłem share_plus: ^7.2.2 na share_plus: ^10.1.4
-  
-  final wersja = '1.9.6.76'; //wersja aplikacji na iOS
-  final dataWersji = '2026-02-07';
+  //1.9.7.77 08.02.2026 - data zadania w Notesie,
+
+  final wersja = '1.9.7.77'; //wersja aplikacji na iOS
+  final dataWersji = '2026-02-08';
   final now = DateTime.now();
   int aktywnosc = 0;
   List<Weather>? pogoda;
@@ -1526,11 +1527,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           // ),
 
 //wiadomosci priorytetowe
-                      Container(
-                        margin: EdgeInsets.only(top: 5),
-                        // height: MediaQuery.of(context).size.height - (350 + (MediaQuery.of(context).size.width/2)),//150,
-                        height: 135 * notatkiOdwrotnie.length.toDouble(),
+                      Padding(
+                        padding: EdgeInsets.only(top: 5),
                         child: ListView.builder(
+                          shrinkWrap: true,
                           physics:
                               NeverScrollableScrollPhysics(), //zeby sie nie przewijał
                           itemCount: notatkiOdwrotnie.length,
