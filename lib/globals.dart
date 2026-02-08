@@ -54,7 +54,7 @@ bool odswiezBelkiUliZ = false;//czy odswiezyć ręcznie ikoną odswiezania
 
 String wykresZbiory = 'miod'; //wyświetlany wykres "miod" lub "pylek"
 
-String nfcMode = 'info'; //tryb NFC: 'off' - wyłączony, 'info' - otwieraj informacje, 'summary' - otwieraj podsumowanie
+String nfcMode = 'summary'; //tryb NFC: 'off' - wyłączony, 'info' - otwieraj informacje, 'summary' - otwieraj podsumowanie
 
 int raportNrStrony = 1; //numer strony dla wykresu raportu zbiorów lub leczenia
 int raportIleUliNaStronie = 20; //ilość uli na stronie w raporcie zbiorów lub leczenia (od 1 do 20)

@@ -183,7 +183,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                           
 // pasieka
                              SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               Row(
                                   //mainAxisAlignment: MainAxisAlignment.center,
@@ -251,7 +251,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                   ]),
 //tytul
                                SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               TextFormField(
                                   minLines: 1,
@@ -282,7 +282,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
 
 //notatka
                               SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
 
                               TextFormField(
@@ -313,7 +313,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
 
 //priorytet
                               SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
@@ -340,7 +340,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
 
 //uwagi
                               SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               // Row(
                               //     mainAxisAlignment: MainAxisAlignment.start,

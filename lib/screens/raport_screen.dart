@@ -486,6 +486,13 @@ class _RaportScreenState extends State<RaportScreen> {
       return inf.kategoria == ('harvest');
     }).toList();
 
+     //poszukanie najstarszego roku w wybranej kategorii
+    int odRoku = int.parse(DateTime.now().toString().substring(0, 4)); //biezący rok
+    for (var i = 0; i < infos.length; i++) {
+      if(odRoku > int.parse(infos[i].data.substring(0, 4)))
+        odRoku = int.parse(infos[i].data.substring(0, 4));
+    }
+
     //TWORZENIE DANYCH DO WYKRESóW
    //print('infos = ${infos.length}');
       
@@ -1321,7 +1328,7 @@ class _RaportScreenState extends State<RaportScreen> {
                         ? Text(('> ${AppLocalizations.of(context)!.aLl} <'),style: TextStyle(fontSize: 18))
                         : Text((AppLocalizations.of(context)!.aLl),style: TextStyle(fontSize: 18))
               ), 
-            if(2023 <= int.parse(DateTime.now().toString().substring(0, 4)))
+            if(2023 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2023 >= odRoku)
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -1333,7 +1340,7 @@ class _RaportScreenState extends State<RaportScreen> {
                         ? Text(('> 2023 <'),style: TextStyle(fontSize: 18))
                         : Text(('2023'),style: TextStyle(fontSize: 18))
               ), 
-            if(2024 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            if(2024 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2024 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -1345,7 +1352,7 @@ class _RaportScreenState extends State<RaportScreen> {
                         ? Text(('> 2024 <'),style: TextStyle(fontSize: 18))
                         : Text(('2024'),style: TextStyle(fontSize: 18))
               ),
-            if(2025 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            if(2025 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2025 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -1357,7 +1364,7 @@ class _RaportScreenState extends State<RaportScreen> {
                         ? Text(('> 2025 <'),style: TextStyle(fontSize: 18))
                         : Text(('2025'),style: TextStyle(fontSize: 18))
               ),
-            if(2026 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            if(2026 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2026 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -1369,7 +1376,7 @@ class _RaportScreenState extends State<RaportScreen> {
                         ? Text(('> 2026 <'),style: TextStyle(fontSize: 18))
                         : Text(('2026'),style: TextStyle(fontSize: 18))
               ),
-            if(2027 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            if(2027 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2027 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -1381,7 +1388,7 @@ class _RaportScreenState extends State<RaportScreen> {
                         ? Text(('> 2027 <'),style: TextStyle(fontSize: 18))
                         : Text(('2027'),style: TextStyle(fontSize: 18))
               ),
-            if(2028 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            if(2028 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2028 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -1393,7 +1400,7 @@ class _RaportScreenState extends State<RaportScreen> {
                         ? Text(('> 2028 <'),style: TextStyle(fontSize: 18))
                         : Text(('2028'),style: TextStyle(fontSize: 18))
               ),
-            if(2029 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            if(2029 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2029 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -1405,7 +1412,7 @@ class _RaportScreenState extends State<RaportScreen> {
                         ? Text(('> 2029 <'),style: TextStyle(fontSize: 18))
                         : Text(('2029'),style: TextStyle(fontSize: 18))
               ),
-            if(2030 <= int.parse(DateTime.now().toString().substring(0, 4)))  
+            if(2030 <= int.parse(DateTime.now().toString().substring(0, 4)) && 2030 >= odRoku)  
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();

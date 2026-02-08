@@ -118,8 +118,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.4.72 31.01.2026 - zwiekszenie kafla pasieki i inne dostosowania do systemowego skalowania czcionki, ilość ramek miodu w zbiorach - zmiana z int na liczby dziesiętne, zbiór miodu zalezy od powierzchni ramki w dm2, obsługa tagów NFC
   //1.9.5.74 01.02.2025 - bład przy wyświetlaniu w hive_screen danych o matkach bez belki zasobów,
   //1.9.6.75 07.02.2026 - raport_color_screen -> litry miodu w legendzie zbiorów (1l=1.45kg), legenda miodobrań w kolumnie, przycisk PDF przy wykresach zbiorów miodu i pyłku, summary_screen - Ostatnie informacje (zbiorcze) na dodatkowym ekranie + Notes, ustawianie obsługi przycisku NFC, usuniecie daty obowiązywania subskrypcji
-
-  final wersja = '1.9.6.75'; //wersja aplikacji na iOS
+  //1.9.6.76 07.02.2026 - AppStore udrzucił wersję 1.9.6.75, zmieniłem share_plus: ^7.2.2 na share_plus: ^10.1.4
+  
+  final wersja = '1.9.6.76'; //wersja aplikacji na iOS
   final dataWersji = '2026-02-07';
   final now = DateTime.now();
   int aktywnosc = 0;
@@ -829,7 +830,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
         // print('wysłano e-mail ale nie zapisał się');
       } else if (odpPost['success'] == 'ok') {
         _showAlertOK(context, AppLocalizations.of(context)!.success,
-            AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
+            AppLocalizations.of(context)!.willBeActiveUntil );//+ odpPost['be_do']);
         //zapis do bazy lokalnej z bazy www
         DBHelper.deleteTable('memory').then((_) {
           //kasowanie tabeli bo będzie nowy wpis

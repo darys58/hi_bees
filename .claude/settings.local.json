@@ -12,7 +12,8 @@
       "WebFetch(domain:blog.stackademic.com)",
       "WebFetch(domain:dev.to)",
       "WebFetch(domain:www.codetrade.io)",
-      "WebFetch(domain:www.oneclickitsolution.com)"
+      "WebFetch(domain:www.oneclickitsolution.com)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

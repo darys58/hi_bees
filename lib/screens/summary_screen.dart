@@ -293,8 +293,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        width: 18,
-                        height: 18,
+                        width: 25,
+                        height: 25,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: _apiaryColor(hive.pasiekaNr),
