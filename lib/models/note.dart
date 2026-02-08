@@ -12,6 +12,9 @@ class Note with ChangeNotifier {
   final String notatka; //
   final int status; //
   final String priorytet; //
+  final String pole1; //
+  final String pole2; //
+  final String pole3; //
   final String uwagi; //
   final int arch; //0-niezarchiwizowane, 1-przesłane do chmury, 2-zaimportowane z chmury
 
@@ -24,6 +27,9 @@ class Note with ChangeNotifier {
     required this.notatka,
     required this.status,
     required this.priorytet,
+    required this.pole1,
+    required this.pole2,
+    required this.pole3,
     required this.uwagi,
     required this.arch,
   });
@@ -62,6 +68,9 @@ class Notes with ChangeNotifier {
             'notatka': notatkiData['no_notatka'],
             'status': notatkiData['no_status'],
             'priorytet': notatkiData['no_priorytet'],
+            'pole1': notatkiData['no_pole1'] ?? '',
+            'pole2': notatkiData['no_pole2'] ?? '',
+            'pole3': notatkiData['no_pole3'] ?? '',
             'uwagi': notatkiData['no_uwagi'],
             'arch': 2,
           });
@@ -87,6 +96,9 @@ class Notes with ChangeNotifier {
             notatka: item['notatka'],
             status: item['status'],
             priorytet: item['priorytet'],
+            pole1: item['pole1'] ?? '',
+            pole2: item['pole2'] ?? '',
+            pole3: item['pole3'] ?? '',
             uwagi: item['uwagi'],
             arch: item['arch'],
           ),
@@ -111,6 +123,9 @@ class Notes with ChangeNotifier {
             notatka: item['notatka'],
             status: item['status'],
             priorytet: item['priorytet'],
+            pole1: item['pole1'] ?? '',
+            pole2: item['pole2'] ?? '',
+            pole3: item['pole3'] ?? '',
             uwagi: item['uwagi'],
             arch: item['arch'],
           ),
@@ -135,6 +150,9 @@ class Notes with ChangeNotifier {
             notatka: item['notatka'],
             status: item['status'],
             priorytet: item['priorytet'],
+            pole1: item['pole1'] ?? '',
+            pole2: item['pole2'] ?? '',
+            pole3: item['pole3'] ?? '',
             uwagi: item['uwagi'],
             arch: item['arch'],
           ),
@@ -155,6 +173,9 @@ class Notes with ChangeNotifier {
     String notatka,
     int status,
     String priorytet,
+    String pole1,
+    String pole2,
+    String pole3,
     String uwagi,
     int arch,
   ) async {
@@ -167,6 +188,9 @@ class Notes with ChangeNotifier {
       'notatka': notatka,
       'status': status,
       'priorytet': priorytet,
+      'pole1': pole1,
+      'pole2': pole2,
+      'pole3': pole3,
       'uwagi': uwagi,
       'arch': arch,
     });

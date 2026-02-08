@@ -40,14 +40,20 @@ class DBHelper {
       await db.execute(
           'CREATE TABLE sprzedaz(id INTEGER PRIMARY KEY, data TEXT, pasiekaNr INTEGER, nazwa TEXT, kategoriaId INTEGER, ilosc REAL, miara INTEGER, cena REAL, wartosc REAL, waluta INTEGER, uwagi TEXT, arch INTEGER)');
       await db.execute(
-          'CREATE TABLE notatki(id INTEGER PRIMARY KEY, data TEXT, tytul TEXT, pasiekaNr INTEGER, ulNr INTEGER, notatka TEXT, status INTEGER, priorytet TEXT, uwagi TEXT, arch INTEGER)');
+          'CREATE TABLE notatki(id INTEGER PRIMARY KEY, data TEXT, tytul TEXT, pasiekaNr INTEGER, ulNr INTEGER, notatka TEXT, status INTEGER, priorytet TEXT, pole1 TEXT, pole2 TEXT, pole3 TEXT, uwagi TEXT, arch INTEGER)');
       await db.execute(
           'CREATE TABLE pogoda(id TEXT PRIMARY KEY, miasto TEXT, latitude TEXT, longitude TEXT, pobranie TEXT, temp TEXT, weatherId TEXT, icon TEXT, units INTEGER, lang TEXT, inne TEXT)');
       await db.execute(
           'CREATE TABLE matki(id INTEGER PRIMARY KEY, data TEXT, zrodlo TEXT, rasa TEXT, linia TEXT, znak TEXT, napis TEXT, uwagi TEXT, pasieka INTEGER, ul INTEGER, dataStraty TEXT, a TEXT, b TEXT, c TEXT, arch INTEGER)');
      
       //    'CREATE TABLE podkategorie(id TEXT PRIMARY KEY, kolejnosc TEXT, kaId TEXT, nazwa TEXT)');
-    }, version: 1);
+    }, onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 2) {
+        await db.execute('ALTER TABLE notatki ADD COLUMN pole1 TEXT');
+        await db.execute('ALTER TABLE notatki ADD COLUMN pole2 TEXT');
+        await db.execute('ALTER TABLE notatki ADD COLUMN pole3 TEXT');
+      }
+    }, version: 2);
   }
 
   static Future<void> deleteBase() async {
@@ -401,6 +407,9 @@ class DBHelper {
       String notatka,
       int status,
       String priorytet,
+      String pole1,
+      String pole2,
+      String pole3,
       String uwagi,
       int arch) async {
     final db = await DBHelper.database();
@@ -415,6 +424,9 @@ class DBHelper {
           'notatka': notatka,
           'status': status,
           'priorytet': priorytet,
+          'pole1': pole1,
+          'pole2': pole2,
+          'pole3': pole3,
           'uwagi': uwagi,
           'arch': arch
         },

@@ -407,6 +407,9 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                             nowyNotatka!,
                                             0,
                                             nowyPriorytet!,
+                                            notatki[0].pole1,
+                                            notatki[0].pole2,
+                                            notatki[0].pole3,
                                             nowyUwagi!,
                                             0)
                                         .then((_) {
@@ -430,6 +433,9 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                         nowyNotatka!,
                                         0,
                                         nowyPriorytet!,
+                                        '',
+                                        '',
+                                        '',
                                         nowyUwagi!,
                                         0); //arch
                                     Provider.of<Notes>(context, listen: false)
