@@ -1327,5 +1327,7 @@
     "inspectionNote": "Notes",
     "@inspectionNote": {},
     "frameReview": "Frame review",
-    "@frameReview": {}
+    "@frameReview": {},
+    "taskDate": "Task date",
+    "@taskDate": {}
 }

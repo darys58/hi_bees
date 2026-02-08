@@ -663,6 +663,7 @@
     "queenCellsCount": "mateczniki",
     "removedCellsCount": "usunięte mat.",
     "inspectionNote": "Notatki",
-    "frameReview": "Przegląd ramek"
+    "frameReview": "Przegląd ramek",
+    "taskDate": "Data zadania"
 
 }

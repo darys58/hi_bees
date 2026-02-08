@@ -72,6 +72,23 @@ class _NoteItemState extends State<NoteItem> {
     //     break;
     // }
 
+    // Kolor tła dla notatek priorytetowych z datą zadania
+    Color priorityColor = Colors.yellow;
+    if (notatki.priorytet == 'true' && notatki.pole1.isNotEmpty) {
+      try {
+        final taskDate = DateTime.parse(notatki.pole1);
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        if (!taskDate.isBefore(today)) {
+          priorityColor = Color(0xFFEF9A9A); // jasny czerwony
+        } else {
+          priorityColor = Color(0xFFFFCC80); // jasny pomarańczowy
+        }
+      } catch (_) {
+        priorityColor = Color(0xFFFFCC80);
+      }
+    }
+
     return Dismissible(
       //usuwalny element listy
       key: ValueKey(notatki.id),
@@ -139,9 +156,9 @@ class _NoteItemState extends State<NoteItem> {
          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5),
             ),
-        color: 
+        color:
           notatki.priorytet == 'true'
-           ? Colors.yellow
+           ? priorityColor
            : Colors.white,
         margin: const EdgeInsets.symmetric(
         horizontal: 15,
@@ -150,7 +167,7 @@ class _NoteItemState extends State<NoteItem> {
         child: Padding(
             padding: const EdgeInsets.all(1),
             child: ListTile(
-              tileColor: notatki.priorytet == 'true'  ? Colors.yellow : null,
+              tileColor: notatki.priorytet == 'true'  ? priorityColor : null,
               onTap: () {
                 //_showAlert(context, 'Edycja', '${frame.id}');
                 // globals.dataInspekcji = frame.data;
@@ -200,6 +217,23 @@ class _NoteItemState extends State<NoteItem> {
                           fontSize: 16,
                           //fontWeight: FontWeight.bold,
                           color: Color.fromARGB(255, 0, 0, 0)),
+                    ),
+                    if (notatki.pole1.isNotEmpty)
+                    TextSpan(
+                      text: '\n${AppLocalizations.of(context)!.taskDate}: ',
+                      style: TextStyle(
+                          fontSize: 14, color: Color.fromARGB(255, 0, 0, 0)),
+                      children: [
+                        TextSpan(
+                          text: globals.jezyk == 'pl_PL'
+                            ? '${notatki.pole1.substring(8)}.${notatki.pole1.substring(5, 7)}.${notatki.pole1.substring(0, 4)}'
+                            : notatki.pole1,
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 0, 0, 0)),
+                        ),
+                      ],
                     ),
                     TextSpan(
                       text: '\n${notatki.uwagi}',

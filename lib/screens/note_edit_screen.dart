@@ -37,7 +37,9 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   bool isChecked = false;
   List<Note> notatki = [];
   TextEditingController dateController = TextEditingController();
+  TextEditingController pole1Controller = TextEditingController();
   DateTime? _selectedDate = DateTime.now(); // domyślnie dziś ; //wybrana data
+  DateTime? _selectedDatePole1 = DateTime.now();
   String test = 'test start';
   // @override
   // void initState() {
@@ -74,6 +76,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           });
         }
         dateController.text = notatki[0].data;
+        pole1Controller.text = notatki[0].pole1;
         // nowyRok = notatki[0].data.substring(0, 4);
         // nowyMiesiac = notatki[0].data.substring(5, 7);
         // nowyDzien = notatki[0].data.substring(8);
@@ -116,6 +119,22 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
       setState(() {
         _selectedDate = pickedDate;
         dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate); // np. 2025-11-01
+      });
+    }
+  }
+
+  //kalendarz wyboru daty zadania (pole1)
+  Future<void> _selectDatePole1(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDatePole1,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDatePole1 = pickedDate;
+        pole1Controller.text = DateFormat('yyyy-MM-dd').format(pickedDate);
       });
     }
   }
@@ -328,6 +347,9 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                         setState(() {
                                           isChecked = value!;
                                           nowyPriorytet = value.toString();
+                                          if (!isChecked) {
+                                            pole1Controller.text = '';
+                                          }
                                         });
                                       },
                                     ),
@@ -337,6 +359,24 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                     Text(AppLocalizations.of(context)!.toDo),
                                   ]),
 
+//data zadania (pole1) - widoczne tylko gdy "Do zrobienia" zaznaczone
+                              if (isChecked)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 15.0),
+                                child: TextFormField(
+                                  controller: pole1Controller,
+                                  readOnly: true,
+                                  decoration: InputDecoration(
+                                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                                    focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                    labelText: AppLocalizations.of(context)!.taskDate,
+                                    labelStyle: TextStyle(color: Colors.black),
+                                    hintText: AppLocalizations.of(context)!.sElectDate,
+                                    suffixIcon: Icon(Icons.calendar_today),
+                                  ),
+                                  onTap: () => _selectDatePole1(context),
+                                ),
+                              ),
 
 //uwagi
                               SizedBox(
@@ -407,7 +447,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                             nowyNotatka!,
                                             0,
                                             nowyPriorytet!,
-                                            notatki[0].pole1,
+                                            pole1Controller.text,
                                             notatki[0].pole2,
                                             notatki[0].pole3,
                                             nowyUwagi!,
@@ -433,7 +473,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                         nowyNotatka!,
                                         0,
                                         nowyPriorytet!,
-                                        '',
+                                        pole1Controller.text,
                                         '',
                                         '',
                                         nowyUwagi!,

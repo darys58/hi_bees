@@ -1044,8 +1044,13 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     List<Note> notatki = notatkiData.items.where((no) {
       return no.priorytet.contains('true');
     }).toList();
-    //odwrotne sortowanie
-    final notatkiOdwrotnie = notatki.reversed.toList();
+    // Sortowanie: najpierw notatki z datą zadania (pole1) wg daty zadania ASC,
+    // potem notatki bez daty zadania wg daty notatki ASC
+    final notatkiZPole1 = notatki.where((no) => no.pole1.isNotEmpty).toList()
+      ..sort((a, b) => a.pole1.compareTo(b.pole1));
+    final notatkiBezPole1 = notatki.where((no) => no.pole1.isEmpty).toList()
+      ..sort((a, b) => a.data.compareTo(b.data));
+    final notatkiOdwrotnie = [...notatkiZPole1, ...notatkiBezPole1];
 
     //print('widzet główny - globals.key = ${globals.key}');
 
