@@ -12,7 +12,7 @@ class Note with ChangeNotifier {
   final String notatka; //
   final int status; //
   final String priorytet; //
-  final String pole1; //
+  final String pole1; // Data zadania
   final String pole2; //
   final String pole3; //
   final String uwagi; //

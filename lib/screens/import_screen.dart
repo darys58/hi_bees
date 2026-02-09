@@ -612,6 +612,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       jsonData += '"notatka": "${notatki[i].notatka}",';
                       jsonData += '"status": ${notatki[i].status},';
                       jsonData += '"priorytet": "${notatki[i].priorytet}",';
+                      jsonData += '"pole1": "${notatki[i].pole1}",';
+                      jsonData += '"pole2": "${notatki[i].pole2}",';
+                      jsonData += '"pole3": "${notatki[i].pole3}",';
                       jsonData += '"uwagi": "${notatki[i].uwagi}",';
                       jsonData += '"arch": ${notatki[i].arch}}';
                       i++;
@@ -1547,6 +1550,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       jsonData += '"notatka": "${notatki[i].notatka}",';
                       jsonData += '"status": ${notatki[i].status},';
                       jsonData += '"priorytet": "${notatki[i].priorytet}",';
+                      jsonData += '"pole1": "${notatki[i].pole1}",';
+                      jsonData += '"pole2": "${notatki[i].pole2}",';
+                      jsonData += '"pole3": "${notatki[i].pole3}",';
                       jsonData += '"uwagi": "${notatki[i].uwagi}",';
                       jsonData += '"arch": ${notatki[i].arch}}';
                       i++;
@@ -1992,6 +1998,9 @@ class _ImportScreenState extends State<ImportScreen> {
                     jsonData += '"notatka": "${notatki[i].notatka}",';
                     jsonData += '"status": ${notatki[i].status},';
                     jsonData += '"priorytet": "${notatki[i].priorytet}",';
+                    jsonData += '"pole1": "${notatki[i].pole1}",';
+                    jsonData += '"pole2": "${notatki[i].pole2}",';
+                    jsonData += '"pole3": "${notatki[i].pole3}",';
                     jsonData += '"uwagi": "${notatki[i].uwagi}",';
                     jsonData += '"arch": ${notatki[i].arch}}';
                     i++;
