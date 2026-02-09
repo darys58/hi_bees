@@ -580,8 +580,9 @@ class InfoItem extends StatelessWidget {
 //lista pozostałych info (oprócz przegladu)
 //********************************************/                
                 : ListTile( 
-                  tileColor: info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
-                              ? const Color.fromARGB(255, 244, 208, 208)
+                              //jeśli likwidacja ula, pozostałe 'brak', 'nie ma' itd. dotyczy braku matki
+                  tileColor: info.parametr == 'likwidacja ula' || info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
+                              ? const Color.fromARGB(255, 244, 208, 208) //czerwone tło infa
                               : info.data.substring(0, 4) == globals.rokStatystyk 
                                 ? null 
                                 : Colors.grey[200],
@@ -597,7 +598,7 @@ class InfoItem extends StatelessWidget {
                     },
 //leading - grafiki                    
                     leading: CircleAvatar(
-                        backgroundColor: info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
+                        backgroundColor: info.parametr == 'likwidacja ula' || info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
                                           ? const Color.fromARGB(255, 244, 208, 208)
                                           : info.data.substring(0, 4) == globals.rokStatystyk 
                                             ? Colors.white 

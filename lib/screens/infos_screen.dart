@@ -189,13 +189,13 @@ class _InfoScreenState extends State<InfoScreen> {
     //nazwy własne typów uli
     String nazwaWl(String typ){
       switch(typ){
-        case 'TYP A': nazwaWlasna = dod2[0].n; break;
-        case 'TYP B': nazwaWlasna = dod2[1].n; break;
-        case 'TYP C': nazwaWlasna = dod2[2].n; break;
-        case 'TYP D': nazwaWlasna = dod2[3].n; break;
+        case 'TYP A': nazwaWlasna = ' (${dod2[0].n})'; break;
+        case 'TYP B': nazwaWlasna = ' (${dod2[1].n})'; break;
+        case 'TYP C': nazwaWlasna = ' (${dod2[2].n})'; break;
+        case 'TYP D': nazwaWlasna = ' (${dod2[3].n})'; break;
         default:nazwaWlasna = '';     
       }
-      return ' ($nazwaWlasna)';
+      return '$nazwaWlasna';
     }
 
     //poszukanie najstarszego roku w wybranej kategorii
@@ -1892,41 +1892,9 @@ class _InfoScreenState extends State<InfoScreen> {
               ),
             ),
         
-            //   ]
-            // ),
+         
         
-        //lista z info o ostatniej inpekcji - bez mozliwosci skasowania
-            //   );
-            // wybranaKategoria == 'inspection'
-            //     ? Card(
-            //         margin:
-            //             const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
-            //         child: ListTile(
-            //             //zeby nie mozna było skasować ptzejścia do inspekcji
-            //             onTap: () {
-            //               Navigator.of(context).pushNamed(
-            //                 FramesScreen.routeName,
-            //                 arguments: globals.ulID,
-            //               );
-            //             },
-            //             leading: CircleAvatar(
-            //               backgroundColor: Colors.white,
-            //               child: Image.asset(
-            //                   'assets/image/hi_bees.png'), //done_outline_rounted //face //female_rounded
-            //             ),
-            //             title: Text(AppLocalizations.of(context)!.bigInspections,
-            //                 style: const TextStyle(
-            //                     fontSize: 14, color: Colors.black)),
-            //             //subtitle: Text(
-            //             // 'last inspection',
-            //             //'${infos[0].parametr}  ${infos[0].wartosc} ${infos[0].miara}',
-            //             //  style:
-            //             //       const TextStyle(fontSize: 18, color: Colors.black)),
-            //             trailing: const Icon(Icons.arrow_forward_ios)),
-            //       )
-           
-        
-//Statystyki zbiorów dla biezacego roku - wykres
+//STATYSTYKI / OSTATNIE INFA  dla biezacego roku - ostatnie infa i wykresy
         //Wykres zbiorów miodu
             SizedBox(height: 10),
             if (wybranaKategoria == 'harvest' && globals.wykresZbiory == 'miod' && miod > 0)

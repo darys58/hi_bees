@@ -533,10 +533,20 @@ class HivesItem extends StatelessWidget {
                               Icons.hive,
                               color: Color.fromARGB(255, 233, 132, 1),
                             )
-                          : const Icon(
-                              Icons.hive,
-                              color: Color.fromARGB(255, 255, 0, 0),
-                            ),
+                          : hive.ikona == 'red'
+                            ? const Icon(
+                                Icons.hive,
+                                color: Color.fromARGB(255, 255, 0, 0),
+                              )
+                            : hive.ikona == 'black'
+                              ? const Icon(
+                                  Icons.hive,
+                                  color: Color.fromARGB(255, 0, 0, 0),
+                                )
+                              : const Icon(
+                                  Icons.hive,
+                                  color: Color.fromARGB(255, 100, 100, 100),
+                                ),
             )),
       ),
     ),

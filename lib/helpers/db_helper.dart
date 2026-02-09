@@ -636,6 +636,14 @@ class DBHelper {
     return db.rawQuery('SELECT * FROM matki ORDER BY id DESC');
   }
 
+  //odczyt ID matki tabeli matki  - dla infos_screen
+  static Future<List<Map<String, dynamic>>> getQueenID(int pasieka, int ul,) async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie ID matki dla ula x');
+    return db.rawQuery('SELECT id FROM matki WHERE pasieka=? and ul = ?',
+        [pasieka, ul]);
+  }
+
   //odczyt z tabeli zbiory - dla harvest_screen
   static Future<List<Map<String, dynamic>>> getZbiory() async {
     final db = await DBHelper.database();
@@ -714,11 +722,11 @@ class DBHelper {
   }
 
    //usuniecie rekordu o podanym id z tabeli matki - dla , queen_item
-  static Future<void> deleteQueen(int id) async {
-    final db = await DBHelper.database();
-  //  print('DBhelper: delete notatki id = $id');
-    db.delete('matki', where: 'id= ?', whereArgs: [id]);
-  }
+  // static Future<void> deleteQueen(int id) async {
+  //   final db = await DBHelper.database();
+  // //  print('DBhelper: delete matki id = $id');
+  //   db.delete('matki', where: 'id= ?', whereArgs: [id]);
+  // }
 
   //usuniecie rekordu o podanym id z tabeli sprzedaz - dla sale_edit_screen, sale_item
   static Future<void> deleteSprzedaz(int id) async {

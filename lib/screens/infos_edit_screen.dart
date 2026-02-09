@@ -241,7 +241,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       if(nowyParametr == AppLocalizations.of(context)!.acid) nowyMiara = 'ml'; //wartość domyslna dla kwasu w ml
       if(nowyParametr == " " + AppLocalizations.of(context)!.acid) nowyMiara = 'g'; //wartość domyslna dla kwasu w g
       if(nowyParametr ==  'varroa') nowyMiara = AppLocalizations.of(context)!.mites; //wartość domyslna dla varroa
-      
+print(' kategoria = $nowaKategoria,  parametr = $nowyParametr ');      
       //zeby wpis(notatka) z przeglądu dotyczył tylko wybranego przegladu i nie zmieniał czasu
       if(nowyParametr == AppLocalizations.of(context)!.inspection){
         // to pobranie wszystkich info dla ula
@@ -2010,7 +2010,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           }else{
                             if(_selectedZakresUli[0] == true){ //dodawanie info tylko dla tego ula
                               //print('dodawanie info - rodzaj ula = $rodzajUla');
-                              //print('usunieto pokarm - nowaWartość = $nowyWartosc');
+                              //print('usunieto pokarm - nowaWartość = $nowyWartosc')                              
                               Infos.insertInfo(
                                 '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
                                 dateController.text,
@@ -2033,10 +2033,123 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 nowyUwagi!,
                                 0, //info[0].arch,
                               ).then((_) {
-                                Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
-                                  .then((_) {
-                                  Navigator.of(context).pop();
-                                });
+                                //jezeli LIKWIDACJA ULA to dodaj info o likwidacji ula do wszystkich kategorii ula
+                                if(nowyParametr == AppLocalizations.of(context)!.hiveLiquidation ) {
+                                  print('zapisywanie w kategoriach!!!!!!!!!!!!!!');
+                                  Infos.insertInfo(
+                                    '${dateController.text}.$nowaPasieka.$nowyUl.equipment.$nowyParametr',
+                                    dateController.text,
+                                    nowaPasieka,
+                                    nowyUl,
+                                    'equipment',
+                                    nowyParametr,
+                                    '', //nowyWartosc,
+                                    '', //nowyMiara!
+                                    '',
+                                    '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                    formatterHm.format(DateTime.now()),
+                                    nowyUwagi!,
+                                    0, //info[0].arch,
+                                  ).then((_) {
+                                    Infos.insertInfo(
+                                      '${dateController.text}.$nowaPasieka.$nowyUl.colony.$nowyParametr',
+                                      dateController.text,
+                                      nowaPasieka,
+                                      nowyUl,
+                                      'colony',
+                                      nowyParametr,
+                                      '', //nowyWartosc,
+                                      '', //nowyMiara!
+                                      '',
+                                      '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                      formatterHm.format(DateTime.now()),
+                                      nowyUwagi!,
+                                      0, //info[0].arch,
+                                    ).then((_) {
+                                      //pobranie ID matki przypisanej do tego ula
+                                      DBHelper.getQueenID(nowaPasieka, nowyUl).then((data) {
+                                      int? matkaIdUla;
+                                      if (data.isNotEmpty) {
+                                        matkaIdUla = data[0]['id'] as int;
+                                      }
+
+                                      Infos.insertInfo(
+                                        '${dateController.text}.$nowaPasieka.$nowyUl.queen.$nowyParametr',
+                                        dateController.text,
+                                        nowaPasieka,
+                                        nowyUl,
+                                        'queen',
+                                        nowyParametr,
+                                        '', //nowyWartosc,
+                                        '', //nowyMiara!
+                                        '${matkaIdUla ?? ''}', //ID matki a jak nie ma to ''
+                                        '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                        formatterHm.format(DateTime.now()),
+                                        nowyUwagi!,
+                                        0, //info[0].arch,
+                                      ).then((_) {
+                                        Infos.insertInfo(
+                                          '${dateController.text}.$nowaPasieka.$nowyUl.harvest.$nowyParametr',
+                                          dateController.text,
+                                          nowaPasieka,
+                                          nowyUl,
+                                          'harvest',
+                                          nowyParametr,
+                                          '', //nowyWartosc,
+                                          '', //nowyMiara!
+                                          '',
+                                          '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                          formatterHm.format(DateTime.now()),
+                                          nowyUwagi!,
+                                          0, //info[0].arch,
+                                        ).then((_) {
+                                          Infos.insertInfo(
+                                            '${dateController.text}.$nowaPasieka.$nowyUl.feeding.$nowyParametr',
+                                            dateController.text,
+                                            nowaPasieka,
+                                            nowyUl,
+                                            'feeding',
+                                            nowyParametr,
+                                            '', //nowyWartosc,
+                                            '', //nowyMiara!
+                                            '',
+                                            '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                            formatterHm.format(DateTime.now()),
+                                            nowyUwagi!,
+                                            0, //info[0].arch,
+                                          ).then((_) {
+                                            Infos.insertInfo(
+                                              '${dateController.text}.$nowaPasieka.$nowyUl.treatment.$nowyParametr',
+                                              dateController.text,
+                                              nowaPasieka,
+                                              nowyUl,
+                                              'treatment',
+                                              nowyParametr,
+                                              '',//nowyWartosc,
+                                              '', //nowyMiara!
+                                              '',
+                                              '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                              formatterHm.format(DateTime.now()),
+                                              nowyUwagi!,
+                                              0, //info[0].arch,
+                                            ).then((_) {
+                                              Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                                                .then((_) {
+                                                Navigator.of(context).pop();
+                                              });
+                                            });
+                                          });
+                                        });
+                                      });
+                                      }); // getQueenID
+                                    });
+                                  });
+                                }else{
+                                  Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                                    .then((_) {
+                                    Navigator.of(context).pop();
+                                  });
+                                };
                               });
                             }else{ //dodawanie tego samego info dla wszystkich uli
                               //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
@@ -2070,8 +2183,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             }
                           }
 
-                        //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki lub wyposazenia
-                        if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'queen' || nowaKategoria == 'equipment') {
+                        //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki lub wyposazenia lub przeglądu (bo likwidacja ula i zmiana ikony na czarną)
+                        if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'queen' || nowaKategoria == 'equipment'  || nowaKategoria == 'inspection') {
                           //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli (belki)
                           final hiveData = Provider.of<Hives>(context,listen: false);
                           final hive = hiveData.items.where((element) {
@@ -2231,9 +2344,16 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = "){
                               ramek = int.parse(nowyWartosc);
                               globals.iloscRamek = ramek; //nie wiem czy potrzeba ???
+                               if (ikona == 'black') { //bo była likwidacja ula
+                                ikona = 'green';
+                              }
                             }
                            }
-                          
+                          //jezeli LIKWIDACJA ULA to zmień ikonę na czarną
+                          if (nowaKategoria == 'inspection' && nowyParametr == AppLocalizations.of(context)!.hiveLiquidation ) {
+                            ikona = 'black';
+                          }
+                          print('nowaKategoria = $nowaKategoria, nowyParametr = $nowyParametr, ikona = $ikona');
                           //print('zapis do hive - rodzaj ula = $rodzajUla');          
                           Hives.insertHive(
                             '$nowaPasieka.$nowyUl',
