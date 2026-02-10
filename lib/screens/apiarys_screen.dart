@@ -119,7 +119,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.5.74 01.02.2025 - bład przy wyświetlaniu w hive_screen danych o matkach bez belki zasobów,
   //1.9.6.75 07.02.2026 - raport_color_screen -> litry miodu w legendzie zbiorów (1l=1.45kg), legenda miodobrań w kolumnie, przycisk PDF przy wykresach zbiorów miodu i pyłku, summary_screen - Ostatnie informacje (zbiorcze) na dodatkowym ekranie + Notes, ustawianie obsługi przycisku NFC, usuniecie daty obowiązywania subskrypcji
   //1.9.6.76 07.02.2026 - AppStore udrzucił wersję 1.9.6.75, zmieniłem share_plus: ^7.2.2 na share_plus: ^10.1.4
-  //1.9.7.77 08.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie,
+  //1.9.7.77 08.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie, Historia matki + PDF
 
   final wersja = '1.9.7.77'; //wersja aplikacji na iOS
   final dataWersji = '2026-02-08';

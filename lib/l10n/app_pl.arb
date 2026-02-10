@@ -668,6 +668,29 @@
     "inspectionNote": "Notatki",
     "frameReview": "Przegląd ramek",
     "taskDate": "Data zadania",
-    "queenHistory": "Historia matki"
+    "queenHistory": "Historia matki",
+    "pdfQueenHistoryTitle": "Historia matki ID {id}",
+    "@pdfQueenHistoryTitle": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+    "pdfLp": "L.p.",
+    "pdfApiaryHive": "Pasieka / Ul",
+    "pdfDate": "Data",
+    "pdfHour": "Czas",
+    "pdfTemperature": "Temp.",
+    "pdfInformation": "Informacja",
+    "pdfRemarks": "Uwagi",
+    "pdfLine": "Linia",
+    "pdfBreed": "Rasa",
+    "pdfMark": "Znak",
+    "pdfLabel": "Napis",
+    "pdfSource": "Źródło",
+    "pdfObtainedDate": "Data pozyskania",
+    "pdfLostDate": "Stracona",
+    "pdfGeneratingError": "Błąd generowania PDF"
 
 }

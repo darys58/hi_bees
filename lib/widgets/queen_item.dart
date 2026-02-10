@@ -88,6 +88,13 @@ class _QueenItemState extends State<QueenItem> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              
+              Icon(
+                Icons.history,
+                color: Colors.white,
+                size: 40,
+              ),
+              SizedBox(width:20),
               if(matki.dataStraty == '' && matki.ul != 0)
                 Icon(
                   Icons.highlight_off,

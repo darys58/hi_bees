@@ -1337,5 +1337,43 @@
     "taskDate": "Task date",
     "@taskDate": {},
     "queenHistory": "Queen history",
-    "@queenHistory": {}
+    "@queenHistory": {},
+    "pdfQueenHistoryTitle": "Queen history ID {id}",
+    "@pdfQueenHistoryTitle": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+    "pdfLp": "No.",
+    "@pdfLp": {},
+    "pdfApiaryHive": "Apiary / Hive",
+    "@pdfApiaryHive": {},
+    "pdfDate": "Date",
+    "@pdfDate": {},
+    "pdfHour": "Time",
+    "@pdfHour": {},
+    "pdfTemperature": "Temp.",
+    "@pdfTemperature": {},
+    "pdfInformation": "Information",
+    "@pdfInformation": {},
+    "pdfRemarks": "Remarks",
+    "@pdfRemarks": {},
+    "pdfLine": "Line",
+    "@pdfLine": {},
+    "pdfBreed": "Breed",
+    "@pdfBreed": {},
+    "pdfMark": "Mark",
+    "@pdfMark": {},
+    "pdfLabel": "Label",
+    "@pdfLabel": {},
+    "pdfSource": "Source",
+    "@pdfSource": {},
+    "pdfObtainedDate": "Obtained date",
+    "@pdfObtainedDate": {},
+    "pdfLostDate": "Lost",
+    "@pdfLostDate": {},
+    "pdfGeneratingError": "PDF generation error",
+    "@pdfGeneratingError": {}
 }
