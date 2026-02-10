@@ -35,6 +35,7 @@ int nrRamkiPrzeniesZ = 1; //numer ramki z którego przenoszona jest ramka
 int nrUlaPrzeniesDo = 1; //numer ula do którego przenoszona jest ramka
 int nrKorpusuPrzeniesDo = 1; //numer korpusu do którego przenoszona jest ramka
 int nrRamkiPrzeniesDo = 1; //numer ramki do którego przenoszona jest ramka
+int nrPasiekiPrzeniesDo = 1; //numer pasieki do której przenoszona jest ramka
 int nowyNrUla = 1;
 int nowyNrKorpusu = 1;
 int nowyNrRamki = 1;

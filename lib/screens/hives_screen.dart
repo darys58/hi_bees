@@ -1073,6 +1073,7 @@ class _HivesScreenState extends State<HivesScreen> {
           //to wczytanie danych edytowanego ula
           return element.id == ('${globals.pasiekaID}.$numerUla');
         }).toList();
+        String ostatniPrzeglad = hive[0].przeglad; //
         ikona = hive[0].ikona; 
         ileRamek = hive[0].ramek;
         korpusNr = hive[0].korpusNr; 
@@ -1166,16 +1167,20 @@ class _HivesScreenState extends State<HivesScreen> {
               if ((todo != '' && todo != '0') && (ikona != 'red' || ikona != 'orange')) {
                 ikona = 'yellow';
               }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';                
-                          
+               print('${globals.pasiekaID}.${numerUla} = ');   
 //ZAPIS DANYCH O ULU              
                 Hives.insertHive(
                   '${globals.pasiekaID}.${numerUla}',
                   globals.pasiekaID, //pasieka nr
                   numerUla, //ul nr
-                  framesZas[0].data, //przeglad
+                  framesZas.isEmpty
+                    ? ostatniPrzeglad  //jak nie ma danych dla ramekPo bo np. wszystkie zostały przenesione lub usunięte
+                    : framesZas[0].data, //przeglad
                   ikona, //kolor ikony ula
                   ileRamek, //ilość ramek w korpusie pobrana z wpisów w "info"
-                  framesZas[0].korpusNr,
+                  framesZas.isEmpty
+                    ? 1  //jak nie ma danych dla ramekPo bo np. wszystkie zostały przenesione lub usunięte
+                    : framesZas[0].korpusNr,
                   trut,
                   czerw,
                   larwy,

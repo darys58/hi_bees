@@ -703,6 +703,32 @@ class InfoItem extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                       color: Color.fromARGB(255, 0, 0, 0)),
                                     )
+                                    //to jezeli to stan rodziny i wartość "zła"  (agresywna)                                                              
+//to jezeli to poławiacz pyłku i wartość                               
+                              : (info.parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (info.wartosc == AppLocalizations.of(context)!.zalacz || info.wartosc == AppLocalizations.of(context)!.set || info.wartosc == AppLocalizations.of(context)!.close))
+                                ? TextSpan(
+                                  text: (AppLocalizations.of(context)!.zalacz1), //załaczony
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 0, 0, 0)),
+                                  )
+                                : (info.parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (info.wartosc == AppLocalizations.of(context)!.off || info.wartosc == AppLocalizations.of(context)!.open))
+                                  ? TextSpan(
+                                    text: (AppLocalizations.of(context)!.off1), //normalna
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color.fromARGB(255, 0, 0, 0)),
+                                    )
+                                  : (info.parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (info.wartosc == AppLocalizations.of(context)!.remove || info.wartosc == AppLocalizations.of(context)!.delete))
+                                    ? TextSpan(
+                                      text: (AppLocalizations.of(context)!.remove1), //normalna
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 0, 0, 0)),
+                                      )
 //jezeli to nie matka (3) i nie stan rodziny to: wartość  bez modyfikacji                              
                                   : info.parametr == 'tag NFC' 
                                     ? TextSpan(

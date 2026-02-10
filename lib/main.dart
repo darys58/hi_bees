@@ -35,6 +35,7 @@ import './screens/note_screen.dart';
 import './screens/note_edit_screen.dart';
 import './screens/queens_screen.dart';
 import './screens/queen_edit_screen.dart';
+import './screens/queen_history_screen.dart';
 import './screens/add_hive_screen.dart';
 import './screens/add_queen_screen.dart';
 import './screens/apiary_weather_5days.dart';
@@ -48,6 +49,7 @@ import './screens/syrup11_calculator_screen.dart';
 import './screens/cake_calculator_screen.dart';
 import './screens/summary_screen.dart';
 import './screens/nfc_settings_screen.dart';
+
 //import './screens/languages_screen.dart';
 
 import './models/apiarys.dart';
@@ -254,6 +256,7 @@ class _MyAppState extends State<MyApp> {
           NoteEditScreen.routeName: (ctx) => NoteEditScreen(),
           QueenScreen.routeName: (ctx) => QueenScreen(),
           QueenEditScreen.routeName: (ctx) => QueenEditScreen(),
+          QueenHistoryScreen.routeName: (ctx) => QueenHistoryScreen(),
           AddHiveScreen.routeName: (ctx) => AddHiveScreen(),
           AddQueenScreen.routeName: (ctx) => AddQueenScreen(),
           Weather5DaysScreen.routeName: (ctx) => Weather5DaysScreen(),

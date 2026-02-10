@@ -13,7 +13,7 @@ import '../models/queen.dart';
 import '../screens/queens_screen.dart';
 import '../screens/infos_edit_screen.dart';
 import '../screens/frame_edit_screen.dart';
-import '../screens/frame_move_screen.dart';
+//import '../screens/frame_move_screen.dart';
 import '../screens/frame_edit_screen2.dart';
 //import '../screens/add_queen_screen.dart';
 
@@ -410,8 +410,17 @@ class _InfoScreenState extends State<InfoScreen> {
         if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
-            wartosc3 = infos[i].parametr + ' ' + infos[i].wartosc +
+            
+            if(infos[i].wartosc == AppLocalizations.of(context)!.zalacz || infos[i].wartosc == AppLocalizations.of(context)!.set || infos[i].wartosc == AppLocalizations.of(context)!.close){
+              wartosc3 = AppLocalizations.of(context)!.zalacz1 +
+                ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            }else if(infos[i].wartosc == AppLocalizations.of(context)!.off || infos[i].wartosc == AppLocalizations.of(context)!.open){
+              wartosc3 = AppLocalizations.of(context)!.off1 +
+                ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            }else{
+              wartosc3 = AppLocalizations.of(context)!.remove1 +
                 ' (${zmienDate_cala(infos[i].data)})';
+            }
           }
         }
         
@@ -943,16 +952,6 @@ class _InfoScreenState extends State<InfoScreen> {
             style: TextStyle(fontSize: 18)),
             ),
           
-          if(wybranaKategoria == 'inspection')  
-            TextButton(onPressed: (){
-              Navigator.of(context).pop();
-              Navigator.of(context).pushNamed(
-                  FrameMoveScreen.routeName,
-                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
-                );
-            }, child: Text((AppLocalizations.of(context)!.mOvingFrame), //przenoszenie ramki
-            style: TextStyle(fontSize: 18)),
-            ),
            
            if(wybranaKategoria == 'inspection')
             TextButton(onPressed: (){
@@ -2103,9 +2102,9 @@ class _InfoScreenState extends State<InfoScreen> {
                       if (wartosc4 != '')
                         Text('(1) $wartosc4', style: const TextStyle(fontSize: 16)),
                       if (wartosc3 != '')
-                        Text('(2) $wartosc3', style: const TextStyle(fontSize: 16)),
+                        Text('(2) ' + AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs + ' $wartosc3', style: const TextStyle(fontSize: 16)),
                       if (wartosc2 != '')
-                        Text('(3) $wartosc2', style: const TextStyle(fontSize: 16)),
+                        Text('(3) $wartosc2', style: const TextStyle(fontSize: 16)), 
                       if (wartosc1 != '')
                         Text('(4/5) $wartosc1', style: const TextStyle(fontSize: 16)),                    
                     ],
@@ -2368,7 +2367,7 @@ class _InfoScreenState extends State<InfoScreen> {
                                   //fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0))),
                            ],),
-//informacje z przeglądów                   
+//informacje o matce                  
                       SizedBox(height: 5),    
  //ograniczenie matki
                       if (wartosc4 != '')

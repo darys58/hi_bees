@@ -8,6 +8,7 @@ import '../models/apiarys.dart';
 // import '../models/info.dart';
 import '../helpers/db_helper.dart';
 import '../screens/queen_edit_screen.dart';
+import '../screens/queen_history_screen.dart';
 //import '../screens/infos_screen.dart';
 import '../globals.dart' as globals;
 //import '../models/frames.dart';
@@ -120,22 +121,16 @@ class _QueenItemState extends State<QueenItem> {
                         : Text(AppLocalizations.of(context)!.eDitQueen),
               
               actions: [
-                //Edytuj
+                //Historia
                 TextButton(
                   onPressed: () => {Navigator.of(context).pop(false),
                     Navigator.of(context).pushNamed(
-                      QueenEditScreen.routeName,
-                      arguments: {'idQueen': matki.id},
+                      QueenHistoryScreen.routeName,
+                      arguments: {'queenId': matki.id},
                     ),
                   },
-                  child: Text(AppLocalizations.of(context)!.eDit), //Edytuj matkę
+                  child: Text(AppLocalizations.of(context)!.queenHistory),
                 ),
-                //Anuluj
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(AppLocalizations.of(context)!.cancel), // Anuluj
-                ),
-                
                 //Odłacz matkę - jezeli matka zyje
                 if(matki.dataStraty == '' && matki.ul != 0)
                   TextButton(
@@ -165,6 +160,24 @@ class _QueenItemState extends State<QueenItem> {
                     },
                     child: Text(AppLocalizations.of(context)!.dIsconnectQueen), //Odłacz matkę
                   ),
+                
+                //Edytuj
+                TextButton(
+                  onPressed: () => {Navigator.of(context).pop(false),
+                    Navigator.of(context).pushNamed(
+                      QueenEditScreen.routeName,
+                      arguments: {'idQueen': matki.id},
+                    ),
+                  },
+                  child: Text(AppLocalizations.of(context)!.eDit), //Edytuj matkę
+                ),
+                //Anuluj
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(AppLocalizations.of(context)!.cancel), // Anuluj
+                ),
+                
+                
 
               ],
             );

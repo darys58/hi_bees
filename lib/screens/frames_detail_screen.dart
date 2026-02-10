@@ -66,7 +66,7 @@ class _FramesDetailScreenState extends State<FramesDetailScreen> {
               Navigator.of(context).pop();
               Navigator.of(context).pushNamed(
                   FrameMoveScreen.routeName,
-                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData},
                 );
             }, child: Text((AppLocalizations.of(context)!.mOvingFrame),
             style: TextStyle(fontSize: 18)),

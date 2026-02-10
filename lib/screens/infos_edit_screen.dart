@@ -241,7 +241,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       if(nowyParametr == AppLocalizations.of(context)!.acid) nowyMiara = 'ml'; //wartość domyslna dla kwasu w ml
       if(nowyParametr == " " + AppLocalizations.of(context)!.acid) nowyMiara = 'g'; //wartość domyslna dla kwasu w g
       if(nowyParametr ==  'varroa') nowyMiara = AppLocalizations.of(context)!.mites; //wartość domyslna dla varroa
-print(' kategoria = $nowaKategoria,  parametr = $nowyParametr ');      
+     
       //zeby wpis(notatka) z przeglądu dotyczył tylko wybranego przegladu i nie zmieniał czasu
       if(nowyParametr == AppLocalizations.of(context)!.inspection){
         // to pobranie wszystkich info dla ula
@@ -1684,19 +1684,19 @@ print(' kategoria = $nowaKategoria,  parametr = $nowyParametr ');
                                 value: nowyWartosc,  
                                 items: [
                                                                                                                                               
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.open),
-                                                  value: AppLocalizations.of(context)!.open),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.close),
-                                                  value: AppLocalizations.of(context)!.close),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.set),
-                                                  value: AppLocalizations.of(context)!.set),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.zalacz),
+                                  // DropdownMenuItem(child: Text(AppLocalizations.of(context)!.open),
+                                  //                 value: AppLocalizations.of(context)!.open),
+                                  // DropdownMenuItem(child: Text(AppLocalizations.of(context)!.close),
+                                  //                 value: AppLocalizations.of(context)!.close),
+                                  // DropdownMenuItem(child: Text(AppLocalizations.of(context)!.set),
+                                  //                 value: AppLocalizations.of(context)!.set),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.zalacz1),
                                                   value: AppLocalizations.of(context)!.zalacz),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.off),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.off1),
                                                   value: AppLocalizations.of(context)!.off),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.delete),
-                                                  value: AppLocalizations.of(context)!.delete), 
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.remove),
+                                  // DropdownMenuItem(child: Text(AppLocalizations.of(context)!.delete),
+                                  //                 value: AppLocalizations.of(context)!.delete), 
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.remove1),
                                                   value: AppLocalizations.of(context)!.remove),                                                                       
                                 
                                 ], //lista elementów do wyboru

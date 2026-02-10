@@ -174,14 +174,13 @@ Każdy provider dziedziczy `ChangeNotifier` i zarządza listą `_items`.
 
 ## W trakcie rozwoju
 
-### Ekran podsumowania ula (`summary_screen.dart`)
+### Historia matki (`queen_history_screen.dart`)
 - **Status:** bazowa wersja gotowa, do dalszego rozwijania
-- **Plik:** `lib/screens/summary_screen.dart`
-- **Route:** `/screen-summary`
-- **Nawigacja:** swipe left z `hives_item.dart` (GestureDetector, velocity.dx < -300)
-- **Obecna zawartość:** 3 karty (pasieka/ul + ikona, typ ula + ramki, dni od przeglądu)
-- **Lokalizacja:** klucze `summary`, `sinceLastInspection` w obu plikach ARB
-- **Do rozwinięcia:** dodatkowe informacje o ulu, zasoby, matka, historia przeglądów itp.
+- **Plik:** `lib/screens/queen_history_screen.dart`
+- **Route:** `/screen-queen-history`
+- **Nawigacja:** przycisk "Historia" w showDialog z `queen_item.dart`
+- **Dane:** segment z danymi matki + segmenty z info (kategoria "queen") posortowane od najstarszego
+- **Lokalizacja:** klucz `queenHistory` w obu plikach ARB
 
 ---
 
