@@ -691,6 +691,11 @@
     "pdfSource": "Źródło",
     "pdfObtainedDate": "Data pozyskania",
     "pdfLostDate": "Stracona",
-    "pdfGeneratingError": "Błąd generowania PDF"
+    "pdfGeneratingError": "Błąd generowania PDF",
+    "deleteDataOnSerwer": "Usunięte zostaną wszystkie dane na serwerze zewnętrznym (w chmurze), które są kopią zapasową danych w aplikacji. Usunięcie ich jest ostateczne, bez możliwości odzyskania. Dane w aplikacji pozostaną ale do chwili eksportu ich do chmury nie będą miały kopii zapasowej.",
+    "deleteAllDataOnSerwer": "Kasowanie kopii zapasowej w chmurze",
+    "allDatabaseOnSerwer": "wszystkich danych na serwerze zewnętrznym",
+    "deleteOk": "Kopia zapasowa w chmurze została usunięta. Dane zgromadzone w aplikacji nie mają kopii zapasowej.",
+    "backupAllData": "kopia zapasowa danych lokalych"
 
 }

@@ -608,11 +608,17 @@ class DBHelper {
         [wybranaData, pasieka, ul]);
   }
 
-  //odczyt z tabeli memory  - dla apiary_screen
+  //odczyt z tabeli memory dla urzadzenia - dla apiary_screen
   static Future<List<Map<String, dynamic>>> getMem(String dev) async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie memory dla dev = $dev');
     return db.rawQuery('SELECT * FROM memory WHERE  dev = ? OR dev = "test"', [dev]);
+  }
+  //odczyt z tabeli memory  - dla apiary_screen - logowanie bez device
+  static Future<List<Map<String, dynamic>>> getMemory() async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie memory dla dev = $dev');
+    return db.rawQuery('SELECT * FROM memory');
   }
 
   //odczyt z tabeli dodatki1  - dla apiary_screen

@@ -2437,7 +2437,7 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
-  //kasowanie zawartości tabeli ramka, info, ule i pasieki
+  //kasowanie zawartości wszystkich tabeli 
   void _showAlertDeleteRamkaInfo(
       BuildContext context, String nazwa, String text) {
     showDialog(
@@ -2498,6 +2498,106 @@ class _ImportScreenState extends State<ImportScreen> {
           false, //zeby zaciemnione tło było zablokowane na kliknięcia
     );
   }
+
+
+
+
+  //kasowanie danych na serwerze zewnętrznym (w chmurze)
+  void _showAlertDeleteDataOnSerwer(
+      BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          //zeby tekst był wyśrodkowany w poziomie
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              WyslijPolecenieKasowania();
+                                               
+            },
+            child: Text(AppLocalizations.of(context)!.dElete),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible:
+          false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
+
+//wyslania polecenia kasowania wszystkich danych  na serwerze w chmurze
+  Future<void> WyslijPolecenieKasowania() async {
+    final http.Response response = await http.post(
+      Uri.parse('https://darys.pl/cbt_hi_del_database.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        "kod_mobile": globals.kod,
+        "deviceId": globals.deviceId,
+        "wersja": globals.wersja,
+        "jezyk": globals.jezyk,
+      }),
+    );
+    //print('$kod ${globals.deviceId} $wersja ${globals.jezyk}');
+    //print(response.body);
+    if (response.statusCode >= 200 && response.statusCode <= 400) {
+      Map<String, dynamic> odpPost = json.decode(response.body);
+      if (odpPost['success'] == 'ok') {
+        _showAlertOK(context, AppLocalizations.of(context)!.success,
+            AppLocalizations.of(context)!.deleteOk );//+ odpPost['be_do']);
+        //zapis do bazy lokalnej z bazy www
+        // DBHelper.deleteTable('memory').then((_) {
+        //   //kasowanie tabeli bo będzie nowy wpis
+        //   Memory.insertMemory(
+        //     odpPost['be_id'], //id
+        //     odpPost['be_email'],
+        //     //ponizej wstawone wartosci deviceId i wersja z apki, bo www nie zdązy ich zapisać i nie ma ich po pobraniu
+        //     //globals.deviceId, //
+        //     odpPost['be_dev'], //deviceId
+        //     //wersja, //
+        //     odpPost['be_wersja'], //wersja apki
+        //     odpPost['be_kod'], //kod
+        //     odpPost['be_key'], //accessKey
+        //     odpPost['be_od'], //data od
+        //     odpPost['be_do'], // do data
+        //     '', //globals.memJezyk, //memjezyk - język ustawiony w Ustawienia/Język apki
+        //     '', //zapas
+        //     '', //zapas
+        //   );
+        // });
+      } else {
+        _showAlertOK(context, AppLocalizations.of(context)!.alert,
+            AppLocalizations.of(context)!.errorWhileActivating);
+        // print('brak danych dla tej apki');
+      }
+
+      //Navigator.of(context).pushNamed(OrderScreen.routeName);
+      //}
+    } else {
+      throw Exception('Failed to create OdpPost.');
+    }
+  }
+
+
+
 
   //wysyłanie backupu ramka
   Future<void> wyslijBackupRamka(String jsonData1) async {
@@ -3229,19 +3329,19 @@ class _ImportScreenState extends State<ImportScreen> {
                 child: ListTile(
                   //leading: Icon(Icons.settings),
                   title: Text(AppLocalizations.of(context)!.exportAllToCloud),//wszystkich wybranych
-                  //subtitle: Text(AppLocalizations.of(context)!.onlyNew),
+                  subtitle: Text(AppLocalizations.of(context)!.backupAllData),
                 ),
               ),
             ),        
 
 
-//usunięcie wszystkich danych o przeglądach i info
+//usunięcie wszystkich danych w tabelach lokalnych
             GestureDetector(
               onTap: () {
                 _showAlertDeleteRamkaInfo(
                     context,
                     (AppLocalizations.of(context)!.alert),
-                    (AppLocalizations.of(context)!.deleteRamkaInfo));
+                    (AppLocalizations.of(context)!.deleteRamkaInfo)); //usunięcie wszystkich danych lokalnie
                 //Navigator.of(context).pushNamed(SettingsScreen.routeName);
               },
               child: Card(
@@ -3252,6 +3352,27 @@ class _ImportScreenState extends State<ImportScreen> {
                 ),
               ),
             ),
+
+//usunięcie wszystkich danych w chmurze (zmiany nazw tabeli na" data_czas_prefix_nazwaTabeli"
+            GestureDetector(
+              onTap: () {
+                _showAlertDeleteDataOnSerwer(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.deleteDataOnSerwer));
+                //Navigator.of(context).pushNamed(SettingsScreen.routeName);
+              },
+              child: Card(
+                child: ListTile(
+                  //leading: Icon(Icons.settings),
+                  title: Text(AppLocalizations.of(context)!.deleteAllDataOnSerwer),
+                  subtitle: Text(AppLocalizations.of(context)!.allDatabaseOnSerwer),
+                ),
+              ),
+            ),
+
+
+
 //polityka prywatności
 //             GestureDetector(
 //               onTap: () {

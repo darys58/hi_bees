@@ -365,7 +365,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                 padding: const EdgeInsets.only(top: 15.0),
                                 child: TextFormField(
                                   controller: pole1Controller,
-                                  readOnly: true,
+                                  //readOnly: true, // blokuje ręczne wpisywanie
                                   decoration: InputDecoration(
                                     enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
                                     focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),

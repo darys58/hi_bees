@@ -434,7 +434,6 @@ class _QueenEditScreenState extends State<QueenEditScreen> {
                                   controller: dateControllerStraty,
                                   //readOnly: true, // blokuje ręczne wpisywanie
                                   decoration: InputDecoration(
-                         
                                   enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
                                   focusedBorder: OutlineInputBorder(borderSide:BorderSide(color: Colors.blue)),
                                   labelText: AppLocalizations.of(context)!.dAteLoss,

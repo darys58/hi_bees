@@ -119,10 +119,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.5.74 01.02.2025 - bład przy wyświetlaniu w hive_screen danych o matkach bez belki zasobów,
   //1.9.6.75 07.02.2026 - raport_color_screen -> litry miodu w legendzie zbiorów (1l=1.45kg), legenda miodobrań w kolumnie, przycisk PDF przy wykresach zbiorów miodu i pyłku, summary_screen - Ostatnie informacje (zbiorcze) na dodatkowym ekranie + Notes, ustawianie obsługi przycisku NFC, usuniecie daty obowiązywania subskrypcji
   //1.9.6.76 07.02.2026 - AppStore udrzucił wersję 1.9.6.75, zmieniłem share_plus: ^7.2.2 na share_plus: ^10.1.4
-  //1.9.7.77 08.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie, Historia matki + PDF
-
-  final wersja = '1.9.7.77'; //wersja aplikacji na iOS
-  final dataWersji = '2026-02-08';
+  //1.9.7.77 10.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie, Historia matki + PDF
+  //1.9.8.78 12.02.2026 - uproszczone logowanie - bez deviceId (jeden unikalny email w bazie = jeden kod), Kasowanie kopii zapasowej w chmurze - robienie kopii archiwalnej do późniejszego usunięcia
+  
+  final wersja = '1.9.8.78'; //wersja aplikacji na iOS
+  final dataWersji = '2026-02-12';
   final now = DateTime.now();
   int aktywnosc = 0;
   List<Weather>? pogoda;
@@ -139,32 +140,22 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       });
 //DBHelper.deleteBase().then((_) {
       _getId().then((_) {
-        //pobranie Id telefonu i zapisanie w globals.deviceId - do identyfikacji uzytkownika apki
-        //pobranie z bazy lokalnej Memory dla tego smartfona (lub "test" dla sklepów)
+        //pobranie Id telefonu i zapisanie w globals.deviceId - do identyfikacji uzytkownika apki - juz nie !!!!!
+        //pobranie z bazy lokalnej Memory dla tego smartfona (lub "test" dla sklepów) - juz nie !!!!!
         //print('globals.deviceId = ${globals.deviceId}');
+        //pobranie z bazy Memory aktyalnego wpisu dla uzytkownika smartfona
         Provider.of<Memory>(context, listen: false)
-            .fetchAndSetMemory(globals.deviceId)
+            .fetchAndSetMemory2()
             .then((_) {
+          
           //memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT,dod TEXT, ddo TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT)');
           //uzyskanie dostępu do danych
           final memData = Provider.of<Memory>(context, listen: false);
           final mem = memData.items;
-          //if (mem.isNotEmpty){
-            //print('------------- jest memory: ');
-            //print('${mem[0].id}, ${mem[0].email},${mem[0].dev},${mem[0].wer},${mem[0].kod},${mem[0].key},${mem[0].dod},${mem[0].ddo},${mem[0].memjezyk},${mem[0].mem1},${mem[0].mem2},');
-         // }else{
-            //print('---------------- memory jest puste!!!!!');};
-          //print('**************** globals.memJezyk przed pobraniem z bazy = /${globals.memJezyk}/ ');
-          // if (mem.isNotEmpty && mem[0].memjezyk != '') globals.memJezyk = mem[0].memjezyk;
-          // else globals.memJezyk = 'system';
-          // print('**************** memjezyk po pobraniu z bazy = /${mem[0].memjezyk}/ ');
-          // print('**************** globals.memJezyk = /${globals.memJezyk}/ ');
-          //odczytanie ustawień języka (pl_PL, en_US)
+     
+          //odczytanie ustawień języka na telefonie (pl_PL, en_US)
           Locale myLocale = Localizations.localeOf(context);
           String jezykSmartfona = myLocale.toString(); //zapamiętanie aktualnego języka
-          //  print('================pobranie jezyka smartona = ${jezykSmartfona}');
-          // print('================globals.jezyk przed switchem = ${globals.jezyk}');
-          //if (globals.memJezyk == 'system')
           switch (jezykSmartfona) {
             case 'pl_PL':
               globals.jezyk = 'pl_PL';
@@ -176,82 +167,24 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
               globals.jezyk = 'en_US'; //i to nie działa nie wiadomo czemu !!!
               break;
           }
-          // else globals.jezyk = mem[0].memjezyk;
 
-          //  print('================globals.jezyk po switchu = ${globals.jezyk}');
           globals.wersja = wersja;
 
           //uaktualnienie wersji apki na serwerze www po np. aktualizacji apki
-          //print('mem.wer = ${mem[0].wer}');
-          //print('mem.kod = ${mem[0].kod}');
           if (mem.isNotEmpty && mem[0].wer != wersja) wyslijKod(mem[0].kod);
 
-          //jezeli jest wpis w bazie dla tego deviceId lub "test" - (wpis moze być ale accessKey niekoniecznie!!!)
-          if (mem.isNotEmpty &&
-              mem[0].dod != 'bez aktywacji' &&
-              mem[0].dod != '') {
-            //jezeli jest taki deviceID i data "od" ma normalny format
+          //jezeli jest wpis w bazie to znaczy ze była juz akywacja kiedyś (wpis moze być ale accessKey niekoniecznie!!!)
+          //dod - data od kiedy aktywacja (dokładniejsza data z czasem w polu be_data na www)
+          if (mem.isNotEmpty ) { 
             globals.key = mem[0].key; //pobranie klucza
             globals.keyMemory =  mem[0].key; //potrzebne gdyby była rezygnacja z aktywacji
             globals.kod = mem[0].kod; //kod do aktywacji, kod tworzy nazwę tabeli do archiwizacji
-//print('jest wpis w bazie dla tego deviceID lub "test" ');
-            //sprawdzenie daty do której apka jest aktywna
+
+            //sprawdzenie daty do której apka jest aktywna - teraz bez znaczenia !!!!!
             final data = DateTime.parse(mem[0].ddo);
             aktywnosc = daysBetween(now, data); //ile dni wazności apki
-            // if (aktywnosc < 30 && aktywnosc >= 0) {
-            //   _showAlert(
-            //       context,
-            //       AppLocalizations.of(context)!.alert,
-            //       AppLocalizations.of(context)!.subscriptionEndsIn +
-            //           " $aktywnosc " +
-            //           AppLocalizations.of(context)!.days);
-            //   //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
-            //   Provider.of<Apiarys>(context, listen: false)
-            //       .fetchAndSetApiarys()
-            //       .then((_) {
-            //         //print('------------------- wczytanie pasiek Apiarys????? podczas inicjacji');
-            //     setState(() {
-            //       _isLoading = false; //zatrzymanie wskaznika ładowania dań
-            //     });
-            //   });
-            // } else if (aktywnosc <= -1) {
-            //   //*** Wygasła subskrypcja
-            //   //wymuszenie trybu "bez aktywacji"
-            //   //print('333333333333 aktywnosc < -1');
-
-            //   DBHelper.updateActivate(globals.deviceId, 'bez aktywacji')
-            //       .then((_) {
-            //     // print(
-            //     //     'w bez i \'\' aktywność < -1 globals.key = ${globals.key}');
-            //     // print('w bez i \'\' aktywność < -1 memory.dod: ${mem[0].dod}');
-            //     //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
-            //     Provider.of<Apiarys>(context, listen: false)
-            //         .fetchAndSetApiarys()
-            //         .then((_) {
-            //       setState(() {
-            //         _isLoading = false; //zatrzymanie wskaznika ładowania dań
-            //       });
-            //     });
-            //   });
-            // } else {
-              //*** Jest aktywna subskrypcja
-              //print('44444444444 aktywnoscok');
-              //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
-              Provider.of<Apiarys>(context, listen: false)
-                  .fetchAndSetApiarys()
-                  .then((_) {
-                setState(() {
-                  _isLoading = false; //zatrzymanie wskaznika ładowania
-                });
-              });
-              //print('Apka aktywna');
-    //        }
-
-            //jezeli uzytkownik wybrał "bez aktywacji" ma dostęp ale bez "voice control"
-          } else if (mem.isNotEmpty && mem[0].dod == 'bez aktywacji') {
-            globals.key = mem[0].dod;
-            //print('w bez aktywności globals.key = ${globals.key}');
-            //print('w bez aktywności memory.dod: ${mem[0].dod}');
+              
+            //Aplikacja jest aktywna 
             //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
             Provider.of<Apiarys>(context, listen: false)
                 .fetchAndSetApiarys()
@@ -260,41 +193,12 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                 _isLoading = false; //zatrzymanie wskaznika ładowania
               });
             });
-            final data = DateTime.parse(mem[0].ddo);
-            aktywnosc = daysBetween(now, data); //ile dni wazności apki
-            //print('aktywnisc = $data - $now = $aktywnosc ');
+    //   }
 
-            // _showAlert(
-            //     context,
-            //     AppLocalizations.of(context)!.alert,
-            //     AppLocalizations.of(context)!.subscriptionEndsIn +
-            //         " $aktywnosc " +
-            //         AppLocalizations.of(context)!.days);
           } else {
-            //jezeli uzytkownik chce aktywować bo wybrał "Aktywuj"
-            if (mem.isNotEmpty)
-              globals.key = mem[0].dod; //???
-            else {
-              //dla testu AppStore
-              //globals.key = '';
-              Provider.of<Memory>(context, listen: false)
-                  .fetchAndSetMemory('test')
-                  .then((_) {
-                //uzyskanie dostępu do danych
-                final memData = Provider.of<Memory>(context, listen: false);
-                final mem = memData.items;
-                if (mem.isNotEmpty && mem[0].dev == 'test') {
-                  globals.key = 'bez_klucza';
-                } else
-                  globals.key = '';
-              });
-            }
-            //jezeli nie ma accessKey
-            //print('nie ma assessKey');
-            //print('w else globals.key = ${globals.key}');
-            //print('w else memory.dod: ${mem[0].dod}');
+            globals.key = ''; 
           }
- //DBHelper.deleteTable('dodatki2');
+          //DBHelper.deleteTable('dodatki2');
           //DODATKI2 - ustawienia w aplikacji:
           Provider.of<Dodatki2>(context, listen: false)
               .fetchAndSetDodatki2()
@@ -336,7 +240,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                               //id-1
                               //a-auto wysyłka danych z bazy do chmury,
                               //b-średnia waga miodu na 1dm2 plastra, 
-                              //c-nic, 
+                              //c-nic,  cos tu jest
                               //d-nic, 
                               //e-waga miodu na duzej ramce, 
                               //f-waga miodu na małej ramce, 
@@ -543,7 +447,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             } //od jezeli jest tabela dodatki1 i a==true
           });
 
-          //pobranie notatek
+          //pobranie notatek bo wyswietlane sa na stronie startowej
           Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
 
           //pobranie danych o pogodzie dla pasieki
@@ -596,21 +500,6 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     // globals.isInit = false;
     super.didChangeDependencies();
   }
-
-  //sprawdzenie czy jest internet
-  // Future<bool> _isInternet() async {
-  //   var connectivityResult = await (Connectivity().checkConnectivity());
-  //   if (connectivityResult == ConnectivityResult.mobile) {
-  //     print("Connected to Mobile Network");
-  //     return true;
-  //   } else if (connectivityResult == ConnectivityResult.wifi) {
-  //     print("Connected to WiFi");
-  //     return true;
-  //   } else {
-  //     print("Unable to connect. Please Check Internet Connection");
-  //     return false;
-  //   }
-  // }
 
   //sprawdzenie czy jest internet
   Future<bool> _isInternet() async {
@@ -806,7 +695,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //wysyłanie kodu
   Future<void> wyslijKod(String kod) async {
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_kod.php'),
+      Uri.parse('https://darys.pl/cbt_hi_kod_v2.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -838,7 +727,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           Memory.insertMemory(
             odpPost['be_id'], //id
             odpPost['be_email'],
-            //ponizej wstawone wartosci deviceId i wersja a apki, bo www nie zdązy ich zapisać i nie ma ich po pobraniu
+            //ponizej wstawone wartosci deviceId i wersja z apki, bo www nie zdązy ich zapisać i nie ma ich po pobraniu
             //globals.deviceId, //
             odpPost['be_dev'], //deviceId
             //wersja, //
@@ -866,46 +755,46 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   }
 
   //okno dialogowe - Aktywuj lub Anuluj
-  void _showAlert(BuildContext context, String nazwa, String text) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(nazwa),
-        content: Column(
-          //zeby tekst był wyśrodkowany w poziomie
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(text),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              DBHelper.updateActivate(globals.deviceId, '').then((_) {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                    ApiarysScreen.routeName,
-                    ModalRoute.withName(ApiarysScreen
-                        .routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
-              }); //'' do memory "od" - kasowanie
-            },
-            child: Text(AppLocalizations.of(context)!.activate),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-        ],
-        elevation: 24.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
-        ),
-      ),
-      barrierDismissible:
-          false, //zeby zaciemnione tło było zablokowane na kliknięcia
-    );
-  }
+  // void _showAlert(BuildContext context, String nazwa, String text) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text(nazwa),
+  //       content: Column(
+  //         //zeby tekst był wyśrodkowany w poziomie
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: <Widget>[
+  //           Text(text),
+  //         ],
+  //       ),
+  //       actions: <Widget>[
+  //         TextButton(
+  //           onPressed: () {
+  //             DBHelper.updateActivate(globals.deviceId, '').then((_) {
+  //               Navigator.of(context).pushNamedAndRemoveUntil(
+  //                   ApiarysScreen.routeName,
+  //                   ModalRoute.withName(ApiarysScreen
+  //                       .routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
+  //             }); //'' do memory "od" - kasowanie
+  //           },
+  //           child: Text(AppLocalizations.of(context)!.activate),
+  //         ),
+  //         TextButton(
+  //           onPressed: () {
+  //             Navigator.of(context).pop();
+  //           },
+  //           child: Text(AppLocalizations.of(context)!.cancel),
+  //         ),
+  //       ],
+  //       elevation: 24.0,
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(15.0),
+  //       ),
+  //     ),
+  //     barrierDismissible:
+  //         false, //zeby zaciemnione tło było zablokowane na kliknięcia
+  //   );
+ // }
 
   //dodawanie ula lub matki
   void _showAlertAdd(BuildContext context) {
@@ -1020,17 +909,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
         textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)));
 
     final apiarysData = Provider.of<Apiarys>(context);
-    final apiarys = apiarysData.items; //showFavs ? productsData.favoriteItems :
-    //getApiarys().then((_) {
-    //print('start_screen - pobranie liczby pasiek z widzetu głównego');
-    // print(apiarys.length);
-    // });
-    // print('obliczenia!!!!!!!!!!!!!!!!!!!');
-    // int dziel = (9 / 2).toInt();
-    // int mod = 9 % 2;
-
-    // print(dziel);
-    // print(mod);
+    final apiarys = apiarysData.items; 
 
     // for (var i = 0; i < apiarys.length; i++) {
     //   print(
@@ -1053,10 +932,6 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       ..sort((a, b) => a.data.compareTo(b.data));
     final notatkiOdwrotnie = [...notatkiZPole1, ...notatkiBezPole1];
 
-    //print('widzet główny - globals.key = ${globals.key}');
-
-    // Locale myLocale = Localizations.localeOf(context);
-    //print(myLocale);
 
     List<String> gridItems = [
       'Notes',
@@ -1074,13 +949,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     final Uri toLaunchEn =
         Uri(scheme: 'https', host: 'www.heymaya.eu', path: '/index.php/guide');
 
-// print('globals.deviceId = ${globals.deviceId}');
-// print('globals.key = ${globals.key}');
- //print('temperatura = ${globals.aktualTemp}');
 
     return Scaffold(
-      //localizationsDelegates: AppLocalizations.localizationsDelegates,
-      //  supportedLocales: AppLocalizations.supportedLocales,
+
       appBar: AppBar(
         iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         title: const Text(
@@ -1090,7 +961,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
         backgroundColor: Color.fromARGB(
             255, 255, 255, 255), //Color.fromARGB(255, 233, 140, 0),
         actions: <Widget>[
-//dodawanie ula (z pasieką) 
+          
+          //dodawanie ula (z pasieką) 
           if(globals.key != '')
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
@@ -1099,7 +971,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                   ? Navigator.of(context).pushNamed(AddHiveScreen.routeName)
                   : _showAlertAdd(context),
             ),
-//pomoc w przeglądarce
+          
+          //pomoc w przeglądarce
           IconButton(
             icon: Icon(Icons.help_rounded, color: Color.fromARGB(255, 0, 0, 0)),
             onPressed: () => globals.jezyk == 'pl_PL'
@@ -1114,16 +987,6 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                           AppLocalizations.of(context)!.noInternet);
                     }
                   })
-                //   },
-                // child: Card(
-                //   child: ListTile(
-                //     leading: Icon(Icons.security),
-                //     title: Text(allTranslations.text('L_POLITYKA')),
-                //     trailing: Icon(Icons.chevron_right),
-                //   ),
-                // ),
-                // ),
-
                 : _isInternet().then((inter) {
                     if (inter) { //inter != null && 
                       _launchInBrowser(toLaunchEn);
@@ -1134,18 +997,17 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                     }
                   }),
           ),
-//ustawienia
+          
+          //ustawienia
           if(globals.key != '')
             IconButton(
               icon: Icon(Icons.settings),
               onPressed: () => Navigator.of(context)
                   .pushNamed(SettingsScreen.routeName).then((_) => setState(() {})), //arguments: {
-              //   'ul': globals.ulID,
-              //   'data': wybranaData,
-              // }),
             )
         ],
-         bottom: PreferredSize(
+        
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Container(
             color: Colors.grey[300], // kolor linii
@@ -1160,57 +1022,60 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                   valueColor: AlwaysStoppedAnimation<Color>(
                       Colors.black)), //kółko ładowania danych
             )
-          : globals.key == '' //jezeli nie ma accessKey to trzeba wysłać kod
-              ? Center(
+          : globals.key == '' //jezeli nie ma accessKey to trzeba wysłać kod 
+              //strona formularza aktywacji
+              ? Center( 
                   child: Column(children: <Widget>[
                     Container(
-                        padding: const EdgeInsets.all(20),
-                        child: mem1.isEmpty
-                            ? Text(
-                                (AppLocalizations.of(context)!.enterYourActivationCode),
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  //color: Colors.grey,
-                                ),
-                              )
-                            : Text(
-                                (AppLocalizations.of(context)!.enterYourActivationCode), //jezeli jest tylko bezpłatnie
-                                // (AppLocalizations.of(context)!
-                                //     .activationCodeAfterPaying), //jezeli będzie wersja płatna
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  //color: Colors.grey,
-                                ),
-                              )),
-//wprowadzenie kodu lub e-maila
+                      padding: const EdgeInsets.all(20),
+                      child: mem1.isEmpty
+                        ? Text(
+                            (AppLocalizations.of(context)!.enterYourActivationCode), //tekst wprowadzania kodu lub maila
+                            style: TextStyle(
+                              fontSize: 15,
+                              //color: Colors.grey,
+                            ),
+                          )
+                        : Text(
+                            (AppLocalizations.of(context)!.enterYourActivationCode), //jezeli jest tylko bezpłatnie
+                            // (AppLocalizations.of(context)!
+                            //     .activationCodeAfterPaying), //jezeli będzie wersja płatna
+                            style: TextStyle(
+                              fontSize: 15,
+                              //color: Colors.grey,
+                            ),
+                          )
+                    ),
+//formularz wprowadzenia kodu lub e-maila
                     Form(
                       key: _formKey2,
                       child: Container(
                         padding: EdgeInsets.only(left: 20, right: 20),
                         child: TextFormField(
-                            //initialValue: globals.numer,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              labelText: (AppLocalizations.of(context)!.codeOrEmail),
-                              labelStyle: TextStyle(color: Colors.black),
-                              //hintText: allTranslations
-                              //.text('L_WPISZ_KOD_POLACZ'),
-                            ),
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return (AppLocalizations.of(context)!.enterCodeOrEmail);
-                              }
-                              globals.kod = value;
-                              return null;
-                            }),
+                          //initialValue: globals.numer,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            labelText: (AppLocalizations.of(context)!.codeOrEmail),
+                            labelStyle: TextStyle(color: Colors.black),
+                            //hintText: allTranslations
+                            //.text('L_WPISZ_KOD_POLACZ'),
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return (AppLocalizations.of(context)!.enterCodeOrEmail);
+                            }
+                            globals.kod = value;
+                            return null;
+                          }),
                       ),
                     ),
-      //Przyciski
+  //Przyciski
                     Container(
                       height: 90,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
+                          
                           //Aktywuj
                           MaterialButton(
                             height: 50,
@@ -1247,46 +1112,32 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                             disabledTextColor: Colors.white,
                           ),
                           SizedBox(width: 10),
-        //Bez aktywacji
-                          if (mem1.isNotEmpty)
-                            MaterialButton(
-                              height: 50,
-                              shape: const StadiumBorder(),
-                              onPressed: () {
-                                DBHelper.updateActivate(globals.deviceId,
-                                    'bez aktywacji'); //"bez aktywacji" do memory "od"
-                                Navigator.of(context)
-                                    .pushNamed(ApiarysScreen.routeName);
-                              },
-                              child: Text('   ' +
-                                  (AppLocalizations.of(context)!.noActivation) +
-                                  '   '), //BEZ AKTYWACJI =========================
-                              color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
-                              disabledColor: Colors.grey,
-                              disabledTextColor: Colors.white,
-                            ),
                         ],
                       ),
                     ),
 
-                    //Subskrypcja wyłaczona ze wzgledu na politykę Picovoice
-                    // //Subskrybuj
-                    // if (aktywnosc < 30 && aktywnosc >= 0 && Platform.isIOS)
+//Powrót bez zmian
+                    // if (aktywnosc < 30 &&
+                    //     aktywnosc >= 0 &&
+                    //     globals.keyMemory != '')
                     //   Container(
                     //     height: 90,
                     //     child: Row(
                     //       mainAxisAlignment: MainAxisAlignment.center,
                     //       children: <Widget>[
                     //         MaterialButton(
+                    //           height: 50,
                     //           shape: const StadiumBorder(),
                     //           onPressed: () {
-                    //             Navigator.of(context)
-                    //                 .pushNamed(SubsScreen.routeName);
+                    //             DBHelper.updateActivate(globals.deviceId,'${globals.keyMemory}'); //powtórne zapisanie key
+                    //             Navigator.of(context).pushNamedAndRemoveUntil(
+                    //                 ApiarysScreen.routeName,
+                    //                 ModalRoute.withName(ApiarysScreen.routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
                     //           },
                     //           child: Text('   ' +
-                    //               (AppLocalizations.of(context)!.subscription) +
-                    //               '   '), //SUBSKRYBUJ ========================
+                    //               (AppLocalizations.of(context)!
+                    //                   .powrotBezZmian) +
+                    //               '   '), //Bez zmian========================
                     //           color: Theme.of(context).primaryColor,
                     //           textColor: Colors.white,
                     //           disabledColor: Colors.grey,
@@ -1295,41 +1146,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                     //       ],
                     //     ),
                     //   ),
-
-//Powrót bez zmian
-                    if (aktywnosc < 30 &&
-                        aktywnosc >= 0 &&
-                        globals.keyMemory != '')
-                      Container(
-                        height: 90,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            MaterialButton(
-                              height: 50,
-                              shape: const StadiumBorder(),
-                              onPressed: () {
-                                DBHelper.updateActivate(globals.deviceId,'${globals.keyMemory}'); //powtórne zapisanie key
-                                Navigator.of(context).pushNamedAndRemoveUntil(
-                                    ApiarysScreen.routeName,
-                                    ModalRoute.withName(ApiarysScreen.routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
-                              },
-                              child: Text('   ' +
-                                  (AppLocalizations.of(context)!
-                                      .powrotBezZmian) +
-                                  '   '), //Bez zmian========================
-                              color: Theme.of(context).primaryColor,
-                              textColor: Colors.white,
-                              disabledColor: Colors.grey,
-                              disabledTextColor: Colors.white,
-                            ),
-                          ],
-                        ),
-                      ),
                   ]),
                 )
 
-//jezeli jest accessKey
+//jezeli jest accessKey to STRONA STARTOWA
+              //brak pasiek
               : apiarys.length == 0
                   ? SingleChildScrollView(
                       child: Column(
@@ -1374,13 +1195,6 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                                   ]),
                             ),
 
-                            // Text(
-                            //   AppLocalizations.of(context)!.noApiaries,
-                            //   style: TextStyle(
-                            //     fontSize: 20,
-                            //     color: Colors.grey,
-                            //   ),
-                            // ),
                           ),
                           const SizedBox(
                             height: 100,
@@ -1526,13 +1340,12 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           //     ),
           // ),
 
-//wiadomosci priorytetowe
+//Notatki priorytetowe
                       Padding(
                         padding: EdgeInsets.only(top: 5),
                         child: ListView.builder(
                           shrinkWrap: true,
-                          physics:
-                              NeverScrollableScrollPhysics(), //zeby sie nie przewijał
+                          physics: NeverScrollableScrollPhysics(), //zeby sie nie przewijał
                           itemCount: notatkiOdwrotnie.length,
                           itemBuilder: (ctx, i) => ChangeNotifierProvider.value(
                             value: notatkiOdwrotnie[i],

@@ -40,9 +40,34 @@ class Memory with ChangeNotifier {
     return [..._items];
   }
 
-  //pobranie wpisów memory z bazy lokalnej
+  //pobranie wpisów memory z bazy lokalnej dla konkretnego rodzaju smartfona
   Future<void> fetchAndSetMemory(device) async {
     final dataList = await DBHelper.getMem(device);
+    _items = dataList
+        .map(
+          (item) => MemoryItem(
+            id: item['id'],
+            email: item['email'],
+            dev: item['dev'],
+            wer: item['wer'],
+            kod: item['kod'],
+            key: item['key'],
+            dod: item['od'],
+            ddo: item['do'],
+            memjezyk: item['memjezyk'],
+            mem1: item['mem1'],
+            mem2: item['mem2'],
+          ),
+        )
+        .toList();
+     //print('wczytanie danych do uruchomienia apki --> Memory <---');
+    // print(_items);
+    notifyListeners();
+  }
+
+//pobranie wpisów memory z bazy lokalnej
+  Future<void> fetchAndSetMemory2() async {
+    final dataList = await DBHelper.getMemory();
     _items = dataList
         .map(
           (item) => MemoryItem(

@@ -25,7 +25,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
 // @override
   Future<void> wyslijKod(String kod) async {
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_kod.php'),
+      Uri.parse('https://darys.pl/cbt_hi_kod_v2.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

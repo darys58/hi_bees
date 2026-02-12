@@ -1375,5 +1375,15 @@
     "pdfLostDate": "Lost",
     "@pdfLostDate": {},
     "pdfGeneratingError": "PDF generation error",
-    "@pdfGeneratingError": {}
+    "@pdfGeneratingError": {},
+    "deleteDataOnSerwer": "All data on the external server (cloud) that is a backup will be deleted. This deletion is final and cannot be recovered. The data in the app will remain, but it will not be backed up until it is exported to the cloud.",
+    "@deleteDataOnSerwer": {},
+    "deleteAllDataOnSerwer": "Deleting cloud backup",
+    "@deleteAllDataOnSerwer": {},
+    "allDatabaseOnSerwer": "all data on the external server",
+    "@allDatabaseOnSerwer": {},
+    "deleteOk": "The cloud backup has been deleted. Data stored in the app is not backed up.",
+    "@deleteOk": {},
+    "backupAllData": "local data backup",
+    "@backupAllData": {}
 }
