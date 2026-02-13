@@ -1,8 +1,13 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 //import 'package:hi_bees/screens/frame_edit_screen2.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../globals.dart' as globals;
 import '../models/info.dart';
 import '../models/infos.dart';
@@ -26,6 +31,7 @@ class InfoScreen extends StatefulWidget {
 
 class _InfoScreenState extends State<InfoScreen> {
   bool _isInit = true;
+  bool _generatingPdf = false;
   String wybranaKategoria = globals.aktualnaKategoriaInfo;
   String rokStatystyk = globals.rokStatystyk; //DateTime.now().toString().substring(0, 4);
   String typUla = '';
@@ -162,6 +168,263 @@ class _InfoScreenState extends State<InfoScreen> {
     }).toList();
   }
 
+  // ====== PDF Historia ula ======
+
+  String _zmienDatePdf(String data) {
+    if (data.length < 10) return data;
+    String rok = data.substring(0, 4);
+    String miesiac = data.substring(5, 7);
+    String dzien = data.substring(8, 10);
+    if (globals.jezyk == 'pl_PL') {
+      return '$dzien.$miesiac.$rok';
+    } else {
+      return '$rok-$miesiac-$dzien';
+    }
+  }
+
+  String _cleanTempPdf(String temp) {
+    if (temp.isEmpty || temp == '0') return '';
+    final numMatch = RegExp(r'-?\d+[.,]?\d*').firstMatch(temp);
+    if (numMatch == null) return '';
+    return '${numMatch.group(0)}\u00B0C';
+  }
+
+  Future<void> _generateHiveHistoryPdf(int hiveNr) async {
+    final loc = AppLocalizations.of(context)!;
+
+    setState(() {
+      _generatingPdf = true;
+    });
+
+    try {
+      // Fonty obsługujące polskie znaki
+      final fontRegular = await PdfGoogleFonts.robotoRegular();
+      final fontBold = await PdfGoogleFonts.robotoBold();
+
+      // Załaduj ikony kategorii z assets
+      final Map<String, Uint8List> categoryIcons = {};
+      final iconAssets = {
+        'inspection': 'assets/image/hi_bees.png',
+        'equipment': 'assets/image/korpus.png',
+        'colony': 'assets/image/pszczola1.png',
+        'queen': 'assets/image/matka1.png',
+        'harvest': 'assets/image/zbiory.png',
+        'feeding': 'assets/image/invert.png',
+        'treatment': 'assets/image/apivarol1.png',
+      };
+      for (final entry in iconAssets.entries) {
+        final byteData = await rootBundle.load(entry.value);
+        categoryIcons[entry.key] = byteData.buffer.asUint8List();
+      }
+
+      // Pobierz WSZYSTKIE info dla tego ula (z providera - już załadowane)
+      final infosData = Provider.of<Infos>(context, listen: false);
+      List<Info> allInfos = List.from(infosData.items);
+
+      // Filtruj po roku jeśli nie "wszystkie"
+      if (rokStatystyk != 'wszystkie') {
+        allInfos = allInfos.where((info) =>
+            info.data.substring(0, 4) == rokStatystyk).toList();
+      }
+
+      // Sortuj chronologicznie (od najstarszego)
+      allInfos.sort((a, b) {
+        int cmp = a.data.compareTo(b.data);
+        if (cmp != 0) return cmp;
+        return a.czas.compareTo(b.czas);
+      });
+
+      final pdf = pw.Document();
+
+      // Aktualna data
+      final now = DateTime.now();
+      final dataPdf = globals.jezyk == 'pl_PL'
+          ? '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}'
+          : '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+      // Tytuł PDF
+      final apiaryNr = globals.pasiekaID.toString();
+      final tytul = rokStatystyk == 'wszystkie'
+          ? loc.hiveHistoryTitleAll(hiveNr.toString(), apiaryNr)
+          : loc.hiveHistoryTitle(hiveNr.toString(), apiaryNr, rokStatystyk);
+
+      // Proporcje kolumn: L.p., Kat., Data, Czas, Temp., Informacja, Uwagi
+      final columnWidths = {
+        0: const pw.FixedColumnWidth(22),
+        1: const pw.FixedColumnWidth(28),
+        2: const pw.FixedColumnWidth(55),
+        3: const pw.FixedColumnWidth(32),
+        4: const pw.FixedColumnWidth(30),
+        5: const pw.FlexColumnWidth(2),
+        6: const pw.FlexColumnWidth(3),
+      };
+
+      final headerStyle = pw.TextStyle(fontSize: 8, font: fontBold);
+      final cellStyle = pw.TextStyle(fontSize: 8, font: fontRegular);
+
+      // Nagłówki tabeli
+      final headerRow = pw.TableRow(
+        decoration: const pw.BoxDecoration(
+          color: PdfColors.grey200,
+        ),
+        children: [
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(3),
+            child: pw.Center(child: pw.Text(loc.pdfLp, style: headerStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(3),
+            child: pw.Center(child: pw.Text(loc.catColumn, style: headerStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(3),
+            child: pw.Center(child: pw.Text(loc.pdfDate, style: headerStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(3),
+            child: pw.Center(child: pw.Text(loc.pdfHour, style: headerStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(3),
+            child: pw.Center(child: pw.Text(loc.pdfTemperature, style: headerStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(3),
+            child: pw.Text(loc.pdfInformation, style: headerStyle),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(3),
+            child: pw.Text(loc.pdfRemarks, style: headerStyle),
+          ),
+        ],
+      );
+
+      // Wiersze tabeli
+      List<List<pw.Widget>> tableData = [];
+      for (int i = 0; i < allInfos.length; i++) {
+        final info = allInfos[i];
+        String infoText;
+        if (info.wartosc == 'dziewica') {
+          infoText = '${info.parametr} nieunasienniona';
+        } else if (info.wartosc == 'virgine') {
+          infoText = '${info.parametr} virgine';
+        } else {
+          infoText = '${info.parametr} ${info.wartosc}'.trim();
+        }
+        if (info.miara.isNotEmpty && info.miara != '0') {
+          infoText = '$infoText ${info.miara}';
+        }
+        if (info.pogoda.isNotEmpty && info.pogoda != '0' && info.kategoria == 'queen') {
+          infoText = 'ID${info.pogoda} $infoText ';
+        }
+
+        final tempClean = _cleanTempPdf(info.temp);
+
+        // Ikonka kategorii
+        final iconBytes = categoryIcons[info.kategoria];
+        final categoryWidget = iconBytes != null
+            ? pw.Center(child: pw.Image(pw.MemoryImage(iconBytes), width: 12, height: 12))
+            : pw.Center(child: pw.Text(info.kategoria.substring(0, 1).toUpperCase(), style: cellStyle));
+
+        tableData.add([
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(2),
+            child: pw.Center(child: pw.Text('${i + 1}', style: cellStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(2),
+            child: categoryWidget,
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(2),
+            child: pw.Center(child: pw.Text(_zmienDatePdf(info.data), style: cellStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(2),
+            child: pw.Center(child: pw.Text(info.czas, style: cellStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(2),
+            child: pw.Center(child: pw.Text(tempClean, style: cellStyle)),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(2),
+            child: pw.Text(infoText, style: cellStyle),
+          ),
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(2),
+            child: pw.Text(info.uwagi, style: cellStyle),
+          ),
+        ]);
+      }
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(56.7), // 2cm
+          build: (pw.Context context) {
+            return [
+              // Tytuł
+              pw.Center(
+                child: pw.Text(
+                  tytul,
+                  style: pw.TextStyle(fontSize: 16, font: fontBold),
+                ),
+              ),
+              pw.SizedBox(height: 4),
+              // Data wygenerowania
+              pw.Center(
+                child: pw.Text(
+                  dataPdf,
+                  style: pw.TextStyle(fontSize: 10, font: fontRegular),
+                ),
+              ),
+              pw.SizedBox(height: 12),
+              // Tabela
+              if (allInfos.isNotEmpty)
+                pw.Table(
+                  border: pw.TableBorder.all(
+                    color: PdfColors.grey400,
+                    width: 0.5,
+                  ),
+                  columnWidths: columnWidths,
+                  children: [
+                    headerRow,
+                    ...tableData.map((row) => pw.TableRow(children: row)),
+                  ],
+                ),
+            ];
+          },
+        ),
+      );
+
+      final Uint8List pdfBytes = await pdf.save();
+      final filename = rokStatystyk == 'wszystkie'
+          ? 'historia_ula_$hiveNr.pdf'
+          : 'historia_ula_${hiveNr}_$rokStatystyk.pdf';
+
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: filename,
+      );
+    } catch (e) {
+      debugPrint('Błąd generowania PDF: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  '${AppLocalizations.of(context)!.pdfGeneratingError}: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _generatingPdf = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     //przekazanie hiveNr z hives_item za pomocą navigatora
@@ -275,8 +538,8 @@ class _InfoScreenState extends State<InfoScreen> {
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x") {
           
-          if(infos[i].miara == '') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-          else dm = double.parse(infos[i].miara);
+          if(infos[i].pogoda == '') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
+          else dm = double.parse(infos[i].pogoda);
          
           miod = miod + (double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000);
           //dane do wykresu
@@ -298,8 +561,8 @@ class _InfoScreenState extends State<InfoScreen> {
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x") {
           
-          if(infos[i].miara == '') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-          else dm = double.parse(infos[i].miara);
+          if(infos[i].pogoda == '') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
+          else dm = double.parse(infos[i].pogoda);
           //print('dod1[0].b = ${dod1[0].b}');
           miod = miod + double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000;//np: 1(ilość ramek) x 245(waga 1dm2) x 78725/10000(ilość dm2 wezy w ramce)
           //dane do wykresu
@@ -1550,11 +1813,24 @@ class _InfoScreenState extends State<InfoScreen> {
           //wybranaKategoria=='harvest' || wybranaKategoria=='feeding'
           IconButton(
             icon: Icon(Icons.query_stats, color: Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => 
+            onPressed: () =>
                //print('${globals.pasiekaID}, $hiveNr')
                 _showAlertYear(),
-               
+
           ),
+          //PDF historia ula
+          _generatingPdf
+            ? const Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: SizedBox(
+                  width: 24, height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : IconButton(
+                icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),
+                onPressed: () => _generateHiveHistoryPdf(hiveNr),
+              ),
           //: Text(''),
           // IconButton(
           //   icon: Icon(Icons.edit),

@@ -1387,5 +1387,21 @@
     "backupAllData": "local data backup",
     "@backupAllData": {},
     "showPurchaseSale": "Show Purchase and Sale buttons",
-    "@showPurchaseSale": {}
+    "@showPurchaseSale": {},
+    "hiveHistoryTitle": "Hive {hiveNr} Apiary {apiary} Year {year}",
+    "@hiveHistoryTitle": {
+      "placeholders": {
+        "hiveNr": {"type": "String"},
+        "apiary": {"type": "String"},
+        "year": {"type": "String"}
+      }
+    },
+    "hiveHistoryTitleAll": "Hive {hiveNr} Apiary {apiary}",
+    "@hiveHistoryTitleAll": {
+      "placeholders": {
+        "hiveNr": {"type": "String"},
+        "apiary": {"type": "String"}
+      }
+    },
+    "catColumn": "Cat."
 }

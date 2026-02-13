@@ -697,6 +697,22 @@
     "allDatabaseOnSerwer": "wszystkich danych na serwerze zewnętrznym",
     "deleteOk": "Kopia zapasowa w chmurze została usunięta. Dane zgromadzone w aplikacji nie mają kopii zapasowej.",
     "backupAllData": "kopia zapasowa danych lokalych",
-    "showPurchaseSale": "Pokaż przyciski Zakupy i Sprzedaż"
+    "showPurchaseSale": "Pokaż przyciski Zakupy i Sprzedaż",
+    "hiveHistoryTitle": "Ul {hiveNr} Pasieka {apiary} Rok {year}",
+    "@hiveHistoryTitle": {
+      "placeholders": {
+        "hiveNr": {"type": "String"},
+        "apiary": {"type": "String"},
+        "year": {"type": "String"}
+      }
+    },
+    "hiveHistoryTitleAll": "Ul {hiveNr} Pasieka {apiary}",
+    "@hiveHistoryTitleAll": {
+      "placeholders": {
+        "hiveNr": {"type": "String"},
+        "apiary": {"type": "String"}
+      }
+    },
+    "catColumn": "Kat."
 
 }

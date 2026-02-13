@@ -127,11 +127,11 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
   // Pomocnicze funkcje do obliczania wartości miodu i pyłku
   double _obliczMiod(Info info, int b, String honeySmall, String honeyBig, String honeyKg) {
     if (info.parametr == honeySmall && info.wartosc.isNotEmpty) {
-      double dmVal = info.miara == '' ? 35175 : double.parse(info.miara);
+      double dmVal = info.pogoda == '' ? 35175 : double.parse(info.pogoda);
       return double.parse(info.wartosc) * b * dmVal / 10000;
     }
     if (info.parametr == honeyBig && info.wartosc.isNotEmpty) {
-      double dmVal = info.miara == '' ? 78725 : double.parse(info.miara);
+      double dmVal = info.pogoda == '' ? 78725 : double.parse(info.pogoda);
       return double.parse(info.wartosc) * b * dmVal / 10000;
     }
     if (info.parametr == honeyKg && info.wartosc.isNotEmpty) {
@@ -1628,11 +1628,11 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
       String honeyKg = AppLocalizations.of(context)!.honey + " = ";
 
       if (info.parametr == honeySmall && info.wartosc.isNotEmpty) {
-        double dmVal = info.miara == '' ? 35175 : double.parse(info.miara);
+        double dmVal = info.pogoda == '' ? 35175 : double.parse(info.pogoda);
         return double.parse(info.wartosc) * b * dmVal / 10000;
       }
       if (info.parametr == honeyBig && info.wartosc.isNotEmpty) {
-        double dmVal = info.miara == '' ? 78725 : double.parse(info.miara);
+        double dmVal = info.pogoda == '' ? 78725 : double.parse(info.pogoda);
         return double.parse(info.wartosc) * b * dmVal / 10000;
       }
       if (info.parametr == honeyKg && info.wartosc.isNotEmpty) {

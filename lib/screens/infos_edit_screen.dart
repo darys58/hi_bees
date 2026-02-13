@@ -41,6 +41,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   String typUla = 'WIELKOPOLSKI'; //wielkopolski, dadant itp
   String rodzajUla = ''; //ul, odkład, mini
   int matkaID = 0; //numer id matki - index z tabeli "matka"
+  String dmRamki = ''; //ilośc dm2 w ramce - zalezna od typu ula i wielkosci ramki
   String? nowyMiara;
   String? nowyUwagi;
   String? nowyTemp;
@@ -121,100 +122,104 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowaKategoria = kategoria.toString();
       nowyParametr = parametr.toString();
       nowyWartosc = wartosc.toString();
+      
       if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {//pole "miara" = typ ula
         nowyMiara = typUla;//wartość domyślna typUla
         rodzajUla = AppLocalizations.of(context)!.hIve; //wartość domyślna rodzajUla //pole "pogoda" = rodzaj ula    
-      }else if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x" ){      
+      } else nowyMiara = '';
+      
+      
+      if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x" ){      
                       //nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
           switch (globals.typUla) {
-            case 'WIELKOPOLSKI': nowyMiara = '35175'; //dm2, węza: 335x105 (mała ramka: 360x130)
+            case 'WIELKOPOLSKI': dmRamki = '35175'; //dm2, węza: 335x105 (mała ramka: 360x130)
               break;
-            case 'DADANT': nowyMiara = '49680';       //dm2, węza: 414x120 (mała ramka: 435x145)
+            case 'DADANT': dmRamki = '49680';       //dm2, węza: 414x120 (mała ramka: 435x145)
               break;
-            case 'OSTROWSKIEJ': nowyMiara = '68675';  //dm2, węza: 335x205 (ramka: 360x230)
+            case 'OSTROWSKIEJ': dmRamki = '68675';  //dm2, węza: 335x205 (ramka: 360x230)
               break;
-            case 'WARSZAWSKI ZWYKŁY': nowyMiara = '28600';  //dm2, węza: 220x130 (mała ramka: 240x160)
+            case 'WARSZAWSKI ZWYKŁY': dmRamki = '28600';  //dm2, węza: 220x130 (mała ramka: 240x160)
               break;
-            case 'WARSZAWSKI POSZERZANY': nowyMiara = '35175';  //dm2, węza: 335x105 (mała ramka: 360x130)
+            case 'WARSZAWSKI POSZERZANY': dmRamki = '35175';  //dm2, węza: 335x105 (mała ramka: 360x130)
               break;
-            case 'APIPOL': nowyMiara = '37260';  //dm2, węza: 414x90 (ramka: 435x115)
+            case 'APIPOL': dmRamki = '37260';  //dm2, węza: 414x90 (ramka: 435x115)
               break;
-            case 'LANGSTROTH': nowyMiara = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
+            case 'LANGSTROTH': dmRamki = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
               break;
-            case 'ZANDER': nowyMiara = '74100';  //dm2, węza: 390x190 (ramka: 420x220)
+            case 'ZANDER': dmRamki = '74100';  //dm2, węza: 390x190 (ramka: 420x220)
               break;
-            case 'GERSTUNG': nowyMiara = '39100';  //dm2, węza: 230x170 (mała ramka: 260x200)
+            case 'GERSTUNG': dmRamki = '39100';  //dm2, węza: 230x170 (mała ramka: 260x200)
               break;
-            case 'APIMAYE': nowyMiara = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
+            case 'APIMAYE': dmRamki = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
               break;
-            case 'DEUTSCH NORMAL': nowyMiara = '49680'; //dm2, węza: 414x120 (mała ramka: 435x145)
+            case 'DEUTSCH NORMAL': dmRamki = '49680'; //dm2, węza: 414x120 (mała ramka: 435x145)
               break;
-            case 'NORMALMASS': nowyMiara = '84000';  //dm2, węza: 400x210 (ramka: 435x240)
+            case 'NORMALMASS': dmRamki = '84000';  //dm2, węza: 400x210 (ramka: 435x240)
               break;
-            case 'FRANKENBEUTE': nowyMiara = '50600';  //dm2, węza: 440x115 (mała ramka: 470x145)
+            case 'FRANKENBEUTE': dmRamki = '50600';  //dm2, węza: 440x115 (mała ramka: 470x145)
               break;
-            case 'NATIONAL': nowyMiara = '88150';  //dm2, węza: 430x205 (ramka: 460x235)
+            case 'NATIONAL': dmRamki = '88150';  //dm2, węza: 430x205 (ramka: 460x235)
               break;
-            case 'WBC': nowyMiara = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
+            case 'WBC': dmRamki = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
               break;
-            case 'WIELKOPOLSKI GÓRSKI': nowyMiara = '51925';  //dm2, węza: 335x155 (ramka: 360x180)
+            case 'WIELKOPOLSKI GÓRSKI': dmRamki = '51925';  //dm2, węza: 335x155 (ramka: 360x180)
               break;
-            case 'TYP A': nowyMiara = dod2[0].z;  //dm2, ramka mała własna TYP A
+            case 'TYP A': dmRamki = dod2[0].z;  //dm2, ramka mała własna TYP A
               break;
-            case 'TYP B': nowyMiara = dod2[1].z;  //dm2, ramka mała własna TYP B
+            case 'TYP B': dmRamki = dod2[1].z;  //dm2, ramka mała własna TYP B
               break;
-            case 'TYP C': nowyMiara = dod2[2].z;  //dm2, ramka mała własna TYP C
+            case 'TYP C': dmRamki = dod2[2].z;  //dm2, ramka mała własna TYP C
               break;
-            case 'TYP D': nowyMiara = dod2[3].z;  //dm2, ramka mała własna TYP D
+            case 'TYP D': dmRamki = dod2[3].z;  //dm2, ramka mała własna TYP D
               break;
-            default: nowyMiara = '0';// dla typów innych niz powyzsze
+            default: dmRamki = '0';// dla typów innych niz powyzsze
           }          
       }else if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x"  ){                   
-          print('globals.typUla = ${globals.typUla}');
+          //print('globals.typUla = ${globals.typUla}');
           switch (globals.typUla) {
-            case 'WIELKOPOLSKI': nowyMiara = '78725'; //dm2, węza: 335x235 (duza ramka: 360x260)
+            case 'WIELKOPOLSKI': dmRamki = '78725'; //dm2, węza: 335x235 (duza ramka: 360x260)
               break;
-            case 'DADANT': nowyMiara = '109710'; //dm2, węza: 414x265 (duza ramka: 435x300)
+            case 'DADANT': dmRamki = '109710'; //dm2, węza: 414x265 (duza ramka: 435x300)
               break;
-            case 'OSTROWSKIEJ': nowyMiara = '68675';  //dm2, węza: 335x205 (ramka: 360x230)
+            case 'OSTROWSKIEJ': dmRamki = '68675';  //dm2, węza: 335x205 (ramka: 360x230)
               break;
-            case 'WARSZAWSKI ZWYKŁY': nowyMiara = '88000';  //dm2, węza: 220x400 (duza ramka: 240x435)
+            case 'WARSZAWSKI ZWYKŁY': dmRamki = '88000';  //dm2, węza: 220x400 (duza ramka: 240x435)
               break;
-            case 'WARSZAWSKI POSZERZANY': nowyMiara = '112000';  //dm2, węza: 280x400 (duza ramka: 300x435)
+            case 'WARSZAWSKI POSZERZANY': dmRamki = '112000';  //dm2, węza: 280x400 (duza ramka: 300x435)
               break;
-            case 'APIPOL': nowyMiara = '37260';  //dm2, węza: 414x90 (ramka: 435x115)
+            case 'APIPOL': dmRamki = '37260';  //dm2, węza: 414x90 (ramka: 435x115)
               break;
-            case 'LANGSTROTH': nowyMiara = '84870';  //dm2, węza: 414x205 (duza ramka: 435x230)
+            case 'LANGSTROTH': dmRamki = '84870';  //dm2, węza: 414x205 (duza ramka: 435x230)
               break;
-            case 'ZANDER': nowyMiara = '74100';  //dm2, węza: 390x190 (ramka: 420x220)
+            case 'ZANDER': dmRamki = '74100';  //dm2, węza: 390x190 (ramka: 420x220)
               break;
-            case 'GERSTUNG': nowyMiara = '64400';  //dm2, węza: 280x230 (duza ramka: 410x260)
+            case 'GERSTUNG': dmRamki = '64400';  //dm2, węza: 280x230 (duza ramka: 410x260)
               break;
-            case 'APIMAYE': nowyMiara = '86820';  //dm2, węza: 424x205 (duza ramka: 448x232)
+            case 'APIMAYE': dmRamki = '86820';  //dm2, węza: 424x205 (duza ramka: 448x232)
               break;
-            case 'DEUTSCH NORMAL': nowyMiara = '109710'; //dm2, węza: 414x265 (duza ramka: 435x300)
+            case 'DEUTSCH NORMAL': dmRamki = '109710'; //dm2, węza: 414x265 (duza ramka: 435x300)
               break;
-            case 'NORMALMASS': nowyMiara = '84000';  //dm2, węza: 400x210 (ramka: 435x240)
+            case 'NORMALMASS': dmRamki = '84000';  //dm2, węza: 400x210 (ramka: 435x240)
               break;
-            case 'FRANKENBEUTE': nowyMiara = '118800';  //dm2, węza: 440x270 (duza ramka: 470x300)
+            case 'FRANKENBEUTE': dmRamki = '118800';  //dm2, węza: 440x270 (duza ramka: 470x300)
               break;
-            case 'NATIONAL': nowyMiara = '88150';  //dm2, węza: 430x205 (ramka: 460x235)
+            case 'NATIONAL': dmRamki = '88150';  //dm2, węza: 430x205 (ramka: 460x235)
               break;
-            case 'WBC': nowyMiara = '84870';  //dm2, węza: 414x205 (duza ramka: 435x230)
+            case 'WBC': dmRamki = '84870';  //dm2, węza: 414x205 (duza ramka: 435x230)
               break;
-            case 'WIELKOPOLSKI GÓRSKI': nowyMiara = '51925';  //dm2, węza: 335x155 (ramka: 360x180)
+            case 'WIELKOPOLSKI GÓRSKI': dmRamki = '51925';  //dm2, węza: 335x155 (ramka: 360x180)
               break;
-            case 'TYP A': nowyMiara = dod2[0].u;  //dm2, ramka duza własna TYP A
+            case 'TYP A': dmRamki = dod2[0].u;  //dm2, ramka duza własna TYP A
               break;
-            case 'TYP B': nowyMiara = dod2[1].u;  //dm2, ramka duza własna TYP B
+            case 'TYP B': dmRamki = dod2[1].u;  //dm2, ramka duza własna TYP B
               break;
-            case 'TYP C': nowyMiara = dod2[2].u;  //dm2, ramka duza własna TYP C
+            case 'TYP C': dmRamki = dod2[2].u;  //dm2, ramka duza własna TYP C
               break;
-            case 'TYP D': nowyMiara = dod2[3].u;  //dm2, ramka duza własna TYP D
+            case 'TYP D': dmRamki = dod2[3].u;  //dm2, ramka duza własna TYP D
               break;
-            default: nowyMiara = '0';// dla typów innych niz powyzsze
+            default: dmRamki = '0';// dla typów innych niz powyzsze
           }          
-      }else nowyMiara = '';
+      }
 //print('nowyMiara = $nowyMiara');
       nowyUwagi = '';
       tytulEkranu = AppLocalizations.of(context)!.addInfo;
@@ -1990,12 +1995,15 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 nowyWartosc,
                                 nowyMiara!, //ewentualny typ ula ustawiony wczesniej
                                 
-                                //pole pogoda moze mieć wartość "matkaID", "rodzaj ula" lub nic
+                                //pole pogoda moze mieć wartość "matkaID", "rodzaj ula", "dmRamki" lub nic
                                 nowaKategoria == 'queen' 
                                   ? matkaID.toString() 
                                   : nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = " 
                                     ? rodzajUla //rodzajUla, //tylko dla ilość ramek =
-                                    : '',
+                                    : nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"      
+                                      || nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x"  
+                                        ? dmRamki //ilość dm2 ramki zalezna od typu ula  i wielkosci ramki
+                                        : '',
                                 info[0].temp,
                                 info[0].czas,
                                 nowyUwagi!,
@@ -2027,7 +2035,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   ? matkaID.toString() 
                                   : nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = " 
                                     ? rodzajUla //rodzajUla,//tylko dla ilość ramek = 
-                                    : '',
+                                    : nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"      
+                                      || nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
+                                        ? dmRamki //ilość dm2 ramki zalezna od typu ula i wielkosci ramki
+                                        : '',
                                 '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
                                 formatterHm.format(DateTime.now()),
                                 nowyUwagi!,
