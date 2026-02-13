@@ -10,7 +10,7 @@ class Dodatki1Item with ChangeNotifier {
   final String a; //ustawienie przełacznika - automatyczny eksport danych przy uruchamianiu aplikacji
   final String b; //średnia waga miodu na 1dm2 plastra miodu
   final String c; //
-  final String d; //
+  final String d; //pokazuj/ukrywaj przyciski Zakupy i Sprzedaż na stronie startowej ('false' = ukryj)
   final String e; //średnia waga miodu małej ramki (dla obliczania ilości miodu w latach 2023-2025)
   final String f; //średnia waga miodu duzej ramki (dla obliczania ilości miodu w latach 2023-2025)
   final String g; //waga pyłku w jednej miarce/porcji

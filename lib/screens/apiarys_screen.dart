@@ -115,15 +115,17 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.1.69 30.11.2025 - usunięty bład w raportach warrozy i błąd w voice_screen: "zamknij pomoc" wychodził z voice,
   //1.9.2.70 19.12.2025 - app_pl, app_en, queen_scerrn - widoki, queen.dart - kolory, add_hive_screen - ilość uli, globals,
   //1.9.3.71 06.01.2026 - app_en i app_pl - "ramek",raport_screen i raport2_screen - rok w tytule, globals - rokMatki, info_edit_screen - dodano ID matki w tytule, queen_screen - dodatkowy rok "Wsztstkie", info_screen - w rodzina i matka ostatnie infa z wszystkich lat a nie z roku do statystyk, w Notes Zbiory Zakupy Sprzedaz - tylko lata z danymi
-  //1.9.4.72 31.01.2026 - zwiekszenie kafla pasieki i inne dostosowania do systemowego skalowania czcionki, ilość ramek miodu w zbiorach - zmiana z int na liczby dziesiętne, zbiór miodu zalezy od powierzchni ramki w dm2, obsługa tagów NFC
+  //1.9.4.72 31.01.2026 - zwiekszenie kafla pasieki i inne dostosowania do systemowego skalowania czcionki, ilość ramek miodu w zbiorach - zmiana z int na liczby dziesiętne, zbiór miodu zalezy od powierzchni ramki w dm2, obsługa tagów NFC (NFC z perwszą pomocą clauda)
   //1.9.5.74 01.02.2025 - bład przy wyświetlaniu w hive_screen danych o matkach bez belki zasobów,
   //1.9.6.75 07.02.2026 - raport_color_screen -> litry miodu w legendzie zbiorów (1l=1.45kg), legenda miodobrań w kolumnie, przycisk PDF przy wykresach zbiorów miodu i pyłku, summary_screen - Ostatnie informacje (zbiorcze) na dodatkowym ekranie + Notes, ustawianie obsługi przycisku NFC, usuniecie daty obowiązywania subskrypcji
   //1.9.6.76 07.02.2026 - AppStore udrzucił wersję 1.9.6.75, zmieniłem share_plus: ^7.2.2 na share_plus: ^10.1.4
   //1.9.7.77 10.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie, Historia matki + PDF
   //1.9.8.78 12.02.2026 - uproszczone logowanie - bez deviceId (jeden unikalny email w bazie = jeden kod), Kasowanie kopii zapasowej w chmurze - robienie kopii archiwalnej do późniejszego usunięcia
+  //1.9.9.79 13.02.2006 - ukrywanie przycisków Zakupy i Sprzedaz,
   
-  final wersja = '1.9.8.78'; //wersja aplikacji na iOS
-  final dataWersji = '2026-02-12';
+  //wersja aplikacji na iOS
+  final wersja = '1.9.9.79'; 
+  final dataWersji = '2026-02-13';
   final now = DateTime.now();
   int aktywnosc = 0;
   List<Weather>? pogoda;
@@ -259,6 +261,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
               if (dod1[0].c != '0' && dod1[0].c != '') {
                 globals.nfcMode = dod1[0].c;
               }
+              //odczytanie ustawienia pokazywania przycisków Zakupy/Sprzedaż
+              globals.showZakupySprzedaz = dod1[0].d != 'false';
               if (dod1[0].a == 'true') {
                 //ustawienie przłącznika eksportu danych - automatyczne wysłanie danych przy uruchamianiu apki
                 //BACKUP BAZY LOKALNEJ
@@ -936,8 +940,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     List<String> gridItems = [
       'Notes',
       AppLocalizations.of(context)!.hArvests,
-      AppLocalizations.of(context)!.pUrchase,
-      AppLocalizations.of(context)!.sAle,
+      if (globals.showZakupySprzedaz)
+        AppLocalizations.of(context)!.pUrchase,
+      if (globals.showZakupySprzedaz)
+        AppLocalizations.of(context)!.sAle,
     ];
 
     //double heightScreen = MediaQuery.of(context).size.height;
@@ -1207,9 +1213,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       child: Column(children: <Widget>[
 //przyciski Zbiory, Zakupy, Sprzedaz, Notes
                       Container(
-                          height:
-                              ((MediaQuery.of(context).size.width + 30) / 5) *
-                                  2, //połowa szerokości
+                          height: globals.showZakupySprzedaz
+                              ? ((MediaQuery.of(context).size.width + 30) / 5) *
+                                  2
+                              : ((MediaQuery.of(context).size.width + 30) / 5), //wysokość siatki przycisków
                           child: Column(children: [
                             Expanded(
                               child: GridView.count(

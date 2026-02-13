@@ -57,6 +57,8 @@ String wykresZbiory = 'miod'; //wyświetlany wykres "miod" lub "pylek"
 
 String nfcMode = 'summary'; //tryb NFC: 'off' - wyłączony, 'info' - otwieraj informacje, 'summary' - otwieraj podsumowanie
 
+bool showZakupySprzedaz = true; //pokazuj/ukrywaj przyciski Zakupy i Sprzedaż na stronie startowej
+
 int raportNrStrony = 1; //numer strony dla wykresu raportu zbiorów lub leczenia
 int raportIleUliNaStronie = 20; //ilość uli na stronie w raporcie zbiorów lub leczenia (od 1 do 20)
 String rokRaportow = 'wszystkie'; //DateTime.now().toString().substring(0, 4); //rok wybrany w Info do raportów

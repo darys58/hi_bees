@@ -1385,5 +1385,7 @@
     "deleteOk": "The cloud backup has been deleted. Data stored in the app is not backed up.",
     "@deleteOk": {},
     "backupAllData": "local data backup",
-    "@backupAllData": {}
+    "@backupAllData": {},
+    "showPurchaseSale": "Show Purchase and Sale buttons",
+    "@showPurchaseSale": {}
 }

@@ -696,6 +696,7 @@
     "deleteAllDataOnSerwer": "Kasowanie kopii zapasowej w chmurze",
     "allDatabaseOnSerwer": "wszystkich danych na serwerze zewnętrznym",
     "deleteOk": "Kopia zapasowa w chmurze została usunięta. Dane zgromadzone w aplikacji nie mają kopii zapasowej.",
-    "backupAllData": "kopia zapasowa danych lokalych"
+    "backupAllData": "kopia zapasowa danych lokalych",
+    "showPurchaseSale": "Pokaż przyciski Zakupy i Sprzedaż"
 
 }

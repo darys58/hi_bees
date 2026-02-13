@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 //import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../globals.dart' as globals;
+import '../helpers/db_helper.dart';
 import '../screens/parametry_ula_screen.dart';
 import '../screens/parametr_edit_screen.dart';
 //import '../models/info.dart';
@@ -21,6 +22,7 @@ class _ParametrScreenState extends State<ParametrScreen> {
   bool _isInit = true;
   double miodMala = 0;
   double miodDuza = 0;
+  bool _showZakupySprzedaz = true;
 
   @override
   void didChangeDependencies() {
@@ -32,6 +34,11 @@ class _ParametrScreenState extends State<ParametrScreen> {
       Provider.of<Infos>(context, listen: false).fetchAndSetInfos().then((_) {
         //wszystkie informacje dla wybranej pasieki i ula
       });
+      //inicjalizacja przełącznika Zakupy/Sprzedaż
+      final dod1Init = Provider.of<Dodatki1>(context, listen: false).items;
+      if (dod1Init.isNotEmpty) {
+        _showZakupySprzedaz = dod1Init[0].d != 'false';
+      }
       //uzyskanie dostępu do danych z tabeli dodatki1
       // final dod1Data = Provider.of<Dodatki1>(context, listen: false);
       // final dod1 = dod1Data.items;
@@ -369,7 +376,27 @@ class _ParametrScreenState extends State<ParametrScreen> {
                         trailing: const Icon(Icons.edit),
                       ),
                     ),
-                  ), 
+                  ),
+
+//przełącznik Zakupy/Sprzedaż
+                  Card(
+                    child: ListTile(
+                      title: Text(AppLocalizations.of(context)!.showPurchaseSale),
+                      trailing: Switch.adaptive(
+                        value: _showZakupySprzedaz,
+                        onChanged: (value) {
+                          DBHelper.updateDodatki1('d', value ? 'true' : 'false').then((_) {
+                            Provider.of<Dodatki1>(context, listen: false).fetchAndSetDodatki1();
+                          });
+                          setState(() {
+                            _showZakupySprzedaz = value;
+                          });
+                          globals.showZakupySprzedaz = value;
+                        },
+                      ),
+                    ),
+                  ),
+
 //ul TYP A
 
                   GestureDetector(

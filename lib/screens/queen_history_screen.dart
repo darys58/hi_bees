@@ -294,8 +294,14 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
 
       List<List<pw.Widget>> tableData = [];
       for (int i = 0; i < _queenInfos.length; i++) {
-        final info = _queenInfos[i];
-        final infoText = '${info.parametr} ${info.wartosc}'.trim();
+        final info = _queenInfos[i];  
+        String? infoText;
+        info.wartosc == 'dziewica'
+        ? infoText = '${info.parametr} nieunasienniona'
+        : info.wartosc == 'virgine'
+          ? infoText = '${info.parametr} virgine'
+          : infoText = '${info.parametr} ${info.wartosc}'.trim();
+        
         // Czyść temperaturę - zostaw tylko cyfry, minus, kropkę i dodaj °C
         final tempClean = _cleanTemp(info.temp);
         tableData.add([
@@ -537,10 +543,21 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                     if (info.parametr.isNotEmpty || info.wartosc.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          '${info.parametr} ${info.wartosc}'.trim(),
-                          style: const TextStyle(fontSize: 14),
-                        ),
+                        child: 
+                          info.wartosc == 'dziewica'
+                        ? Text(
+                            '${info.parametr} nieunasienniona',
+                            style: const TextStyle(fontSize: 14),
+                          )
+                        : info.wartosc == 'virgine'
+                          ? Text(
+                              '${info.parametr} virgine',//jakby była własciwa nazwa po angielsku to tu mozna zmienić //${info.wartosc}'.trim(),
+                              style: const TextStyle(fontSize: 14),
+                            )
+                          : Text(
+                            '${info.parametr} ${info.wartosc}'.trim(), //wszystkie inne wartości
+                            style: const TextStyle(fontSize: 14),
+                          ),
                       ),
                     // Wiersz 3: uwagi
                     if (info.uwagi.isNotEmpty)
