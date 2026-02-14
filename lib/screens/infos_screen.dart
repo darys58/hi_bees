@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,9 +9,13 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../globals.dart' as globals;
 import '../models/info.dart';
 import '../models/infos.dart';
+import '../models/photo.dart';
 import '../widgets/info_item.dart';
 import '../models/dodatki1.dart';
 import '../models/dodatki2.dart';
@@ -39,6 +44,8 @@ class _InfoScreenState extends State<InfoScreen> {
   String tagNFC = '';
   String uwagiUla = '';
   String nazwaWlasna = '';
+  List<Photo> _photos = [];
+  final ImagePicker _picker = ImagePicker();
 
   List<Color> colory = [
     const Color.fromARGB(255, 252, 193, 104),
@@ -86,12 +93,169 @@ class _InfoScreenState extends State<InfoScreen> {
           .fetchAndSetQueens()
           .then((_) {
 
-          }); 
+          });
       });
+      //pobranie zdjęć dla wybranego ula
+      _loadPhotos();
     }
     _isInit = false;
     //Provider.of<Rests>(context, listen: false).fetchAndSetRests(); //dostawca restauracji
     super.didChangeDependencies();
+  }
+
+  //pobranie zdjęć z bazy dla aktualnego ula
+  Future<void> _loadPhotos() async {
+    await Provider.of<Photos>(context, listen: false)
+        .fetchAndSetPhotosForHive(globals.pasiekaID, globals.ulID);
+    setState(() {
+      _photos = Provider.of<Photos>(context, listen: false).items;
+    });
+  }
+
+  //zrobienie zdjęcia aparatem lub pobranie z galerii
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(
+      source: source,
+      maxWidth: 1200,
+      imageQuality: 85,
+    );
+    if (image == null) return;
+
+    //zapisanie zdjęcia w katalogu aplikacji
+    final appDir = await getApplicationDocumentsDirectory();
+    final photosDir = Directory('${appDir.path}/photos');
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+
+    final now = DateTime.now();
+    final timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
+    final fileName = '${globals.pasiekaID}_${globals.ulID}_$timestamp.jpg';
+    final savedPath = '${photosDir.path}/$fileName';
+
+    //kopiowanie zdjęcia do katalogu aplikacji
+    final File imageFile = File(image.path);
+    await imageFile.copy(savedPath);
+
+    final dataStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final czasStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+    final id = '$dataStr.$timestamp.${globals.pasiekaID}.${globals.ulID}';
+
+    //zapisanie metadanych w bazie
+    await Photos.insertPhoto(
+      id,
+      dataStr,
+      czasStr,
+      globals.pasiekaID,
+      globals.ulID,
+      savedPath,
+      '',
+      0,
+    );
+
+    //odświeżenie listy zdjęć
+    await _loadPhotos();
+  }
+
+  //podgląd zdjęcia na pełnym ekranie
+  void _showPhotoPreview(Photo photo) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            //zdjęcie z możliwością zoomowania
+            Center(
+              child: InteractiveViewer(
+                child: Image.file(
+                  File(photo.sciezka),
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            //data zdjęcia na górze
+            Positioned(
+              top: 50,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${photo.data}  ${photo.czas}',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+            ),
+            //przyciski na dole
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  //udostępnij
+                  IconButton(
+                    icon: Icon(Icons.share, color: Colors.white, size: 30),
+                    onPressed: () async {
+                      await Share.shareXFiles([XFile(photo.sciezka)]);
+                    },
+                  ),
+                  //zamknij
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  ),
+                  //usuń
+                  IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red, size: 30),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: ctx,
+                        builder: (c) => AlertDialog(
+                          title: Text(AppLocalizations.of(context)!.dEleteFoto), //Usuwanie zdjęcia
+                          content: Text(AppLocalizations.of(context)!.tORemove + '?'), //Usunąć ?
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(c).pop(false),
+                              child: Text(AppLocalizations.of(context)!.cancel),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(c).pop(true),
+                              child: Text(AppLocalizations.of(context)!.yesDelete,//Tak, usuń
+                                  style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        //kasowanie pliku
+                        final file = File(photo.sciezka);
+                        if (await file.exists()) {
+                          await file.delete();
+                        }
+                        //kasowanie z bazy
+                        await Photos.deletePhoto(photo.id);
+                        Navigator.of(ctx).pop();
+                        await _loadPhotos();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String zmienDate5_10(String data) {
@@ -2858,6 +3022,88 @@ class _InfoScreenState extends State<InfoScreen> {
               ),
             
         
+        //sekcja zdjęć ula - tylko w kategorii inspection
+            if (wybranaKategoria == 'inspection')
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    //galeria miniatur zdjęć - nad przyciskami, od najnowszego (lewo) do najstarszego (prawo)
+                    if (_photos.isNotEmpty)
+                      SizedBox(
+                        height: 120,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _photos.length,
+                          itemBuilder: (ctx, i) {
+                            final photo = _photos[i];
+                            final dataFormatted = photo.data.length >= 10
+                                ? '${photo.data.substring(8, 10)}.${photo.data.substring(5, 7)}.${photo.data.substring(0, 4)}'
+                                : photo.data;
+                            return GestureDetector(
+                              onTap: () => _showPhotoPreview(photo),
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Column(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.file(
+                                        File(photo.sciezka),
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (ctx, err, stack) => Container(
+                                          width: 80,
+                                          height: 80,
+                                          color: Colors.grey[300],
+                                          child: Icon(Icons.broken_image, color: Colors.grey),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      dataFormatted,
+                                      style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    if (_photos.isNotEmpty) SizedBox(height: 8),
+                    //przyciski: aparat i galeria - wyśrodkowane
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () => _pickImage(ImageSource.camera),
+                          icon: Icon(Icons.camera_alt, size: 20),
+                          label: Text(globals.jezyk == 'pl_PL' ? 'Zdjęcie' : 'Photo'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                            foregroundColor: Colors.black,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        ElevatedButton.icon(
+                          onPressed: () => _pickImage(ImageSource.gallery),
+                          icon: Icon(Icons.photo_library, size: 20),
+                          label: Text(globals.jezyk == 'pl_PL' ? 'Galeria' : 'Gallery'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                            foregroundColor: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
         //kreska pod statystykami
             const Divider(
               height: 10,
