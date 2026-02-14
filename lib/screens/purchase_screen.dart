@@ -1,11 +1,15 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../models/purchase.dart';
 import '../widgets/purchase_item.dart';
 import '../screens/purchase_edit_screen.dart';
-//import '../globals.dart' as globals;
+import '../globals.dart' as globals;
 
 class PurchaseScreen extends StatefulWidget {
   const PurchaseScreen({super.key});
@@ -174,6 +178,322 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
     }
   }
 
+  Future<void> _generatePurchasePdf(List<Purchase> zakupy) async {
+    if (zakupy.isEmpty) return;
+
+    final loc = AppLocalizations.of(context)!;
+    final bool isPl = globals.jezyk == 'pl_PL';
+
+    try {
+      final fontRegular = await PdfGoogleFonts.robotoRegular();
+      final fontBold = await PdfGoogleFonts.robotoBold();
+
+      // Sumaryczne wartości per kategoria dla wykresu kołowego
+      double brakTotal = brakWartoscPLN + brakWartoscEUR + brakWartoscUSD;
+      double opakowaniaTotal = opakowaniaWartoscPLN + opakowaniaWartoscEUR + opakowaniaWartoscUSD;
+      double wyposazenieTotal = wyposazenieWartoscPLN + wyposazenieWartoscEUR + wyposazenieWartoscUSD;
+      double pszczolyTotal = pszczolyWartoscPLN + pszczolyWartoscEUR + pszczolyWartoscUSD;
+      double matkiTotal = matkiWartoscPLN + matkiWartoscEUR + matkiWartoscUSD;
+      double wezaTotal = wezaWartoscPLN + wezaWartoscEUR + wezaWartoscUSD;
+      double pokarmTotal = pokarmWartoscPLN + pokarmWartoscEUR + pokarmWartoscUSD;
+      double lekiTotal = lekiWartoscPLN + lekiWartoscEUR + lekiWartoscUSD;
+
+      // Dane do wykresu kołowego
+      final pieColors = <PdfColor>[];
+      final pieValues = <double>[];
+      final pieNames = <String>[];
+
+      if (brakTotal > 0) {
+        pieNames.add(loc.noCaregory);
+        pieValues.add(brakTotal);
+        pieColors.add(PdfColors.grey);
+      }
+      if (opakowaniaTotal > 0) {
+        pieNames.add(loc.packaging);
+        pieValues.add(opakowaniaTotal);
+        pieColors.add(PdfColors.amber);
+      }
+      if (wyposazenieTotal > 0) {
+        pieNames.add(loc.equipment);
+        pieValues.add(wyposazenieTotal);
+        pieColors.add(PdfColors.blue);
+      }
+      if (pszczolyTotal > 0) {
+        pieNames.add(loc.bees);
+        pieValues.add(pszczolyTotal);
+        pieColors.add(PdfColors.orange);
+      }
+      if (matkiTotal > 0) {
+        pieNames.add(loc.queens);
+        pieValues.add(matkiTotal);
+        pieColors.add(PdfColors.red);
+      }
+      if (wezaTotal > 0) {
+        pieNames.add(loc.waxFundation);
+        pieValues.add(wezaTotal);
+        pieColors.add(PdfColor.fromInt(0xFFBDB76B));
+      }
+      if (pokarmTotal > 0) {
+        pieNames.add(loc.food);
+        pieValues.add(pokarmTotal);
+        pieColors.add(PdfColors.green);
+      }
+      if (lekiTotal > 0) {
+        pieNames.add(loc.medicines);
+        pieValues.add(lekiTotal);
+        pieColors.add(PdfColors.purple);
+      }
+
+      List<pw.Dataset> pieDatasets = [];
+      for (int i = 0; i < pieValues.length; i++) {
+        final v = pieValues[i];
+        if (v.isNaN || v.isInfinite || v <= 0) continue;
+        pieDatasets.add(pw.PieDataSet(
+          value: v,
+          color: pieColors[i],
+          legend: pieNames[i],
+          legendStyle: pw.TextStyle(fontSize: 0.01, font: fontRegular),
+        ));
+      }
+
+      // Helpery
+      String getWalutaText(int w) {
+        switch (w) {
+          case 1: return 'PLN';
+          case 2: return 'EUR';
+          case 3: return 'USD';
+          default: return '';
+        }
+      }
+
+      String getKategoriaText(int k) {
+        switch (k) {
+          case 1: return loc.noCaregory;
+          case 2: return loc.packaging;
+          case 3: return loc.equipment;
+          case 4: return loc.bees;
+          case 5: return loc.queens;
+          case 6: return loc.waxFundation;
+          case 7: return loc.food;
+          case 8: return loc.medicines;
+          default: return '';
+        }
+      }
+
+      String formatDate(String data) {
+        if (data.length < 10) return data;
+        String day = data.substring(8, 10);
+        String month = data.substring(5, 7);
+        String year = data.substring(0, 4);
+        return isPl ? '$day.$month.$year' : '$month-$day-$year';
+      }
+
+      String formatValue(double val) {
+        return isPl
+            ? val.toStringAsFixed(2).replaceAll('.', ',')
+            : val.toStringAsFixed(2);
+      }
+
+      // Legenda
+      pw.Widget buildLegendRow(PdfColor color, String text, {bool bold = false}) {
+        return pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 3),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Container(width: 10, height: 10, color: color),
+              pw.SizedBox(width: 5),
+              pw.Expanded(
+                child: pw.Text(text,
+                    style: pw.TextStyle(
+                        fontSize: 9,
+                        font: bold ? fontBold : fontRegular)),
+              ),
+            ],
+          ),
+        );
+      }
+
+      List<pw.Widget> legendRows = [];
+
+      void addLegend(PdfColor color, String name, double pln, double eur, double usd) {
+        if (pln <= 0 && eur <= 0 && usd <= 0) return;
+        String t = '$name: ';
+        if (pln > 0) t += ' ${pln.toStringAsFixed(0)} PLN';
+        if (eur > 0) t += ' ${eur.toStringAsFixed(0)} EUR';
+        if (usd > 0) t += ' ${usd.toStringAsFixed(0)} USD';
+        legendRows.add(buildLegendRow(color, t));
+      }
+
+      addLegend(PdfColors.grey, loc.noCaregory, brakWartoscPLN, brakWartoscEUR, brakWartoscUSD);
+      addLegend(PdfColors.amber, loc.packaging, opakowaniaWartoscPLN, opakowaniaWartoscEUR, opakowaniaWartoscUSD);
+      addLegend(PdfColors.blue, loc.equipment, wyposazenieWartoscPLN, wyposazenieWartoscEUR, wyposazenieWartoscUSD);
+      addLegend(PdfColors.orange, loc.bees, pszczolyWartoscPLN, pszczolyWartoscEUR, pszczolyWartoscUSD);
+      addLegend(PdfColors.red, loc.queens, matkiWartoscPLN, matkiWartoscEUR, matkiWartoscUSD);
+      addLegend(PdfColor.fromInt(0xFFBDB76B), loc.waxFundation, wezaWartoscPLN, wezaWartoscEUR, wezaWartoscUSD);
+      addLegend(PdfColors.green, loc.food, pokarmWartoscPLN, pokarmWartoscEUR, pokarmWartoscUSD);
+      addLegend(PdfColors.purple, loc.medicines, lekiWartoscPLN, lekiWartoscEUR, lekiWartoscUSD);
+
+      // RAZEM
+      String razemText = loc.tOTAL + ': ';
+      if (razemWartoscPLN > 0) razemText += ' ${razemWartoscPLN.toStringAsFixed(0)} PLN';
+      if (razemWartoscEUR > 0) razemText += ' ${razemWartoscEUR.toStringAsFixed(0)} EUR';
+      if (razemWartoscUSD > 0) razemText += ' ${razemWartoscUSD.toStringAsFixed(0)} USD';
+      legendRows.add(pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 5, left: 15),
+        child: pw.Text(razemText, style: pw.TextStyle(fontSize: 10, font: fontBold)),
+      ));
+
+      // Komórka tabeli
+      pw.Widget cell(String text, {pw.Alignment alignment = pw.Alignment.centerLeft}) {
+        return pw.Container(
+          padding: const pw.EdgeInsets.all(3),
+          alignment: alignment,
+          child: pw.Text(text, style: pw.TextStyle(fontSize: 8, font: fontRegular)),
+        );
+      }
+
+      pw.Widget headerCell(String text) {
+        return pw.Container(
+          padding: const pw.EdgeInsets.all(3),
+          color: PdfColors.grey200,
+          alignment: pw.Alignment.center,
+          child: pw.Text(text, style: pw.TextStyle(fontSize: 8, font: fontBold)),
+        );
+      }
+
+      // Wiersze tabeli - sortowanie od najstarszego do najnowszego
+      final zakupySorted = zakupy.reversed.toList();
+
+      List<pw.TableRow> tableRows = [
+        pw.TableRow(children: [
+          headerCell('L.p.'),
+          headerCell(isPl ? 'Data' : 'Date'),
+          headerCell(isPl ? 'Kategoria' : 'Category'),
+          headerCell(isPl ? 'Nazwa' : 'Name'),
+          headerCell(isPl ? 'Ilość' : 'Qty'),
+          headerCell(isPl ? 'Wartość' : 'Value'),
+          headerCell(isPl ? 'Uwagi' : 'Notes'),
+        ]),
+      ];
+
+      for (int i = 0; i < zakupySorted.length; i++) {
+        final z = zakupySorted[i];
+        String kategoriaText = getKategoriaText(z.kategoriaId);
+
+        tableRows.add(pw.TableRow(
+          children: [
+            cell('${i + 1}', alignment: pw.Alignment.center),
+            cell(formatDate(z.data), alignment: pw.Alignment.center),
+            cell(kategoriaText),
+            cell(z.nazwa),
+            cell('${z.ilosc.toInt()}', alignment: pw.Alignment.centerRight),
+            cell('${formatValue(z.wartosc)} ${getWalutaText(z.waluta)}', alignment: pw.Alignment.centerRight),
+            cell(z.uwagi),
+          ],
+        ));
+      }
+
+      // Tworzenie PDF
+      final pdf = pw.Document(
+        theme: pw.ThemeData.withFont(
+          base: fontRegular,
+          bold: fontBold,
+        ),
+      );
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          build: (pw.Context ctx) {
+            List<pw.Widget> content = [
+              pw.Center(
+                child: pw.Text(
+                  '${loc.pUrchase} $wybranaData',
+                  style: pw.TextStyle(fontSize: 18, font: fontBold),
+                ),
+              ),
+              pw.SizedBox(height: 5),
+              pw.Center(
+                child: pw.Text(
+                  'Hey Maya  ${DateTime.now().toString().substring(0, 10)}',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey, font: fontRegular),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+            ];
+
+            // Wykres kołowy + legenda
+            if (pieDatasets.isNotEmpty) {
+              content.add(
+                pw.Center(
+                  child: pw.Row(
+                    mainAxisSize: pw.MainAxisSize.min,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Container(
+                        width: 150,
+                        height: 150,
+                        child: pw.Chart(
+                          grid: pw.PieGrid(),
+                          datasets: pieDatasets,
+                        ),
+                      ),
+                      pw.SizedBox(width: 20),
+                      pw.Container(
+                        width: 260,
+                        padding: const pw.EdgeInsets.only(top: 24),
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: legendRows,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              content.add(pw.SizedBox(height: 20));
+            }
+
+            // Tabela
+            content.add(
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(28),
+                  1: const pw.FixedColumnWidth(55),
+                  2: const pw.FlexColumnWidth(2),
+                  3: const pw.FlexColumnWidth(3),
+                  4: const pw.FixedColumnWidth(35),
+                  5: const pw.FixedColumnWidth(62),
+                  6: const pw.FlexColumnWidth(2),
+                },
+                children: tableRows,
+              ),
+            );
+
+            return content;
+          },
+        ),
+      );
+
+      // Udostępnienie PDF
+      final Uint8List pdfBytes = await pdf.save();
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: 'purchase_${wybranaData}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+    } catch (e) {
+      debugPrint('Błąd generowania PDF zakupów: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('PDF error: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     brakWartoscPLN = 0; //kategoria brak
@@ -328,12 +648,14 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
               onPressed: () =>
-                  //_showAlert(context, frames[0].pasiekaNr, frames[0].ulNr)
                   Navigator.of(context).pushNamed(
                 PurchaseEditScreen.routeName,
                 arguments: {'temp': 1},
               ),
-              //print('dodaj zbior'),
+            ),
+            IconButton(
+              icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),
+              onPressed: () => _generatePurchasePdf(zakupy),
             ),
             // IconButton(
             //   icon: Icon(Icons.edit),
