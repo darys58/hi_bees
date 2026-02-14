@@ -1708,7 +1708,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(4) varroa'),
+            }, child: Text(('(5) varroa'),
             style: TextStyle(fontSize: 18)),
             ),
 

@@ -580,7 +580,7 @@ class _RaportScreenState extends State<RaportScreen> {
           }
         }
       }
-      if(miod2023 > 0)
+      if(miod > 0)
         daneZbioruMioduDoWykresu2023.add({ //to dodaj następny słupek wykresu
           "x": j,         // Kolejna wartość osi X - numer ula
           "value": miod,   // Wartość słupka
@@ -588,7 +588,7 @@ class _RaportScreenState extends State<RaportScreen> {
           // "value_02": 5000,
           // "value_03": 15000,
         });
-      if(pylek2023 > 0)
+      if(pylek > 0)
         daneZbioruPylkuDoWykresu2023.add({
           "x": j,         // Kolejna wartość osi X
           "value": pylek,   // Wartość słupka
@@ -682,12 +682,12 @@ class _RaportScreenState extends State<RaportScreen> {
           }
         }
       }
-      if(miod2024 > 0)
+      if(miod > 0)
         daneZbioruMioduDoWykresu2024.add({ //to dodaj następny słupek wykresu
           "x": j,         // Kolejna wartość osi X - numer ula
           "value": miod, // Wartość słupka         
         });
-      if(pylek2024 > 0)
+      if(pylek > 0)
         daneZbioruPylkuDoWykresu2024.add({
           "x": j,         // Kolejna wartość osi X
           "value": pylek,   // Wartość słupka
@@ -782,13 +782,13 @@ class _RaportScreenState extends State<RaportScreen> {
         }
       }
       //print('miod2025 = $miod2025');
-      if(miod2025 > 0)
+      if(miod > 0)
         daneZbioruMioduDoWykresu2025.add({ //to dodaj następny słupek wykresu
           "x": j,         // Kolejna wartość osi X - index w tabeli numerów uli hivesNumbers wskazujący numer ula
           "value": miod,   // Wartość słupka
         });
       
-      if(pylek2025 > 0)
+      if(pylek > 0)
         daneZbioruPylkuDoWykresu2025.add({
           "x": j,         // Kolejna wartość osi X
           "value": pylek,   // Wartość słupka
@@ -881,12 +881,12 @@ class _RaportScreenState extends State<RaportScreen> {
           }
         }
       }
-      if(miod2026 > 0)
+      if(miod > 0)
         daneZbioruMioduDoWykresu2026.add({ //to dodaj następny słupek wykresu
           "x": j,         // Kolejna wartość osi X - numer ula
           "value": miod,   // Wartość słupka
         });
-      if(pylek2026 > 0)
+      if(pylek > 0)
         daneZbioruPylkuDoWykresu2026.add({
           "x": j,         // Kolejna wartość osi X
           "value": pylek,   // Wartość słupka
@@ -979,12 +979,12 @@ class _RaportScreenState extends State<RaportScreen> {
           }
         }
       }
-      if(miod2027 > 0)
+      if(miod > 0)
         daneZbioruMioduDoWykresu2027.add({ //to dodaj następny słupek wykresu
           "x": j,         // Kolejna wartość osi X - numer ula
           "value": miod,   // Wartość słupka
         });
-      if(pylek2027 > 0)
+      if(pylek > 0)
         daneZbioruPylkuDoWykresu2027.add({
           "x": j,         // Kolejna wartość osi X
           "value": pylek,   // Wartość słupka
@@ -1078,12 +1078,12 @@ class _RaportScreenState extends State<RaportScreen> {
           }
         }
       }
-      if(miod2028 > 0)
+      if(miod > 0)
         daneZbioruMioduDoWykresu2028.add({ //to dodaj następny słupek wykresu
           "x": j,         // Kolejna wartość osi X - numer ula
           "value": miod,   // Wartość słupka
         });
-      if(pylek2028 > 0)
+      if(pylek > 0)
         daneZbioruPylkuDoWykresu2028.add({
           "x": j,         // Kolejna wartość osi X
           "value": pylek,   // Wartość słupka
@@ -1176,12 +1176,12 @@ class _RaportScreenState extends State<RaportScreen> {
           }
         }
       }
-      if(miod2029 > 0)
+      if(miod > 0)
         daneZbioruMioduDoWykresu2029.add({ //to dodaj następny słupek wykresu
           "x": j,         // Kolejna wartość osi X - numer ula
           "value": miod,   // Wartość słupka
         });
-      if(pylek2029 > 0)
+      if(pylek > 0)
         daneZbioruPylkuDoWykresu2029.add({
           "x": j,         // Kolejna wartość osi X
           "value": pylek,   // Wartość słupka
@@ -1274,12 +1274,12 @@ class _RaportScreenState extends State<RaportScreen> {
           }
         }
       }
-      if(miod2030 > 0)
+      if(miod > 0)
         daneZbioruMioduDoWykresu2030.add({ //to dodaj następny słupek wykresu
           "x": j,         // Kolejna wartość osi X - numer ula
           "value": miod,   // Wartość słupka
         });
-      if(pylek2030 > 0)
+      if(pylek > 0)
         daneZbioruPylkuDoWykresu2030.add({
           "x": j,         // Kolejna wartość osi X
           "value": pylek,   // Wartość słupka

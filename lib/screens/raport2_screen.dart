@@ -356,7 +356,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
           }
         }
       }
-      if(varroa2023 > 0)  
+      if(varroa > 0)
         daneVarroaDoWykresu2023.add({
           "x": j,         // Kolejna wartość osi X - numer ula
           "value": varroa,   // Wartość słupka
@@ -395,7 +395,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
           }
         }
       }
-      if(varroa2024 > 0)  
+      if(varroa > 0)
         daneVarroaDoWykresu2024.add({
           "x": j,         // Kolejna wartość osi X
           "value": varroa,   // Wartość słupka
@@ -434,7 +434,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
           }
         }
       }
-      if(varroa2025 > 0)  
+      if(varroa > 0)
         daneVarroaDoWykresu2025.add({
           "x": j,         // Kolejna wartość osi X
           "value": varroa,   // Wartość słupka
@@ -473,7 +473,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
           }
         }
       }
-      if(varroa2026 > 0)  
+      if(varroa > 0)
         daneVarroaDoWykresu2026.add({
           "x": j,         // Kolejna wartość osi X
           "value": varroa,   // Wartość słupka
@@ -512,7 +512,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
           }
         }
       }
-      if(varroa2027 > 0)  
+      if(varroa > 0)
         daneVarroaDoWykresu2027.add({
           "x": j,         // Kolejna wartość osi X
           "value": varroa,   // Wartość słupka
@@ -551,7 +551,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
           }
         }
       }
-      if(varroa2028 > 0)  
+      if(varroa > 0)
         daneVarroaDoWykresu2028.add({
           "x": j,         // Kolejna wartość osi X
           "value": varroa,   // Wartość słupka
@@ -590,7 +590,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
           }
         }
       }
-      if(varroa2029 > 0)  
+      if(varroa > 0)
         daneVarroaDoWykresu2029.add({
           "x": j,         // Kolejna wartość osi X
           "value": varroa,   // Wartość słupka
@@ -629,7 +629,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
           }
         }
       }
-      if(varroa2030 > 0)  
+      if(varroa > 0)
         daneVarroaDoWykresu2030.add({
           "x": j,         // Kolejna wartość osi X
           "value": varroa,   // Wartość słupka
