@@ -1,4 +1,8 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -130,6 +134,380 @@ class _SaleScreenState extends State<SaleScreen> {
       case 3:
         propolisWartoscUSD += wartosc;
         break;
+    }
+  }
+
+  Future<void> _generateSalePdf(List<Sale> sprzedaz) async {
+    if (sprzedaz.isEmpty) return;
+
+    final loc = AppLocalizations.of(context)!;
+    final bool isPl = globals.jezyk == 'pl_PL';
+
+    try {
+      final fontRegular = await PdfGoogleFonts.robotoRegular();
+      final fontBold = await PdfGoogleFonts.robotoBold();
+
+      // Sumaryczne wartości per kategoria (wszystkie waluty) dla wykresu kołowego
+      double miodTotal = miodWartoscPLN + miodWartoscEUR + miodWartoscUSD +
+          miodWartoscInnaPLN + miodWartoscInnaEUR + miodWartoscInnaUSD;
+      double pylekTotal = pylekWartoscPLN + pylekWartoscEUR + pylekWartoscUSD +
+          pylekWartoscInnaPLN + pylekWartoscInnaEUR + pylekWartoscInnaUSD;
+      double pierzgaTotal = pierzgaWartoscPLN + pierzgaWartoscEUR + pierzgaWartoscUSD +
+          pierzgaWartoscInnaPLN + pierzgaWartoscInnaEUR + pierzgaWartoscInnaUSD;
+      double woskTotal = woskWartoscPLN + woskWartoscEUR + woskWartoscUSD;
+      double propolisTotal = propolisWartoscPLN + propolisWartoscEUR + propolisWartoscUSD;
+
+      // Dane do wykresu kołowego - tylko kategorie z wartością > 0
+      final pieColors = <PdfColor>[];
+      final pieValues = <double>[];
+      final pieNames = <String>[];
+
+      if (miodTotal > 0) {
+        pieNames.add(loc.honey);
+        pieValues.add(miodTotal);
+        pieColors.add(PdfColors.amber);
+      }
+      if (pylekTotal > 0) {
+        pieNames.add(loc.beePollen);
+        pieValues.add(pylekTotal);
+        pieColors.add(PdfColors.orange);
+      }
+      if (pierzgaTotal > 0) {
+        pieNames.add(loc.perga);
+        pieValues.add(pierzgaTotal);
+        pieColors.add(PdfColors.green);
+      }
+      if (woskTotal > 0) {
+        pieNames.add(loc.wax);
+        pieValues.add(woskTotal);
+        pieColors.add(PdfColor.fromInt(0xFFBDB76B));
+      }
+      if (propolisTotal > 0) {
+        pieNames.add('propolis');
+        pieValues.add(propolisTotal);
+        pieColors.add(PdfColors.brown);
+      }
+
+      List<pw.Dataset> pieDatasets = [];
+      for (int i = 0; i < pieValues.length; i++) {
+        final v = pieValues[i];
+        if (v.isNaN || v.isInfinite || v <= 0) continue;
+        pieDatasets.add(pw.PieDataSet(
+          value: v,
+          color: pieColors[i],
+          legend: pieNames[i],
+          legendStyle: pw.TextStyle(fontSize: 0.01, font: fontRegular),
+        ));
+      }
+
+      // Helpery
+      String getMiaraText(int m) {
+        switch (m) {
+          case 2: return '900 ml';
+          case 3: return '720 ml';
+          case 4: return '500 ml';
+          case 5: return '350 ml';
+          case 6: return '315 ml';
+          case 7: return '200 ml';
+          case 8: return '100 ml';
+          case 9: return '50 ml';
+          case 10: return '30 ml';
+          case 21: return '1000 g';
+          case 22: return '500 g';
+          case 23: return '250 g';
+          case 24: return '100 g';
+          case 25: return '50 g';
+          default: return '';
+        }
+      }
+
+      String getWalutaText(int w) {
+        switch (w) {
+          case 1: return 'PLN';
+          case 2: return 'EUR';
+          case 3: return 'USD';
+          default: return '';
+        }
+      }
+
+      String getKategoriaText(int k) {
+        switch (k) {
+          case 1: return loc.honey;
+          case 2: return loc.beePollen;
+          case 3: return loc.perga;
+          case 4: return loc.wax;
+          case 5: return 'propolis';
+          default: return '';
+        }
+      }
+
+      String formatDate(String data) {
+        if (data.length < 10) return data;
+        String day = data.substring(8, 10);
+        String month = data.substring(5, 7);
+        String year = data.substring(0, 4);
+        return isPl ? '$day.$month.$year' : '$month-$day-$year';
+      }
+
+      String formatValue(double val) {
+        return isPl
+            ? val.toStringAsFixed(2).replaceAll('.', ',')
+            : val.toStringAsFixed(2);
+      }
+
+      // Legenda - wiersz z kolorowym prostokątem i tekstem
+      pw.Widget buildLegendRow(PdfColor color, String text, {bool bold = false}) {
+        return pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 3),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Container(width: 10, height: 10, color: color),
+              pw.SizedBox(width: 5),
+              pw.Expanded(
+                child: pw.Text(text,
+                    style: pw.TextStyle(
+                        fontSize: 9,
+                        font: bold ? fontBold : fontRegular)),
+              ),
+            ],
+          ),
+        );
+      }
+
+      List<pw.Widget> legendRows = [];
+
+      // Miód
+      if (miod > 0 || miodWartoscInnaPLN > 0 || miodWartoscInnaEUR > 0 || miodWartoscInnaUSD > 0) {
+        String t = loc.honey + ': ';
+        if (miod > 0) {
+          t += isPl
+              ? '${miod.toStringAsFixed(1).replaceAll('.', ',')} l (${(miod * 1.38).toStringAsFixed(1).replaceAll('.', ',')} kg)'
+              : '${miod.toStringAsFixed(1)} l (${(miod * 1.38).toStringAsFixed(1)} kg)';
+        }
+        double allPLN = miodWartoscPLN + miodWartoscInnaPLN;
+        double allEUR = miodWartoscEUR + miodWartoscInnaEUR;
+        double allUSD = miodWartoscUSD + miodWartoscInnaUSD;
+        if (allPLN > 0) t += ' ${allPLN.toStringAsFixed(0)} PLN';
+        if (allEUR > 0) t += ' ${allEUR.toStringAsFixed(0)} EUR';
+        if (allUSD > 0) t += ' ${allUSD.toStringAsFixed(0)} USD';
+        legendRows.add(buildLegendRow(PdfColors.amber, t));
+      }
+
+      // Pyłek
+      if (pylek > 0 || pylekWartoscInnaPLN > 0 || pylekWartoscInnaEUR > 0 || pylekWartoscInnaUSD > 0) {
+        String t = loc.beePollen + ': ';
+        if (pylek > 0) {
+          t += isPl
+              ? '${pylek.toStringAsFixed(1).replaceAll('.', ',')} l (${(pylek * 0.634).toStringAsFixed(1).replaceAll('.', ',')} kg)'
+              : '${pylek.toStringAsFixed(1)} l (${(pylek * 0.634).toStringAsFixed(1)} kg)';
+        }
+        double allPLN = pylekWartoscPLN + pylekWartoscInnaPLN;
+        double allEUR = pylekWartoscEUR + pylekWartoscInnaEUR;
+        double allUSD = pylekWartoscUSD + pylekWartoscInnaUSD;
+        if (allPLN > 0) t += ' ${allPLN.toStringAsFixed(0)} PLN';
+        if (allEUR > 0) t += ' ${allEUR.toStringAsFixed(0)} EUR';
+        if (allUSD > 0) t += ' ${allUSD.toStringAsFixed(0)} USD';
+        legendRows.add(buildLegendRow(PdfColors.orange, t));
+      }
+
+      // Pierzga
+      if (pierzga > 0 || pierzgaWartoscInnaPLN > 0 || pierzgaWartoscInnaEUR > 0 || pierzgaWartoscInnaUSD > 0) {
+        String t = loc.perga + ': ';
+        if (pierzga > 0) {
+          t += isPl
+              ? '${pierzga.toStringAsFixed(1).replaceAll('.', ',')} l (${(pierzga * 0.555).toStringAsFixed(1).replaceAll('.', ',')} kg)'
+              : '${pierzga.toStringAsFixed(1)} l (${(pierzga * 0.555).toStringAsFixed(1)} kg)';
+        }
+        double allPLN = pierzgaWartoscPLN + pierzgaWartoscInnaPLN;
+        double allEUR = pierzgaWartoscEUR + pierzgaWartoscInnaEUR;
+        double allUSD = pierzgaWartoscUSD + pierzgaWartoscInnaUSD;
+        if (allPLN > 0) t += ' ${allPLN.toStringAsFixed(0)} PLN';
+        if (allEUR > 0) t += ' ${allEUR.toStringAsFixed(0)} EUR';
+        if (allUSD > 0) t += ' ${allUSD.toStringAsFixed(0)} USD';
+        legendRows.add(buildLegendRow(PdfColors.green, t));
+      }
+
+      // Wosk
+      if (woskTotal > 0) {
+        String t = loc.wax + ': ';
+        if (woskWartoscPLN > 0) t += ' ${woskWartoscPLN.toStringAsFixed(0)} PLN';
+        if (woskWartoscEUR > 0) t += ' ${woskWartoscEUR.toStringAsFixed(0)} EUR';
+        if (woskWartoscUSD > 0) t += ' ${woskWartoscUSD.toStringAsFixed(0)} USD';
+        legendRows.add(buildLegendRow(PdfColor.fromInt(0xFFBDB76B), t));
+      }
+
+      // Propolis
+      if (propolisTotal > 0) {
+        String t = 'propolis: ';
+        if (propolisWartoscPLN > 0) t += ' ${propolisWartoscPLN.toStringAsFixed(0)} PLN';
+        if (propolisWartoscEUR > 0) t += ' ${propolisWartoscEUR.toStringAsFixed(0)} EUR';
+        if (propolisWartoscUSD > 0) t += ' ${propolisWartoscUSD.toStringAsFixed(0)} USD';
+        legendRows.add(buildLegendRow(PdfColors.brown, t));
+      }
+
+      // RAZEM
+      String razemText = loc.tOTAL + ': ';
+      if (razemWartoscPLN > 0) razemText += ' ${razemWartoscPLN.toStringAsFixed(0)} PLN';
+      if (razemWartoscEUR > 0) razemText += ' ${razemWartoscEUR.toStringAsFixed(0)} EUR';
+      if (razemWartoscUSD > 0) razemText += ' ${razemWartoscUSD.toStringAsFixed(0)} USD';
+      legendRows.add(pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 5, left: 15),
+        child: pw.Text(razemText, style: pw.TextStyle(fontSize: 10, font: fontBold)),
+      ));
+
+      // Komórka tabeli
+      pw.Widget cell(String text, {pw.Alignment alignment = pw.Alignment.centerLeft}) {
+        return pw.Container(
+          padding: const pw.EdgeInsets.all(3),
+          alignment: alignment,
+          child: pw.Text(text, style: pw.TextStyle(fontSize: 8, font: fontRegular)),
+        );
+      }
+
+      pw.Widget headerCell(String text) {
+        return pw.Container(
+          padding: const pw.EdgeInsets.all(3),
+          color: PdfColors.grey200,
+          alignment: pw.Alignment.center,
+          child: pw.Text(text, style: pw.TextStyle(fontSize: 8, font: fontBold)),
+        );
+      }
+
+      // Wiersze tabeli - sortowanie od najstarszego do najnowszego
+      final sprzedazSorted = sprzedaz.reversed.toList();
+
+      List<pw.TableRow> tableRows = [
+        pw.TableRow(children: [
+          headerCell('L.p.'),
+          headerCell(isPl ? 'Data' : 'Date'),
+          headerCell(isPl ? 'Nazwa' : 'Name'),
+          headerCell(isPl ? 'Ilość' : 'Qty'),
+          headerCell(isPl ? 'Cena' : 'Price'),
+          headerCell(isPl ? 'Wartość' : 'Value'),
+          headerCell(isPl ? 'Uwagi' : 'Notes'),
+        ]),
+      ];
+
+      for (int i = 0; i < sprzedazSorted.length; i++) {
+        final s = sprzedazSorted[i];
+        String miaraText = getMiaraText(s.miara);
+        String iloscText = miaraText.isNotEmpty
+            ? '${s.ilosc.toInt()} x $miaraText'
+            : '${s.ilosc.toInt()}';
+        String nazwaText = getKategoriaText(s.kategoriaId);
+        if (s.nazwa.isNotEmpty) nazwaText += ' ${s.nazwa}';
+
+        tableRows.add(pw.TableRow(
+          children: [
+            cell('${i + 1}', alignment: pw.Alignment.center),
+            cell(formatDate(s.data), alignment: pw.Alignment.center),
+            cell(nazwaText),
+            cell(iloscText, alignment: pw.Alignment.centerRight),
+            cell(formatValue(s.cena), alignment: pw.Alignment.centerRight),
+            cell('${formatValue(s.wartosc)} ${getWalutaText(s.waluta)}', alignment: pw.Alignment.centerRight),
+            cell(s.uwagi),
+          ],
+        ));
+      }
+
+      // Tworzenie PDF
+      final pdf = pw.Document(
+        theme: pw.ThemeData.withFont(
+          base: fontRegular,
+          bold: fontBold,
+        ),
+      );
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          build: (pw.Context ctx) {
+            List<pw.Widget> content = [
+              pw.Center(
+                child: pw.Text(
+                  '${loc.sAle} $wybranaData',
+                  style: pw.TextStyle(fontSize: 18, font: fontBold),
+                ),
+              ),
+              pw.SizedBox(height: 5),
+              pw.Center(
+                child: pw.Text(
+                  'Hey Maya  ${DateTime.now().toString().substring(0, 10)}',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey, font: fontRegular),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+            ];
+
+            // Wykres kołowy + legenda
+            if (pieDatasets.isNotEmpty) {
+              content.add(
+                pw.Center(
+                  child: pw.Row(
+                    mainAxisSize: pw.MainAxisSize.min,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Container(
+                        width: 150,
+                        height: 150,
+                        child: pw.Chart(
+                          grid: pw.PieGrid(),
+                          datasets: pieDatasets,
+                        ),
+                      ),
+                      pw.SizedBox(width: 20),
+                      pw.Container(
+                        width: 260,
+                        padding: const pw.EdgeInsets.only(top: 24),
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: legendRows,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              content.add(pw.SizedBox(height: 20));
+            }
+
+            // Tabela
+            content.add(
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(28),
+                  1: const pw.FixedColumnWidth(55),
+                  2: const pw.FlexColumnWidth(3),
+                  3: const pw.FixedColumnWidth(65),
+                  4: const pw.FixedColumnWidth(44),
+                  5: const pw.FixedColumnWidth(62),
+                  6: const pw.FlexColumnWidth(2),
+                },
+                children: tableRows,
+              ),
+            );
+
+            return content;
+          },
+        ),
+      );
+
+      // Udostępnienie PDF
+      final Uint8List pdfBytes = await pdf.save();
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: 'sale_${wybranaData}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+    } catch (e) {
+      debugPrint('Błąd generowania PDF sprzedaży: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('PDF error: $e')),
+        );
+      }
     }
   }
 
@@ -534,12 +912,14 @@ class _SaleScreenState extends State<SaleScreen> {
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
               onPressed: () =>
-                  //_showAlert(context, frames[0].pasiekaNr, frames[0].ulNr)
                   Navigator.of(context).pushNamed(
                 SaleEditScreen.routeName,
                 arguments: {'temp': 1},
               ),
-              //print('dodaj zbior'),
+            ),
+            IconButton(
+              icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),
+              onPressed: () => _generateSalePdf(sprzedaz),
             ),
             // IconButton(
             //   icon: Icon(Icons.edit),
