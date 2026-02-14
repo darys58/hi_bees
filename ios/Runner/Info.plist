@@ -40,6 +40,10 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>For voice processing</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikacja potrzebuje dostępu do aparatu aby robić zdjęcia uli</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikacja potrzebuje dostępu do zdjęć aby wybrać zdjęcie ula</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

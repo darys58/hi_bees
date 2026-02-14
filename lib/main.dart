@@ -60,6 +60,7 @@ import 'models/queen.dart';
 import './models/sale.dart';
 import './models/purchase.dart';
 import './models/infos.dart';
+import './models/photo.dart';
 import './models/memory.dart';
 import './models/dodatki1.dart';
 import './models/dodatki2.dart';
@@ -149,6 +150,10 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider.value(
           //zarejestrowanie dostawcy danych (bez kontekstu)
           value: Queens(), //dla Hives
+        ),
+        ChangeNotifierProvider.value(
+          //zarejestrowanie dostawcy danych (bez kontekstu)
+          value: Photos(), //dla zdjęć uli
         ),
         
       ],

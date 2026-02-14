@@ -45,7 +45,9 @@ class DBHelper {
           'CREATE TABLE pogoda(id TEXT PRIMARY KEY, miasto TEXT, latitude TEXT, longitude TEXT, pobranie TEXT, temp TEXT, weatherId TEXT, icon TEXT, units INTEGER, lang TEXT, inne TEXT)');
       await db.execute(
           'CREATE TABLE matki(id INTEGER PRIMARY KEY, data TEXT, zrodlo TEXT, rasa TEXT, linia TEXT, znak TEXT, napis TEXT, uwagi TEXT, pasieka INTEGER, ul INTEGER, dataStraty TEXT, a TEXT, b TEXT, c TEXT, arch INTEGER)');
-     
+      await db.execute(
+          'CREATE TABLE zdjecia(id TEXT PRIMARY KEY, data TEXT, czas TEXT, pasiekaNr INTEGER, ulNr INTEGER, sciezka TEXT, uwagi TEXT, arch INTEGER)');
+
       //    'CREATE TABLE podkategorie(id TEXT PRIMARY KEY, kolejnosc TEXT, kaId TEXT, nazwa TEXT)');
     }, onUpgrade: (db, oldVersion, newVersion) async {
       if (oldVersion < 2) {
@@ -53,7 +55,11 @@ class DBHelper {
         await db.execute('ALTER TABLE notatki ADD COLUMN pole2 TEXT');
         await db.execute('ALTER TABLE notatki ADD COLUMN pole3 TEXT');
       }
-    }, version: 2);
+      if (oldVersion < 3) {
+        await db.execute(
+            'CREATE TABLE zdjecia(id TEXT PRIMARY KEY, data TEXT, czas TEXT, pasiekaNr INTEGER, ulNr INTEGER, sciezka TEXT, uwagi TEXT, arch INTEGER)');
+      }
+    }, version: 3);
   }
 
   static Future<void> deleteBase() async {
@@ -755,6 +761,22 @@ class DBHelper {
     db.delete('ramka',
         where: 'data=? and pasiekaNr=? and ulNr =?',
         whereArgs: [data, pasieka, ul]);
+  }
+
+  //pobieranie zdjęć dla danego ula i pasieki - dla infos_screen
+  static Future<List<Map<String, dynamic>>> getPhotosOfHive(
+      int pasieka, int ul) async {
+    final db = await DBHelper.database();
+    return db.query("zdjecia",
+        where: "pasiekaNr=? and ulNr=?",
+        whereArgs: [pasieka, ul],
+        orderBy: "data DESC, czas DESC");
+  }
+
+  //usuniecie zdjęcia z tabeli zdjecia - dla infos_screen
+  static Future<void> deletePhoto(String id) async {
+    final db = await DBHelper.database();
+    db.delete('zdjecia', where: 'id= ?', whereArgs: [id]);
   }
 
 }

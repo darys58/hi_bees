@@ -713,6 +713,8 @@
         "apiary": {"type": "String"}
       }
     },
-    "catColumn": "Kat."
+    "catColumn": "Kat.",
+    "tORemove": "Usunąć",
+    "dEleteFoto": "Usuwanie zdjęcia"
 
 }

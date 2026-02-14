@@ -9,6 +9,8 @@ PODS:
   - flutter_voice_processor (1.1.2):
     - Flutter
     - ios-voice-processor (~> 1.2.0)
+  - image_picker_ios (0.0.1):
+    - Flutter
   - ios-voice-processor (1.2.0)
   - nfc_manager (0.0.1):
     - Flutter
@@ -48,6 +50,7 @@ DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_beep (from `.symlinks/plugins/flutter_beep/ios`)
   - flutter_voice_processor (from `.symlinks/plugins/flutter_voice_processor/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - nfc_manager (from `.symlinks/plugins/nfc_manager/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
@@ -77,6 +80,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_beep/ios"
   flutter_voice_processor:
     :path: ".symlinks/plugins/flutter_voice_processor/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
   nfc_manager:
     :path: ".symlinks/plugins/nfc_manager/ios"
   package_info_plus:
@@ -106,6 +111,7 @@ SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_beep: daa8f6cab904fd4251c9a8917d15672657013ffd
   flutter_voice_processor: f60363f959515eaebc35bcaaf26017596c953fc6
+  image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
   ios-voice-processor: 6b5ca08962f39e434fe39dca0f483d923a3b1b97
   nfc_manager: 9c40fe22528ab871ca11e52ea8b95790e9d92ca2
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499

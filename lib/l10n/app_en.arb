@@ -1403,5 +1403,9 @@
         "apiary": {"type": "String"}
       }
     },
-    "catColumn": "Cat."
+    "catColumn": "Cat.",
+    "tORemove": "To remove",
+    "@tORemove": {},
+    "dEleteFoto": "Deleting photo",
+    "@dEleteFoto": {}
 }
