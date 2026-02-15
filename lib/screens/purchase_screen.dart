@@ -245,14 +245,16 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
       }
 
       List<pw.Dataset> pieDatasets = [];
+      final pieTotal = pieValues.fold(0.0, (sum, v) => sum + v);
       for (int i = 0; i < pieValues.length; i++) {
         final v = pieValues[i];
         if (v.isNaN || v.isInfinite || v <= 0) continue;
+        final percent = (v / pieTotal * 100).toStringAsFixed(1);
         pieDatasets.add(pw.PieDataSet(
           value: v,
           color: pieColors[i],
-          legend: pieNames[i],
-          legendStyle: pw.TextStyle(fontSize: 0.01, font: fontRegular),
+          legend: '$percent%',
+          legendStyle: pw.TextStyle(fontSize: 8, font: fontBold),
         ));
       }
 
@@ -365,6 +367,15 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
       // Wiersze tabeli - sortowanie od najstarszego do najnowszego
       final zakupySorted = zakupy.reversed.toList();
 
+      String getPurchaseMiaraText(int m) {
+        switch (m) {
+          case 1: return loc.pcs;
+          case 2: return 'l';
+          case 3: return 'kg';
+          default: return '';
+        }
+      }
+
       List<pw.TableRow> tableRows = [
         pw.TableRow(children: [
           headerCell('L.p.'),
@@ -372,6 +383,7 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
           headerCell(isPl ? 'Kategoria' : 'Category'),
           headerCell(isPl ? 'Nazwa' : 'Name'),
           headerCell(isPl ? 'Ilość' : 'Qty'),
+          headerCell(isPl ? 'Cena' : 'Price'),
           headerCell(isPl ? 'Wartość' : 'Value'),
           headerCell(isPl ? 'Uwagi' : 'Notes'),
         ]),
@@ -380,6 +392,10 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
       for (int i = 0; i < zakupySorted.length; i++) {
         final z = zakupySorted[i];
         String kategoriaText = getKategoriaText(z.kategoriaId);
+        String miaraText = getPurchaseMiaraText(z.miara);
+        String iloscText = miaraText.isNotEmpty
+            ? '${z.ilosc.toInt()} $miaraText'
+            : '${z.ilosc.toInt()}';
 
         tableRows.add(pw.TableRow(
           children: [
@@ -387,7 +403,8 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
             cell(formatDate(z.data), alignment: pw.Alignment.center),
             cell(kategoriaText),
             cell(z.nazwa),
-            cell('${z.ilosc.toInt()}', alignment: pw.Alignment.centerRight),
+            cell(iloscText, alignment: pw.Alignment.centerRight),
+            cell(formatValue(z.cena), alignment: pw.Alignment.centerRight),
             cell('${formatValue(z.wartosc)} ${getWalutaText(z.waluta)}', alignment: pw.Alignment.centerRight),
             cell(z.uwagi),
           ],
@@ -417,7 +434,7 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
               pw.SizedBox(height: 5),
               pw.Center(
                 child: pw.Text(
-                  'Hey Maya  ${DateTime.now().toString().substring(0, 10)}',
+                  'Hey Maya  ${isPl ? '${DateTime.now().day.toString().padLeft(2, '0')}.${DateTime.now().month.toString().padLeft(2, '0')}.${DateTime.now().year}' : DateTime.now().toString().substring(0, 10)}',
                   style: pw.TextStyle(fontSize: 10, color: PdfColors.grey, font: fontRegular),
                 ),
               ),
@@ -433,8 +450,8 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Container(
-                        width: 150,
-                        height: 150,
+                        width: 300,
+                        height: 300,
                         child: pw.Chart(
                           grid: pw.PieGrid(),
                           datasets: pieDatasets,
@@ -463,11 +480,12 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
                 columnWidths: {
                   0: const pw.FixedColumnWidth(28),
                   1: const pw.FixedColumnWidth(55),
-                  2: const pw.FlexColumnWidth(2),
-                  3: const pw.FlexColumnWidth(3),
-                  4: const pw.FixedColumnWidth(35),
-                  5: const pw.FixedColumnWidth(62),
-                  6: const pw.FlexColumnWidth(2),
+                  2: const pw.FlexColumnWidth(1.4),
+                  3: const pw.FlexColumnWidth(2.4),
+                  4: const pw.FixedColumnWidth(45),
+                  5: const pw.FixedColumnWidth(44),
+                  6: const pw.FixedColumnWidth(62),
+                  7: const pw.FlexColumnWidth(3),
                 },
                 children: tableRows,
               ),

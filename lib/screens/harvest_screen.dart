@@ -84,14 +84,16 @@ class _HarvestScreenState extends State<HarvestScreen> {
       }
 
       List<pw.Dataset> pieDatasets = [];
+      final pieTotal = pieValues.fold(0.0, (sum, v) => sum + v);
       for (int i = 0; i < pieValues.length; i++) {
         final v = pieValues[i];
         if (v.isNaN || v.isInfinite || v <= 0) continue;
+        final percent = (v / pieTotal * 100).toStringAsFixed(1);
         pieDatasets.add(pw.PieDataSet(
           value: v,
           color: pieColors[i],
-          legend: pieNames[i],
-          legendStyle: pw.TextStyle(fontSize: 0.01, font: fontRegular),
+          legend: '$percent%',
+          legendStyle: pw.TextStyle(fontSize: 8, font: fontBold),
         ));
       }
 
@@ -207,21 +209,23 @@ class _HarvestScreenState extends State<HarvestScreen> {
           headerCell(isPl ? 'Data' : 'Date'),
           headerCell(isPl ? 'Zasób' : 'Resource'),
           headerCell(isPl ? 'Ilość' : 'Qty'),
-          headerCell(isPl ? 'Miara' : 'Unit'),
           headerCell(isPl ? 'Uwagi' : 'Notes'),
         ]),
       ];
 
       for (int i = 0; i < zbiorySorted.length; i++) {
         final z = zbiorySorted[i];
+        String miaraText = getMiaraText(z.miara);
+        String iloscText = miaraText.isNotEmpty
+            ? '${formatValue(z.ilosc)} $miaraText'
+            : formatValue(z.ilosc);
 
         tableRows.add(pw.TableRow(
           children: [
             cell('${i + 1}', alignment: pw.Alignment.center),
             cell(formatDate(z.data), alignment: pw.Alignment.center),
             cell(getZasobText(z.zasobId)),
-            cell(formatValue(z.ilosc), alignment: pw.Alignment.centerRight),
-            cell(getMiaraText(z.miara), alignment: pw.Alignment.center),
+            cell(iloscText, alignment: pw.Alignment.centerRight),
             cell(z.uwagi),
           ],
         ));
@@ -250,7 +254,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
               pw.SizedBox(height: 5),
               pw.Center(
                 child: pw.Text(
-                  'Hey Maya  ${DateTime.now().toString().substring(0, 10)}',
+                  'Hey Maya  ${isPl ? '${DateTime.now().day.toString().padLeft(2, '0')}.${DateTime.now().month.toString().padLeft(2, '0')}.${DateTime.now().year}' : DateTime.now().toString().substring(0, 10)}',
                   style: pw.TextStyle(fontSize: 10, color: PdfColors.grey, font: fontRegular),
                 ),
               ),
@@ -266,8 +270,8 @@ class _HarvestScreenState extends State<HarvestScreen> {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Container(
-                        width: 150,
-                        height: 150,
+                        width: 300,
+                        height: 300,
                         child: pw.Chart(
                           grid: pw.PieGrid(),
                           datasets: pieDatasets,
@@ -296,10 +300,9 @@ class _HarvestScreenState extends State<HarvestScreen> {
                 columnWidths: {
                   0: const pw.FixedColumnWidth(28),
                   1: const pw.FixedColumnWidth(55),
-                  2: const pw.FlexColumnWidth(2),
-                  3: const pw.FixedColumnWidth(50),
-                  4: const pw.FixedColumnWidth(35),
-                  5: const pw.FlexColumnWidth(3),
+                  2: const pw.FlexColumnWidth(0.8),
+                  3: const pw.FixedColumnWidth(55),
+                  4: const pw.FlexColumnWidth(4),
                 },
                 children: tableRows,
               ),

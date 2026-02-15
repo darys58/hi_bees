@@ -13,7 +13,9 @@
       "WebFetch(domain:dev.to)",
       "WebFetch(domain:www.codetrade.io)",
       "WebFetch(domain:www.oneclickitsolution.com)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(wc:*)",
+      "Bash(grep:*)"
     ]
   }
 }

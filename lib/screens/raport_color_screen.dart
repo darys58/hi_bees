@@ -1033,7 +1033,12 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
       final fontBold = await PdfGoogleFonts.robotoBold();
 
       // Utwórz dokument PDF
-      final pdf = pw.Document();
+      final pdf = pw.Document(
+        theme: pw.ThemeData.withFont(
+          base: fontRegular,
+          bold: fontBold,
+        ),
+      );
 
       // Współczynnik przeliczeniowy (gramy na kg dla miodu, ml na litry dla pyłku)
       double dzielnik = 1000; // dla obu typów: miód g->kg, pyłek ml->l

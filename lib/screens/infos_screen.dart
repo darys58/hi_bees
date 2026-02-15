@@ -398,7 +398,12 @@ class _InfoScreenState extends State<InfoScreen> {
         return a.czas.compareTo(b.czas);
       });
 
-      final pdf = pw.Document();
+      final pdf = pw.Document(
+        theme: pw.ThemeData.withFont(
+          base: fontRegular,
+          bold: fontBold,
+        ),
+      );
 
       // Aktualna data
       final now = DateTime.now();
@@ -539,7 +544,7 @@ class _InfoScreenState extends State<InfoScreen> {
               // Data wygenerowania
               pw.Center(
                 child: pw.Text(
-                  dataPdf,
+                  'Hey Maya  $dataPdf',
                   style: pw.TextStyle(fontSize: 10, font: fontRegular),
                 ),
               ),
@@ -3022,7 +3027,7 @@ class _InfoScreenState extends State<InfoScreen> {
               ),
             
         
-        //sekcja zdjęć ula - tylko w kategorii inspection
+//sekcja zdjęć ula - tylko w kategorii inspection
             if (wybranaKategoria == 'inspection')
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
@@ -3075,7 +3080,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         ),
                       ),
                     if (_photos.isNotEmpty) SizedBox(height: 8),
-                    //przyciski: aparat i galeria - wyśrodkowane
+  //przyciski: aparat i galeria - wyśrodkowane
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

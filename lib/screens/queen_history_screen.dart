@@ -151,7 +151,12 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
       final fontRegular = await PdfGoogleFonts.robotoRegular();
       final fontBold = await PdfGoogleFonts.robotoBold();
 
-      final pdf = pw.Document();
+      final pdf = pw.Document(
+        theme: pw.ThemeData.withFont(
+          base: fontRegular,
+          bold: fontBold,
+        ),
+      );
 
       // Aktualna data
       final now = DateTime.now();
@@ -353,7 +358,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
               // Data PDF
               pw.Center(
                 child: pw.Text(
-                  dataPdf,
+                  'Hey Maya  $dataPdf',
                   style: pw.TextStyle(fontSize: 10, font: fontRegular),
                 ),
               ),
