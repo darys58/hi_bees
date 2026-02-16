@@ -95,12 +95,55 @@ class _InfoScreenState extends State<InfoScreen> {
 
           });
       });
-      //pobranie zdjęć dla wybranego ula
-      _loadPhotos();
+      //pobranie zdjęć dla wybranego ula + odzyskanie zgubionych na Androidzie
+      _retrieveLostImage().then((_) => _loadPhotos());
     }
     _isInit = false;
     //Provider.of<Rests>(context, listen: false).fetchAndSetRests(); //dostawca restauracji
     super.didChangeDependencies();
+  }
+
+  //odzyskanie zdjęcia po restarcie Activity na Androidzie
+  Future<void> _retrieveLostImage() async {
+    final LostDataResponse response = await _picker.retrieveLostData();
+    if (response.isEmpty) return;
+    if (response.file != null) {
+      await _savePickedImage(response.file!);
+    }
+  }
+
+  //zapisanie wybranego/zrobionego zdjęcia do katalogu aplikacji i bazy
+  Future<void> _savePickedImage(XFile image) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final photosDir = Directory('${appDir.path}/photos');
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+
+    final now = DateTime.now();
+    final timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
+    final fileName = '${globals.pasiekaID}_${globals.ulID}_$timestamp.jpg';
+    final savedPath = '${photosDir.path}/$fileName';
+
+    final File imageFile = File(image.path);
+    await imageFile.copy(savedPath);
+
+    final dataStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final czasStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+    final id = '$dataStr.$timestamp.${globals.pasiekaID}.${globals.ulID}';
+
+    await Photos.insertPhoto(
+      id,
+      dataStr,
+      czasStr,
+      globals.pasiekaID,
+      globals.ulID,
+      savedPath,
+      '',
+      0,
+    );
+
+    await _loadPhotos();
   }
 
   //pobranie zdjęć z bazy dla aktualnego ula (tylko te których plik istnieje na dysku)
@@ -130,41 +173,7 @@ class _InfoScreenState extends State<InfoScreen> {
       imageQuality: 85,
     );
     if (image == null) return;
-
-    //zapisanie zdjęcia w katalogu aplikacji
-    final appDir = await getApplicationDocumentsDirectory();
-    final photosDir = Directory('${appDir.path}/photos');
-    if (!await photosDir.exists()) {
-      await photosDir.create(recursive: true);
-    }
-
-    final now = DateTime.now();
-    final timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
-    final fileName = '${globals.pasiekaID}_${globals.ulID}_$timestamp.jpg';
-    final savedPath = '${photosDir.path}/$fileName';
-
-    //kopiowanie zdjęcia do katalogu aplikacji
-    final File imageFile = File(image.path);
-    await imageFile.copy(savedPath);
-
-    final dataStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final czasStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-    final id = '$dataStr.$timestamp.${globals.pasiekaID}.${globals.ulID}';
-
-    //zapisanie metadanych w bazie
-    await Photos.insertPhoto(
-      id,
-      dataStr,
-      czasStr,
-      globals.pasiekaID,
-      globals.ulID,
-      savedPath,
-      '',
-      0,
-    );
-
-    //odświeżenie listy zdjęć
-    await _loadPhotos();
+    await _savePickedImage(image);
   }
 
   //podgląd zdjęcia na pełnym ekranie

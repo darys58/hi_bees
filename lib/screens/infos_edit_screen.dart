@@ -2046,7 +2046,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               ).then((_) {
                                 //jezeli LIKWIDACJA ULA to dodaj info o likwidacji ula do wszystkich kategorii ula
                                 if(nowyParametr == AppLocalizations.of(context)!.hiveLiquidation ) {
-                                  print('zapisywanie w kategoriach!!!!!!!!!!!!!!');
+                                  //print('zapisywanie w kategoriach!!!!!!!!!!!!!!');
                                   Infos.insertInfo(
                                     '${dateController.text}.$nowaPasieka.$nowyUl.equipment.$nowyParametr',
                                     dateController.text,
@@ -2364,7 +2364,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           if (nowaKategoria == 'inspection' && nowyParametr == AppLocalizations.of(context)!.hiveLiquidation ) {
                             ikona = 'black';
                           }
-                          print('nowaKategoria = $nowaKategoria, nowyParametr = $nowyParametr, ikona = $ikona');
+                          //print('nowaKategoria = $nowaKategoria, nowyParametr = $nowyParametr, ikona = $ikona');
                           //print('zapis do hive - rodzaj ula = $rodzajUla');          
                           Hives.insertHive(
                             '$nowaPasieka.$nowyUl',

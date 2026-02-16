@@ -121,11 +121,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.6.76 07.02.2026 - AppStore udrzucił wersję 1.9.6.75, zmieniłem share_plus: ^7.2.2 na share_plus: ^10.1.4
   //1.9.7.77 10.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie, Historia matki + PDF
   //1.9.8.78 12.02.2026 - uproszczone logowanie - bez deviceId (jeden unikalny email w bazie = jeden kod), Kasowanie kopii zapasowej w chmurze - robienie kopii archiwalnej do późniejszego usunięcia
-  //1.9.9.79 13.02.2026 - ukrywanie przycisków Zakupy i Sprzedaz, historia ula, dm2 ramki - zmiana: z pola miara do pola pogoda w bazie, wyświetlanie tylko uli z zasobami w raport i raport2, zdjęcia w inspection, archiwizacja zdjęć,
+  //1.9.9.79 16.02.2026 - ukrywanie przycisków Zakupy i Sprzedaz, historia ula, dm2 ramki - zmiana: z pola miara do pola pogoda w bazie, wyświetlanie tylko uli z zasobami w raport i raport2, PDFy w Zakupy, Sprzedaz i Zbiory, zdjęcia w inspection, archiwizacja zdjęć i kasowanie,
   
   //wersja aplikacji na iOS
   final wersja = '1.9.9.79'; 
-  final dataWersji = '2026-02-13';
+  final dataWersji = '2026-02-16';
   final now = DateTime.now();
   int aktywnosc = 0;
   List<Weather>? pogoda;

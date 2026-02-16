@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:share_plus/share_plus.dart';
 //import '../models/hive.dart';
 import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/queen.dart';
+import '../models/photo.dart';
 import '../models/dodatki1.dart';
 import '../models/note.dart';
 import '../globals.dart' as globals;
@@ -30,6 +33,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
   double _lastHarvestHoneyKg = 0;
   String _lastHarvestDate = '';
   List<Note> _hiveNotes = [];
+  List<Photo> _photos = [];
 
   @override
   void didChangeDependencies() {
@@ -149,6 +153,18 @@ class _SummaryScreenState extends State<SummaryScreen> {
             _lastHarvestDate = latestDate;
           }
         }
+
+        // Photos for this hive
+        await Provider.of<Photos>(context, listen: false)
+            .fetchAndSetPhotosForHive(pasiekaNr, ulNr);
+        final allPhotos = Provider.of<Photos>(context, listen: false).items;
+        final existingPhotos = <Photo>[];
+        for (final photo in allPhotos) {
+          if (File(photo.sciezka).existsSync()) {
+            existingPhotos.add(photo);
+          }
+        }
+        _photos = existingPhotos;
 
         // Notes for this hive
         final notesData = Provider.of<Notes>(context, listen: false);
@@ -476,6 +492,60 @@ class _SummaryScreenState extends State<SummaryScreen> {
               ),
             ),
           ),
+
+          // --- Segment: Galeria zdjęć ---
+          if (_photos.isNotEmpty)
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: SizedBox(
+                  height: 110,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _photos.length,
+                    itemBuilder: (ctx, i) {
+                      final photo = _photos[i];
+                      final dataFormatted = photo.data.length >= 10
+                          ? '${photo.data.substring(8, 10)}.${photo.data.substring(5, 7)}.${photo.data.substring(0, 4)}'
+                          : photo.data;
+                      return GestureDetector(
+                        onTap: () => _showPhotoPreview(photo),
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Column(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  File(photo.sciezka),
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (ctx, err, stack) => Container(
+                                    width: 80,
+                                    height: 80,
+                                    color: Colors.grey[300],
+                                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                dataFormatted,
+                                style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
 
           // --- Segment: Rodzina ---
           // if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
@@ -832,6 +902,66 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
         ],
       ),
+      ),
+    );
+  }
+
+  void _showPhotoPreview(Photo photo) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                child: Image.file(
+                  File(photo.sciezka),
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 50,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${photo.data}  ${photo.czas}',
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.share, color: Colors.white, size: 30),
+                    onPressed: () async {
+                      await Share.shareXFiles([XFile(photo.sciezka)]);
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -297,13 +297,13 @@ class _ImportScreenState extends State<ImportScreen> {
                         .fetchAndSetZbiory();
                   });
 
-//import zdjęć (na razie niewykorzystywanje)
-                  // Photos.fetchZdjeciaFromSerwer(
-                  //         'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia')
-                  //     .then((_) {
-                  //   Provider.of<Photos>(context, listen: false)
-                  //       .fetchAndSetPhotosForHive(0, 0); //odswiezenie - nie jest kluczowe
-                  // });
+//import zdjęć 
+                  Photos.fetchZdjeciaFromSerwer(
+                          'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia')
+                      .then((_) {
+                    Provider.of<Photos>(context, listen: false)
+                        .fetchAndSetPhotosForHive(0, 0); //odswiezenie - nie jest kluczowe
+                  });
 
 //import ramek
                   Frames.fetchFramesFromSerwer(
@@ -1835,6 +1835,21 @@ class _ImportScreenState extends State<ImportScreen> {
                   } //jeśli sa ramki do archiwizacji
                 });
 
+              //BACKUP tabeli zdjecia - razem ze wszystkimi tabelami -zastanowic sie czy wysyłać razem z innymi tabelami - moze długo trwać
+              Provider.of<Photos>(context, listen: false)
+                  .fetchAndSetPhotos()
+                  .then((_) {
+                final photosArchData =
+                    Provider.of<Photos>(context, listen: false);
+                final zdjecia = photosArchData.items;
+                iloscDoWyslania += zdjecia.length;
+
+                if (zdjecia.length > 0) {
+                  _wyslijZdjeciaPoJednym(zdjecia, mem, 0);
+                }
+              }); //od pobrania zdjec
+
+
               //BACKUP tabeli ramka - wszystkie wpisy
                 Provider.of<Frames>(context, listen: false)
                     .fetchAndSetFrames()
@@ -1901,23 +1916,8 @@ class _ImportScreenState extends State<ImportScreen> {
                     //     AppLocalizations.of(context)!.noDataToSend);
                   } //jeśli ramki do archiwizacji
                 }); //od pobrania ramek
-
-      //BACKUP tabeli zdjecia - razem ze wszystkimi tabelami -zastanowic sie czy wysyłać razem z innymi tabelami - moze długo trwać
-              Provider.of<Photos>(context, listen: false)
-                  .fetchAndSetPhotos()
-                  .then((_) {
-                final photosArchData =
-                    Provider.of<Photos>(context, listen: false);
-                final zdjecia = photosArchData.items;
-                iloscDoWyslania += zdjecia.length;
-
-                if (zdjecia.length > 0) {
-                  _wyslijZdjeciaPoJednym(zdjecia, mem, 0);
-                }
-              }); //od pobrania zdjec
-
+      
                //Navigator.of(context).pop();
-
 
             },//od wysłania wszystkie tabele
             child: Text(AppLocalizations.of(context)!.eXport),
@@ -2332,6 +2332,23 @@ class _ImportScreenState extends State<ImportScreen> {
                 } //jeśli sa ramki do archiwizacji
               });
 
+               
+              //BACKUP tabeli zdjecia - tylko wpisy z arch=0   
+              Provider.of<Photos>(context, listen: false)
+                  .fetchAndSetPhotosToArch()
+                  .then((_) {
+                final photosArchData =
+                    Provider.of<Photos>(context, listen: false);
+                final zdjecia = photosArchData.items;
+                iloscDoWyslania += zdjecia.length;
+
+                if (zdjecia.length > 0) {
+                  _wyslijZdjeciaPoJednym(zdjecia, mem, 0);
+                }
+              }); //od pobrania zdjec
+
+              
+              
               //BACKUP tabeli ramka - tylko wpisy z arch=0
               Provider.of<Frames>(context, listen: false)
                   .fetchAndSetFramesToArch()
@@ -2398,20 +2415,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 } //jeśli ramki do archiwizacji
               }); //od pobrania ramek
 
-      //BACKUP tabeli zdjecia - tylko wpisy z arch=0   
-              Provider.of<Photos>(context, listen: false)
-                  .fetchAndSetPhotosToArch()
-                  .then((_) {
-                final photosArchData =
-                    Provider.of<Photos>(context, listen: false);
-                final zdjecia = photosArchData.items;
-                iloscDoWyslania += zdjecia.length;
-
-                if (zdjecia.length > 0) {
-                  _wyslijZdjeciaPoJednym(zdjecia, mem, 0);
-                }
-              }); //od pobrania zdjec
-
+     
    
             },
             child: Text(AppLocalizations.of(context)!.eXport),
