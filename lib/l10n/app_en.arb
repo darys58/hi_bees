@@ -1407,5 +1407,11 @@
     "tORemove": "To remove",
     "@tORemove": {},
     "dEleteFoto": "Deleting photo",
-    "@dEleteFoto": {}
+    "@dEleteFoto": {},
+    "photoDataSend": "Photos have been sent",
+    "@photoDataSend": {},
+    "eXportPhoto": "Export all photos to the cloud",
+    "@eXportPhoto": {},
+    "pHotos": "Photos",
+    "@pHotos": {}
 }

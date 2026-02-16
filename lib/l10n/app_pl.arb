@@ -715,6 +715,9 @@
     },
     "catColumn": "Kat.",
     "tORemove": "Usunąć",
-    "dEleteFoto": "Usuwanie zdjęcia"
+    "dEleteFoto": "Usuwanie zdjęcia",
+    "photoDataSend": "Zdjęcia zostały wysłane",
+    "eXportPhoto": "Eksport wszystkich zdjęć do chmury",
+    "pHotos": "Zdjęcia"
 
 }

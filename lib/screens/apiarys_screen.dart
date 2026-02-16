@@ -121,7 +121,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.6.76 07.02.2026 - AppStore udrzucił wersję 1.9.6.75, zmieniłem share_plus: ^7.2.2 na share_plus: ^10.1.4
   //1.9.7.77 10.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie, Historia matki + PDF
   //1.9.8.78 12.02.2026 - uproszczone logowanie - bez deviceId (jeden unikalny email w bazie = jeden kod), Kasowanie kopii zapasowej w chmurze - robienie kopii archiwalnej do późniejszego usunięcia
-  //1.9.9.79 13.02.2026 - ukrywanie przycisków Zakupy i Sprzedaz, historia ula, dm2 ramki - zmiana: z pola miara do pola pogoda w bazie, wyświetlanie tylko uli z zasobami w raport i raport2,
+  //1.9.9.79 13.02.2026 - ukrywanie przycisków Zakupy i Sprzedaz, historia ula, dm2 ramki - zmiana: z pola miara do pola pogoda w bazie, wyświetlanie tylko uli z zasobami w raport i raport2, zdjęcia w inspection, archiwizacja zdjęć,
   
   //wersja aplikacji na iOS
   final wersja = '1.9.9.79'; 
@@ -555,7 +555,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -603,7 +603,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   Future<void> wyslijBackupInfo(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -650,7 +650,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   Future<void> wyslijBackupMatki(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

@@ -177,6 +177,12 @@ class DBHelper {
     db.update('zakupy', {'arch': 1}, where: 'id = ?', whereArgs: [id]);
   }
 
+  //update tabeli zdjecia - rekord zarchiwizowany - dla import_screen
+  static Future<void> updatePhotoArch(String id) async {
+    final db = await DBHelper.database();
+    db.update('zdjecia', {'arch': 1}, where: 'id = ?', whereArgs: [id]);
+  }
+
   //update tabeli info - wartość = edit = szara ikona - dla frame_edit_screen
   static Future<void> updateInfoWartosc(String id,  String wart) async {
     final db = await DBHelper.database();
@@ -597,6 +603,12 @@ class DBHelper {
     return db.query("zakupy", where: "arch=?", whereArgs: [0]);
   }
 
+  //pobieranie wszystkich nowych zdjec do achiwizacji dla import_screen
+  static Future<List<Map<String, dynamic>>> getPhotosToArch() async {
+    final db = await DBHelper.database();
+    return db.query("zdjecia", where: "arch=?", whereArgs: [0]);
+  }
+
   //odczyt z tabeli ramka rekordu o danym id  - dla frames_detail_item
   static Future<List<Map<String, dynamic>>> getFrame(String id) async {
     final db = await DBHelper.database();
@@ -691,6 +703,13 @@ class DBHelper {
     return db.rawQuery('SELECT * FROM zakupy ORDER BY data DESC');
   }
 
+  //odczyt z tabeli zdjecia - dla import_screen i photo.dart
+  static Future<List<Map<String, dynamic>>> getZdjecia() async {
+    final db = await DBHelper.database();
+  //  print('DBHelper - pobieranie zakupy');
+    return db.rawQuery('SELECT * FROM zdjecia ORDER BY data DESC');
+  }
+
   //usuniecie rekordu z tabeli info - dla frame_screen
   static Future<void> deleteInfo(String id) async {
     final db = await DBHelper.database();
@@ -764,8 +783,7 @@ class DBHelper {
   }
 
   //pobieranie zdjęć dla danego ula i pasieki - dla infos_screen
-  static Future<List<Map<String, dynamic>>> getPhotosOfHive(
-      int pasieka, int ul) async {
+  static Future<List<Map<String, dynamic>>> getPhotosOfHive(int pasieka, int ul) async {
     final db = await DBHelper.database();
     return db.query("zdjecia",
         where: "pasiekaNr=? and ulNr=?",

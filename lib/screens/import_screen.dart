@@ -26,6 +26,8 @@ import '../models/sale.dart';
 import '../models/queen.dart';
 import '../models/purchase.dart';
 import '../models/note.dart';
+import '../models/photo.dart';
+import 'dart:io';
 import '../screens/apiarys_screen.dart';
 
 class ImportScreen extends StatefulWidget {
@@ -126,39 +128,6 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
-  // void _showAlert(BuildContext context, String nazwa, String text) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: Text(nazwa),
-  //       content: Column(
-  //         //zeby tekst był wyśrodkowany w poziomie
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: <Widget>[
-  //           Text(text),
-
-  //           //progress bar
-  //           // Container(
-  //           //     alignment: Alignment.topCenter,
-  //           //     margin: EdgeInsets.all(20),
-  //           //     child: LinearProgressIndicator(
-  //           //       value: 0.7,
-  //           //       valueColor:
-  //           //           new AlwaysStoppedAnimation<Color>(Colors.deepOrange),
-  //           //       backgroundColor: Colors.grey,
-  //           //     )),
-
-  //           //Text(komunikat),
-  //         ],
-  //       ),
-  //       elevation: 24.0,
-  //       shape: RoundedRectangleBorder(
-  //         borderRadius: BorderRadius.circular(15.0),
-  //       ),
-  //     ),
-  //     barrierDismissible: false, //zeby zaciemnione tło było zablokowane na kliknięcia
-  //   );
-  // }
 
   void _showAlertOK(BuildContext context, String nazwa, String text) {
     showDialog(
@@ -327,6 +296,14 @@ class _ImportScreenState extends State<ImportScreen> {
                     Provider.of<Harvests>(context, listen: false)
                         .fetchAndSetZbiory();
                   });
+
+//import zdjęć (na razie niewykorzystywanje)
+                  // Photos.fetchZdjeciaFromSerwer(
+                  //         'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia')
+                  //     .then((_) {
+                  //   Provider.of<Photos>(context, listen: false)
+                  //       .fetchAndSetPhotosForHive(0, 0); //odswiezenie - nie jest kluczowe
+                  // });
 
 //import ramek
                   Frames.fetchFramesFromSerwer(
@@ -990,7 +967,6 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
-
   //eksport wszystkich danych Zbiory
   void _showAlertExportAllZbiory(BuildContext context, String nazwa, String text) {
     showDialog(
@@ -1502,8 +1478,7 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
   
-  
-  //eksport wszystkich danych
+  //eksport wszystkich danych - wszystkie tabele
   void _showAlertExportAll(BuildContext context, String nazwa, String text) {
     showDialog(
       context: context,
@@ -1927,10 +1902,24 @@ class _ImportScreenState extends State<ImportScreen> {
                   } //jeśli ramki do archiwizacji
                 }); //od pobrania ramek
 
+      //BACKUP tabeli zdjecia - razem ze wszystkimi tabelami -zastanowic sie czy wysyłać razem z innymi tabelami - moze długo trwać
+              Provider.of<Photos>(context, listen: false)
+                  .fetchAndSetPhotos()
+                  .then((_) {
+                final photosArchData =
+                    Provider.of<Photos>(context, listen: false);
+                final zdjecia = photosArchData.items;
+                iloscDoWyslania += zdjecia.length;
+
+                if (zdjecia.length > 0) {
+                  _wyslijZdjeciaPoJednym(zdjecia, mem, 0);
+                }
+              }); //od pobrania zdjec
+
                //Navigator.of(context).pop();
-              
-            
-            },
+
+
+            },//od wysłania wszystkie tabele
             child: Text(AppLocalizations.of(context)!.eXport),
           ),
           TextButton(
@@ -1949,7 +1938,7 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
-  
+
   //eksport wszystkich ale tylko nowych danych
   void _showAlertExportNew(BuildContext context, String nazwa, String text) {
     showDialog(
@@ -2409,14 +2398,21 @@ class _ImportScreenState extends State<ImportScreen> {
                 } //jeśli ramki do archiwizacji
               }); //od pobrania ramek
 
-             // Navigator.of(context).pop();
+      //BACKUP tabeli zdjecia - tylko wpisy z arch=0   
+              Provider.of<Photos>(context, listen: false)
+                  .fetchAndSetPhotosToArch()
+                  .then((_) {
+                final photosArchData =
+                    Provider.of<Photos>(context, listen: false);
+                final zdjecia = photosArchData.items;
+                iloscDoWyslania += zdjecia.length;
 
-              // DBHelper.updateActivate(globals.deviceId, '').then((_) {
-              //   Navigator.of(context).pushNamedAndRemoveUntil(
-              //       ApiarysScreen.routeName,
-              //       ModalRoute.withName(ApiarysScreen
-              //           .routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
-              // }); //'' do memory "od" - kasowanie
+                if (zdjecia.length > 0) {
+                  _wyslijZdjeciaPoJednym(zdjecia, mem, 0);
+                }
+              }); //od pobrania zdjec
+
+   
             },
             child: Text(AppLocalizations.of(context)!.eXport),
           ),
@@ -2437,6 +2433,7 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
+  
   //kasowanie zawartości wszystkich tabeli 
   void _showAlertDeleteRamkaInfo(
       BuildContext context, String nazwa, String text) {
@@ -2604,7 +2601,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2654,7 +2651,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupInfo(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2703,7 +2700,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupZbiory(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2751,7 +2748,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupSprzedaz(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2799,7 +2796,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupMatki(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2848,7 +2845,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupZakupy(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2896,7 +2893,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> wyslijBackupNotatki(String jsonData1) async {
     //String jsonData1
     final http.Response response = await http.post(
-      Uri.parse('https://darys.pl/cbt_hi_backup_v6.php'),
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -2941,7 +2938,143 @@ class _ImportScreenState extends State<ImportScreen> {
     }
   }
 
-  @override
+  
+  //PĘTLA WYSYŁANIA ZDJĘĆ (PO JEDNYM)
+  //wysyłanie zdjęć po jednym (Base64 duże pliki) encodr pfoto + przygotowanie jsonData i wyslijBackupZdjecia
+  void _wyslijZdjeciaPoJednym(List<Photo> zdjecia, List<dynamic> mem, int index) async {
+    if (index >= zdjecia.length) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.photoDataSend),
+        ),
+      );
+      return;
+    }
+
+    final photo = zdjecia[index];
+    String base64Data = '';
+    try {
+      final file = File(photo.sciezka);
+      if (await file.exists()) {
+        final bytes = await file.readAsBytes();
+        base64Data = base64Encode(bytes);
+      }
+    } catch (e) {
+      //plik nie istnieje - wysyłamy same metadane
+    }
+
+    //wyciągnięcie samej nazwy pliku ze ścieżki
+    final fileName = photo.sciezka.split('/').last;
+
+    String jsonData = '{"zdjecia":[';
+    jsonData += '{"id": "${photo.id}",';
+    jsonData += '"data": "${photo.data}",';
+    jsonData += '"czas": "${photo.czas}",';
+    jsonData += '"pasiekaNr": ${photo.pasiekaNr},';
+    jsonData += '"ulNr": ${photo.ulNr},';
+    jsonData += '"sciezka": "$fileName",';
+    jsonData += '"uwagi": "${photo.uwagi}",';
+    jsonData += '"arch": ${photo.arch},';
+    jsonData += '"base64": "$base64Data"}';
+    jsonData += '],"total":1, "tabela":"${mem[0].kod.substring(0, 4)}_zdjecia"}';
+
+    _isInternet().then((inter) {
+      if (inter) {
+        wyslijBackupZdjecia(jsonData, zdjecia, mem, index);
+      }
+    });
+  }
+
+  //wysyłanie jednego zdjęcia i jeśli ok to przygotowanie następnego w _wyslijZdjeciaPoJednym
+  Future<void> wyslijBackupZdjecia(String jsonData1, List<Photo> zdjecia, List<dynamic> mem, int index) async {
+    final http.Response response = await http.post(
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonData1,
+    );
+    if (response.statusCode >= 200 && response.statusCode <= 400) {
+      Map<String, dynamic> odpPost = json.decode(response.body);
+      if (odpPost['success'] == 'ok') {
+        //oznaczenie zdjęcia jako zarchiwizowane
+        DBHelper.updatePhotoArch(zdjecia[index].id);
+        //wysłanie następnego zdjęcia
+        _wyslijZdjeciaPoJednym(zdjecia, mem, index + 1);
+      }
+    } else {
+      throw Exception('Failed to create OdpPost.');
+    }
+  }
+
+  
+  //eksport wszystkich danych Zdjecia (tylko) dialog - pierwsze wywołanie _wyslijZdjeciaPoJednym
+  void _showAlertExportAllZdjecia(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () async {
+              showLoaderDialog(context, AppLocalizations.of(context)!.eXportData);
+              await Future.delayed(const Duration(seconds: 1));
+              iloscDoWyslania = 0;
+
+              final memData = Provider.of<Memory>(context, listen: false);
+              final mem = memData.items;
+
+              //BACKUP tabeli zdjecia - wszystkie nowe z arch=0
+              Provider.of<Photos>(context, listen: false)
+                  .fetchAndSetPhotos()
+                  .then((_) {
+                final photosArchData = Provider.of<Photos>(context, listen: false);
+                final zdjecia = photosArchData.items;
+                iloscDoWyslania = zdjecia.length;
+
+                if (iloscDoWyslania > 0)
+                  _showAlertOK(
+                      context,
+                      AppLocalizations.of(context)!.alert,
+                      AppLocalizations.of(context)!.dataToSend +
+                          ' = $iloscDoWyslania');
+                else
+                  _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                      AppLocalizations.of(context)!.noDataToSend);
+
+                if (zdjecia.length > 0) {
+                  _wyslijZdjeciaPoJednym(zdjecia, mem, 0);
+                }
+              });
+            },
+            child: Text(AppLocalizations.of(context)!.eXport),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+ 
+ 
+ 
+ @override
   Widget build(BuildContext context) {
     //komunikat = AppLocalizations.of(context)!.dopisanieDoBazy;
 
@@ -2963,70 +3096,6 @@ class _ImportScreenState extends State<ImportScreen> {
         ),
         body: ListView(
           children: <Widget>[
-// //język
-//             GestureDetector(
-//               onTap: () {
-//                 Navigator.of(context).pushNamed(LanguagesScreen.routeName);
-//               },
-//               child: Card(
-//                 child: ListTile(
-//                   leading: Icon(Icons.translate),
-//                   title: Text(allTranslations.text('L_JEZYK')),
-//                   trailing: Icon(Icons.chevron_right),
-//                 ),
-//               ),
-//             ),
-
-// //zamówienia
-//             GestureDetector(
-//               onTap: () {
-//                 //czy jest internet
-//                 _isInternet().then((inter) {
-//                   if (inter != null && inter) {
-//                     Navigator.of(context).pushNamed(OrdersScreen.routeName);
-//                   } else {
-//                     print('braaaaaak internetu');
-//                     _showAlertAnuluj(
-//                         context,
-//                         allTranslations.text('L_BRAK_INTERNETU'),
-//                         allTranslations.text('L_URUCHOM_INTERNETU'));
-//                   }
-//                 });
-//               },
-//               child: Card(
-//                 child: ListTile(
-//                   leading: Icon(Icons.list),
-//                   title: Text(allTranslations.text('L_ZAMOWIENIA')),
-//                   trailing: Icon(Icons.chevron_right),
-//                 ),
-//               ),
-//             ),
-
-// //promocje
-//             GestureDetector(
-//               onTap: () {
-//                 //czy jest internet
-//                 _isInternet().then((inter) {
-//                   if (inter != null && inter) {
-//                     print('wiecej - specialsScreen');
-//                     Navigator.of(context).pushNamed(SpecialsScreen.routeName);
-//                   } else {
-//                     print('braaaaaak internetu');
-//                     _showAlertAnuluj(
-//                         context,
-//                         allTranslations.text('L_BRAK_INTERNETU'),
-//                         allTranslations.text('L_URUCHOM_INTERNETU'));
-//                   }
-//                 });
-//               },
-//               child: Card(
-//                 child: ListTile(
-//                   leading: Icon(Icons.notifications),
-//                   title: Text(allTranslations.text('L_PROMOCJE')),
-//                   trailing: Icon(Icons.chevron_right),
-//                 ),
-//               ),
-//             ),
 
 //import danych
             GestureDetector(
@@ -3192,11 +3261,11 @@ class _ImportScreenState extends State<ImportScreen> {
 
 //eksport wybranych danych Info
             GestureDetector(
-              onTap: () {               
+              onTap: () {
                 _showAlertExportAllInfo(
                     context,
                     (AppLocalizations.of(context)!.alert),
-                    (AppLocalizations.of(context)!.iNfos + '. ' + AppLocalizations.of(context)!.exportDataToCloud)); 
+                    (AppLocalizations.of(context)!.iNfos + '. ' + AppLocalizations.of(context)!.exportDataToCloud));
               },
               child: Card(
                 child: ListTile(
@@ -3207,115 +3276,46 @@ class _ImportScreenState extends State<ImportScreen> {
               ),
             ),
 
+//eksport wybranych danych Zdjecia
+            GestureDetector(
+              onTap: () {
+                _showAlertExportAllZdjecia(
+                    context,
+                    (AppLocalizations.of(context)!.alert),
+                    (AppLocalizations.of(context)!.pHotos + '. ' + AppLocalizations.of(context)!.exportDataToCloud));
+              },
+              child: Card(
+                child: ListTile(
+                  title: Text(AppLocalizations.of(context)!.pHotos),
+                  subtitle: Text(AppLocalizations.of(context)!.eXportPhoto),
+                ),
+              ),
+            ),
 
-          
-      /*    
-          if(wyborDanych)
-            Card(
-              child: ListTile(
-                title: Text('     Notatki'),
-                trailing: Switch.adaptive(
-                    value: archNotatki,
-                    onChanged: (value) {
-                      setState(() {
-                        archNotatki = value;
-                        print(archNotatki);
-                      });
-                    },
-                )  
-              ),
-            ),
-          if(wyborDanych)
-            Card(
-              child: ListTile(
-                title: Text('     Zbiory'),
-                trailing: Switch.adaptive(
-                    value: archZbiory,
-                    onChanged: (value) {
-                      setState(() {
-                        archZbiory = value;
-                        print(archZbiory);
-                      });
-                    },
-                )  
-              ),
-            ),
-          if(wyborDanych)
-            Card(
-              child: ListTile(
-                title: Text('     Zakupy'),
-                trailing: Switch.adaptive(
-                    value: archZakupy,
-                    onChanged: (value) {
-                      setState(() {
-                        archZakupy = value;
-                        print(archZakupy);
-                      });
-                    },
-                )  
-              ),
-            ),
-          if(wyborDanych)
-            Card(
-              child: ListTile(
-                title: Text('     Sprzedaz'),
-                trailing: Switch.adaptive(
-                    value: archSprzedaz,
-                    onChanged: (value) {
-                      setState(() {
-                        archSprzedaz = value;
-                        print(archSprzedaz);
-                      });
-                    },
-                )  
-              ),
-            ),
-            if(wyborDanych)
-            Card(
-              child: ListTile(
-                title: Text('     Przeglądy ramek'),
-                trailing: Switch.adaptive(
-                    value: archRamki,
-                    onChanged: (value) {
-                      setState(() {
-                        archRamki = value;
-                        print(archRamki);
-                      });
-                    },
-                )  
-              ),
-            ),
-            if(wyborDanych)
-            Card(
-              child: ListTile(
-                title: Text('     Pozostałe informacje'),
-                trailing: Switch.adaptive(
-                    value: archInfo,
-                    onChanged: (value) {
-                      setState(() {
-                        archInfo = value;
-                        print(archInfo);
-                      });
-                    },
-                )  
-              ),
-            ),
-            if(wyborDanych)
-            Card(
-              child: ListTile(
-                title: Text('     Tylko z biezącego roku'),
-                trailing: Switch.adaptive(
-                    value: archOstatniRok,
-                    onChanged: (value) {
-                      setState(() {
-                        archOstatniRok = value;
-                        print(archOstatniRok);
-                      });
-                    },
-                )  
-              ),
-            ),
- */
+//import Zdjecia
+            // GestureDetector(
+            //   onTap: () {
+            //       Photos.fetchZdjeciaFromSerwer(
+            //       'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia')
+            //         .then((_) {
+            //           Provider.of<Photos>(context, listen: false)
+            //               .fetchAndSetPhotosForHive(0, 0); //odswiezenie - nie jest kluczowe
+            //         });
+            //       },
+            //   child: Card(
+            //     child: ListTile(
+            //       title: Text(AppLocalizations.of(context)!.pHotos),
+            //       subtitle: Text(AppLocalizations.of(context)!.import),
+            //     ),
+            //   ),
+            // ),
+
+ 
+ 
+ 
+ 
+ 
+ 
  //eksport wwszystkich danych teraz         
             GestureDetector(
               onTap: () {

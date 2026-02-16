@@ -103,12 +103,22 @@ class _InfoScreenState extends State<InfoScreen> {
     super.didChangeDependencies();
   }
 
-  //pobranie zdjęć z bazy dla aktualnego ula
+  //pobranie zdjęć z bazy dla aktualnego ula (tylko te których plik istnieje na dysku)
   Future<void> _loadPhotos() async {
     await Provider.of<Photos>(context, listen: false)
         .fetchAndSetPhotosForHive(globals.pasiekaID, globals.ulID);
+    final allPhotos = Provider.of<Photos>(context, listen: false).items;
+    final existingPhotos = <Photo>[];
+    for (final photo in allPhotos) {
+      if (File(photo.sciezka).existsSync()) {
+        existingPhotos.add(photo);
+      } else {
+        //usunięcie z bazy wpisów zdjęć których pliki nie istnieją
+        await Photos.deletePhoto(photo.id);
+      }
+    }
     setState(() {
-      _photos = Provider.of<Photos>(context, listen: false).items;
+      _photos = existingPhotos;
     });
   }
 
@@ -3037,7 +3047,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     //galeria miniatur zdjęć - nad przyciskami, od najnowszego (lewo) do najstarszego (prawo)
                     if (_photos.isNotEmpty)
                       SizedBox(
-                        height: 120,
+                        height: 110,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: _photos.length,
