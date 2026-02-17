@@ -438,7 +438,7 @@
     "@exportNewToCloud": {},
     "autoEksportDoChmury": "Automatic data export",
     "@autoEksportDoChmury": {},
-    "onlyInspection": "after launching the application, only detailed data regarding frames, equipment, families, queens, harvests, feeding, and treatment is automatically sent to the cloud. Notes, Harvest, Purchases, and Sales are not sent.",
+    "onlyInspection": "after launching the application, only detailed data regarding frames, equipment, families, queens, harvests, feeding, and treatment is automatically sent to the cloud. Notes, Harvest, Purchases, Sales and Photos are not sent.",
     "@onlyInspection": {},
     "zarzadzanieDanymi": "Data management",
     "@zarzadzanieDanymi": {},

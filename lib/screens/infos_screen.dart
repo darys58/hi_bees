@@ -105,10 +105,14 @@ class _InfoScreenState extends State<InfoScreen> {
 
   //odzyskanie zdjęcia po restarcie Activity na Androidzie
   Future<void> _retrieveLostImage() async {
-    final LostDataResponse response = await _picker.retrieveLostData();
-    if (response.isEmpty) return;
-    if (response.file != null) {
-      await _savePickedImage(response.file!);
+    try {
+      final LostDataResponse response = await _picker.retrieveLostData();
+      if (response.isEmpty) return;
+      if (response.file != null) {
+        await _savePickedImage(response.file!);
+      }
+    } catch (_) {
+      // retrieveLostData() nie jest wspierane na iOS - ignorujemy błąd
     }
   }
 
@@ -148,9 +152,11 @@ class _InfoScreenState extends State<InfoScreen> {
 
   //pobranie zdjęć z bazy dla aktualnego ula (tylko te których plik istnieje na dysku)
   Future<void> _loadPhotos() async {
-    await Provider.of<Photos>(context, listen: false)
-        .fetchAndSetPhotosForHive(globals.pasiekaID, globals.ulID);
-    final allPhotos = Provider.of<Photos>(context, listen: false).items;
+    if (!mounted) return;
+    final photosProvider = Provider.of<Photos>(context, listen: false);
+    await photosProvider.fetchAndSetPhotosForHive(globals.pasiekaID, globals.ulID);
+    if (!mounted) return;
+    final allPhotos = photosProvider.items;
     final existingPhotos = <Photo>[];
     for (final photo in allPhotos) {
       if (File(photo.sciezka).existsSync()) {
@@ -160,6 +166,7 @@ class _InfoScreenState extends State<InfoScreen> {
         await Photos.deletePhoto(photo.id);
       }
     }
+    if (!mounted) return;
     setState(() {
       _photos = existingPhotos;
     });
@@ -169,10 +176,10 @@ class _InfoScreenState extends State<InfoScreen> {
   Future<void> _pickImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(
       source: source,
-      maxWidth: 1200,
+      maxWidth: 800,
       imageQuality: 85,
     );
-    if (image == null) return;
+    if (image == null || !mounted) return;
     await _savePickedImage(image);
   }
 

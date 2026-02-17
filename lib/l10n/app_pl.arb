@@ -219,7 +219,7 @@
     "importowanie": "Dane z chmury zostaną dodane do bazy lokalnej",
     "exportNewToCloud": "Eksport nowych danych do chmury",
     "autoEksportDoChmury": "Automatyczny eksport danych",
-    "onlyInspection": "po uruchomieniu aplikacji do chmury wysyłane są automatycznie tylko dane szczegółowe dotyczące przegladu ramek, wyposażenia, rodziny, matek, zbiorów, dokarmiania i leczenia. \nNie są wysyłane Notatki, Zbiory, Zakupy i Sprzedaż.",
+    "onlyInspection": "po uruchomieniu aplikacji do chmury wysyłane są automatycznie tylko dane szczegółowe dotyczące przegladu ramek, wyposażenia, rodziny, matek, zbiorów, dokarmiania i leczenia. \nNie są wysyłane Notatki, Zbiory, Zakupy, Sprzedaż i Zdjęcia.",
     "zarzadzanieDanymi": "Zarządzanie danymi",
     "dopisanieDoBazy": "dopisanie do bazy lokalnej",
     "powrotBezZmian": "Powrót bez zmian",

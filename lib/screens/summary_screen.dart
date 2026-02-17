@@ -155,9 +155,11 @@ class _SummaryScreenState extends State<SummaryScreen> {
         }
 
         // Photos for this hive
-        await Provider.of<Photos>(context, listen: false)
-            .fetchAndSetPhotosForHive(pasiekaNr, ulNr);
-        final allPhotos = Provider.of<Photos>(context, listen: false).items;
+        if (!mounted) return;
+        final photosProvider = Provider.of<Photos>(context, listen: false);
+        await photosProvider.fetchAndSetPhotosForHive(pasiekaNr, ulNr);
+        if (!mounted) return;
+        final allPhotos = photosProvider.items;
         final existingPhotos = <Photo>[];
         for (final photo in allPhotos) {
           if (File(photo.sciezka).existsSync()) {
@@ -167,8 +169,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
         _photos = existingPhotos;
 
         // Notes for this hive
+        if (!mounted) return;
         final notesData = Provider.of<Notes>(context, listen: false);
         await notesData.fetchAndSetNotatki();
+        if (!mounted) return;
         _hiveNotes = notesData.items.where((n) =>
             n.pasiekaNr == pasiekaNr && n.ulNr == ulNr).toList();
       }
@@ -178,12 +182,14 @@ class _SummaryScreenState extends State<SummaryScreen> {
             .fetchAndSetHives(pasiekaNr)
             .then((_) => loadInfos())
             .then((_) {
+          if (!mounted) return;
           setState(() {
             _isLoading = false;
           });
         });
       } else {
         loadInfos().then((_) {
+          if (!mounted) return;
           setState(() {
             _isLoading = false;
           });
@@ -495,14 +501,17 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
           // --- Segment: Galeria zdjęć ---
           if (_photos.isNotEmpty)
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: SizedBox(
-                  height: 110,
+            // Card(
+            //   shape: RoundedRectangleBorder(
+            //     borderRadius: BorderRadius.circular(8),
+            //   ),
+            //   child: 
+              
+              Padding(
+                padding: const EdgeInsets.all(6),
+                child: 
+                SizedBox(
+                  height: 100,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: _photos.length,
@@ -545,7 +554,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                   ),
                 ),
               ),
-            ),
+       //     ),
 
           // --- Segment: Rodzina ---
           // if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
