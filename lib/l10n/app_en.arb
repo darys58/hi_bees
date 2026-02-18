@@ -636,7 +636,7 @@
     "@latitude": {},
     "city": "City",
     "@city": {},
-    "locationApiary": "Apiary location data used to retrieve weather information during inspection. Enter the name of the nearest city or latitude and longitude of the apiary.",
+    "locationApiary": "Apiary location data used to retrieve weather information during inspection. Enter the name of the nearest city, latitude and longitude of the apiary or indicate the location of the apiary on the map.",
     "@locationApiary": {},
     "apiaryAdition": "Apiary edition",
     "@apiaryAdition": {},
@@ -1413,5 +1413,14 @@
     "eXportPhoto": "Export all photos to the cloud",
     "@eXportPhoto": {},
     "pHotos": "Photos",
-    "@pHotos": {}
+    "@pHotos": {},
+    "selectOnMap": "Select on map",
+    "@selectOnMap": {},
+    "selectLocationOnMap": "Select location",
+    "@selectLocationOnMap": {},
+    "beeFlightRange": "Bee flight range (2.5 km)",
+    "@beeFlightRange": {},
+    "apiaryLocations": "Apiary locations",
+    "@apiaryLocations": {},
+    "noApiaryLocations": "No apiary locations.\nSet the location in the apiary weather settings."
 }

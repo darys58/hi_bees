@@ -3117,6 +3117,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color.fromARGB(255, 252, 193, 104),
                             foregroundColor: Colors.black,
+                            side: BorderSide(color: Colors.grey),
+
                           ),
                         ),
                         SizedBox(width: 10),
@@ -3127,6 +3129,8 @@ class _InfoScreenState extends State<InfoScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color.fromARGB(255, 252, 193, 104),
                             foregroundColor: Colors.black,
+                            side: BorderSide(color: Colors.grey),
+
                           ),
                         ),
                       ],

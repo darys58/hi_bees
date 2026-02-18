@@ -9,6 +9,7 @@ import '../screens/about_screen.dart';
 import '../screens/parametr_screen.dart';
 import '../screens/calculator_screen.dart';
 import '../screens/nfc_settings_screen.dart';
+import '../screens/apiarys_all_map_screen.dart';
 //import '../screens/languages_screen.dart';
 //import '../models/memory.dart';
 
@@ -212,6 +213,19 @@ class SettingsScreen extends StatelessWidget {
             //     ),
             //   ),
             // ),
+//Lokalizacje pasiek
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushNamed(ApiarysAllMapScreen.routeName);
+              },
+              child: Card(
+                child: ListTile(
+                  leading: Icon(Icons.map),
+                  title: Text(AppLocalizations.of(context)!.apiaryLocations),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
 //Obsługa NFC
             GestureDetector(
               onTap: () {

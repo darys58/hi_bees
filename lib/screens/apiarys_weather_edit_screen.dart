@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 //import '../helpers/db_helper.dart';
 import '../models/weather.dart';
 import '../models/weathers.dart';
+import './apiarys_map_screen.dart';
 
 class WeatherEditScreen extends StatefulWidget {
   static const routeName = '/weather_edit';
@@ -19,9 +20,9 @@ class WeatherEditScreen extends StatefulWidget {
 
 class _WeatherEditScreenState extends State<WeatherEditScreen> {
   final _formKey1 = GlobalKey<FormState>();
-  //final _formKey2 = GlobalKey<FormState>();
-  //var now = new DateTime.now();
-  //var formatterY = new DateFormat('yyyy-MM-dd');
+  final _latController = TextEditingController();
+  final _lngController = TextEditingController();
+  bool _isInit = true;
 
   String? idPasieki;
   String? miasto;
@@ -47,51 +48,41 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
 
   @override
   void didChangeDependencies() {
-    final routeArgs =
-        ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
-    idPasieki = routeArgs['idPasieki'].toString();
+    if (_isInit) {
+      _isInit = false;
+      final routeArgs =
+          ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
+      idPasieki = routeArgs['idPasieki'].toString();
 
-    //print('idPasieki= $idPasieki');
-
-    // Provider.of<Weathers>(context, listen: false)
-    //     .fetchAndSetWeathers()
-    //     .then((_) {
-    //   //uzyskanie dostępu do danych z tabeli 'pogoda'
       final pogodaData = Provider.of<Weathers>(context, listen: false);
       List<Weather> pogoda = pogodaData.items.where((ap) {
         return ap.id == (idPasieki.toString());
-        //'numerPasieki'; // jest ==  a było contains ale dla typu String
       }).toList();
-      // print(pogodaData);
-      // print('nnnnnnnnnnn = ${pogoda[0].id}');
       if (pogoda.length == 0) {
-        //jezeli nie ma danych dla wybranej pasieki
-        //print('brak danych o lokalizacji pasieki');
         miasto = '';
         latitude = '';
         longitude = '';
         units_number = 1;
         lang = 'pl';
       } else {
-        //jezeli są jakie dane dla pasieki
         miasto = pogoda[0].miasto;
         latitude = pogoda[0].latitude;
         longitude = pogoda[0].longitude;
         units_number = pogoda[0].units;
         lang = pogoda[0].lang;
-        //print('${pogoda[0].id}, ${pogoda[0].miasto}, ${pogoda[0].latitude},${pogoda[0].longitude}, ${pogoda[0].pobranie},${pogoda[0].temp},${pogoda[0].units},${pogoda[0].icon}');
       }
- //   });
 
-    // edycja = true;
-    // //jezeli edycja istniejącego wpisu
-    // final zbiorData = Provider.of<Harvests>(context, listen: false);
-    // zbior = zbiorData.items.where((element) {
-    //   //to wczytanie danych zbioru
-    //   return element.id.toString().contains('$idZbioru');
-    // }).toList();
-
+      _latController.text = latitude ?? '';
+      _lngController.text = longitude ?? '';
+    }
     super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    _latController.dispose();
+    _lngController.dispose();
+    super.dispose();
   }
 
 //sprawdzenie czy jest internet
@@ -276,7 +267,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                                             overflow: TextOverflow.fade,
                                             ),
                                   ),
-// pasieka
+// pasieka miasto
                               Row(
                                   //mainAxisAlignment: MainAxisAlignment.center,
                                   mainAxisAlignment: MainAxisAlignment.start,
@@ -343,7 +334,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                                     SizedBox(
                                       width: 150,
                                       child: TextFormField(
-                                          initialValue: latitude,
+                                          controller: _latController,
                                           keyboardType: TextInputType.numberWithOptions(decimal: true),
                                           decoration: InputDecoration(
                                             labelText: (''),
@@ -352,13 +343,6 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                                             hintText: 'np.: 52.25314',
                                           ),
                                           validator: (value) {
-                                            // if (value!.isEmpty) {
-                                            //   return (AppLocalizations.of(
-                                            //               context)!
-                                            //           .enter +
-                                            //       ' ' +
-                                            //       'szerokość');
-                                            // }
                                             latitude = value;
                                             return null;
                                           }),
@@ -388,7 +372,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                                     SizedBox(
                                       width: 150,
                                       child: TextFormField(
-                                          initialValue: longitude,
+                                          controller: _lngController,
                                           keyboardType: TextInputType.numberWithOptions(decimal: true),
                                           decoration: InputDecoration(
                                             labelText: (''),
@@ -397,18 +381,49 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                                             hintText: 'np.:18.1976522',
                                           ),
                                           validator: (value) {
-                                            // if (value!.isEmpty) {
-                                            //   return (AppLocalizations.of(
-                                            //               context)!
-                                            //           .enter +
-                                            //       ' ' +
-                                            //       'długość');
-                                            // }
                                             longitude = value;
                                             return null;
                                           }),
                                     ),
                                   ]),
+
+//przycisk "Wybierz na mapie"
+                              SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  ElevatedButton.icon(
+                                    icon: Icon(Icons.map, size: 20),
+                                    label: Text(
+                                      AppLocalizations.of(context)!.selectOnMap,
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                                      foregroundColor: Colors.black,
+                                      side: BorderSide(color: Colors.grey),
+
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).pushNamed(
+                                        ApiaryMapScreen.routeName,
+                                        arguments: {
+                                          'latitude': _latController.text,
+                                          'longitude': _lngController.text,
+                                        },
+                                      ).then((result) {
+                                        if (result != null && result is Map) {
+                                          setState(() {
+                                            _latController.text = result['latitude'] ?? '';
+                                            _lngController.text = result['longitude'] ?? '';
+                                            latitude = result['latitude'];
+                                            longitude = result['longitude'];
+                                          });
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
 
 //jednostka
                               SizedBox(height: 20),

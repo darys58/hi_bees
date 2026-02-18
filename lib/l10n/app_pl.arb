@@ -318,7 +318,7 @@
     "longitude": "Długość geograficzna",
     "latitude": "Szerokość geograficzna",
     "city": "Miasto",
-    "locationApiary": "Dane o lokalizacji pasieki wykorzystywane do pobierania informacji o pogodzie podczas przeglądów. Wpisz nazwę najbliższego miasta lub szerokość i długość geograficzną pasieki.",
+    "locationApiary": "Dane o lokalizacji pasieki wykorzystywane do pobierania informacji o pogodzie podczas przeglądów. Wpisz nazwę najbliższego miasta, szerokość i długość geograficzną pasieki lub wskaż lokalizacje pasieki na mapie.",
     "apiaryAdition": "Edycja pasieki",
     "editingInfo": "Edycja informacji",
     "addInfo": "Dodawanie informacji",
@@ -718,6 +718,14 @@
     "dEleteFoto": "Usuwanie zdjęcia",
     "photoDataSend": "Zdjęcia zostały wysłane",
     "eXportPhoto": "Eksport wszystkich zdjęć do chmury",
-    "pHotos": "Zdjęcia"
-
+    "pHotos": "Zdjęcia",
+    "selectOnMap": "Wskaż na mapie",
+    "@selectOnMap": {},
+    "selectLocationOnMap": "Wskaż lokalizację",
+    "@selectLocationOnMap": {},
+    "beeFlightRange": "Zasięg lotu pszczół (2,5 km)",
+    "@beeFlightRange": {},
+    "apiaryLocations": "Lokalizacje pasiek",
+    "@apiaryLocations": {},
+    "noApiaryLocations": "Brak lokalizacji pasiek.\nUstaw lokalizację w ustawieniach pogody pasieki."
 }

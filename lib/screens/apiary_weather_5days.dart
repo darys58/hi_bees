@@ -103,7 +103,11 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
             // print('$inter - jest internet');
             //print('pobranie danych o pogodzie');
             if (latitude != '' && longitude != '') {
-              getCurrentWeatherCoord(idPasieki.toString(), latitude!, longitude!);
+              getCurrentWeatherCoord(idPasieki.toString(), latitude!, longitude!)?.then((_) {
+                setState(() {
+                  _isLoading = false; //zatrzymanie wskaznika ładowania danych
+                });
+              });
             } else if (miasto != '') {
               getCurrentWeather(idPasieki.toString(), miasto)?.then((_) {
                  setState(() {
@@ -194,57 +198,38 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
     return true;
   }
 
-  //pobranie pogody z www dla koordynatów i aktualizacja wpisu w bazie
+  //pobranie pogody z www dla koordynatów (prognoza 5 dni)
   Future<bool>? getCurrentWeatherCoord(
       String nrPasieki, String lati, String longi) async {
     var endpoint = Uri.parse(
-        "https://api.openweathermap.org/data/2.5/weather?lat=$lati&lon=$longi&appid=3943495c9983f5f94616a38aa17fcb4d&units=$units"); //https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=-2.15&appid={API key}")
+        "https://api.openweathermap.org/data/2.5/forecast?lat=$lati&lon=$longi&appid=3943495c9983f5f94616a38aa17fcb4d&units=$units");
     var response = await http.get(endpoint);
     body = jsonDecode(response.body);
     // print('dane o pogodzie z koordynatów -----------------------');
     // print(body);
-    temp = body["main"]["temp"];
-    icon = body["weather"][0]["icon"];
-    //print('$temp, $icon');
-    //String teraz = formatterPogoda.format(now);
-    // print('ikona przed zapisem w koo');
-    // print(icon);
-    Weathers.insertWeather(
-      idPasieki!,
-      miasto,
-      latitude!,
-      longitude!,
-      formatterPogoda.format(now),//'0000-00-00 00:00', //pobranie
-      temp.toString(), //temp
-      '', // weatherId,
-      icon, //icon
-      units_number!,
-      lang!,
-      '',
-    ).then((_) {
-      OdswiezPogode(idPasieki!);
-    }); //
+    temp = body["list"][5]["main"]["temp"];
+    icon = body["list"][5]["weather"][0]["icon"];
     return true;
   }
 
-  OdswiezPogode(String nrPasieki) {
-    //pobranie danych o pogodzie dla pasieki
-    Provider.of<Weathers>(context, listen: false)
-        .fetchAndSetWeathers()
-        .then((_) {
-      final pogodaData = Provider.of<Weathers>(context, listen: false);
-      pogoda = pogodaData.items.where((ap) {
-        return ap.id == (idPasieki.toString());
-        //'numerPasieki'; // jest ==  a było contains ale dla typu String
-      }).toList();
-      // setState(() {
-      temp = double.parse(pogoda![0].temp);
-      icon = pogoda![0].icon;
-      //print('setState icon - z bazy po OdswiezPogode');
-      //  });
-      Navigator.of(context).pop();
-    });
-  }
+  // OdswiezPogode(String nrPasieki) {
+  //   //pobranie danych o pogodzie dla pasieki
+  //   Provider.of<Weathers>(context, listen: false)
+  //       .fetchAndSetWeathers()
+  //       .then((_) {
+  //     final pogodaData = Provider.of<Weathers>(context, listen: false);
+  //     pogoda = pogodaData.items.where((ap) {
+  //       return ap.id == (idPasieki.toString());
+  //       //'numerPasieki'; // jest ==  a było contains ale dla typu String
+  //     }).toList();
+  //     // setState(() {
+  //     temp = double.parse(pogoda![0].temp);
+  //     icon = pogoda![0].icon;
+  //     //print('setState icon - z bazy po OdswiezPogode');
+  //     //  });
+  //     Navigator.of(context).pop();
+  //   });
+  // }
 
   String zmienDate(String data) {
     String rok = data.substring(0, 4);
@@ -295,10 +280,16 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
-          title: Text(
-            AppLocalizations.of(context)!.wEatherForecast,
-            style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-          ),
+          title: 
+            miasto != '' 
+              ? Text(
+                  AppLocalizations.of(context)!.wEatherForecast + ' - $miasto',
+                  style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                )
+              : Text(
+                  AppLocalizations.of(context)!.wEatherForecast,
+                  style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                ),
           bottom: PreferredSize(
             preferredSize: Size.fromHeight(1.0),
             child: Container(

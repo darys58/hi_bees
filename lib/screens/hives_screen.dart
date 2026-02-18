@@ -1167,7 +1167,7 @@ class _HivesScreenState extends State<HivesScreen> {
               if ((todo != '' && todo != '0') && (ikona != 'red' || ikona != 'orange')) {
                 ikona = 'yellow';
               }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';                
-               print('${globals.pasiekaID}.${numerUla} = ');   
+              //print('${globals.pasiekaID}.${numerUla} = ');   
 //ZAPIS DANYCH O ULU              
                 Hives.insertHive(
                   '${globals.pasiekaID}.${numerUla}',
@@ -1766,10 +1766,29 @@ class _HivesScreenState extends State<HivesScreen> {
     return Scaffold(
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
-          title: Text(
-            AppLocalizations.of(context)!.aPiary + " $numerPasieki",
-            style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-          ),
+          title: RichText(
+            text: TextSpan(
+              //style: TextStyle(color: Colors.black),
+              children: [
+                TextSpan(
+                  text: (AppLocalizations.of(context)!.aPiary + " $numerPasieki"),
+                  style: TextStyle(
+                      fontSize: 20,
+                      //fontWeight: FontWeight.bold,
+                      color: Colors.black,),
+                ),
+                pogoda!.length != 0 && pogoda![0].miasto != ''
+                  ? TextSpan(
+                      text: '\n(${pogoda![0].miasto})',
+                        style: const TextStyle(
+                         // fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: Colors.black,
+                        ))
+                  : TextSpan( text:(''),)
+         
+              ])),
+                                  
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
           //   title: Text('Apiary $numerPasieki'),
           //   backgroundColor: Color.fromARGB(255, 233, 140, 0),

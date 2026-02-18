@@ -49,6 +49,8 @@ import './screens/syrup11_calculator_screen.dart';
 import './screens/cake_calculator_screen.dart';
 import './screens/summary_screen.dart';
 import './screens/nfc_settings_screen.dart';
+import './screens/apiarys_map_screen.dart';
+import './screens/apiarys_all_map_screen.dart';
 
 //import './screens/languages_screen.dart';
 
@@ -275,6 +277,8 @@ class _MyAppState extends State<MyApp> {
           CakeCalculatorScreen.routeName: (ctx) => CakeCalculatorScreen(),
           SummaryScreen.routeName: (ctx) => SummaryScreen(),
           NfcSettingsScreen.routeName: (ctx) => NfcSettingsScreen(),
+          ApiaryMapScreen.routeName: (ctx) => ApiaryMapScreen(),
+          ApiarysAllMapScreen.routeName: (ctx) => ApiarysAllMapScreen(),
          // LanguagesScreen.routeName: (ctx) => LanguagesScreen(),
           //FiltersScreen.routeName: (ctx) => FiltersScreen(_filters, _setFilters),
         },

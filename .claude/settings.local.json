@@ -15,7 +15,8 @@
       "WebFetch(domain:www.oneclickitsolution.com)",
       "mcp__ide__getDiagnostics",
       "Bash(wc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ]
   }
 }
