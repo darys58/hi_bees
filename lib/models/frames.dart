@@ -21,41 +21,40 @@ class Frames with ChangeNotifier {
   // }
 
 
-  //pobranie ramek z serwera www
-  static Future<void> fetchFramesFromSerwer(String url) async {
-    //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
-    try {
-      final response = await http.get(Uri.parse(url));
-      //print(json.decode(response.body));
+  //pobranie ramek z serwera www - tylko download (HTTP GET + JSON decode)
+  static Future<List<MapEntry<String, dynamic>>> downloadFramesFromSerwer(String url) async {
+    final response = await http.get(Uri.parse(url));
+    final extractedData = json.decode(response.body) as Map<String, dynamic>;
+    return extractedData.entries.where((e) => e.key != 'brak').toList();
+  }
 
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      // if (extractedData == null) {
-      //   return;
-      // }
-
-      extractedData.forEach((ramkaId, ramkaData) {
-        if (ramkaId != 'brak') {//jezeli są wpisy a tabeli xxxx_ramka
-          //zapis ramki do bazy
-          DBHelper.insert('ramka', {
-            'id': ramkaId,
-            'data': ramkaData['ra_data'],
-            'pasiekaNr': ramkaData['ra_pasiekaNr'],
-            'ulNr': ramkaData['ra_ulNr'],
-            'korpusNr': ramkaData['ra_korpusNr'],
-            'typ': ramkaData['ra_typ'],
-            'ramkaNr': ramkaData['ra_ramkaNr'],
-            'ramkaNrPo': ramkaData['ra_ramkaNrPo'],
-            'rozmiar': ramkaData['ra_rozmiar'],
-            'strona': ramkaData['ra_strona'],
-            'zasob': ramkaData['ra_zasob'],
-            'wartosc': ramkaData['ra_wartosc'],
-            'arch': 2,
-          });
-        }
+  //zapis pobranych ramek do bazy lokalnej z progressem
+  static Future<int> saveFramesToDb(List<MapEntry<String, dynamic>> entries, {Function(int current, int total)? onProgress}) async {
+    final total = entries.length;
+    int current = 0;
+    for (var entry in entries) {
+      DBHelper.insert('ramka', {
+        'id': entry.key,
+        'data': entry.value['ra_data'],
+        'pasiekaNr': entry.value['ra_pasiekaNr'],
+        'ulNr': entry.value['ra_ulNr'],
+        'korpusNr': entry.value['ra_korpusNr'],
+        'typ': entry.value['ra_typ'],
+        'ramkaNr': entry.value['ra_ramkaNr'],
+        'ramkaNrPo': entry.value['ra_ramkaNrPo'],
+        'rozmiar': entry.value['ra_rozmiar'],
+        'strona': entry.value['ra_strona'],
+        'zasob': entry.value['ra_zasob'],
+        'wartosc': entry.value['ra_wartosc'],
+        'arch': 2,
       });
-    } catch (error) {
-      throw (error);
+      current++;
+      if (onProgress != null && (current % 100 == 0 || current == total)) {
+        onProgress(current, total);
+        await Future.delayed(Duration.zero); //oddanie sterowania do UI
+      }
     }
+    return total;
   }
 
 //pobranie wszystkich wpisów o ramce z bazy lokalnej

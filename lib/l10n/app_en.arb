@@ -486,7 +486,7 @@
     "@activationCode": {},
     "subscryptionTo": "Subscryption to: ",
     "@subscryptionTo": {},
-    "onlyNew": "only not previously shipped",
+    "onlyNew": "only not previously shipped, from all categories",
     "@onlyNew": {},
     "exportNewData": "Only data that has not yet been sent will be sent",
     "@exportNewData": {},
@@ -1422,5 +1422,10 @@
     "@beeFlightRange": {},
     "apiaryLocations": "Apiary locations",
     "@apiaryLocations": {},
-    "noApiaryLocations": "No apiary locations.\nSet the location in the apiary weather settings."
+    "noApiaryLocations": "No apiary locations.\nSet the location in the apiary weather settings.",
+    "downloading": "Downloading",
+    "savingToDb": "Saving to database",
+    "rebuildingHives": "Rebuilding hives",
+    "rebuildingApiaries": "Rebuilding apiaries",
+    "finalization": "Finalization"
 }

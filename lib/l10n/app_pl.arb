@@ -243,7 +243,7 @@
     "versionApp": "Wersja aplikacji: ",
     "activationCode": "Kod aktywacyjny: ",
     "subscryptionTo": "Subskrypcja do: ",
-    "onlyNew": "tylko wcześniej nie wysyłanych",
+    "onlyNew": "tylko wcześniej nie wysyłanych, ze wszystkich kategorii",
     "exportNewData": "Wysłane zostaną tylko dane, które nie były jeszcze wysyłane",
     "eXport": "Eksportuj",
     "noDataToSend": "Brak nowych danych do wysłania",
@@ -727,5 +727,10 @@
     "@beeFlightRange": {},
     "apiaryLocations": "Lokalizacje pasiek",
     "@apiaryLocations": {},
-    "noApiaryLocations": "Brak lokalizacji pasiek.\nUstaw lokalizację w ustawieniach pogody pasieki."
+    "noApiaryLocations": "Brak lokalizacji pasiek.\nUstaw lokalizację w ustawieniach pogody pasieki.",
+    "downloading": "Pobieranie",
+    "savingToDb": "Zapis do bazy",
+    "rebuildingHives": "Odbudowa uli",
+    "rebuildingApiaries": "Odbudowa pasiek",
+    "finalization": "Finalizacja"
 }

@@ -14,40 +14,40 @@ class Infos with ChangeNotifier {
     return [..._items]; //... - operator rozprzestrzeniania
   }
 
-   //pobranie info z serwera www
-  static Future<void> fetchInfosFromSerwer(String url) async {
-    //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
-    try {
-      final response = await http.get(Uri.parse(url));
-      // print('response od info');
-      // print(json.decode(response.body));
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      // if (extractedData == null) {
-      //   return;
-      // }
-      extractedData.forEach((infoId, infoData) {
-        if (infoId != 'brak') {//jezeli są wpisy a tabeli info_xxxx
-          //zapis info do bazy
-          DBHelper.insert('info', {
-            'id': infoId,
-            'data': infoData['in_data'],
-            'pasiekaNr': infoData['in_pasiekaNr'],
-            'ulNr': infoData['in_ulNr'],
-            'kategoria': infoData['in_kategoria'],
-            'parametr': infoData['in_parametr'],
-            'wartosc': infoData['in_wartosc'],
-            'miara': infoData['in_miara'],
-            'pogoda': infoData['in_pogoda'],
-            'temp': infoData['in_temp'],
-            'czas': infoData['in_czas'],
-            'uwagi': infoData['in_uwagi'],
-            'arch': 2,
-          });
-        }
+   //pobranie info z serwera www - tylko download (HTTP GET + JSON decode)
+  static Future<List<MapEntry<String, dynamic>>> downloadInfosFromSerwer(String url) async {
+    final response = await http.get(Uri.parse(url));
+    final extractedData = json.decode(response.body) as Map<String, dynamic>;
+    return extractedData.entries.where((e) => e.key != 'brak').toList();
+  }
+
+  //zapis pobranych info do bazy lokalnej z progressem
+  static Future<int> saveInfosToDb(List<MapEntry<String, dynamic>> entries, {Function(int current, int total)? onProgress}) async {
+    final total = entries.length;
+    int current = 0;
+    for (var entry in entries) {
+      DBHelper.insert('info', {
+        'id': entry.key,
+        'data': entry.value['in_data'],
+        'pasiekaNr': entry.value['in_pasiekaNr'],
+        'ulNr': entry.value['in_ulNr'],
+        'kategoria': entry.value['in_kategoria'],
+        'parametr': entry.value['in_parametr'],
+        'wartosc': entry.value['in_wartosc'],
+        'miara': entry.value['in_miara'],
+        'pogoda': entry.value['in_pogoda'],
+        'temp': entry.value['in_temp'],
+        'czas': entry.value['in_czas'],
+        'uwagi': entry.value['in_uwagi'],
+        'arch': 2,
       });
-    } catch (error) {
-      throw (error);
+      current++;
+      if (onProgress != null && (current % 100 == 0 || current == total)) {
+        onProgress(current, total);
+        await Future.delayed(Duration.zero); //oddanie sterowania do UI
+      }
     }
+    return total;
   }
 
 

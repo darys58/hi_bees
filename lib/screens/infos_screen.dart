@@ -1639,7 +1639,7 @@ class _InfoScreenState extends State<InfoScreen> {
                   arguments: {'idInfo': '',
                               'kategoria': 'queen', 
                               'parametr': AppLocalizations.of(context)!.queenWasBornIn, //Born
-                              'wartosc': '2023', //wartość domyślna
+                              'wartosc': DateTime.now().toString().substring(0, 4), //wartość domyślna
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         

@@ -122,7 +122,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.7.77 10.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie, Historia matki + PDF
   //1.9.8.78 12.02.2026 - uproszczone logowanie - bez deviceId (jeden unikalny email w bazie = jeden kod), Kasowanie kopii zapasowej w chmurze - robienie kopii archiwalnej do późniejszego usunięcia
   //1.9.9.79 17.02.2026 - ukrywanie przycisków Zakupy i Sprzedaz, historia ula, dm2 ramki - zmiana: z pola miara do pola pogoda w bazie, wyświetlanie tylko uli z zasobami w raport i raport2, PDFy w Zakupy, Sprzedaz i Zbiory, zdjęcia (800px) w inspection, archiwizacja zdjęć i kasowanie, wyświetlanie zdjęć na Androidzie
-  //1.9.10.80 17.02.2026 - apiarys_map_screen - mapa do lokalizacji,
+  //1.9.10.80 17.02.2026 - apiarys_map_screen - mapa do lokalizacji, mapa lokalizacji wszystkich pasiek,
   
   
   final wersja = '1.9.10.80'; //wersja aplikacji na iOS
