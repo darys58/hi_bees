@@ -6,6 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/notification_helper.dart';
 import '../models/apiarys.dart';
 // import '../models/frame.dart';
 import '../models/hives.dart';
@@ -52,7 +53,12 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   TextEditingController dateController = TextEditingController();
   //int _nowaIloscRamek = 0; //zmieniana nowym wpisem
   List<bool> _selectedZakresUli = <bool>[true, false]; //tylko ten | wszystkie
-  
+
+  // Zmienne stanu dla sekcji "Przypomnij"
+  bool _przypomnienieEnabled = false;
+  int _przypomnienieDni = 5;
+  int _przypomnienieGodzina = 8;
+  int _przypomnienieMinuta = 0;
 
 
 
@@ -114,6 +120,19 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowyCzas = info[0].czas;
       nowyUwagi = info[0].uwagi;
       tytulEkranu = AppLocalizations.of(context)!.editingInfo;
+      // Załadowanie danych powiadomienia indywidualnego (jeśli istnieje)
+      if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment') {
+        DBHelper.getPowiadomienieByInfoId(info[0].id).then((data) {
+          if (data.isNotEmpty && mounted) {
+            setState(() {
+              _przypomnienieEnabled = (data[0]['aktywne'] as int) == 1;
+              _przypomnienieDni = data[0]['dni'] as int? ?? 5;
+              _przypomnienieGodzina = data[0]['godzina'] as int? ?? 8;
+              _przypomnienieMinuta = data[0]['minuta'] as int? ?? 0;
+            });
+          }
+        });
+      }
     }else { //a jezeli dodanie nowego info
       edycja = false;
       dateController.text = globals.dataWpisu; //ostatnio wybrana data      DateTime.now().toString().substring(0, 10);
@@ -275,6 +294,57 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     } //od if (_isInit) {
     _isInit = false;
     super.didChangeDependencies();
+  }
+
+  //dialog z wyborem liczby dni (0-30) - wzorowany na raport_screen
+  void _showDaysPickerDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.remindAfterDays, textAlign: TextAlign.center),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            SizedBox(
+              height: 230,
+              width: 300,
+              child: ListWheelScrollView(
+                itemExtent: 70,
+                physics: FixedExtentScrollPhysics(),
+                perspective: 0.009,
+                controller: FixedExtentScrollController(initialItem: _przypomnienieDni),
+                children: [
+                  for (var i = 0; i <= 30; i++)
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _przypomnienieDni = i;
+                        });
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        '$i',
+                        style: const TextStyle(fontSize: 40),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   @override
@@ -455,6 +525,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                     // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
                                     for (int i = 0; i < _selectedZakresUli.length; i++) {
                                       _selectedZakresUli[i] = i == index;
+                                    }
+                                    // Przy wyborze “wszystkie ule” wyłącz przypomnienie
+                                    if (_selectedZakresUli[1] == true) {
+                                      _przypomnienieEnabled = false;
                                     }
                                   });
                                 },
@@ -1964,6 +2038,108 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                   ]
                 ),
               ),
+//*********************************************** */
+              //** */ sekcja "Przypomnij" - tylko dla feeding i treatment
+//*********************************************** */
+              if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment')
+                Column(
+                  children: [
+                    SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.remind,
+                          style: TextStyle(fontSize: 16, color: _selectedZakresUli[1] == true ? Colors.grey : Colors.black),
+                        ),
+                        Switch(
+                          value: _przypomnienieEnabled,
+                          activeColor: Theme.of(context).primaryColor,
+                          onChanged: _selectedZakresUli[1] == true
+                              ? null // zablokowany przy "wszystkie ule"
+                              : (bool value) {
+                                  setState(() {
+                                    _przypomnienieEnabled = value;
+                                  });
+                                },
+                        ),
+                      ],
+                    ),
+                    if (_przypomnienieEnabled)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.forr,  //za
+                              style: TextStyle(fontSize: 16, color: const Color.fromARGB(255, 0, 0, 0)),
+                            ),                         
+                            
+                            // Przycisk z liczbą dni
+                            Column(
+                              children: [
+                                //Text(AppLocalizations.of(context)!.remindAfterDays, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                                // SizedBox(height: 4),
+                                OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: Theme.of(context).primaryColor,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                                    side: BorderSide(color: Color.fromARGB(255, 162, 103, 0), width: 1),
+                                    fixedSize: Size(120.0, 40.0),
+                                  ),
+                                  onPressed: () {
+                                    _showDaysPickerDialog();
+                                  },
+                                  child: Text(
+                                    '$_przypomnienieDni ${_przypomnienieDni == 1 ? AppLocalizations.of(context)!.day : AppLocalizations.of(context)!.days}',
+                                    style: TextStyle(color: Colors.black, fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            
+                            Text(
+                              AppLocalizations.of(context)!.at,  // o
+                              style: TextStyle(fontSize: 16, color: const Color.fromARGB(255, 0, 0, 0)),
+                            ), 
+                            
+                            // Przycisk z godziną
+                            Column(
+                              children: [
+                               // Text(AppLocalizations.of(context)!.remindAtTime, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                               // SizedBox(height: 4),
+                                OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: Theme.of(context).primaryColor,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                                    side: BorderSide(color: Color.fromARGB(255, 162, 103, 0), width: 1),
+                                    fixedSize: Size(120.0, 40.0),
+                                  ),
+                                  onPressed: () async {
+                                    final TimeOfDay? picked = await showTimePicker(
+                                      context: context,
+                                      initialTime: TimeOfDay(hour: _przypomnienieGodzina, minute: _przypomnienieMinuta),
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        _przypomnienieGodzina = picked.hour;
+                                        _przypomnienieMinuta = picked.minute;
+                                      });
+                                    }
+                                  },
+                                  child: Text(
+                                    '${_przypomnienieGodzina.toString().padLeft(2, '0')}:${_przypomnienieMinuta.toString().padLeft(2, '0')}',
+                                    style: TextStyle(color: Colors.black, fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               SizedBox(height: 30),
 //*********************************************** */
               //** */przycisk "Zapisz"
@@ -1984,9 +2160,12 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                         if(nowyParametr != '') //było: jezeli wartość nie jest pusta, jest: jezeli parametr...
                           if (edycja) {
                             //print('edycja info - rodzaj ula = $rodzajUla');
+                            // Usunięcie starego powiadomienia indywidualnego
+                            DBHelper.deletePowiadomienieByInfoId(info[0].id);
                             DBHelper.deleteInfo(info[0].id).then((_) {
+                              final nowyInfoId = '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr';
                               Infos.insertInfo(
-                                '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
+                                nowyInfoId,
                                 dateController.text,
                                 nowaPasieka,
                                 nowyUl,
@@ -1994,14 +2173,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 nowyParametr,
                                 nowyWartosc,
                                 nowyMiara!, //ewentualny typ ula ustawiony wczesniej
-                                
+
                                 //pole pogoda moze mieć wartość "matkaID", "rodzaj ula", "dmRamki" lub nic
-                                nowaKategoria == 'queen' 
-                                  ? matkaID.toString() 
-                                  : nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = " 
+                                nowaKategoria == 'queen'
+                                  ? matkaID.toString()
+                                  : nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = "
                                     ? rodzajUla //rodzajUla, //tylko dla ilość ramek =
-                                    : nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"      
-                                      || nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x"  
+                                    : nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"
+                                      || nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x"
                                         ? dmRamki //ilość dm2 ramki zalezna od typu ula  i wielkosci ramki
                                         : '',
                                 info[0].temp,
@@ -2009,6 +2188,36 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 nowyUwagi!,
                                 0, //info[0].arch,
                               ).then((_) {
+                                // Zapis nowego powiadomienia indywidualnego (edycja)
+                                if (_przypomnienieEnabled && (nowaKategoria == 'feeding' || nowaKategoria == 'treatment')) {
+                                  final dataInfo = DateTime.parse(dateController.text);
+                                  final dataNotif = dataInfo.add(Duration(days: _przypomnienieDni));
+                                  final dataNotifStr = dataNotif.toString().substring(0, 10);
+                                  DBHelper.insertPowiadomienie({
+                                    'infoId': nowyInfoId,
+                                    'pasiekaNr': nowaPasieka,
+                                    'ulNr': nowyUl,
+                                    'kategoria': nowaKategoria,
+                                    'parametr': nowyParametr,
+                                    'dni': _przypomnienieDni,
+                                    'godzina': _przypomnienieGodzina,
+                                    'minuta': _przypomnienieMinuta,
+                                    'dataInfo': dateController.text,
+                                    'dataNotif': dataNotifStr,
+                                    'aktywne': 1,
+                                  }).then((insertedId) {
+                                    NotificationHelper.scheduleIndividualNotification(
+                                      id: insertedId,
+                                      pasiekaNr: nowaPasieka,
+                                      ulNr: nowyUl,
+                                      kategoria: nowaKategoria,
+                                      parametr: nowyParametr,
+                                      godzina: _przypomnienieGodzina,
+                                      minuta: _przypomnienieMinuta,
+                                      dataNotif: dataNotifStr,
+                                    );
+                                  });
+                                }
                                 Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
                                 .then((_) {
                                   Navigator.of(context).pop();
@@ -2156,6 +2365,37 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                     });
                                   });
                                 }else{
+                                  // Zapis powiadomienia indywidualnego (dodawanie, tylko ten ul)
+                                  if (_przypomnienieEnabled && (nowaKategoria == 'feeding' || nowaKategoria == 'treatment')) {
+                                    final nowyInfoId = '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr';
+                                    final dataInfo = DateTime.parse(dateController.text);
+                                    final dataNotif = dataInfo.add(Duration(days: _przypomnienieDni));
+                                    final dataNotifStr = dataNotif.toString().substring(0, 10);
+                                    DBHelper.insertPowiadomienie({
+                                      'infoId': nowyInfoId,
+                                      'pasiekaNr': nowaPasieka,
+                                      'ulNr': nowyUl,
+                                      'kategoria': nowaKategoria,
+                                      'parametr': nowyParametr,
+                                      'dni': _przypomnienieDni,
+                                      'godzina': _przypomnienieGodzina,
+                                      'minuta': _przypomnienieMinuta,
+                                      'dataInfo': dateController.text,
+                                      'dataNotif': dataNotifStr,
+                                      'aktywne': 1,
+                                    }).then((insertedId) {
+                                      NotificationHelper.scheduleIndividualNotification(
+                                        id: insertedId,
+                                        pasiekaNr: nowaPasieka,
+                                        ulNr: nowyUl,
+                                        kategoria: nowaKategoria,
+                                        parametr: nowyParametr,
+                                        godzina: _przypomnienieGodzina,
+                                        minuta: _przypomnienieMinuta,
+                                        dataNotif: dataNotifStr,
+                                      );
+                                    });
+                                  }
                                   Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
                                     .then((_) {
                                     Navigator.of(context).pop();
@@ -2193,6 +2433,11 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 });
                             }
                           }
+
+                        //przeplanowanie powiadomień po zapisie info
+                        if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'inspection') {
+                          NotificationHelper.scheduleAllNotifications();
+                        }
 
                         //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki lub wyposazenia lub przeglądu (bo likwidacja ula i zmiana ikony na czarną)
                         if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'queen' || nowaKategoria == 'equipment'  || nowaKategoria == 'inspection') {

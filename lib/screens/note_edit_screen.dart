@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 //import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/notification_helper.dart';
 import 'package:flutter/services.dart';
 import '../models/note.dart';
 
@@ -455,7 +456,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                         .then((_) {
                                       // print(
                                       //     '$nowyNrPasieki, $nowyZasobId, $nowyIlosc, $nowyMiara, $nowyUwagi');
-
+                                      NotificationHelper.scheduleAllNotifications();
                                       Provider.of<Notes>(context, listen: false)
                                           .fetchAndSetNotatki()
                                           .then((_) {
@@ -478,6 +479,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                         '',
                                         nowyUwagi!,
                                         0); //arch
+                                    NotificationHelper.scheduleAllNotifications();
                                     Provider.of<Notes>(context, listen: false)
                                         .fetchAndSetNotatki()
                                         .then((_) {

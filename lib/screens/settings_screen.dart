@@ -10,6 +10,7 @@ import '../screens/parametr_screen.dart';
 import '../screens/calculator_screen.dart';
 import '../screens/nfc_settings_screen.dart';
 import '../screens/apiarys_all_map_screen.dart';
+import '../screens/notification_settings_screen.dart';
 //import '../screens/languages_screen.dart';
 //import '../models/memory.dart';
 
@@ -235,6 +236,19 @@ class SettingsScreen extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(Icons.nfc),
                   title: Text(AppLocalizations.of(context)!.nfcSettings),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
+//Powiadomienia
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushNamed(NotificationSettingsScreen.routeName);
+              },
+              child: Card(
+                child: ListTile(
+                  leading: Icon(Icons.notifications),
+                  title: Text(AppLocalizations.of(context)!.notificationSettings),
                   trailing: Icon(Icons.chevron_right),
                 ),
               ),

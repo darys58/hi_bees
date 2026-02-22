@@ -51,6 +51,8 @@ import './screens/summary_screen.dart';
 import './screens/nfc_settings_screen.dart';
 import './screens/apiarys_map_screen.dart';
 import './screens/apiarys_all_map_screen.dart';
+import './screens/notification_settings_screen.dart';
+import './helpers/notification_helper.dart';
 
 //import './screens/languages_screen.dart';
 
@@ -78,8 +80,11 @@ void main() async {
   initializeDateFormatting;
   // Initializes the translation module
 //    await allTranslations.init();
+
+  // Inicjalizacja powiadomień lokalnych
+  await NotificationHelper.initialize();
+
   // then start the application
-  
   return runApp(MyApp());
 }
 
@@ -89,7 +94,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  
+
   @override
   void initState() {
     super.initState();
@@ -160,6 +165,7 @@ class _MyAppState extends State<MyApp> {
         
       ],
       child: MaterialApp(
+         navigatorKey: NotificationHelper.navigatorKey,
          localizationsDelegates: [
           AppLocalizations.delegate,
            GlobalMaterialLocalizations.delegate,
@@ -279,6 +285,7 @@ class _MyAppState extends State<MyApp> {
           NfcSettingsScreen.routeName: (ctx) => NfcSettingsScreen(),
           ApiaryMapScreen.routeName: (ctx) => ApiaryMapScreen(),
           ApiarysAllMapScreen.routeName: (ctx) => ApiarysAllMapScreen(),
+          NotificationSettingsScreen.routeName: (ctx) => NotificationSettingsScreen(),
          // LanguagesScreen.routeName: (ctx) => LanguagesScreen(),
           //FiltersScreen.routeName: (ctx) => FiltersScreen(_filters, _setFilters),
         },

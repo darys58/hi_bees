@@ -1779,7 +1779,7 @@ class _HivesScreenState extends State<HivesScreen> {
                 ),
                 pogoda!.length != 0 && pogoda![0].miasto != ''
                   ? TextSpan(
-                      text: '\n(${pogoda![0].miasto})',
+                      text: '\n${pogoda![0].miasto}',
                         style: const TextStyle(
                          // fontWeight: FontWeight.bold,
                           fontSize: 12,

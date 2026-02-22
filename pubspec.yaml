@@ -48,6 +48,9 @@ dependencies:
   image_picker: ^1.0.7
   flutter_map: ^6.2.1
   latlong2: ^0.9.1
+  flutter_local_notifications: ^17.2.4
+  timezone: ^0.9.4
+  flutter_timezone: ^3.0.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.1

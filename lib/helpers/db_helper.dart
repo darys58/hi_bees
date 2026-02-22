@@ -47,6 +47,8 @@ class DBHelper {
           'CREATE TABLE matki(id INTEGER PRIMARY KEY, data TEXT, zrodlo TEXT, rasa TEXT, linia TEXT, znak TEXT, napis TEXT, uwagi TEXT, pasieka INTEGER, ul INTEGER, dataStraty TEXT, a TEXT, b TEXT, c TEXT, arch INTEGER)');
       await db.execute(
           'CREATE TABLE zdjecia(id TEXT PRIMARY KEY, data TEXT, czas TEXT, pasiekaNr INTEGER, ulNr INTEGER, sciezka TEXT, uwagi TEXT, arch INTEGER)');
+      await db.execute(
+          'CREATE TABLE powiadomienia(id INTEGER PRIMARY KEY AUTOINCREMENT, infoId TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, dni INTEGER, godzina INTEGER, minuta INTEGER, dataInfo TEXT, dataNotif TEXT, aktywne INTEGER)');
 
       //    'CREATE TABLE podkategorie(id TEXT PRIMARY KEY, kolejnosc TEXT, kaId TEXT, nazwa TEXT)');
     }, onUpgrade: (db, oldVersion, newVersion) async {
@@ -59,7 +61,11 @@ class DBHelper {
         await db.execute(
             'CREATE TABLE zdjecia(id TEXT PRIMARY KEY, data TEXT, czas TEXT, pasiekaNr INTEGER, ulNr INTEGER, sciezka TEXT, uwagi TEXT, arch INTEGER)');
       }
-    }, version: 3);
+      if (oldVersion < 4) {
+        await db.execute(
+            'CREATE TABLE powiadomienia(id INTEGER PRIMARY KEY AUTOINCREMENT, infoId TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, dni INTEGER, godzina INTEGER, minuta INTEGER, dataInfo TEXT, dataNotif TEXT, aktywne INTEGER)');
+      }
+    }, version: 4);
   }
 
   static Future<void> deleteBase() async {
@@ -795,6 +801,64 @@ class DBHelper {
   static Future<void> deletePhoto(String id) async {
     final db = await DBHelper.database();
     db.delete('zdjecia', where: 'id= ?', whereArgs: [id]);
+  }
+
+  //pobieranie ostatniej daty info per ul dla danej kategorii - dla powiadomień
+  static Future<List<Map<String, dynamic>>> getLatestInfoPerHive(String kategoria) async {
+    final db = await DBHelper.database();
+    return db.rawQuery(
+      'SELECT pasiekaNr, ulNr, MAX(data) as lastDate FROM info WHERE kategoria = ? AND arch = 0 GROUP BY pasiekaNr, ulNr',
+      [kategoria]
+    );
+  }
+
+  //pobieranie aktywnych notatek z datą zadania - dla powiadomień
+  static Future<List<Map<String, dynamic>>> getActiveNotesWithTaskDate() async {
+    final db = await DBHelper.database();
+    return db.rawQuery(
+      "SELECT id, tytul, pole1 FROM notatki WHERE status = 0 AND pole1 IS NOT NULL AND pole1 != '' AND arch = 0"
+    );
+  }
+
+  //zapis powiadomienia indywidualnego - dla infos_edit_screen
+  static Future<int> insertPowiadomienie(Map<String, dynamic> data) async {
+    final db = await DBHelper.database();
+    return db.insert('powiadomienia', data, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  //usuwanie powiadomienia po infoId - dla infos_edit_screen
+  static Future<void> deletePowiadomienieByInfoId(String infoId) async {
+    final db = await DBHelper.database();
+    db.delete('powiadomienia', where: 'infoId = ?', whereArgs: [infoId]);
+  }
+
+  //pobieranie aktywnych powiadomień indywidualnych - dla notification_helper
+  static Future<List<Map<String, dynamic>>> getActivePowiadomienia() async {
+    final db = await DBHelper.database();
+    final today = DateTime.now().toString().substring(0, 10);
+    return db.rawQuery(
+      'SELECT * FROM powiadomienia WHERE aktywne = 1 AND dataNotif >= ?',
+      [today]
+    );
+  }
+
+  //pobieranie powiadomienia po infoId - dla infos_edit_screen (edycja)
+  static Future<List<Map<String, dynamic>>> getPowiadomienieByInfoId(String infoId) async {
+    final db = await DBHelper.database();
+    return db.rawQuery('SELECT * FROM powiadomienia WHERE infoId = ?', [infoId]);
+  }
+
+  //usunięcie powiadomienia po id - dla notification_settings_screen
+  static Future<void> deletePowiadomienie(int id) async {
+    final db = await DBHelper.database();
+    await db.delete('powiadomienia', where: 'id = ?', whereArgs: [id]);
+  }
+
+  //czyszczenie starych/nieaktywnych powiadomień z bazy
+  static Future<void> cleanupPowiadomienia() async {
+    final db = await DBHelper.database();
+    final today = DateTime.now().toString().substring(0, 10);
+    await db.delete('powiadomienia', where: 'aktywne = 0 OR dataNotif < ?', whereArgs: [today]);
   }
 
 }
