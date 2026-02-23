@@ -887,7 +887,7 @@ class _ImportScreenState extends State<ImportScreen> {
               _progressLabelNotifier.value = '${loc.harvest}: ${zbiory.length}';
 
               // 6. Import zdjęć
-              _updateProgress(loc.pHotos + '...6');
+              _updateProgress(loc.pHotos + '...');
               await Photos.fetchZdjeciaFromSerwer(
                   'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia');
               await Provider.of<Photos>(context, listen: false).fetchAndSetPhotosForHive(0, 0);

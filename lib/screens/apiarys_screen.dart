@@ -125,10 +125,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.8.78 12.02.2026 - uproszczone logowanie - bez deviceId (jeden unikalny email w bazie = jeden kod), Kasowanie kopii zapasowej w chmurze - robienie kopii archiwalnej do późniejszego usunięcia
   //1.9.9.79 17.02.2026 - ukrywanie przycisków Zakupy i Sprzedaz, historia ula, dm2 ramki - zmiana: z pola miara do pola pogoda w bazie, wyświetlanie tylko uli z zasobami w raport i raport2, PDFy w Zakupy, Sprzedaz i Zbiory, zdjęcia (800px) w inspection, archiwizacja zdjęć i kasowanie, wyświetlanie zdjęć na Androidzie
   //1.9.10.80 22.02.2026 - apiarys_map_screen - mapa do lokalizacji, mapa lokalizacji wszystkich pasiek, progress bar w zarządzaniu danymi,
+  //1.9.11.81 23.02.2026 - poprawka - problem z aktualizacją na iPhone i z importem - blokada na zdjeciach
   
-  
-  final wersja = '1.9.10.80'; //wersja aplikacji na iOS
-  final dataWersji = '2026-02-22';
+  final wersja = '1.9.11.81'; //wersja aplikacji na iOS
+  final dataWersji = '2026-02-23';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;
@@ -246,7 +246,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                               //id-1
                               //a-auto wysyłka danych z bazy do chmury,
                               //b-średnia waga miodu na 1dm2 plastra, 
-                              //c-nic,  cos tu jest
+                              //c-nfcCode, //NFC otwiera info albo summary
                               //d-nic, 
                               //e-waga miodu na duzej ramce, 
                               //f-waga miodu na małej ramce, 
@@ -268,7 +268,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
               //odczytanie ustawienia pokazywania przycisków Zakupy/Sprzedaż
               globals.showZakupySprzedaz = dod1[0].d != 'false';
               //przeplanowanie powiadomień lokalnych przy starcie aplikacji
-              NotificationHelper.scheduleAllNotifications();
+              try {
+                NotificationHelper.scheduleAllNotifications();
+              } catch (_) {
+                // Błąd planowania powiadomień - nie blokuje startu aplikacji
+              }
               if (dod1[0].a == 'true') {
                 //ustawienie przłącznika eksportu danych - automatyczne wysłanie danych przy uruchamianiu apki
                 //BACKUP BAZY LOKALNEJ

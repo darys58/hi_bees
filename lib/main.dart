@@ -81,8 +81,17 @@ void main() async {
   // Initializes the translation module
 //    await allTranslations.init();
 
-  // Inicjalizacja powiadomień lokalnych
-  await NotificationHelper.initialize();
+  // Inicjalizacja powiadomień lokalnych - z zabezpieczeniem przed zawieszeniem
+  try {
+    await NotificationHelper.initialize().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        // Timeout - aplikacja startuje bez powiadomień
+      },
+    );
+  } catch (_) {
+    // Błąd inicjalizacji powiadomień - aplikacja startuje normalnie
+  }
 
   // then start the application
   return runApp(MyApp());

@@ -45,9 +45,13 @@ class Purchases with ChangeNotifier {
     //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
-      //print(json.decode(response.body));
-
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      //wycinamy sam JSON z odpowiedzi (serwer moze dodać tekst po JSON)
+      String body = response.body.trim();
+      final jsonEnd = body.lastIndexOf('}');
+      if (jsonEnd != -1 && jsonEnd < body.length - 1) {
+        body = body.substring(0, jsonEnd + 1);
+      }
+      final extractedData = json.decode(body) as Map<String, dynamic>;
       // if (extractedData == null) {
       //   return;
       // }

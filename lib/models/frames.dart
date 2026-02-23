@@ -24,7 +24,13 @@ class Frames with ChangeNotifier {
   //pobranie ramek z serwera www - tylko download (HTTP GET + JSON decode)
   static Future<List<MapEntry<String, dynamic>>> downloadFramesFromSerwer(String url) async {
     final response = await http.get(Uri.parse(url));
-    final extractedData = json.decode(response.body) as Map<String, dynamic>;
+    //wycinamy sam JSON z odpowiedzi (serwer moze dodać tekst po JSON)
+    String body = response.body.trim();
+    final jsonEnd = body.lastIndexOf('}');
+    if (jsonEnd != -1 && jsonEnd < body.length - 1) {
+      body = body.substring(0, jsonEnd + 1);
+    }
+    final extractedData = json.decode(body) as Map<String, dynamic>;
     return extractedData.entries.where((e) => e.key != 'brak').toList();
   }
 

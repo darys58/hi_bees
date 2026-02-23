@@ -100,8 +100,20 @@ class Photos with ChangeNotifier {
   static Future<void> fetchZdjeciaFromSerwer(String url) async {
     try {
       final response = await http.get(Uri.parse(url));
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      
+
+      //serwer moze zwrócić dodatkowy tekst po JSON np. {"brak":"brak"}Nie ma nic do wyswietlenia...
+      //wycinamy sam JSON z odpowiedzi
+      String body = response.body.trim();
+      final jsonEnd = body.lastIndexOf('}');
+      if (jsonEnd != -1 && jsonEnd < body.length - 1) {
+        body = body.substring(0, jsonEnd + 1);
+      }
+
+      final extractedData = json.decode(body) as Map<String, dynamic>;
+
+      //jezeli serwer zwrócił "brak" to nie ma zdjęć do importu
+      if (extractedData.containsKey('brak')) return;
+
       //tworzenie katalogu dla zdjęć jesli nie ma
       final appDir = await getApplicationDocumentsDirectory();
       final photosDir = Directory('${appDir.path}/photos');
@@ -109,8 +121,9 @@ class Photos with ChangeNotifier {
         await photosDir.create(recursive: true);
       }
 
-      extractedData.forEach((zdjeciaId, zdjeciaData) {
-        if (zdjeciaId != 'brak') {
+      for (final entry in extractedData.entries) {
+        final zdjeciaId = entry.key;
+        final zdjeciaData = entry.value;
           //dekodowanie Base64 i zapis pliku
           final String sciezka;
           if (zdjeciaData['zd_base64'] != null && zdjeciaData['zd_base64'] != '') {
@@ -119,13 +132,13 @@ class Photos with ChangeNotifier {
             //wyciągnięcie samej nazwy pliku ze ścieżki
             final bareFileName = fileName.split('/').last;
             final filePath = '${photosDir.path}/$bareFileName';
-            File(filePath).writeAsBytesSync(bytes);
+            await File(filePath).writeAsBytes(bytes);
             sciezka = filePath;
           } else {
             sciezka = zdjeciaData['zd_sciezka'] ?? '';
           }
 
-          DBHelper.insert('zdjecia', {
+          await DBHelper.insert('zdjecia', {
             'id': zdjeciaId,
             'data': zdjeciaData['zd_data'],
             'czas': zdjeciaData['zd_czas'] ?? '',
@@ -135,8 +148,7 @@ class Photos with ChangeNotifier {
             'uwagi': zdjeciaData['zd_uwagi'] ?? '',
             'arch': 2,
           });
-        }
-      });
+      }
     } catch (error) {
       throw (error);
     }

@@ -16,7 +16,9 @@
       "mcp__ide__getDiagnostics",
       "Bash(wc:*)",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(python3 -c \"import json; json.load\\(open\\('/workspaces/hi_bees/lib/l10n/app_pl.arb'\\)\\); print\\('app_pl.arb: Valid JSON'\\)\")",
+      "Bash(git check-ignore android/app/build.gradle.kts android/app/src/main/res/values-v31/styles.xml android/app/src/main/res/values-night-v31/styles.)"
     ]
   }
 }
