@@ -762,6 +762,14 @@
     "noPendingNotifications": "Brak zaplanowanych powiadomień",
     "cancelNotification": "Anuluj powiadomienie",
     "notificationCanceled": "Powiadomienie anulowane",
-    "cancelNotificationConfirm": "Czy anulować to powiadomienie?"
+    "cancelNotificationConfirm": "Czy anulować to powiadomienie?",
+    "taskExistingTasks": "Istniejące zadania",
+    "taskExistingMessage": "Na ten dzień zaplanowane są już zadania:",
+    "taskAddQuestion": "Czy chcesz dodać nowe zadanie do tego dnia?",
+    "taskSelectDate": "Wybierz datę zadania",
+    "yes": "Tak",
+    "no": "Nie",
+    "taskCalendar": "Kalendarz zadań",
+    "taskNoTasks": "Brak zadań na ten dzień"
 
 }

@@ -126,9 +126,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.9.79 17.02.2026 - ukrywanie przycisków Zakupy i Sprzedaz, historia ula, dm2 ramki - zmiana: z pola miara do pola pogoda w bazie, wyświetlanie tylko uli z zasobami w raport i raport2, PDFy w Zakupy, Sprzedaz i Zbiory, zdjęcia (800px) w inspection, archiwizacja zdjęć i kasowanie, wyświetlanie zdjęć na Androidzie
   //1.9.10.80 22.02.2026 - apiarys_map_screen - mapa do lokalizacji, mapa lokalizacji wszystkich pasiek, progress bar w zarządzaniu danymi,
   //1.9.11.81 23.02.2026 - poprawka - problem z aktualizacją na iPhone i z importem - blokada na zdjeciach
+  //1.9.12.82 23.02.2026 - poprawka kolejna -  catchError w bazie + Timeout 15s, kalendarz z zadaniami w Notesie, wyświetlanie zadań w summary_screen
   
-  final wersja = '1.9.11.81'; //wersja aplikacji na iOS
-  final dataWersji = '2026-02-23';
+  final wersja = '1.9.12.82'; //wersja aplikacji na iOS
+  final dataWersji = '2026-02-24';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;
@@ -144,6 +145,17 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       setState(() {
         _isLoading = true; //uruchomienie wskaznika ładowania danych
       });
+
+      // Zabezpieczenie - timeout inicjalizacji (15 sekund)
+      Future.delayed(const Duration(seconds: 15), () {
+        if (mounted && _isLoading) {
+          debugPrint('TIMEOUT: Inicjalizacja trwa >15s - wymuszenie _isLoading = false');
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+
 //DBHelper.deleteBase().then((_) {
       _getId().then((_) {
         //pobranie Id telefonu i zapisanie w globals.deviceId - do identyfikacji uzytkownika apki - juz nie !!!!!
@@ -506,7 +518,21 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             _isLoading = false; //zatrzymanie wskaznika ładowania danych
           });
 //   }); //kasowanie bazy
+        }).catchError((error) {
+          debugPrint('Błąd inicjalizacji (fetchAndSetMemory2): $error');
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
         }); //od pobrania danych z tabeli memory
+      }).catchError((error) {
+        debugPrint('Błąd inicjalizacji (_getId): $error');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       });
     }
 

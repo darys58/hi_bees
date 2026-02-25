@@ -1,4 +1,4 @@
-//import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:path/path.dart';
 import 'package:sqflite/sqlite_api.dart';
@@ -52,18 +52,22 @@ class DBHelper {
 
       //    'CREATE TABLE podkategorie(id TEXT PRIMARY KEY, kolejnosc TEXT, kaId TEXT, nazwa TEXT)');
     }, onUpgrade: (db, oldVersion, newVersion) async {
-      if (oldVersion < 2) {
-        await db.execute('ALTER TABLE notatki ADD COLUMN pole1 TEXT');
-        await db.execute('ALTER TABLE notatki ADD COLUMN pole2 TEXT');
-        await db.execute('ALTER TABLE notatki ADD COLUMN pole3 TEXT');
-      }
-      if (oldVersion < 3) {
-        await db.execute(
-            'CREATE TABLE zdjecia(id TEXT PRIMARY KEY, data TEXT, czas TEXT, pasiekaNr INTEGER, ulNr INTEGER, sciezka TEXT, uwagi TEXT, arch INTEGER)');
-      }
-      if (oldVersion < 4) {
-        await db.execute(
-            'CREATE TABLE powiadomienia(id INTEGER PRIMARY KEY AUTOINCREMENT, infoId TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, dni INTEGER, godzina INTEGER, minuta INTEGER, dataInfo TEXT, dataNotif TEXT, aktywne INTEGER)');
+      try {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE notatki ADD COLUMN pole1 TEXT');
+          await db.execute('ALTER TABLE notatki ADD COLUMN pole2 TEXT');
+          await db.execute('ALTER TABLE notatki ADD COLUMN pole3 TEXT');
+        }
+        if (oldVersion < 3) {
+          await db.execute(
+              'CREATE TABLE IF NOT EXISTS zdjecia(id TEXT PRIMARY KEY, data TEXT, czas TEXT, pasiekaNr INTEGER, ulNr INTEGER, sciezka TEXT, uwagi TEXT, arch INTEGER)');
+        }
+        if (oldVersion < 4) {
+          await db.execute(
+              'CREATE TABLE IF NOT EXISTS powiadomienia(id INTEGER PRIMARY KEY AUTOINCREMENT, infoId TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, dni INTEGER, godzina INTEGER, minuta INTEGER, dataInfo TEXT, dataNotif TEXT, aktywne INTEGER)');
+        }
+      } catch (e) {
+        debugPrint('Błąd migracji bazy danych (v$oldVersion -> v$newVersion): $e');
       }
     }, version: 4);
   }
@@ -78,7 +82,7 @@ class DBHelper {
   static Future<void> insert(String table, Map<String, Object> data) async {
     final db = await DBHelper.database();
     //print('DBHelper - wstawianie do tabeli $table');
-    db.insert(
+    await db.insert(
       table,
       data,
       conflictAlgorithm: ConflictAlgorithm.replace,

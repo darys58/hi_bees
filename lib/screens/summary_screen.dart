@@ -754,14 +754,14 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.hArvests,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
+                    // Text(
+                    //   AppLocalizations.of(context)!.hArvests,
+                    //   style: const TextStyle(
+                    //     fontWeight: FontWeight.bold,
+                    //     fontSize: 16,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 6),
                     Row(
                       children: [
                         Image.asset('assets/image/zbiory.png', width: 22, height: 22, fit: BoxFit.fill),
@@ -795,15 +795,15 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.feeding[0].toUpperCase() +
-                          AppLocalizations.of(context)!.feeding.substring(1),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
+                    // Text(
+                    //   AppLocalizations.of(context)!.feeding[0].toUpperCase() +
+                    //       AppLocalizations.of(context)!.feeding.substring(1),
+                    //   style: const TextStyle(
+                    //     fontWeight: FontWeight.bold,
+                    //     fontSize: 16,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 6),
                     Row(
                       children: [
                         Image.asset('assets/image/invert.png', width: 22, height: 22, fit: BoxFit.fill),
@@ -834,14 +834,14 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.tReatment,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
+                    // Text(
+                    //   AppLocalizations.of(context)!.tReatment,
+                    //   style: const TextStyle(
+                    //     fontWeight: FontWeight.bold,
+                    //     fontSize: 16,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 6),
                     Row(
                       children: [
                         Image.asset('assets/image/apivarol1.png', width: 22, height: 22, fit: BoxFit.fill),
@@ -859,56 +859,134 @@ class _SummaryScreenState extends State<SummaryScreen> {
               ),
             ),
 
-          // --- Segment: Notatki ---
-          // if (_hiveNotes.isNotEmpty)
-          //   const SizedBox(height: 8),
-          if (_hiveNotes.isNotEmpty)
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.nOtes,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    for (int ni = 0; ni < _hiveNotes.length; ni++) ...[
-                      if (ni > 0) const Divider(height: 12),
-                      Row(
-                        children: [
-                          Text(
-                            '${_zmienDatePelna(_hiveNotes[ni].data)} ',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          Expanded(
-                            child: Text(
-                              _hiveNotes[ni].tytul,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_hiveNotes[ni].notatka.isNotEmpty)
-                        Text(
-                          _hiveNotes[ni].notatka,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                    ],
-                  ],
+          // --- Segment: Zadania (Do zrobienia) ---
+          // Sortowanie: najpierw z datą zadania (pole1) wg daty zadania ASC,
+          // potem bez daty zadania wg daty utworzenia (data) ASC
+          if (_hiveNotes.where((n) => n.priorytet == 'true').isNotEmpty)
+            () {
+              final taskiZPole1 = _hiveNotes.where((n) => n.priorytet == 'true' && n.pole1.isNotEmpty).toList()
+                ..sort((a, b) => a.pole1.compareTo(b.pole1));
+              final taskiBezPole1 = _hiveNotes.where((n) => n.priorytet == 'true' && n.pole1.isEmpty).toList()
+                ..sort((a, b) => a.data.compareTo(b.data));
+              final sortedTasks = [...taskiZPole1, ...taskiBezPole1];
+              return Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-            ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (int ni = 0; ni < sortedTasks.length; ni++) ...[
+                        if (ni > 0) const Divider(height: 12),
+                        () {
+                          final task = sortedTasks[ni];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Wiersz 1: "Do zrobienia (data zadania)"
+                              Text(
+                                task.pole1.isNotEmpty
+                                    ? '${AppLocalizations.of(context)!.toDo} (${_zmienDatePelna(task.pole1)})'
+                                    : AppLocalizations.of(context)!.toDo,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: task.pole1.isEmpty
+                                      ? const Color.fromARGB(255, 189, 165, 0) // żółty - bez daty zadania
+                                      : !DateTime.parse(task.pole1).isAfter(DateTime.now())
+                                          ? Colors.red // czerwony - data zadania <= dziś
+                                          : const Color.fromARGB(255, 162, 103, 0), // pomarańczowy - data zadania > dziś
+                                ),
+                              ),
+                              // Wiersz 2: tytuł
+                              Text(
+                                task.tytul,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              // Wiersz 3: treść zadania
+                              if (task.notatka.isNotEmpty)
+                                Text(
+                                  task.notatka,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              // Wiersz 4: uwagi (jeśli są)
+                              if (task.uwagi.isNotEmpty)
+                                Text(
+                                  task.uwagi,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                            ],
+                          );
+                        }(),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }(),
+
+          // --- Segment: Notatki (zwykłe, bez zadań) ---
+          // Sortowanie wg daty utworzenia DESC (najnowsze na górze)
+          if (_hiveNotes.where((n) => n.priorytet != 'true').isNotEmpty)
+            () {
+              final sortedNotes = _hiveNotes.where((n) => n.priorytet != 'true').toList()
+                ..sort((a, b) => b.data.compareTo(a.data));
+              return Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (int ni = 0; ni < sortedNotes.length; ni++) ...[
+                        if (ni > 0) const Divider(height: 12),
+                        () {
+                          final note = sortedNotes[ni];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    '${_zmienDatePelna(note.data)} ',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      note.tytul,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (note.notatka.isNotEmpty)
+                                Text(
+                                  note.notatka,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                            ],
+                          );
+                        }(),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }(),
         ],
       ),
       ),

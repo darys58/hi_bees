@@ -1471,5 +1471,21 @@
     "notificationCanceled": "Notification canceled",
     "@notificationCanceled": {},
     "cancelNotificationConfirm": "Cancel this notification?",
-    "@cancelNotificationConfirm": {}
+    "@cancelNotificationConfirm": {},
+    "taskExistingTasks": "Existing tasks",
+    "@taskExistingTasks": {},
+    "taskExistingMessage": "There are already tasks planned for this day:",
+    "@taskExistingMessage": {},
+    "taskAddQuestion": "Do you want to add a new task to this day?",
+    "@taskAddQuestion": {},
+    "taskSelectDate": "Select task date",
+    "@taskSelectDate": {},
+    "yes": "Yes",
+    "@yes": {},
+    "no": "No",
+    "@no": {},
+    "taskCalendar": "Task calendar",
+    "@taskCalendar": {},
+    "taskNoTasks": "No tasks planned for this day",
+    "@taskNoTasks": {}
 }

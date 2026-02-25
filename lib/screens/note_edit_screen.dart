@@ -8,6 +8,7 @@ import '../helpers/db_helper.dart';
 import '../helpers/notification_helper.dart';
 import 'package:flutter/services.dart';
 import '../models/note.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class NoteEditScreen extends StatefulWidget {
   static const routeName = '/note_edit';
@@ -124,20 +125,186 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     }
   }
 
-  //kalendarz wyboru daty zadania (pole1)
+  //kalendarz wyboru daty zadania (pole1) z oznaczeniem dni z istniejącymi zadaniami
   Future<void> _selectDatePole1(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDatePole1,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        _selectedDatePole1 = pickedDate;
-        pole1Controller.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-      });
+    // Pobierz świeże dane notatek
+    await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
+    final allNotes = Provider.of<Notes>(context, listen: false).items;
+
+    // Buduj mapę dni z istniejącymi zadaniami
+    final Map<DateTime, List<Note>> taskMap = {};
+    // ID bieżącej notatki (przy edycji) — aby ją wykluczyć
+    final int? currentNoteId = edycja ? notatki[0].id : null;
+
+    for (final note in allNotes) {
+      if (note.priorytet == 'true' && note.pole1.isNotEmpty) {
+        // Wyklucz bieżącą notatkę przy edycji
+        if (currentNoteId != null && note.id == currentNoteId) continue;
+        try {
+          final date = DateTime.parse(note.pole1);
+          final normalizedDate = DateTime.utc(date.year, date.month, date.day);
+          taskMap.putIfAbsent(normalizedDate, () => []);
+          taskMap[normalizedDate]!.add(note);
+        } catch (_) {
+          // Pomiń notatki z nieprawidłową datą
+        }
+      }
     }
+
+    DateTime focusedDay = _selectedDatePole1 ?? DateTime.now();
+    DateTime? selectedDay;
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (builderContext, setDialogState) {
+            return Dialog(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
+                    child: Text(
+                      AppLocalizations.of(context)!.taskSelectDate,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  TableCalendar<Note>(
+                    locale: Localizations.localeOf(context).toString(),
+                    firstDay: DateTime(2000),
+                    lastDay: DateTime(2100),
+                    focusedDay: focusedDay,
+                    selectedDayPredicate: (day) =>
+                        selectedDay != null && isSameDay(selectedDay, day),
+                    eventLoader: (day) {
+                      final normalizedDay = DateTime.utc(day.year, day.month, day.day);
+                      return taskMap[normalizedDay] ?? [];
+                    },
+                    calendarBuilders: CalendarBuilders<Note>(
+                      markerBuilder: (context, day, events) {
+                        if (events.isNotEmpty) {
+                          return Positioned(
+                            bottom: 1,
+                            child: Container(
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          );
+                        }
+                        return null;
+                      },
+                    ),
+                    headerStyle: HeaderStyle(
+                      formatButtonVisible: false,
+                      titleCentered: true,
+                    ),
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    onDaySelected: (selected, focused) async {
+                      setDialogState(() {
+                        selectedDay = selected;
+                        focusedDay = focused;
+                      });
+
+                      final normalizedSelected =
+                          DateTime.utc(selected.year, selected.month, selected.day);
+                      final tasksOnDay = taskMap[normalizedSelected];
+
+                      if (tasksOnDay != null && tasksOnDay.isNotEmpty) {
+                        // Dzień z istniejącymi zadaniami — pokaż dialog
+                        final bool? addTask = await showDialog<bool>(
+                          context: dialogContext,
+                          builder: (alertContext) {
+                            return AlertDialog(
+                              title: Text(AppLocalizations.of(context)!.taskExistingTasks),
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(AppLocalizations.of(context)!.taskExistingMessage),
+                                    SizedBox(height: 10),
+                                    ...tasksOnDay.map((note) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 4.0),
+                                          child: Text(
+                                            '- ${note.tytul}: ${note.notatka}',
+                                            style: TextStyle(fontSize: 13),
+                                          ),
+                                        )),
+                                    SizedBox(height: 10),
+                                    Text(AppLocalizations.of(context)!.taskAddQuestion),
+                                  ],
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(alertContext).pop(false),
+                                  child: Text(AppLocalizations.of(context)!.no),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(alertContext).pop(true),
+                                  child: Text(AppLocalizations.of(context)!.yes),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        if (addTask == true) {
+                          // Użytkownik potwierdził — ustaw datę i zamknij kalendarz
+                          setState(() {
+                            _selectedDatePole1 = selected;
+                            pole1Controller.text =
+                                DateFormat('yyyy-MM-dd').format(selected);
+                          });
+                          Navigator.of(dialogContext).pop();
+                        }
+                        // Jeśli addTask == false lub null → wracamy do kalendarza
+                      } else {
+                        // Dzień bez zadań — ustaw datę i zamknij
+                        setState(() {
+                          _selectedDatePole1 = selected;
+                          pole1Controller.text =
+                              DateFormat('yyyy-MM-dd').format(selected);
+                        });
+                        Navigator.of(dialogContext).pop();
+                      }
+                    },
+                    onPageChanged: (focused) {
+                      setDialogState(() {
+                        focusedDay = focused;
+                      });
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -373,7 +540,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                     labelText: AppLocalizations.of(context)!.taskDate,
                                     labelStyle: TextStyle(color: Colors.black),
                                     hintText: AppLocalizations.of(context)!.sElectDate,
-                                    suffixIcon: Icon(Icons.calendar_today),
+                                    suffixIcon: Icon(Icons.calendar_month),
                                   ),
                                   onTap: () => _selectDatePole1(context),
                                 ),

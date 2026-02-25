@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 //import 'package:http/http.dart' as http;
 //import 'dart:convert'; //obsługa json'a
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
@@ -67,26 +68,31 @@ class Memory with ChangeNotifier {
 
 //pobranie wpisów memory z bazy lokalnej
   Future<void> fetchAndSetMemory2() async {
-    final dataList = await DBHelper.getMemory();
-    _items = dataList
-        .map(
-          (item) => MemoryItem(
-            id: item['id'],
-            email: item['email'],
-            dev: item['dev'],
-            wer: item['wer'],
-            kod: item['kod'],
-            key: item['key'],
-            dod: item['od'],
-            ddo: item['do'],
-            memjezyk: item['memjezyk'],
-            mem1: item['mem1'],
-            mem2: item['mem2'],
-          ),
-        )
-        .toList();
-     //print('wczytanie danych do uruchomienia apki --> Memory <---');
-    // print(_items);
+    try {
+      final dataList = await DBHelper.getMemory();
+      _items = dataList
+          .map(
+            (item) => MemoryItem(
+              id: item['id'],
+              email: item['email'],
+              dev: item['dev'],
+              wer: item['wer'],
+              kod: item['kod'],
+              key: item['key'],
+              dod: item['od'],
+              ddo: item['do'],
+              memjezyk: item['memjezyk'],
+              mem1: item['mem1'],
+              mem2: item['mem2'],
+            ),
+          )
+          .toList();
+      //print('wczytanie danych do uruchomienia apki --> Memory <---');
+      // print(_items);
+    } catch (e) {
+      debugPrint('Błąd fetchAndSetMemory2: $e');
+      _items = [];
+    }
     notifyListeners();
   }
 
