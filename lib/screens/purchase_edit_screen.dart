@@ -44,12 +44,7 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
   
   void didChangeDependencies() {
     if (_isInit) {
-      if (globals.jezyk == 'pl_PL')
-        nowaWaluta = 1;
-      else if (globals.jezyk == 'en_US')
-        nowaWaluta = 2;
-      else
-        nowaWaluta = 3;
+      nowaWaluta = globals.walutaDlaJezyka();
 
       final routeArgs =
           ModalRoute.of(context)!.settings.arguments as Map<String, Object>;

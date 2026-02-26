@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 //import 'package:provider/provider.dart';
 // import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-//import '../globals.dart' as globals;
+import '../globals.dart' as globals;
+import '../main.dart';
+import '../helpers/db_helper.dart';
 
 import '../screens/import_screen.dart';
 import '../screens/about_screen.dart';
@@ -11,8 +13,6 @@ import '../screens/calculator_screen.dart';
 import '../screens/nfc_settings_screen.dart';
 import '../screens/apiarys_all_map_screen.dart';
 import '../screens/notification_settings_screen.dart';
-//import '../screens/languages_screen.dart';
-//import '../models/memory.dart';
 
 class SettingsScreen extends StatelessWidget {
   static const routeName = '/settings';
@@ -69,6 +69,80 @@ class SettingsScreen extends StatelessWidget {
   //     return false;
   //   }
   // }
+
+  /// Lista dostępnych języków z nazwami natywnymi
+  static const List<Map<String, String>> _languages = [
+    {'code': 'system', 'name': 'System', 'flag': '🌐'},
+    {'code': 'pl', 'name': 'Polski', 'flag': '🇵🇱'},
+    {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
+    {'code': 'de', 'name': 'Deutsch', 'flag': '🇩🇪'},
+    {'code': 'fr', 'name': 'Français', 'flag': '🇫🇷'},
+    {'code': 'es', 'name': 'Español', 'flag': '🇪🇸'},
+    {'code': 'pt', 'name': 'Português', 'flag': '🇵🇹'},
+    {'code': 'it', 'name': 'Italiano', 'flag': '🇮🇹'},
+  ];
+
+  String _currentLanguageName() {
+    final code = globals.memJezyk;
+    final lang = _languages.firstWhere(
+      (l) => l['code'] == code,
+      orElse: () => _languages[0],
+    );
+    return lang['name']!;
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.cHooseLanguage),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _languages.length,
+            itemBuilder: (ctx, index) {
+              final lang = _languages[index];
+              final isSelected = globals.memJezyk == lang['code'];
+              return ListTile(
+                leading: Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
+                title: Text(
+                  lang['code'] == 'system'
+                      ? AppLocalizations.of(context)!.systemLanguage
+                      : lang['name']!,
+                  style: TextStyle(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _changeLanguage(context, lang['code']!);
+                },
+              );
+            },
+          ),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      ),
+    );
+  }
+
+  void _changeLanguage(BuildContext context, String langCode) {
+    // Zapisz do bazy danych
+    if (globals.deviceId.isNotEmpty) {
+      DBHelper.updateJezyk(globals.deviceId, langCode);
+    }
+    // Ustaw locale
+    MyApp.setLocale(langCode);
+    // Odśwież globals.jezyk po zmianie
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        Locale myLocale = Localizations.localeOf(context);
+        globals.jezyk = myLocale.toString();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -202,18 +276,19 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
 //język
-            // GestureDetector(
-            //   onTap: () {
-            //     Navigator.of(context).pushNamed(LanguagesScreen.routeName);
-            //   },
-            //   child: Card(
-            //     child: ListTile(
-            //       leading: Icon(Icons.translate),
-            //       title: Text(AppLocalizations.of(context)!.lAnguage),
-            //       trailing: Icon(Icons.chevron_right),
-            //     ),
-            //   ),
-            // ),
+            GestureDetector(
+              onTap: () {
+                _showLanguageDialog(context);
+              },
+              child: Card(
+                child: ListTile(
+                  leading: Icon(Icons.translate),
+                  title: Text(AppLocalizations.of(context)!.lAnguage),
+                  subtitle: Text(_currentLanguageName()),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
 //Lokalizacje pasiek
             GestureDetector(
               onTap: () {

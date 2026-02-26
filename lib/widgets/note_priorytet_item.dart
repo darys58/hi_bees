@@ -199,7 +199,7 @@ class _NotePriorytetItemState extends State<NotePriorytetItem> {
                           :null,
               //         )
               //     : null,
-              title: globals.jezyk == 'pl_PL'
+              title: globals.isEuropeanFormat()
                 ?  Text("${notatki.data.substring(8)}.${notatki.data.substring(5, 7)}  ${notatki.tytul}", 
                   style: const TextStyle(fontSize: 16,
                   fontWeight: FontWeight.bold))
@@ -224,7 +224,7 @@ class _NotePriorytetItemState extends State<NotePriorytetItem> {
                           fontSize: 14, color: Color.fromARGB(255, 0, 0, 0)),
                       children: [
                         TextSpan(
-                          text: globals.jezyk == 'pl_PL'
+                          text: globals.isEuropeanFormat()
                             ? '${notatki.pole1.substring(8)}.${notatki.pole1.substring(5, 7)}.${notatki.pole1.substring(0, 4)}'
                             : notatki.pole1,
                           style: TextStyle(

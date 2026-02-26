@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../globals.dart' as globals;
+import '../main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
 //import 'dart:io';
@@ -171,20 +172,15 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           final memData = Provider.of<Memory>(context, listen: false);
           final mem = memData.items;
      
-          //odczytanie ustawień języka na telefonie (pl_PL, en_US)
-          Locale myLocale = Localizations.localeOf(context);
-          String jezykSmartfona = myLocale.toString(); //zapamiętanie aktualnego języka
-          switch (jezykSmartfona) {
-            case 'pl_PL':
-              globals.jezyk = 'pl_PL';
-              break;
-            case 'en_US':
-              globals.jezyk = 'en_US';
-              break;
-            default:
-              globals.jezyk = 'en_US'; //i to nie działa nie wiadomo czemu !!!
-              break;
+          //odczytanie ustawień języka z bazy (memjezyk) - nadpisanie języka systemowego
+          if (mem.isNotEmpty && mem[0].memjezyk.isNotEmpty && mem[0].memjezyk != 'system') {
+            globals.memJezyk = mem[0].memjezyk;
+            MyApp.setLocale(mem[0].memjezyk);
           }
+
+          //odczytanie aktualnego języka (po ewentualnym nadpisaniu)
+          Locale myLocale = Localizations.localeOf(context);
+          globals.jezyk = myLocale.toString(); //zapamiętanie aktualnego języka (np. pl_PL, en_US, de_DE)
 
           globals.wersja = wersja;
 
@@ -1031,7 +1027,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           //pomoc w przeglądarce
           IconButton(
             icon: Icon(Icons.help_rounded, color: Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => globals.jezyk == 'pl_PL'
+            onPressed: () => globals.jezyk.startsWith('pl')
                 ? _isInternet().then((inter) {
                     if (inter) {
                       _launchInBrowser(toLaunchPl);

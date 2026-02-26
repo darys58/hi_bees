@@ -214,7 +214,7 @@ class _SaleItemState extends State<SaleItem> {
               //           style: const TextStyle(fontSize: 18)),
               // ),
               
-               leading: globals.jezyk == 'pl_PL'
+               leading: globals.isEuropeanFormat()
                 ? Text('${sprzedaz.data.substring(8)}.${sprzedaz.data.substring(5, 7)}',
                          style: const TextStyle(fontSize: 16))
                 : Text('${sprzedaz.data.substring(5, 7)}-${sprzedaz.data.substring(8)}',
@@ -231,7 +231,7 @@ class _SaleItemState extends State<SaleItem> {
                     //       //fontWeight: FontWeight.bold,
                     //       color: Color.fromARGB(255, 0, 0, 0)),
                     // ),
-                    globals.jezyk == 'pl_PL'
+                    globals.isEuropeanFormat()
                       ? TextSpan(
                           text: '${sprzedaz.ilosc.toInt()} x ${sprzedaz.cena.toStringAsFixed(2).replaceAll('.', ',')} = ',
                           style: TextStyle(
@@ -244,7 +244,7 @@ class _SaleItemState extends State<SaleItem> {
                            // fontWeight: FontWeight.bold,
                               fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
                         ),
-                    globals.jezyk == 'pl_PL'
+                    globals.isEuropeanFormat()
                       ? TextSpan(
                           text: '${sprzedaz.wartosc.toStringAsFixed(2).replaceAll('.', ',')}',
                           style: TextStyle(

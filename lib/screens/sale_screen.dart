@@ -141,7 +141,7 @@ class _SaleScreenState extends State<SaleScreen> {
     if (sprzedaz.isEmpty) return;
 
     final loc = AppLocalizations.of(context)!;
-    final bool isPl = globals.jezyk == 'pl_PL';
+    final bool isPl = globals.isEuropeanFormat();
 
     try {
       final fontRegular = await PdfGoogleFonts.robotoRegular();
@@ -1080,7 +1080,7 @@ class _SaleScreenState extends State<SaleScreen> {
                             text: TextSpan(
                                 style: TextStyle(color: Colors.black),
                                 children: [
-                              globals.jezyk == 'pl_PL'
+                              globals.isEuropeanFormat()
                                   ? TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po polsku
                                       text: (AppLocalizations.of(context)!
@@ -1225,7 +1225,7 @@ class _SaleScreenState extends State<SaleScreen> {
                             ])),
 
                       // if (pylek != 0)
-                      //   globals.jezyk == 'pl_PL'
+                      //   globals.isEuropeanFormat()
                       //       ? Text(
                       //           AppLocalizations.of(context)!.beePollen +
                       //               ': ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.634).toStringAsFixed(2).replaceAll('.', ',')} kg) ${pylekWartoscPLN.toStringAsFixed(2).replaceAll('.', ',')} PLN',
@@ -1240,7 +1240,7 @@ class _SaleScreenState extends State<SaleScreen> {
                             text: TextSpan(
                                 style: TextStyle(color: Colors.black),
                                 children: [
-                              globals.jezyk == 'pl_PL'
+                              globals.isEuropeanFormat()
                                   ? TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po polsku
                                       text: (AppLocalizations.of(context)!
@@ -1385,7 +1385,7 @@ class _SaleScreenState extends State<SaleScreen> {
                             ])),
 
                       // if (pierzga != 0)
-                      //   globals.jezyk == 'pl_PL'
+                      //   globals.isEuropeanFormat()
                       //       ? Text(
                       //           AppLocalizations.of(context)!.perga +
                       //               ': ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.75).toStringAsFixed(2).replaceAll('.', ',')} kg) ${pierzgaWartoscPLN.toStringAsFixed(2).replaceAll('.', ',')} PLN',
@@ -1401,7 +1401,7 @@ class _SaleScreenState extends State<SaleScreen> {
                             text: TextSpan(
                                 style: TextStyle(color: Colors.black),
                                 children: [
-                              globals.jezyk == 'pl_PL'
+                              globals.isEuropeanFormat()
                                   ? TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po polsku
                                       text: (AppLocalizations.of(context)!

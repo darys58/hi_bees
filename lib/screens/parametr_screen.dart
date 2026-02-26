@@ -272,7 +272,7 @@ class _ParametrScreenState extends State<ParametrScreen> {
             ),
           ),
         ),
-        body: dod1.isEmpty
+        body: dod1.isEmpty || dod2.length < 4
             ? Center(
                 child: Column(
                   children: <Widget>[

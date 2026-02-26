@@ -168,14 +168,14 @@ class _HarvestItemState extends State<HarvestItem> {
                     Text('${zbior.pasiekaNr}',
                         style: const TextStyle(fontSize: 18)),
               ),
-              title: globals.jezyk == 'pl_PL'
+              title: globals.isEuropeanFormat()
                  ? Text("${zmienDate(zbior.data)}", style: const TextStyle(fontSize: 14))
                  : Text(zbior.data, style: const TextStyle(fontSize: 14)),
               subtitle: RichText(
                   text: TextSpan(
                       style: TextStyle(color: Colors.black),
                       children: [
-                    globals.jezyk == 'pl_PL'
+                    globals.isEuropeanFormat()
                     ? TextSpan(
                         text: ('$nazwaZbioru' +
                           ' ${zbior.ilosc.toString().replaceAll('.', ',')}' +

@@ -105,7 +105,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
     //String rok = data.substring(0, 4);
     String miesiac = data.substring(0, 2);
     String dzien = data.substring(3);
-    if (globals.jezyk == 'pl_PL')
+    if (globals.isEuropeanFormat())
       return '$dzien.$miesiac';
     else
       return '$miesiac-$dzien';

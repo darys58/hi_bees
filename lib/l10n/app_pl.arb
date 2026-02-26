@@ -770,6 +770,8 @@
     "yes": "Tak",
     "no": "Nie",
     "taskCalendar": "Kalendarz zadań",
-    "taskNoTasks": "Brak zadań na ten dzień"
+    "taskNoTasks": "Brak zadań na ten dzień",
+    "systemLanguage": "Język systemowy",
+    "languageChanged": "Język zmieniony. Aplikacja zostanie uruchomiona ponownie."
 
 }

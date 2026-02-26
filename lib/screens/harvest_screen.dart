@@ -46,7 +46,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
     if (zbiory.isEmpty) return;
 
     final loc = AppLocalizations.of(context)!;
-    final bool isPl = globals.jezyk == 'pl_PL';
+    final bool isPl = globals.isEuropeanFormat();
 
     try {
       final fontRegular = await PdfGoogleFonts.robotoRegular();
@@ -593,7 +593,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                             text: TextSpan(
                               style: TextStyle(color: Colors.black),
                               children: [
-                                  globals.jezyk == 'pl_PL'
+                                  globals.isEuropeanFormat()
                                   ? TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po polsku
                                       text: AppLocalizations.of(context)!.honey + ': ',
@@ -606,7 +606,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                                         style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
                                           color: Color.fromARGB(255, 0, 0, 0)),
                                     ),
-                                  globals.jezyk == 'pl_PL'
+                                  globals.isEuropeanFormat()
                                   ? TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po polsku
                                       text: '${miod.toStringAsFixed(2).replaceAll('.', ',')} l',
@@ -619,7 +619,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
                                           color: Color.fromARGB(255, 0, 0, 0)),
                                     ),
-                                  globals.jezyk == 'pl_PL'
+                                  globals.isEuropeanFormat()
                                   ? TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po polsku
                                       text: ' (${(miod * 1.38).toStringAsFixed(2).replaceAll('.', ',')} kg)',
@@ -634,7 +634,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                                     ),
                                 ])),
 
-                        // globals.jezyk == 'pl_PL'
+                        // globals.isEuropeanFormat()
                         //   ? Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.38).toStringAsFixed(2).replaceAll('.', ',')} kg)',
                         //     style:  TextStyle(fontSize: 16))
                         //   : Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2)} l (${(miod * 1.38).toStringAsFixed(2)} kg)',
@@ -644,7 +644,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                             text: TextSpan(
                               style: TextStyle(color: Colors.black),
                               children: [
-                                  globals.jezyk == 'pl_PL'
+                                  globals.isEuropeanFormat()
                                   ? TextSpan(
                                       text: AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
                                       style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
@@ -658,7 +658,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
 
                                 ])),
                       // if (pylek != 0)
-                      //   globals.jezyk == 'pl_PL'
+                      //   globals.isEuropeanFormat()
                       //     ? Text(AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
                       //       style: TextStyle(fontSize: 16))
                       //     : Text(AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2)} l (${(pylek * 0.67).toStringAsFixed(2)} kg)',
@@ -668,7 +668,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                             text: TextSpan(
                               style: TextStyle(color: Colors.black),
                               children: [
-                                  globals.jezyk == 'pl_PL'
+                                  globals.isEuropeanFormat()
                                   ? TextSpan(
                                       text: AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
                                       style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
@@ -682,7 +682,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
 
                                 ])),
                       // if (pierzga != 0)
-                      //   globals.jezyk == 'pl_PL'
+                      //   globals.isEuropeanFormat()
                       //     ? Text(AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
                       //       style: TextStyle(fontSize: 16))
                       //     : Text(AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2)} l (${(pierzga * 0.56).toStringAsFixed(2)} kg)',
@@ -693,7 +693,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                             text: TextSpan(
                               style: TextStyle(color: Colors.black),
                               children: [
-                                  globals.jezyk == 'pl_PL'
+                                  globals.isEuropeanFormat()
                                   ? TextSpan(
                                       text: AppLocalizations.of(context)!.wax + ': ${wosk.toString().replaceAll('.', ',')} kg',
                                       style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
@@ -707,7 +707,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
 
                                 ])),
                       // if (wosk != 0)
-                      //   globals.jezyk == 'pl_PL'
+                      //   globals.isEuropeanFormat()
                       //     ? Text(AppLocalizations.of(context)!.wax + ': ${wosk.toString().replaceAll('.', ',')} kg',
                       //       style: TextStyle(fontSize: 16))
                       //     : Text(AppLocalizations.of(context)!.wax + ': ${wosk} kg',
@@ -717,7 +717,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                             text: TextSpan(
                               style: TextStyle(color: Colors.black),
                               children: [
-                                  globals.jezyk == 'pl_PL'
+                                  globals.isEuropeanFormat()
                                   ? TextSpan(
                                       text: 'propolis: ${propolis.toString().replaceAll('.', ',')} kg',
                                       style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
@@ -732,7 +732,7 @@ class _HarvestScreenState extends State<HarvestScreen> {
                                 ])),
                       
                       // if (propolis != 0)
-                      //   globals.jezyk == 'pl_PL'
+                      //   globals.isEuropeanFormat()
                       //     ? Text('propolis: ${propolis.toString().replaceAll('.', ',')} kg',
                       //       style: TextStyle(fontSize: 16))
                       //     : Text('propolis: ${propolis} kg',

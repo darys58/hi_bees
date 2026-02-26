@@ -235,7 +235,7 @@ class _Weather5DaysScreenState extends State<Weather5DaysScreen> {
     String rok = data.substring(0, 4);
     String miesiac = data.substring(5, 7);
     String dzien = data.substring(8);
-    if (globals.jezyk == 'pl_PL')
+    if (globals.isEuropeanFormat())
       return '$dzien.$miesiac.$rok';
     else
       return '$rok-$miesiac-$dzien';

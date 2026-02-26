@@ -182,7 +182,7 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
     if (zakupy.isEmpty) return;
 
     final loc = AppLocalizations.of(context)!;
-    final bool isPl = globals.jezyk == 'pl_PL';
+    final bool isPl = globals.isEuropeanFormat();
 
     try {
       final fontRegular = await PdfGoogleFonts.robotoRegular();

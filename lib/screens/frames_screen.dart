@@ -595,7 +595,7 @@ class _FramesScreenState extends State<FramesScreen> {
           ), 
           IconButton(
             icon: Icon(Icons.help_center, color: Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => globals.jezyk == 'pl_PL'
+            onPressed: () => globals.isEuropeanFormat()
                 ? _dialogBuilderHelpPl(context)
                 : _dialogBuilderHelp(context),
           ),
@@ -683,7 +683,7 @@ class _FramesScreenState extends State<FramesScreen> {
                                           padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
                                           child: Center(
                                             child: 
-                                              globals.jezyk == 'pl_PL'
+                                              globals.isEuropeanFormat()
                                                 ? Text('${zmienDate(_daty[index].data)}', 
                                                     style: const TextStyle(color: Colors.black,fontSize: 17.0),
                                                   )
@@ -697,7 +697,7 @@ class _FramesScreenState extends State<FramesScreen> {
                                         child: Container(
                                           padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
                                           child: Center(
-                                              child: globals.jezyk == 'pl_PL'
+                                              child: globals.isEuropeanFormat()
                                                 ? Text('${zmienDate(_daty[index].data)}',
                                                     style: TextStyle(color: Colors.grey,fontSize: 17.0),
                                                   )

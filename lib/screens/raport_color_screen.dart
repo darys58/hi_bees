@@ -249,7 +249,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
     //String rok = data.substring(0, 4);
     String miesiac = data.substring(0, 2);
     String dzien = data.substring(3);
-    if (globals.jezyk == 'pl_PL')
+    if (globals.isEuropeanFormat())
       return '$dzien.$miesiac';
     else
       return '$miesiac-$dzien';
@@ -508,7 +508,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 if (date.length >= 10) {
                   String day = date.substring(8, 10);
                   String month = date.substring(5, 7);
-                  if (globals.jezyk == 'pl_PL') {
+                  if (globals.isEuropeanFormat()) {
                     displayDate = '$day.$month';
                   } else {
                     displayDate = '$month-$day';
@@ -620,7 +620,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 if (date.length >= 10) {
                   String day = date.substring(8, 10);
                   String month = date.substring(5, 7);
-                  if (globals.jezyk == 'pl_PL') {
+                  if (globals.isEuropeanFormat()) {
                     displayDate = '$day.$month';
                   } else {
                     displayDate = '$month-$day';
@@ -1353,7 +1353,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         if (date.length >= 10) {
                           String day = date.substring(8, 10);
                           String month = date.substring(5, 7);
-                          displayDate = globals.jezyk == 'pl_PL' ? '$day.$month' : '$month-$day';
+                          displayDate = globals.isEuropeanFormat() ? '$day.$month' : '$month-$day';
                         } else {
                           displayDate = date;
                         }

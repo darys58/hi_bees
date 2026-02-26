@@ -21,7 +21,19 @@ String keyMemory = ''; //kaccessKey picovoice - gdyby wycofanie sie z aktywacji 
 String deviceId = ''; //Id telefonu - identyfikator apki/uzytkownika
 String wersja = ''; //wersja apki
 String jezyk = ''; //język obsługiwany przez aplikację
-//String memJezyk = 'system'; //język z systemu "system" lub z ustawień w aplikacji 
+String memJezyk = 'system'; //język z systemu "system" lub z ustawień w aplikacji
+
+/// Europejski format: DD.MM.RRRR, przecinek dziesiętny - wszystkie języki oprócz angielskiego
+bool isEuropeanFormat() => jezyk != 'en_US';
+
+/// Zwraca kod waluty na podstawie języka
+int walutaDlaJezyka() {
+  switch (jezyk) {
+    case 'pl_PL': return 1; // PLN
+    case 'en_US': return 2; // USD
+    default: return 3; // EUR (de, fr, es, pt, it)
+  }
+}
 String ikonaUla = 'green'; //
 String ikonaPasieki = 'green'; //
 String widokMatek = 'activ'; //lista matek w ZARZADZANIE MATKAMI (all, activ, living, lost) 

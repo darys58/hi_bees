@@ -80,7 +80,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
     String rok = data.substring(0, 4);
     String miesiac = data.substring(5, 7);
     String dzien = data.substring(8, 10);
-    if (globals.jezyk == 'pl_PL') {
+    if (globals.isEuropeanFormat()) {
       return '$dzien.$miesiac.$rok';
     } else {
       return '$rok-$miesiac-$dzien';
@@ -160,7 +160,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
 
       // Aktualna data
       final now = DateTime.now();
-      final dataPdf = globals.jezyk == 'pl_PL'
+      final dataPdf = globals.isEuropeanFormat()
           ? '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}'
           : '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 

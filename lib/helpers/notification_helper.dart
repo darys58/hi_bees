@@ -180,23 +180,21 @@ class NotificationHelper {
     int days;
     int idBase;
     String bodyPrefix;
-    final isPl = globals.jezyk == 'pl_PL';
-
     switch (kategoria) {
       case 'inspection':
         days = prefs.getInt(keyInspectionDays) ?? 7;
         idBase = 200000;
-        bodyPrefix = isPl ? '🔍 przegląd' : '🔍 inspection';
+        bodyPrefix = _getCategoryPrefix('inspection');
         break;
       case 'feeding':
         days = prefs.getInt(keyFeedingDays) ?? 7;
         idBase = 300000;
-        bodyPrefix = isPl ? '🍶 dokarmianie' : '🍶 feeding';
+        bodyPrefix = _getCategoryPrefix('feeding');
         break;
       case 'treatment':
         days = prefs.getInt(keyTreatmentDays) ?? 5;
         idBase = 400000;
-        bodyPrefix = isPl ? '💉 leczenie' : '💉 treatment';
+        bodyPrefix = _getCategoryPrefix('treatment');
         break;
       default:
         return;
@@ -327,17 +325,13 @@ class NotificationHelper {
 
   /// Zwraca prefix powiadomienia dla danej kategorii
   static String _getCategoryPrefix(String kategoria) {
-    final isPl = globals.jezyk == 'pl_PL';
-    switch (kategoria) {
-      case 'inspection':
-        return isPl ? '🔍 przegląd' : '🔍 inspection';
-      case 'feeding':
-        return isPl ? '🍶 dokarmianie' : '🍶 feeding';
-      case 'treatment':
-        return isPl ? '💉 leczenie' : '💉 treatment';
-      default:
-        return '';
-    }
+    final lang = globals.jezyk.substring(0, 2); // pl, en, de, fr, es, pt, it
+    const map = {
+      'inspection': {'pl': '🔍 przegląd', 'en': '🔍 inspection', 'de': '🔍 Durchsicht', 'fr': '🔍 inspection', 'es': '🔍 inspección', 'pt': '🔍 inspeção', 'it': '🔍 ispezione'},
+      'feeding':    {'pl': '🍶 dokarmianie', 'en': '🍶 feeding', 'de': '🍶 Fütterung', 'fr': '🍶 nourrissement', 'es': '🍶 alimentación', 'pt': '🍶 alimentação', 'it': '🍶 nutrizione'},
+      'treatment':  {'pl': '💉 leczenie', 'en': '💉 treatment', 'de': '💉 Behandlung', 'fr': '💉 traitement', 'es': '💉 tratamiento', 'pt': '💉 tratamento', 'it': '💉 trattamento'},
+    };
+    return map[kategoria]?[lang] ?? map[kategoria]?['en'] ?? '';
   }
 
   /// Planuje pojedyncze indywidualne powiadomienie (wywoływane po zapisie info)

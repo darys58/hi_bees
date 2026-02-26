@@ -265,7 +265,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       else if(globals.numeryWieluRamek == 0) _selectedNumeryWieluRamek=<bool>[true, false, false];
       else if(globals.numeryWieluRamek == 2) _selectedNumeryWieluRamek=<bool>[false, false, true];
 
-      globals.jezyk == 'pl_PL'
+      globals.isEuropeanFormat()
         ? gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych','inny']
         : gridItemsKolor = ['black','yellow','red','green','blue','white','no\ndata','other'];
       
@@ -761,7 +761,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                         matecznikiDod = 0;
                         usunmatDod = 0;
                       
-                        if(globals.jezyk == 'pl_PL'){  
+                        if(globals.isEuropeanFormat()){  
                           switch (data) {
                             case 'czarny': 
                               setState(() {
@@ -869,7 +869,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                       }
                     
                       if(tryb == 'dodaj')
-                        if(globals.jezyk == 'pl_PL'){  
+                        if(globals.isEuropeanFormat()){  
                           switch (data) {
                             case 'czarny': 
                               setState(() {

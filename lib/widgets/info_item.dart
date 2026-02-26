@@ -461,7 +461,7 @@ class InfoItem extends StatelessWidget {
                                             : Colors.grey[200],
                       child: Image.asset('assets/image/hi_bees.png'),
                     ),
-                    title: globals.jezyk == 'pl_PL'
+                    title: globals.isEuropeanFormat()
                         ? Text(
                             '${zmienDate(info.data)}  ${info.czas}  ${info.temp}',
                             style: const TextStyle(fontSize: 14))
@@ -516,7 +516,7 @@ class InfoItem extends StatelessWidget {
                         backgroundColor: info.data.substring(0, 4) == globals.rokStatystyk ? Colors.white : Colors.grey[200],
                         child: Image.asset('assets/image/hi_bees.png'),
                       ),
-                      title: globals.jezyk == 'pl_PL'
+                      title: globals.isEuropeanFormat()
                           ? Text(
                               '${zmienDate(info.data)}  ${info.czas}  ${info.temp}',
                               style: const TextStyle(fontSize: 14))
@@ -624,7 +624,7 @@ class InfoItem extends StatelessWidget {
                                                   )),
 //*********************************************** */
 //title - pierwszy wiersz: data, czas temperatura
-                    title: globals.jezyk == 'pl_PL'
+                    title: globals.isEuropeanFormat()
                         ? Text(
                             '${zmienDate(info.data)}  ${info.czas}  ${info.temp}',
                             style: const TextStyle(fontSize: 14))

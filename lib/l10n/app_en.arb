@@ -1487,5 +1487,9 @@
     "taskCalendar": "Task calendar",
     "@taskCalendar": {},
     "taskNoTasks": "No tasks planned for this day",
-    "@taskNoTasks": {}
+    "@taskNoTasks": {},
+    "systemLanguage": "System language",
+    "@systemLanguage": {},
+    "languageChanged": "Language changed. The app will restart.",
+    "@languageChanged": {}
 }

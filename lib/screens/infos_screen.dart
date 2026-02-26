@@ -288,7 +288,7 @@ class _InfoScreenState extends State<InfoScreen> {
     //String rok = data.substring(0, 4);
     String miesiac = data.substring(0, 2);
     String dzien = data.substring(3);
-    if (globals.jezyk == 'pl_PL')
+    if (globals.isEuropeanFormat())
       return '$dzien.$miesiac';
     else
       return '$miesiac-$dzien';
@@ -298,7 +298,7 @@ class _InfoScreenState extends State<InfoScreen> {
     String rok = data.substring(2, 4);
     String miesiac = data.substring(5, 7);
     String dzien = data.substring(8, 10);
-    if (globals.jezyk == 'pl_PL')
+    if (globals.isEuropeanFormat())
       return '$dzien.$miesiac.$rok';
     else
       return '$rok-$miesiac-$dzien';
@@ -365,7 +365,7 @@ class _InfoScreenState extends State<InfoScreen> {
     String rok = data.substring(0, 4);
     String miesiac = data.substring(5, 7);
     String dzien = data.substring(8, 10);
-    if (globals.jezyk == 'pl_PL') {
+    if (globals.isEuropeanFormat()) {
       return '$dzien.$miesiac.$rok';
     } else {
       return '$rok-$miesiac-$dzien';
@@ -433,7 +433,7 @@ class _InfoScreenState extends State<InfoScreen> {
 
       // Aktualna data
       final now = DateTime.now();
-      final dataPdf = globals.jezyk == 'pl_PL'
+      final dataPdf = globals.isEuropeanFormat()
           ? '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}'
           : '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
@@ -1055,7 +1055,7 @@ class _InfoScreenState extends State<InfoScreen> {
           suma1 = suma1 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
-            globals.jezyk == 'pl_PL'
+            globals.isEuropeanFormat()
                 ? wartosc1 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
                 : wartosc1 = infos[i].wartosc + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -1066,7 +1066,7 @@ class _InfoScreenState extends State<InfoScreen> {
           suma2 = suma2 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
-            globals.jezyk == 'pl_PL'
+            globals.isEuropeanFormat()
                 ? wartosc2 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
                 : wartosc2 = infos[i].wartosc + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -1077,7 +1077,7 @@ class _InfoScreenState extends State<InfoScreen> {
           suma3 = suma3 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
-            globals.jezyk == 'pl_PL'
+            globals.isEuropeanFormat()
                 ? wartosc3 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
                 : wartosc3 = infos[i].wartosc + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -1088,7 +1088,7 @@ class _InfoScreenState extends State<InfoScreen> {
           suma4 = suma4 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
-            globals.jezyk == 'pl_PL'
+            globals.isEuropeanFormat()
                 ? wartosc4 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
                 : wartosc4 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
 
@@ -1100,7 +1100,7 @@ class _InfoScreenState extends State<InfoScreen> {
           //suma5 = suma5 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
-            globals.jezyk == 'pl_PL'
+            globals.isEuropeanFormat()
                 ? wartosc5 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'//' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
                 : wartosc5 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
 
@@ -1112,7 +1112,7 @@ class _InfoScreenState extends State<InfoScreen> {
           //suma5 = suma5 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData6) && DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData6 = DateTime.parse(infos[i].data);
-            globals.jezyk == 'pl_PL'
+            globals.isEuropeanFormat()
                 ? wartosc6 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})' //' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
                 : wartosc6 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -2900,7 +2900,7 @@ class _InfoScreenState extends State<InfoScreen> {
                     children: [
                       if (wartosc1 != '')
                         Text(
-                            globals.jezyk == 'pl_PL'
+                            globals.isEuropeanFormat()
                                 ? '(1) ' + AppLocalizations.of(context)!.syrup +
                                     ' 1:1 $wartosc1' +
                                     ' ($rokStatystyk: ${suma1.toString().replaceAll('.', ',')} l))'
@@ -2910,7 +2910,7 @@ class _InfoScreenState extends State<InfoScreen> {
                             style: const TextStyle(fontSize: 16)),
                       if (wartosc2 != '')
                         Text(
-                            globals.jezyk == 'pl_PL'
+                            globals.isEuropeanFormat()
                                 ? '(2) ' + AppLocalizations.of(context)!.syrup +
                                     ' 3:2 $wartosc2' +
                                     ' ($rokStatystyk: ${suma2.toString().replaceAll('.', ',')} l)'
@@ -2920,7 +2920,7 @@ class _InfoScreenState extends State<InfoScreen> {
                             style: const TextStyle(fontSize: 16)),
                       if (wartosc3 != '')
                         Text(
-                            globals.jezyk == 'pl_PL'
+                            globals.isEuropeanFormat()
                                 ? '(3) ' + AppLocalizations.of(context)!.invert +
                                     ' $wartosc3' +
                                     ' ($rokStatystyk: ${suma3.toString().replaceAll('.', ',')} l)'
@@ -2931,7 +2931,7 @@ class _InfoScreenState extends State<InfoScreen> {
                       if (wartosc4 != '') SizedBox(height: 10),
                       if (wartosc4 != '')
                         Text(
-                            globals.jezyk == 'pl_PL'
+                            globals.isEuropeanFormat()
                                 ? '(4) ' + AppLocalizations.of(context)!.candy +
                                     ' $wartosc4' +
                                     ' ($rokStatystyk: ${suma4.toString().replaceAll('.', ',')} kg)'
@@ -3113,7 +3113,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         ElevatedButton.icon(
                           onPressed: () => _pickImage(ImageSource.camera),
                           icon: Icon(Icons.camera_alt, size: 20),
-                          label: Text(globals.jezyk == 'pl_PL' ? 'Zdjęcie' : 'Photo'),
+                          label: Text(globals.isEuropeanFormat() ? 'Zdjęcie' : 'Photo'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color.fromARGB(255, 252, 193, 104),
                             foregroundColor: Colors.black,
@@ -3125,7 +3125,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         ElevatedButton.icon(
                           onPressed: () => _pickImage(ImageSource.gallery),
                           icon: Icon(Icons.photo_library, size: 20),
-                          label: Text(globals.jezyk == 'pl_PL' ? 'Galeria' : 'Gallery'),
+                          label: Text(globals.isEuropeanFormat() ? 'Galeria' : 'Gallery'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color.fromARGB(255, 252, 193, 104),
                             foregroundColor: Colors.black,

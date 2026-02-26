@@ -769,7 +769,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         Expanded(
                           child: Text(
                             '${AppLocalizations.of(context)!.honey} '
-                            '${globals.jezyk == 'pl_PL' ? _lastHarvestHoneyKg.toStringAsFixed(1).replaceAll('.', ',') : _lastHarvestHoneyKg.toStringAsFixed(1)} '
+                            '${globals.isEuropeanFormat() ? _lastHarvestHoneyKg.toStringAsFixed(1).replaceAll('.', ',') : _lastHarvestHoneyKg.toStringAsFixed(1)} '
                             'kg '
                             '(${_zmienDateCala(_lastHarvestDate)})',
                             style: const TextStyle(fontSize: 14),
@@ -1078,7 +1078,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     String rok = data.substring(0, 4);
     String miesiac = data.substring(5, 7);
     String dzien = data.substring(8, 10);
-    if (globals.jezyk == 'pl_PL') {
+    if (globals.isEuropeanFormat()) {
       return '$dzien.$miesiac.$rok';
     } else {
       return '$rok-$miesiac-$dzien';
@@ -1090,7 +1090,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     String rok = data.substring(2, 4);
     String miesiac = data.substring(5, 7);
     String dzien = data.substring(8, 10);
-    if (globals.jezyk == 'pl_PL') {
+    if (globals.isEuropeanFormat()) {
       return '$dzien.$miesiac.$rok';
     } else {
       return '$rok-$miesiac-$dzien';

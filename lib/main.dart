@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 //import 'package:in_app_purchase/in_app_purchase.dart'; //subskrypcja
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart'; //do formatowania daty - dzień tygodnia
+import './globals.dart' as globals;
 import './screens/frames_screen.dart';
 import './screens/hives_screen.dart';
 import './screens/apiarys_screen.dart';
@@ -98,80 +99,123 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
+  // Notifier do zmiany języka z poziomu ustawień
+  static final ValueNotifier<Locale?> localeOverride = ValueNotifier<Locale?>(null);
+
+  /// Mapowanie kodu języka na Locale
+  static const Map<String, Locale> supportedLocaleMap = {
+    'system': Locale('en', 'US'), // placeholder - nadpisywany przez system
+    'pl': Locale('pl', 'PL'),
+    'en': Locale('en', 'US'),
+    'de': Locale('de', 'DE'),
+    'fr': Locale('fr', 'FR'),
+    'es': Locale('es', 'ES'),
+    'pt': Locale('pt', 'PT'),
+    'it': Locale('it', 'IT'),
+  };
+
+  /// Ustawia locale nadpisujące język systemowy
+  static void setLocale(String langCode) {
+    if (langCode == 'system') {
+      globals.memJezyk = 'system';
+      localeOverride.value = null; // null = użyj języka systemowego
+      // globals.jezyk zaktualizuje się po rebuild w localeListResolutionCallback
+    } else {
+      globals.memJezyk = langCode;
+      final locale = supportedLocaleMap[langCode];
+      localeOverride.value = locale;
+      if (locale != null) {
+        globals.jezyk = locale.toString(); // natychmiastowa aktualizacja
+      }
+    }
+  }
+
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
+  // Instancje providerów tworzone raz - nie są tracone przy rebuild (np. zmiana języka)
+  final _frames = Frames();
+  final _hives = Hives();
+  final _apiarys = Apiarys();
+  final _infos = Infos();
+  final _memory = Memory();
+  final _dodatki1 = Dodatki1();
+  final _dodatki2 = Dodatki2();
+  final _harvests = Harvests();
+  final _weathers = Weathers();
+  final _sales = Sales();
+  final _purchases = Purchases();
+  final _notes = Notes();
+  final _queens = Queens();
+  final _photos = Photos();
 
   @override
   void initState() {
     super.initState();
+    MyApp.localeOverride.addListener(_onLocaleChanged);
+  }
+
+  @override
+  void dispose() {
+    MyApp.localeOverride.removeListener(_onLocaleChanged);
+    super.dispose();
+  }
+
+  void _onLocaleChanged() {
+    setState(() {});
   }
 
   // główna konstrukcja aplikacji
   @override
   Widget build(BuildContext context) {
-    
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Frames(), //dla Frames
+          value: _frames,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Hives(), //dla Hives
+          value: _hives,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Apiarys(), //dla Hives
+          value: _apiarys,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Infos(), //dla Hives
+          value: _infos,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Memory(), //dla Hives
+          value: _memory,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Dodatki1(), //dla Hives
+          value: _dodatki1,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Dodatki2(), //dla Hives
+          value: _dodatki2,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Harvests(), //dla Hives
+          value: _harvests,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Weathers(), //dla Hives
+          value: _weathers,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Sales(), //dla Hives
+          value: _sales,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Purchases(), //dla Hives
+          value: _purchases,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Notes(), //dla Hives
+          value: _notes,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Queens(), //dla Hives
+          value: _queens,
         ),
         ChangeNotifierProvider.value(
-          //zarejestrowanie dostawcy danych (bez kontekstu)
-          value: Photos(), //dla zdjęć uli
+          value: _photos,
         ),
-        
+
       ],
       child: MaterialApp(
          navigatorKey: NotificationHelper.navigatorKey,
@@ -183,18 +227,26 @@ class _MyAppState extends State<MyApp> {
            //AppLocalizations.localizationsDelegates,
             
          ],
-         //locale: Locale('pl','PL'),
+         locale: MyApp.localeOverride.value, // null = język systemowy, Locale = nadpisany
          supportedLocales: [
            const Locale('en', 'US'),
            const Locale('pl', 'PL'),
+           const Locale('de', 'DE'),
+           const Locale('fr', 'FR'),
+           const Locale('es', 'ES'),
+           const Locale('pt', 'PT'),
+           const Locale('it', 'IT'),
          ],
 
          //zeby domyślnie ustawić "en" jesli wybrano inny jezyk niz polski
          localeListResolutionCallback: (allLocales, supportedLocales) {
           final locale = allLocales?.first.languageCode;
-          if (locale == 'pl') {
-            return const Locale('pl', 'PL');
-          }
+          if (locale == 'pl') return const Locale('pl', 'PL');
+          if (locale == 'de') return const Locale('de', 'DE');
+          if (locale == 'fr') return const Locale('fr', 'FR');
+          if (locale == 'es') return const Locale('es', 'ES');
+          if (locale == 'pt') return const Locale('pt', 'PT');
+          if (locale == 'it') return const Locale('it', 'IT');
           // The default locale
           return const Locale('en', 'US');
         },
