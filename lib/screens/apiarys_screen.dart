@@ -14,7 +14,7 @@ import '../globals.dart' as globals;
 import '../main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
-//import 'dart:io';
+import 'dart:io';
 import '../helpers/db_helper.dart';
 import '../helpers/notification_helper.dart';
 import '../models/dodatki1.dart';
@@ -38,6 +38,8 @@ import '../screens/queens_screen.dart';
 import '../models/weathers.dart';
 import '../models/queen.dart';
 import '../helpers/nfc_helper.dart';
+import '../models/hives.dart';
+import '../screens/move_hive_screen.dart';
 //import '../models/apiarys.dart';
 
 //ekran startowy
@@ -128,9 +130,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.10.80 22.02.2026 - apiarys_map_screen - mapa do lokalizacji, mapa lokalizacji wszystkich pasiek, progress bar w zarządzaniu danymi,
   //1.9.11.81 23.02.2026 - poprawka - problem z aktualizacją na iPhone i z importem - blokada na zdjeciach
   //1.9.12.82 23.02.2026 - poprawka kolejna -  catchError w bazie + Timeout 15s, kalendarz z zadaniami w Notesie, wyświetlanie zadań w summary_screen
-  
-  final wersja = '1.9.12.82'; //wersja aplikacji na iOS
-  final dataWersji = '2026-02-24';
+  //1.9.13.83 26.02.2025 - tłumaczenie na: de, es, fr, it, pt, przenoszenie i kasowanie ula,
+
+  final wersja = '1.9.13.83'; //wersja aplikacji na iOS
+  final dataWersji = '2026-02-26';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;
@@ -836,41 +839,57 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   void _showAlertAdd(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         //title: Text(AppLocalizations.of(context)!.selectEntryType),
         content: Column(
           //zeby tekst był wyśrodkowany w poziomie
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-//dodawanie ula      
+//dodawanie ula
             TextButton(onPressed: (){
-              Navigator.of(context).pop();
-              Navigator.of(context).pushNamed(AddHiveScreen.routeName);               
+              Navigator.of(dialogCtx).pop();
+              Navigator.of(context).pushNamed(AddHiveScreen.routeName);
             }, child: Text((AppLocalizations.of(context)!.aDdHive),style: TextStyle(fontSize: 18)) //zasoby
-            ), 
-          
-          
-            TextButton(onPressed: (){
-              Navigator.of(context).pop();
-              Navigator.of(context).pushNamed(AddQueenScreen.routeName);  
-            }, child: Text((AppLocalizations.of(context)!.aDdQueen),style: TextStyle(fontSize: 18)) //zasoby +
-            ), 
+            ),
+
 
             TextButton(onPressed: (){
-              Navigator.of(context).pop();
+              Navigator.of(dialogCtx).pop();
+              Navigator.of(context).pushNamed(AddQueenScreen.routeName);
+            }, child: Text((AppLocalizations.of(context)!.aDdQueen),style: TextStyle(fontSize: 18)) //zasoby +
+            ),
+
+            TextButton(onPressed: (){
+              Navigator.of(dialogCtx).pop();
                Navigator.of(context).pushNamed(
-                  QueenScreen.routeName, 
+                  QueenScreen.routeName,
                     arguments: {'idInfo': '',
-                              'kategoria': 'queen', 
+                              'kategoria': 'queen',
                               'parametr': AppLocalizations.of(context)!.queenIs, //Start
                               'wartosc': AppLocalizations.of(context)!.freed, //wartość domyślna
-                              'idPasieki': 0, 
+                              'idPasieki': 0,
                               'idUla':0,}, //przy wejściu z Apiary do ZARZADZANIA MATKAMI numer ula jest zerowany
                   );
             }, child: Text((AppLocalizations.of(context)!.aDdingQueen),style: TextStyle(fontSize: 18)) //zasoby +
-            ),  
-      
+            ),
+
+            Divider(),
+
+//przenieś ul
+            TextButton(onPressed: (){
+              Navigator.of(dialogCtx).pop();
+              Navigator.of(context).pushNamed(MoveHiveScreen.routeName);
+            }, child: Text((AppLocalizations.of(context)!.moveHive),style: TextStyle(fontSize: 18))
+            ),
+
+//skasuj ul
+            TextButton(onPressed: (){
+              Navigator.of(dialogCtx).pop();
+              _showDeleteHiveDialog(context);
+            }, child: Text((AppLocalizations.of(context)!.deleteHive),style: TextStyle(fontSize: 18, color: Colors.red))
+            ),
+
           ],
         ),
         actions: <Widget>[
@@ -889,7 +908,169 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       barrierDismissible:
           false, //zeby zaciemnione tło było zablokowane na kliknięcia
     );
-  }    
+  }
+
+  //dialog kasowania ula
+  void _showDeleteHiveDialog(BuildContext context) {
+    final apiarysData = Provider.of<Apiarys>(context, listen: false);
+    final apiaryList = apiarysData.items;
+
+    if (apiaryList.isEmpty) return;
+
+    int? selectedPasieka;
+    int? selectedUl;
+    List<int> hiveNumbers = [];
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final loc = AppLocalizations.of(dialogContext)!;
+          return AlertDialog(
+            title: Text(loc.deleteHive),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                //dropdown pasieki
+                DropdownButtonFormField<int>(
+                  decoration: InputDecoration(
+                    labelText: loc.selectApiary,
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedPasieka,
+                  items: apiaryList.map((a) => DropdownMenuItem<int>(
+                    value: a.pasiekaNr,
+                    child: Text('${loc.aPiary} ${a.pasiekaNr}'),
+                  )).toList(),
+                  onChanged: (val) async {
+                    if (val == null) return;
+                    //pobranie uli z wybranej pasieki
+                    await Provider.of<Hives>(dialogContext, listen: false).fetchAndSetHives(val);
+                    final hivesData = Provider.of<Hives>(dialogContext, listen: false);
+                    final hives = hivesData.items;
+                    setDialogState(() {
+                      selectedPasieka = val;
+                      selectedUl = null;
+                      hiveNumbers = hives.map((h) => h.ulNr).toList();
+                    });
+                  },
+                ),
+                SizedBox(height: 15),
+                //dropdown ula
+                DropdownButtonFormField<int>(
+                  decoration: InputDecoration(
+                    labelText: loc.selectHive,
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedUl,
+                  items: hiveNumbers.map((nr) => DropdownMenuItem<int>(
+                    value: nr,
+                    child: Text('${loc.hive} $nr'),
+                  )).toList(),
+                  onChanged: selectedPasieka == null ? null : (val) {
+                    setDialogState(() {
+                      selectedUl = val;
+                    });
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(loc.cancel),
+              ),
+              TextButton(
+                onPressed: (selectedPasieka == null || selectedUl == null)
+                    ? null
+                    : () {
+                        Navigator.of(dialogContext).pop();
+                        _confirmDeleteHive(context, selectedPasieka!, selectedUl!);
+                      },
+                child: Text(
+                  loc.deleteHive,
+                  style: TextStyle(color: (selectedPasieka != null && selectedUl != null) ? Colors.red : Colors.grey),
+                ),
+              ),
+            ],
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+          );
+        },
+      ),
+    );
+  }
+
+  //potwierdzenie kasowania ula
+  void _confirmDeleteHive(BuildContext context, int pasieka, int ul) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.deleteHive),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(AppLocalizations.of(context)!.deleteHiveConfirm(ul, pasieka)),
+            SizedBox(height: 10),
+            Text(
+              AppLocalizations.of(context)!.deleteHiveWarning,
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              //kaskadowe kasowanie
+              final photoPaths = await DBHelper.deleteHiveCascade(pasieka, ul);
+              //fizyczne usunięcie zdjęć
+              for (final path in photoPaths) {
+                try {
+                  final file = File(path);
+                  if (await file.exists()) {
+                    await file.delete();
+                  }
+                } catch (_) {}
+              }
+              //przeliczenie uli w pasiece
+              final hiveCount = await DBHelper.getHiveCount(pasieka);
+              if (hiveCount == 0) {
+                //pasieka pusta - kasujemy
+                await DBHelper.deletePasieki(pasieka);
+              } else {
+                await DBHelper.updateIleUli(pasieka, hiveCount);
+              }
+              //odświeżenie providerów
+              if (context.mounted) {
+                await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
+                if (hiveCount == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('${AppLocalizations.of(context)!.hiveDeleted}. ${AppLocalizations.of(context)!.emptyApiaryDeleted(pasieka)}'),
+                  ));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(AppLocalizations.of(context)!.hiveDeleted),
+                  ));
+                }
+              }
+            },
+            child: Text(
+              AppLocalizations.of(context)!.deleteHive,
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      ),
+    );
+  }
 
   void _showAlertOK(BuildContext context, String nazwa, String text) {
     showDialog(

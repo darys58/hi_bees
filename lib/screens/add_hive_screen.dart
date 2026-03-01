@@ -83,7 +83,7 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
       rodzajUla, //pogoda - tu rodzaj ula
       '', //temp
       formatterHm.format(DateTime.now()), //czas
-      nowyUwagi,
+      AppLocalizations.of(context)!.hIve + ' $numerUlaDoDodania ' + AppLocalizations.of(context)!.createdInApiary + ' $nowyNrPasieki. ' + nowyUwagi, //Ul X utworzony w pasiece Y
       0, //info[0].arch,
     );
 
@@ -474,7 +474,7 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                         height: 30,
                       ),
 
-                      //przyciski
+    //przyciski
                       Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -494,7 +494,7 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
 
                                     for (var item in items) {
                                       await dodajUle(item); //tworzenie uli
-                                      print('tworze ul nr = $item');
+                                      //print('tworze ul nr = $item');
                                     }
 
                               

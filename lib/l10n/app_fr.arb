@@ -553,6 +553,7 @@
     "mOveFrameTo": "Déplacer le cadre vers :",
     "hIveLiquidation": "Liquidation de la ruche",
     "hiveLiquidation": "liquidation de la ruche",
+    "hiveTransfer": "transfert de la ruche",
     "nOteForInspection": "Note pour l'inspection",
     "pAge": "Page",
     "onPage": "Sur la page",
@@ -757,6 +758,61 @@
     "taskCalendar": "Calendrier des tâches",
     "taskNoTasks": "Aucune tâche pour ce jour",
     "systemLanguage": "Langue du système",
-    "languageChanged": "Langue modifiée. L'application va redémarrer."
+    "languageChanged": "Langue modifiée. L'application va redémarrer.",
+    "deleteHive": "Supprimer la ruche",
+    "moveHive": "Déplacer la ruche",
+    "deleteHiveConfirm": "Êtes-vous sûr de vouloir supprimer la ruche {ulNr} du rucher {pasiekaNr} ? Toutes les données (cadres, inspections, notes, photos) seront définitivement supprimées !",
+    "@deleteHiveConfirm": {
+        "placeholders": {
+            "ulNr": {"type": "int"},
+            "pasiekaNr": {"type": "int"}
+        }
+    },
+    "deleteHiveWarning": "ATTENTION : Cette opération est irréversible !",
+    "hiveDeleted": "Ruche supprimée",
+    "hiveMoved": "Ruche déplacée",
+    "selectApiary": "Sélectionner le rucher",
+    "selectHive": "Sélectionner la ruche",
+    "sourceApiary": "Rucher source",
+    "sourceHive": "Ruche source",
+    "destApiaryNr": "N° du rucher de destination",
+    "destHiveNr": "N° de la ruche de destination",
+    "moveWithHistory": "Avec historique",
+    "moveWithoutHistory": "Sans historique",
+    "moveWithHistoryDesc": "Déplace toutes les données : cadres, inspections, infos, notes, photos",
+    "moveWithoutHistoryDesc": "Crée une nouvelle ruche avec les paramètres techniques, déplace la reine",
+    "hiveAlreadyExists": "Une ruche avec ce numéro existe déjà dans le rucher de destination",
+    "newApiaryWillBeCreated": "Le rucher de destination n'existe pas - il sera créé",
+    "cannotMoveSameLocation": "Impossible de déplacer au même emplacement",
+    "movedFrom": "Déplacé du rucher {src} / ruche {srcUl}",
+    "@movedFrom": {
+        "placeholders": {
+            "src": {"type": "int"},
+            "srcUl": {"type": "int"}
+        }
+    },
+    "movedTo": "Ruche déplacée vers rucher {dst} / ruche {dstUl}",
+    "@movedTo": {
+        "placeholders": {
+            "dst": {"type": "int"},
+            "dstUl": {"type": "int"}
+        }
+    },
+    "whatToDoWithOldHive": "Que faire de l'ancienne ruche ?",
+    "leaveHive": "Laisser",
+    "leaveHiveDesc": "Conserve l'ancienne ruche avec l'historique, crée une nouvelle avec les mêmes paramètres et déplace la reine.",
+    "liquidateHive": "Liquider",
+    "liquidateHiveDesc": "Conserve l'ancienne ruche avec l'historique et ajoute l'info de transfert, crée une nouvelle avec les mêmes paramètres et déplace la reine.",
+    "deleteOldHive": "Supprimer avec données",
+    "deleteOldHiveDesc": "Crée une nouvelle ruche avec les mêmes paramètres, déplace la reine et supprime l'ancienne ruche.",
+    "emptyApiaryDeleted": "Le rucher vide {nr} a été supprimé",
+    "@emptyApiaryDeleted": {
+        "placeholders": {
+            "nr": {"type": "int"}
+        }
+    },
+    "move": "Déplacer",
+    "moving": "Déplacement...",
+    "createdInApiary": "créé dans le rucher"
 
 }

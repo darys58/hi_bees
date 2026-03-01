@@ -1947,40 +1947,96 @@ class _InfoScreenState extends State<InfoScreen> {
         iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         title: 
         wybranaKategoria == 'inspection'
-        ? Text(
-            AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.frameInspections + ' ' + AppLocalizations.of(context)!.frames2,//  + " " + rokStatystyk,
-            style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
-          )
+        ? RichText(
+            text: TextSpan(
+              //style: TextStyle(color: Colors.black),
+              children: [
+                TextSpan(
+                  text: AppLocalizations.of(context)!.hIve + " $hiveNr " + AppLocalizations.of(context)!.frames,// + AppLocalizations.of(context)!.frameInspections + ' ' + " " + rokStatystyk,
+                  style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+                ),
+                TextSpan(
+                  text: '\n${AppLocalizations.of(context)!.aPiary} ${globals.pasiekaID} / $rokStatystyk',
+                        style: const TextStyle(fontSize: 12, color: Colors.black,)),
+              ]))
         : wybranaKategoria == 'equipment'
-          ? Text(
-              AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.equipment,//  + " " + rokStatystyk,
-              style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
-            )
-          : wybranaKategoria == 'colony'
-            ? Text(
-                AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.colony,// + " " + rokStatystyk,
-                style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
-              )
-            : wybranaKategoria == 'queen'
-              ? Text(
-                  AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.queen ,//+ " " + rokStatystyk,
-                  style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
-                )
-              : wybranaKategoria == 'harvest'
-                ? Text(
-                    AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.harvest + " " + rokStatystyk,
+          ? RichText(
+              text: TextSpan(
+                //style: TextStyle(color: Colors.black),
+                children: [
+                  TextSpan(
+                    text: AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.equipment,//  + " " + rokStatystyk,
                     style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
-                  )
-                : wybranaKategoria == 'feeding'
-                  ? Text(
-                      AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.feeding + " " + rokStatystyk,
-                      style: TextStyle(fontSize: 17, color: Color.fromARGB(255, 0, 0, 0)),
-                    )
-                  : wybranaKategoria == 'treatment'
-                    ? Text(
-                        AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.treatment + " " + rokStatystyk,
+                  ),
+                  TextSpan(
+                    text: '\n${AppLocalizations.of(context)!.aPiary} ${globals.pasiekaID} / $rokStatystyk',
+                          style: const TextStyle(fontSize: 12, color: Colors.black,)),
+                ]))
+          : wybranaKategoria == 'colony'
+            ? RichText(
+                text: TextSpan(
+                  //style: TextStyle(color: Colors.black),
+                  children: [
+                    TextSpan(
+                      text: AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.colony,// + " " + rokStatystyk,
+                      style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+                    ),
+                    TextSpan(
+                      text: '\n${AppLocalizations.of(context)!.aPiary} ${globals.pasiekaID} / $rokStatystyk',
+                            style: const TextStyle(fontSize: 12, color: Colors.black,)),
+                  ])) 
+            : wybranaKategoria == 'queen'
+              ? RichText(
+                  text: TextSpan(
+                    //style: TextStyle(color: Colors.black),
+                    children: [
+                      TextSpan(
+                        text: AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.queen ,//+ " " + rokStatystyk,
                         style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
-                      )
+                      ),
+                      TextSpan(
+                        text: '\n${AppLocalizations.of(context)!.aPiary} ${globals.pasiekaID} / $rokStatystyk',
+                              style: const TextStyle(fontSize: 12, color: Colors.black,)),
+                    ]))  
+              : wybranaKategoria == 'harvest'
+                ? RichText(
+                    text: TextSpan(
+                      //style: TextStyle(color: Colors.black),
+                      children: [
+                        TextSpan(
+                          text: AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.harvest,// + " " + rokStatystyk,
+                          style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+                        ),
+                        TextSpan(
+                          text: '\n${AppLocalizations.of(context)!.aPiary} ${globals.pasiekaID} / $rokStatystyk',
+                                style: const TextStyle(fontSize: 12, color: Colors.black,)),
+                      ])) 
+                : wybranaKategoria == 'feeding'
+                  ? RichText(
+                      text: TextSpan(
+                        //style: TextStyle(color: Colors.black),
+                        children: [
+                          TextSpan(
+                            text: AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.feeding,
+                            style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+                          ),
+                          TextSpan(
+                            text: '\n${AppLocalizations.of(context)!.aPiary} ${globals.pasiekaID} / $rokStatystyk',
+                                  style: const TextStyle(fontSize: 12, color: Colors.black,)),
+                        ])) 
+                  : wybranaKategoria == 'treatment'
+                    ? RichText(
+                        text: TextSpan(
+                          //style: TextStyle(color: Colors.black),
+                          children: [
+                            TextSpan(
+                              text: AppLocalizations.of(context)!.hIve + " $hiveNr "  + AppLocalizations.of(context)!.treatment,// + " " + rokStatystyk,
+                              style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+                            ),
+                            TextSpan(
+                              text: '\n${AppLocalizations.of(context)!.aPiary} ${globals.pasiekaID} / $rokStatystyk',
+                                    style: const TextStyle(fontSize: 12, color: Colors.black,)),
+                          ])) 
                     : null,      
         backgroundColor: Color.fromARGB(255, 255, 255, 255), //tło pola nawigacji
         elevation: 0, // Brak cienia = brak zmiany koloru

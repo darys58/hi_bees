@@ -553,6 +553,7 @@
     "mOveFrameTo": "Sposta telaino a:",
     "hIveLiquidation": "Liquidazione arnia",
     "hiveLiquidation": "liquidazione arnia",
+    "hiveTransfer": "trasferimento arnia",
     "nOteForInspection": "Nota per l'ispezione",
     "pAge": "Pagina",
     "onPage": "Sulla pagina",
@@ -757,6 +758,61 @@
     "taskCalendar": "Calendario attività",
     "taskNoTasks": "Nessuna attività programmata per questo giorno",
     "systemLanguage": "Lingua di sistema",
-    "languageChanged": "Lingua cambiata. L'app verrà riavviata."
+    "languageChanged": "Lingua cambiata. L'app verrà riavviata.",
+    "deleteHive": "Elimina arnia",
+    "moveHive": "Sposta arnia",
+    "deleteHiveConfirm": "Sei sicuro di voler eliminare l'arnia {ulNr} dall'apiario {pasiekaNr}? Tutti i dati (telaini, ispezioni, note, foto) verranno eliminati permanentemente!",
+    "@deleteHiveConfirm": {
+        "placeholders": {
+            "ulNr": {"type": "int"},
+            "pasiekaNr": {"type": "int"}
+        }
+    },
+    "deleteHiveWarning": "ATTENZIONE: Questa operazione è irreversibile!",
+    "hiveDeleted": "Arnia eliminata",
+    "hiveMoved": "Arnia spostata",
+    "selectApiary": "Seleziona apiario",
+    "selectHive": "Seleziona arnia",
+    "sourceApiary": "Apiario di origine",
+    "sourceHive": "Arnia di origine",
+    "destApiaryNr": "N° apiario di destinazione",
+    "destHiveNr": "N° arnia di destinazione",
+    "moveWithHistory": "Con cronologia",
+    "moveWithoutHistory": "Senza cronologia",
+    "moveWithHistoryDesc": "Sposta tutti i dati: telaini, ispezioni, infos, note, foto",
+    "moveWithoutHistoryDesc": "Crea una nuova arnia con parametri tecnici, sposta la regina",
+    "hiveAlreadyExists": "Un'arnia con questo numero esiste già nell'apiario di destinazione",
+    "newApiaryWillBeCreated": "L'apiario di destinazione non esiste - verrà creato",
+    "cannotMoveSameLocation": "Impossibile spostare nella stessa posizione",
+    "movedFrom": "Spostata dall'apiario {src} / arnia {srcUl}",
+    "@movedFrom": {
+        "placeholders": {
+            "src": {"type": "int"},
+            "srcUl": {"type": "int"}
+        }
+    },
+    "movedTo": "Arnia spostata all'apiario {dst} / arnia {dstUl}",
+    "@movedTo": {
+        "placeholders": {
+            "dst": {"type": "int"},
+            "dstUl": {"type": "int"}
+        }
+    },
+    "whatToDoWithOldHive": "Cosa fare con la vecchia arnia?",
+    "leaveHive": "Lasciare",
+    "leaveHiveDesc": "Mantiene la vecchia arnia con lo storico, crea una nuova con gli stessi parametri e sposta la regina.",
+    "liquidateHive": "Liquidare",
+    "liquidateHiveDesc": "Mantiene la vecchia arnia con lo storico e aggiunge info sul trasferimento, crea una nuova con gli stessi parametri e sposta la regina.",
+    "deleteOldHive": "Elimina con dati",
+    "deleteOldHiveDesc": "Crea una nuova arnia con gli stessi parametri, sposta la regina ed elimina la vecchia arnia.",
+    "emptyApiaryDeleted": "L'apiario vuoto {nr} è stato eliminato",
+    "@emptyApiaryDeleted": {
+        "placeholders": {
+            "nr": {"type": "int"}
+        }
+    },
+    "move": "Sposta",
+    "moving": "Spostamento...",
+    "createdInApiary": "creato nell'apiario"
 
 }

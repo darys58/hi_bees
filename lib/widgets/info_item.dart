@@ -23,18 +23,8 @@ class InfoItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final info = Provider.of<Info>(context, listen: false);
-    // List<Color> color = [
-    //   const Color.fromARGB(255, 252, 193, 104),
-    //   const Color.fromARGB(255, 255, 114, 104),
-    //   const Color.fromARGB(255, 104, 187, 254),
-    //   const Color.fromARGB(255, 83, 215, 88),
-    //   const Color.fromARGB(255, 203, 174, 85),
-    //   const Color.fromARGB(255, 253, 182, 76),
-    //   const Color.fromARGB(255, 255, 86, 74),
-    //   const Color.fromARGB(255, 71, 170, 251),
-    //   Color.fromARGB(255, 61, 214, 66),
-    //   Color.fromARGB(255, 210, 170, 49),
-    // ];
+    final loc = AppLocalizations.of(context)!;
+    final isLiquidationOrTransfer = info.parametr == loc.hiveLiquidation || info.parametr == loc.hiveTransfer;
     List<Hive> hive = [];
    
     
@@ -437,7 +427,7 @@ class InfoItem extends StatelessWidget {
 //****************************** */
 //lista przegladów              
               info.kategoria == 'inspection' //jezeli przeglądy
-                ? info.parametr == 'likwidacja ula' || info.parametr == 'hive liquidation'  //jezeli jest to usunięcie ula
+                ? isLiquidationOrTransfer  //jezeli jest to usunięcie lub przeniesienie ula
 //element listy dla usuniętego ula                  
                   ? ListTile( 
                     tileColor: info.wartosc == 'red'
@@ -581,24 +571,24 @@ class InfoItem extends StatelessWidget {
 //********************************************/                
                 : ListTile( 
                               //jeśli likwidacja ula, pozostałe 'brak', 'nie ma' itd. dotyczy braku matki
-                  tileColor: info.parametr == 'likwidacja ula' || info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
+                  tileColor: isLiquidationOrTransfer || info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
                               ? const Color.fromARGB(255, 244, 208, 208) //czerwone tło infa
-                              : info.data.substring(0, 4) == globals.rokStatystyk 
-                                ? null 
+                              : info.data.substring(0, 4) == globals.rokStatystyk
+                                ? null
                                 : Colors.grey[200],
                     onTap: () {
                       //_showAlert(context, 'Edycja', '${frame.id}');
                       // globals.dataInspekcji = frame.data;
-                     info.parametr == 'tag NFC' 
+                     info.parametr == 'tag NFC'
                       ? null
                       : Navigator.of(context).pushNamed(
                           InfosEditScreen.routeName,
                           arguments: {'idInfo': info.id},
                         );
                     },
-//leading - grafiki                    
+//leading - grafiki
                     leading: CircleAvatar(
-                        backgroundColor: info.parametr == 'likwidacja ula' || info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
+                        backgroundColor: isLiquidationOrTransfer || info.wartosc == 'brak' || info.wartosc == 'nie ma' || info.wartosc == 'missing' || info.wartosc == 'nie żyje' || info.wartosc == 'dead'
                                           ? const Color.fromARGB(255, 244, 208, 208)
                                           : info.data.substring(0, 4) == globals.rokStatystyk 
                                             ? Colors.white 

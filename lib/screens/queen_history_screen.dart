@@ -547,29 +547,29 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                     // Wiersz 2: parametr i wartość
                     if (info.parametr.isNotEmpty || info.wartosc.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.only(top: 2, left: 40),
                         child: 
                           info.wartosc == 'dziewica'
-                        ? Text(
-                            '${info.parametr} nieunasienniona',
-                            style: const TextStyle(fontSize: 14),
-                          )
-                        : info.wartosc == 'virgine'
-                          ? Text(
-                              '${info.parametr} virgine',//jakby była własciwa nazwa po angielsku to tu mozna zmienić //${info.wartosc}'.trim(),
-                              style: const TextStyle(fontSize: 14),
-                            )
-                          : Text(
-                            '${info.parametr} ${info.wartosc}'.trim(), //wszystkie inne wartości
-                            style: const TextStyle(fontSize: 14),
-                          ),
+                            ? Text(
+                                '${info.parametr} nieunasienniona',
+                                style: const TextStyle(fontSize: 14),
+                              )
+                            : info.wartosc == 'virgine'
+                              ? Text(
+                                  '${info.parametr} virgine',//jakby była własciwa nazwa po angielsku to tu mozna zmienić //${info.wartosc}'.trim(),
+                                  style: const TextStyle(fontSize: 14),
+                                )
+                              : Text(
+                                '${info.parametr} ${info.wartosc}'.trim(), //wszystkie inne wartości
+                                style: const TextStyle(fontSize: 14),
+                              ),
                       ),
                     // Wiersz 3: uwagi
                     if (info.uwagi.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.only(top: 2, left: 40),
                         child: Text(info.uwagi,
-                            style: const TextStyle(fontSize: 14)),
+                            style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic), ),
                       ),
                   ],
                 ),

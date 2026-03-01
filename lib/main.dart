@@ -53,6 +53,7 @@ import './screens/nfc_settings_screen.dart';
 import './screens/apiarys_map_screen.dart';
 import './screens/apiarys_all_map_screen.dart';
 import './screens/notification_settings_screen.dart';
+import './screens/move_hive_screen.dart';
 import './helpers/notification_helper.dart';
 
 //import './screens/languages_screen.dart';
@@ -347,6 +348,7 @@ class _MyAppState extends State<MyApp> {
           ApiaryMapScreen.routeName: (ctx) => ApiaryMapScreen(),
           ApiarysAllMapScreen.routeName: (ctx) => ApiarysAllMapScreen(),
           NotificationSettingsScreen.routeName: (ctx) => NotificationSettingsScreen(),
+          MoveHiveScreen.routeName: (ctx) => MoveHiveScreen(),
          // LanguagesScreen.routeName: (ctx) => LanguagesScreen(),
           //FiltersScreen.routeName: (ctx) => FiltersScreen(_filters, _setFilters),
         },

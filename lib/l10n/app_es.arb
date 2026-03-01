@@ -553,6 +553,7 @@
     "mOveFrameTo": "Mover cuadro a:",
     "hIveLiquidation": "Liquidacion de colmena",
     "hiveLiquidation": "liquidacion de colmena",
+    "hiveTransfer": "traslado de colmena",
     "nOteForInspection": "Nota para inspeccion",
     "pAge": "Pagina",
     "onPage": "En la pagina",
@@ -757,6 +758,61 @@
     "taskCalendar": "Calendario de tareas",
     "taskNoTasks": "No hay tareas para este día",
     "systemLanguage": "Idioma del sistema",
-    "languageChanged": "Idioma cambiado. La aplicación se reiniciará."
+    "languageChanged": "Idioma cambiado. La aplicación se reiniciará.",
+    "deleteHive": "Eliminar colmena",
+    "moveHive": "Mover colmena",
+    "deleteHiveConfirm": "¿Está seguro de que desea eliminar la colmena {ulNr} del apiario {pasiekaNr}? ¡Todos los datos (marcos, inspecciones, notas, fotos) se eliminarán permanentemente!",
+    "@deleteHiveConfirm": {
+        "placeholders": {
+            "ulNr": {"type": "int"},
+            "pasiekaNr": {"type": "int"}
+        }
+    },
+    "deleteHiveWarning": "¡ATENCIÓN: Esta operación es irreversible!",
+    "hiveDeleted": "Colmena eliminada",
+    "hiveMoved": "Colmena movida",
+    "selectApiary": "Seleccionar apiario",
+    "selectHive": "Seleccionar colmena",
+    "sourceApiary": "Apiario de origen",
+    "sourceHive": "Colmena de origen",
+    "destApiaryNr": "N° del apiario de destino",
+    "destHiveNr": "N° de la colmena de destino",
+    "moveWithHistory": "Con historial",
+    "moveWithoutHistory": "Sin historial",
+    "moveWithHistoryDesc": "Mueve todos los datos: marcos, inspecciones, infos, notas, fotos",
+    "moveWithoutHistoryDesc": "Crea una nueva colmena con parámetros técnicos, mueve la reina",
+    "hiveAlreadyExists": "Ya existe una colmena con este número en el apiario de destino",
+    "newApiaryWillBeCreated": "El apiario de destino no existe - se creará",
+    "cannotMoveSameLocation": "No se puede mover a la misma ubicación",
+    "movedFrom": "Movido del apiario {src} / colmena {srcUl}",
+    "@movedFrom": {
+        "placeholders": {
+            "src": {"type": "int"},
+            "srcUl": {"type": "int"}
+        }
+    },
+    "movedTo": "Colmena movida al apiario {dst} / colmena {dstUl}",
+    "@movedTo": {
+        "placeholders": {
+            "dst": {"type": "int"},
+            "dstUl": {"type": "int"}
+        }
+    },
+    "whatToDoWithOldHive": "¿Qué hacer con la colmena antigua?",
+    "leaveHive": "Dejar",
+    "leaveHiveDesc": "Mantiene la colmena antigua con historial, crea una nueva con los mismos parámetros y mueve la reina.",
+    "liquidateHive": "Liquidar",
+    "liquidateHiveDesc": "Mantiene la colmena antigua con historial y añade info de traslado, crea una nueva con los mismos parámetros y mueve la reina.",
+    "deleteOldHive": "Eliminar con datos",
+    "deleteOldHiveDesc": "Crea una nueva colmena con los mismos parámetros, mueve la reina y elimina la colmena antigua.",
+    "emptyApiaryDeleted": "El apiario vacío {nr} ha sido eliminado",
+    "@emptyApiaryDeleted": {
+        "placeholders": {
+            "nr": {"type": "int"}
+        }
+    },
+    "move": "Mover",
+    "moving": "Moviendo...",
+    "createdInApiary": "creado en el colmenar"
 
 }

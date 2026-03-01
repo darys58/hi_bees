@@ -1106,6 +1106,8 @@
     "@hIveLiquidation":{},
     "hiveLiquidation": "hive liquidation",
     "@hiveLiquidation":{},
+    "hiveTransfer": "hive transfer",
+    "@hiveTransfer":{},
     "nOteForInspection": "Note for inspection",
     "@nOteForInspection":{},
     "pAge": "Page",
@@ -1491,5 +1493,88 @@
     "systemLanguage": "System language",
     "@systemLanguage": {},
     "languageChanged": "Language changed. The app will restart.",
-    "@languageChanged": {}
+    "@languageChanged": {},
+    "deleteHive": "Delete hive",
+    "@deleteHive": {},
+    "moveHive": "Move hive",
+    "@moveHive": {},
+    "deleteHiveConfirm": "Are you sure you want to delete hive {ulNr} from apiary {pasiekaNr}? All data (frames, inspections, notes, photos) will be permanently deleted!",
+    "@deleteHiveConfirm": {
+        "placeholders": {
+            "ulNr": {"type": "int"},
+            "pasiekaNr": {"type": "int"}
+        }
+    },
+    "deleteHiveWarning": "WARNING: This operation is irreversible!",
+    "@deleteHiveWarning": {},
+    "hiveDeleted": "Hive deleted",
+    "@hiveDeleted": {},
+    "hiveMoved": "Hive moved",
+    "@hiveMoved": {},
+    "selectApiary": "Select apiary",
+    "@selectApiary": {},
+    "selectHive": "Select hive",
+    "@selectHive": {},
+    "sourceApiary": "Source apiary",
+    "@sourceApiary": {},
+    "sourceHive": "Source hive",
+    "@sourceHive": {},
+    "destApiaryNr": "Destination apiary nr",
+    "@destApiaryNr": {},
+    "destHiveNr": "Destination hive nr",
+    "@destHiveNr": {},
+    "moveWithHistory": "With history",
+    "@moveWithHistory": {},
+    "moveWithoutHistory": "Without history",
+    "@moveWithoutHistory": {},
+    "moveWithHistoryDesc": "Moves all data: frames, inspections, infos, notes, photos",
+    "@moveWithHistoryDesc": {},
+    "moveWithoutHistoryDesc": "Creates a new hive with technical parameters, moves the queen",
+    "@moveWithoutHistoryDesc": {},
+    "hiveAlreadyExists": "A hive with this number already exists in the destination apiary",
+    "@hiveAlreadyExists": {},
+    "newApiaryWillBeCreated": "Destination apiary does not exist - it will be created",
+    "@newApiaryWillBeCreated": {},
+    "cannotMoveSameLocation": "Cannot move to the same location",
+    "@cannotMoveSameLocation": {},
+    "movedFrom": "Moved from apiary {src} / hive {srcUl}",
+    "@movedFrom": {
+        "placeholders": {
+            "src": {"type": "int"},
+            "srcUl": {"type": "int"}
+        }
+    },
+    "movedTo": "Hive moved to apiary {dst} / hive {dstUl}",
+    "@movedTo": {
+        "placeholders": {
+            "dst": {"type": "int"},
+            "dstUl": {"type": "int"}
+        }
+    },
+    "whatToDoWithOldHive": "What to do with the old hive?",
+    "@whatToDoWithOldHive": {},
+    "leaveHive": "Leave",
+    "@leaveHive": {},
+    "leaveHiveDesc": "Keeps the old hive with history, creates a new one with the same parameters and moves the queen.",
+    "@leaveHiveDesc": {},
+    "liquidateHive": "Liquidate",
+    "@liquidateHive": {},
+    "liquidateHiveDesc": "Keeps the old hive with history and adds transfer info, creates a new one with the same parameters and moves the queen.",
+    "@liquidateHiveDesc": {},
+    "deleteOldHive": "Delete with data",
+    "@deleteOldHive": {},
+    "deleteOldHiveDesc": "Creates a new hive with the same parameters, moves the queen and deletes the old hive.",
+    "@deleteOldHiveDesc": {},
+    "emptyApiaryDeleted": "Empty apiary {nr} has been deleted",
+    "@emptyApiaryDeleted": {
+        "placeholders": {
+            "nr": {"type": "int"}
+        }
+    },
+    "move": "Move",
+    "@move": {},
+    "moving": "Moving...",
+    "@moving": {},
+    "createdInApiary": "created in the apiary",
+    "@createdInApiary": {}
 }

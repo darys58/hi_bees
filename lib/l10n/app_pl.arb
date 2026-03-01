@@ -553,6 +553,7 @@
     "mOveFrameTo": "Przenieś ramkę do:",
     "hIveLiquidation": "Likwidacja ula",
     "hiveLiquidation": "likwidacja ula",
+    "hiveTransfer": "przeniesienie ula",
     "nOteForInspection": "Notatka do przeglądu",
     "pAge": "Strona",
     "onPage": "Na stronie",
@@ -772,6 +773,62 @@
     "taskCalendar": "Kalendarz zadań",
     "taskNoTasks": "Brak zadań na ten dzień",
     "systemLanguage": "Język systemowy",
-    "languageChanged": "Język zmieniony. Aplikacja zostanie uruchomiona ponownie."
+    "languageChanged": "Język zmieniony. Aplikacja zostanie uruchomiona ponownie.",
+    "deleteHive": "Skasuj ul",
+    "moveHive": "Przenieś ul",
+    "deleteHiveConfirm": "Czy na pewno usunąć ul {ulNr} z pasieki {pasiekaNr}? Wszystkie dane (ramki, przeglądy, notatki, zdjęcia) zostaną trwale usunięte!",
+    "@deleteHiveConfirm": {
+        "placeholders": {
+            "ulNr": {"type": "int"},
+            "pasiekaNr": {"type": "int"}
+        }
+    },
+    "deleteHiveWarning": "UWAGA: Ta operacja jest nieodwracalna!",
+    "hiveDeleted": "Ul usunięty",
+    "hiveMoved": "Ul przeniesiony",
+    "selectApiary": "Wybierz pasiekę",
+    "selectHive": "Wybierz ul",
+    "sourceApiary": "Pasieka źródłowa",
+    "sourceHive": "Ul źródłowy",
+    "destApiaryNr": "Nr pasieki docelowej",
+    "destHiveNr": "Nr ula docelowego",
+    "moveWithHistory": "Z historią",
+    "moveWithoutHistory": "Bez historii",
+    "moveWithHistoryDesc": "Przenosi wszystkie dane: ramki, przeglądy, informacje, notatki, zdjęcia",
+    "moveWithoutHistoryDesc": "Tworzy nowy ul z parametrami technicznymi, przenosi matkę",
+    "hiveAlreadyExists": "Ul o tym numerze już istnieje w docelowej pasiece",
+    "newApiaryWillBeCreated": "Pasieka docelowa nie istnieje - zostanie utworzona",
+    "cannotMoveSameLocation": "Nie można przenieść na tę samą pozycję",
+    "movedFrom": "Przeniesiony z pasieki {src} / ul {srcUl}",
+    "@movedFrom": {
+        "placeholders": {
+            "src": {"type": "int"},
+            "srcUl": {"type": "int"}
+        }
+    },
+    "movedTo": "Ul przeniesiony do pasieki {dst} / ul {dstUl}",
+    "@movedTo": {
+        "placeholders": {
+            "dst": {"type": "int"},
+            "dstUl": {"type": "int"}
+        }
+    },
+    "whatToDoWithOldHive": "Co zrobić ze starym ulem?",
+    "leaveHive": "Zostaw",
+    "leaveHiveDesc": "Pozostawia stary ul z historią, tworzy nowy z takimi samymi parametrami i przenosi matkę.",
+    "liquidateHive": "Zlikwiduj",
+    "liquidateHiveDesc": "Pozostawia stary ul z historią i dodaje informację o przeniesieniu w nowe miejsce, tworzy nowy z takimi samymi parametrami i przenosi matkę.",
+    "deleteOldHive": "Usuń z danymi",
+    "deleteOldHiveDesc": "Tworzy nowy ul z takimi samymi parametrami, przenosi matkę i usuwa stary ul.",
+    "emptyApiaryDeleted": "Pusta pasieka {nr} została usunięta",
+    "@emptyApiaryDeleted": {
+        "placeholders": {
+            "nr": {"type": "int"}
+        }
+    },
+    "move": "Przenieś",
+    "moving": "Przenoszenie...",
+    "createdInApiary": "utworzony w pasiece"
+
 
 }

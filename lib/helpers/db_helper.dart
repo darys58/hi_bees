@@ -237,6 +237,13 @@ class DBHelper {
     db.update('dodatki1', {'$pole': wartosc}, where: 'id = ?', whereArgs: ['1']);
   }
 
+  //przeniesienie matek z jednego ula do drugiego - dla move_hive_screen
+  static Future<void> moveQueens(int srcPasieka, int srcUl, int dstPasieka, int dstUl) async {
+    final db = await DBHelper.database();
+    await db.update('matki', {'pasieka': dstPasieka, 'ul': dstUl, 'arch': 0},
+        where: 'pasieka = ? AND ul = ?', whereArgs: [srcPasieka, srcUl]);
+  }
+
   //update matki - dla import_screen
   static Future<void> updateQueen(int id, String pole, int wartosc) async {
     final db = await DBHelper.database();
@@ -863,6 +870,192 @@ class DBHelper {
     final db = await DBHelper.database();
     final today = DateTime.now().toString().substring(0, 10);
     await db.delete('powiadomienia', where: 'aktywne = 0 OR dataNotif < ?', whereArgs: [today]);
+  }
+
+  //sprawdzenie czy ul istnieje w danej pasiece
+  static Future<bool> hiveExists(int pasieka, int ul) async {
+    final db = await DBHelper.database();
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM ule WHERE pasiekaNr = ? AND ulNr = ?',
+      [pasieka, ul],
+    );
+    return (result.first['cnt'] as int) > 0;
+  }
+
+  //sprawdzenie czy pasieka istnieje
+  static Future<bool> apiaryExists(int pasieka) async {
+    final db = await DBHelper.database();
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM pasieki WHERE pasiekaNr = ?',
+      [pasieka],
+    );
+    return (result.first['cnt'] as int) > 0;
+  }
+
+  //pobranie liczby uli w pasiece
+  static Future<int> getHiveCount(int pasieka) async {
+    final db = await DBHelper.database();
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM ule WHERE pasiekaNr = ?',
+      [pasieka],
+    );
+    return result.first['cnt'] as int;
+  }
+
+  //kaskadowe usunięcie ula i wszystkich powiązanych danych
+  //zwraca listę ścieżek zdjęć do fizycznego usunięcia
+  static Future<List<String>> deleteHiveCascade(int pasieka, int ul) async {
+    final db = await DBHelper.database();
+
+    //1. pobrać ścieżki zdjęć
+    final photos = await db.rawQuery(
+      'SELECT sciezka FROM zdjecia WHERE pasiekaNr = ? AND ulNr = ?',
+      [pasieka, ul],
+    );
+    final List<String> photoPaths = photos
+        .where((p) => p['sciezka'] != null && (p['sciezka'] as String).isNotEmpty)
+        .map((p) => p['sciezka'] as String)
+        .toList();
+
+    //2. usunięcie ramek
+    await db.delete('ramka', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
+    //3. usunięcie info
+    await db.delete('info', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
+    //4. usunięcie notatek
+    await db.delete('notatki', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
+    //5. usunięcie zdjęć z bazy
+    await db.delete('zdjecia', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
+    //6. usunięcie powiadomień
+    await db.delete('powiadomienia', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
+    //7. zerowanie matek (nie usuwamy, przenosimy do "wolnych")
+    await db.update('matki', {'pasieka': 0, 'ul': 0},
+        where: 'pasieka = ? AND ul = ?', whereArgs: [pasieka, ul]);
+    //8. usunięcie ula
+    await db.delete('ule', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
+
+    return photoPaths;
+  }
+
+  //helper: przebudowa ID ramki - zamiana pasiekaNr i ulNr w ID
+  //format ID: "data.pasiekaNr.ulNr.korpus.ramka.ramkaPo.strona.zasob"
+  static String _rebuildRamkaId(String oldId, int dstPasieka, int dstUl) {
+    final parts = oldId.split('.');
+    if (parts.length >= 3) {
+      parts[1] = dstPasieka.toString();
+      parts[2] = dstUl.toString();
+    }
+    return parts.join('.');
+  }
+
+  //helper: przebudowa ID info - zamiana pasiekaNr i ulNr w ID
+  //format ID: "data.pasiekaNr.ulNr.kategoria.parametr"
+  static String _rebuildInfoId(String oldId, int dstPasieka, int dstUl) {
+    final parts = oldId.split('.');
+    if (parts.length >= 3) {
+      parts[1] = dstPasieka.toString();
+      parts[2] = dstUl.toString();
+    }
+    return parts.join('.');
+  }
+
+  //helper: przebudowa ID zdjecia - zamiana pasiekaNr i ulNr w ID
+  //format ID: "data.timestamp.pasiekaNr.ulNr"
+  static String _rebuildZdjeciaId(String oldId, int dstPasieka, int dstUl) {
+    final parts = oldId.split('.');
+    if (parts.length >= 4) {
+      parts[2] = dstPasieka.toString();
+      parts[3] = dstUl.toString();
+    }
+    return parts.join('.');
+  }
+
+  //przeniesienie ula z historią do nowej lokalizacji
+  static Future<void> moveHiveWithHistory(int srcPasieka, int srcUl, int dstPasieka, int dstUl) async {
+    final db = await DBHelper.database();
+
+    //1. ramka - przebudowa ID
+    final ramki = await db.query('ramka',
+        where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [srcPasieka, srcUl]);
+    for (final r in ramki) {
+      final oldId = r['id'] as String;
+      final newId = _rebuildRamkaId(oldId, dstPasieka, dstUl);
+      final newData = Map<String, dynamic>.from(r);
+      newData['id'] = newId;
+      newData['pasiekaNr'] = dstPasieka;
+      newData['ulNr'] = dstUl;
+      newData['arch'] = 0;
+      await db.delete('ramka', where: 'id = ?', whereArgs: [oldId]);
+      await db.insert('ramka', newData, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+
+    //2. info - przebudowa ID
+    final infos = await db.query('info',
+        where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [srcPasieka, srcUl]);
+    //zbieramy mapowanie starych infoId na nowe (dla powiadomień)
+    final Map<String, String> infoIdMap = {};
+    for (final i in infos) {
+      final oldId = i['id'] as String;
+      final newId = _rebuildInfoId(oldId, dstPasieka, dstUl);
+      infoIdMap[oldId] = newId;
+      final newData = Map<String, dynamic>.from(i);
+      newData['id'] = newId;
+      newData['pasiekaNr'] = dstPasieka;
+      newData['ulNr'] = dstUl;
+      newData['arch'] = 0;
+      await db.delete('info', where: 'id = ?', whereArgs: [oldId]);
+      await db.insert('info', newData, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+
+    //3. notatki - UPDATE (autoincrement ID)
+    await db.update('notatki', {'pasiekaNr': dstPasieka, 'ulNr': dstUl, 'arch': 0},
+        where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [srcPasieka, srcUl]);
+
+    //4. zdjecia - przebudowa ID
+    final zdjecia = await db.query('zdjecia',
+        where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [srcPasieka, srcUl]);
+    for (final z in zdjecia) {
+      final oldId = z['id'] as String;
+      final newId = _rebuildZdjeciaId(oldId, dstPasieka, dstUl);
+      final newData = Map<String, dynamic>.from(z);
+      newData['id'] = newId;
+      newData['pasiekaNr'] = dstPasieka;
+      newData['ulNr'] = dstUl;
+      newData['arch'] = 0;
+      await db.delete('zdjecia', where: 'id = ?', whereArgs: [oldId]);
+      await db.insert('zdjecia', newData, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+
+    //5. powiadomienia - UPDATE + przebudowa infoId
+    final powiad = await db.query('powiadomienia',
+        where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [srcPasieka, srcUl]);
+    for (final p in powiad) {
+      final oldInfoId = p['infoId'] as String?;
+      final newInfoId = (oldInfoId != null && infoIdMap.containsKey(oldInfoId))
+          ? infoIdMap[oldInfoId]
+          : oldInfoId;
+      await db.update(
+        'powiadomienia',
+        {'pasiekaNr': dstPasieka, 'ulNr': dstUl, 'infoId': newInfoId},
+        where: 'id = ?',
+        whereArgs: [p['id']],
+      );
+    }
+
+    //6. matki - UPDATE
+    await db.update('matki', {'pasieka': dstPasieka, 'ul': dstUl, 'arch': 0},
+        where: 'pasieka = ? AND ul = ?', whereArgs: [srcPasieka, srcUl]);
+
+    //7. ul - pobrać stary, usunąć, wstawić z nowym ID
+    final hiveRows = await db.query('ule',
+        where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [srcPasieka, srcUl]);
+    if (hiveRows.isNotEmpty) {
+      final hiveData = Map<String, dynamic>.from(hiveRows.first);
+      await db.delete('ule', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [srcPasieka, srcUl]);
+      hiveData['id'] = '$dstPasieka.$dstUl';
+      hiveData['pasiekaNr'] = dstPasieka;
+      hiveData['ulNr'] = dstUl;
+      await db.insert('ule', hiveData, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
   }
 
 }

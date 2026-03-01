@@ -553,6 +553,7 @@
     "mOveFrameTo": "Rahmen verschieben nach:",
     "hIveLiquidation": "Auflösung der Beute",
     "hiveLiquidation": "Auflösung der Beute",
+    "hiveTransfer": "Umsetzung der Beute",
     "nOteForInspection": "Notiz zur Durchsicht",
     "pAge": "Seite",
     "onPage": "Auf Seite",
@@ -757,6 +758,61 @@
     "taskCalendar": "Aufgabenkalender",
     "taskNoTasks": "Keine Aufgaben für diesen Tag",
     "systemLanguage": "Systemsprache",
-    "languageChanged": "Sprache geändert. Die App wird neu gestartet."
+    "languageChanged": "Sprache geändert. Die App wird neu gestartet.",
+    "deleteHive": "Beute löschen",
+    "moveHive": "Beute verschieben",
+    "deleteHiveConfirm": "Möchten Sie wirklich Beute {ulNr} aus Bienenstand {pasiekaNr} löschen? Alle Daten (Rähmchen, Durchsichten, Notizen, Fotos) werden dauerhaft gelöscht!",
+    "@deleteHiveConfirm": {
+        "placeholders": {
+            "ulNr": {"type": "int"},
+            "pasiekaNr": {"type": "int"}
+        }
+    },
+    "deleteHiveWarning": "ACHTUNG: Dieser Vorgang ist unwiderruflich!",
+    "hiveDeleted": "Beute gelöscht",
+    "hiveMoved": "Beute verschoben",
+    "selectApiary": "Bienenstand wählen",
+    "selectHive": "Beute wählen",
+    "sourceApiary": "Quell-Bienenstand",
+    "sourceHive": "Quell-Beute",
+    "destApiaryNr": "Ziel-Bienenstand Nr",
+    "destHiveNr": "Ziel-Beute Nr",
+    "moveWithHistory": "Mit Geschichte",
+    "moveWithoutHistory": "Ohne Geschichte",
+    "moveWithHistoryDesc": "Verschiebt alle Daten: Rähmchen, Durchsichten, Info, Notizen, Fotos",
+    "moveWithoutHistoryDesc": "Erstellt eine neue Beute mit technischen Parametern, verschiebt die Königin",
+    "hiveAlreadyExists": "Eine Beute mit dieser Nummer existiert bereits im Ziel-Bienenstand",
+    "newApiaryWillBeCreated": "Ziel-Bienenstand existiert nicht - wird erstellt",
+    "cannotMoveSameLocation": "Kann nicht an denselben Ort verschoben werden",
+    "movedFrom": "Verschoben aus Bienenstand {src} / Beute {srcUl}",
+    "@movedFrom": {
+        "placeholders": {
+            "src": {"type": "int"},
+            "srcUl": {"type": "int"}
+        }
+    },
+    "movedTo": "Beute verschoben nach Bienenstand {dst} / Beute {dstUl}",
+    "@movedTo": {
+        "placeholders": {
+            "dst": {"type": "int"},
+            "dstUl": {"type": "int"}
+        }
+    },
+    "whatToDoWithOldHive": "Was soll mit der alten Beute geschehen?",
+    "leaveHive": "Belassen",
+    "leaveHiveDesc": "Behält die alte Beute mit Verlauf, erstellt eine neue mit gleichen Parametern und verschiebt die Königin.",
+    "liquidateHive": "Liquidieren",
+    "liquidateHiveDesc": "Behält die alte Beute mit Verlauf und fügt Umzugsinfo hinzu, erstellt eine neue mit gleichen Parametern und verschiebt die Königin.",
+    "deleteOldHive": "Mit Daten löschen",
+    "deleteOldHiveDesc": "Erstellt eine neue Beute mit gleichen Parametern, verschiebt die Königin und löscht die alte Beute.",
+    "emptyApiaryDeleted": "Leerer Bienenstand {nr} wurde gelöscht",
+    "@emptyApiaryDeleted": {
+        "placeholders": {
+            "nr": {"type": "int"}
+        }
+    },
+    "move": "Verschieben",
+    "moving": "Verschieben...",
+    "createdInApiary": "im Bienenhaus entstanden"
 
 }
