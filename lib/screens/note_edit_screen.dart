@@ -8,6 +8,10 @@ import '../helpers/db_helper.dart';
 import '../helpers/notification_helper.dart';
 import 'package:flutter/services.dart';
 import '../models/note.dart';
+import '../models/apiary.dart';
+import '../models/apiarys.dart';
+import '../models/hive.dart';
+import '../models/hives.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class NoteEditScreen extends StatefulWidget {
@@ -38,6 +42,10 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   String tytulEkranu = 'Edycja notatki';
   bool isChecked = false;
   List<Note> notatki = [];
+  Set<int> _selectedHiveNrs = {};
+  List<Hive> _availableHives = [];
+  List<Apiary> _apiaries = [];
+  int? _loadedForApiary;
   TextEditingController dateController = TextEditingController();
   TextEditingController pole1Controller = TextEditingController();
   DateTime? _selectedDate = DateTime.now(); // domyślnie dziś ; //wybrana data
@@ -103,13 +111,131 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         nowyNotatka = '';
         nowyUwagi = '';
         tytulEkranu = AppLocalizations.of(context)!.addNote;
+        _loadApiaries();
       }
     } //od if (_isInit) {
     _isInit = false;
     super.didChangeDependencies();
   }
 
-  //kalendarz wyboru daty 
+  Future<void> _showHiveSelectionDialog() async {
+    List<int> tempSelected = _selectedHiveNrs.toList();
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (builderContext, setDialogState) {
+            final allSelected = tempSelected.length == _availableHives.length && _availableHives.isNotEmpty;
+            return AlertDialog(
+              title: Text(AppLocalizations.of(context)!.selectHives, textAlign: TextAlign.center),
+              content: SizedBox(
+                width: 300,
+                height: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Zaznacz/Odznacz wszystkie
+                    InkWell(
+                      onTap: () {
+                        setDialogState(() {
+                          if (allSelected) {
+                            tempSelected.clear();
+                          } else {
+                            tempSelected = _availableHives.map((h) => h.ulNr).toList();
+                          }
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              allSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              allSelected
+                                ? AppLocalizations.of(context)!.deselectAll
+                                : AppLocalizations.of(context)!.selectAll,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Divider(),
+                    // Lista uli z checkboxami
+                    Expanded(
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: _availableHives.length,
+                        itemBuilder: (ctx, i) {
+                          final hive = _availableHives[i];
+                          final isHiveChecked = tempSelected.contains(hive.ulNr);
+                          return CheckboxListTile(
+                            title: Text('${AppLocalizations.of(context)!.hIve} ${hive.ulNr}'),
+                            value: isHiveChecked,
+                            activeColor: Theme.of(context).primaryColor,
+                            onChanged: (bool? value) {
+                              setDialogState(() {
+                                if (value == true) {
+                                  tempSelected.add(hive.ulNr);
+                                } else {
+                                  tempSelected.remove(hive.ulNr);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedHiveNrs = (tempSelected..sort()).toSet();
+                    });
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _loadApiaries() async {
+    await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
+    setState(() {
+      _apiaries = Provider.of<Apiarys>(context, listen: false).items;
+    });
+  }
+
+  Future<void> _loadHivesForApiary(int pasiekaNr) async {
+    if (pasiekaNr <= 0 || pasiekaNr == _loadedForApiary) return;
+    await Provider.of<Hives>(context, listen: false).fetchAndSetHives(pasiekaNr);
+    final hives = Provider.of<Hives>(context, listen: false).items;
+    setState(() {
+      _availableHives = hives;
+      _loadedForApiary = pasiekaNr;
+      // Usuń z zaznaczonych ule które nie istnieją w nowej pasiece
+      final validNrs = hives.map((h) => h.ulNr).toSet();
+      _selectedHiveNrs.removeWhere((nr) => !validNrs.contains(nr));
+    });
+  }
+
+  //kalendarz wyboru daty
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -368,12 +494,12 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
  
  
                           
-// pasieka
+// pasieka i ul
                              SizedBox(
                                 height: 15,
                               ),
+                          if (edycja)
                               Row(
-                                  //mainAxisAlignment: MainAxisAlignment.center,
                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: <Widget>[
@@ -392,7 +518,6 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                               borderSide: BorderSide(color: Colors.blue)),
                                           labelText: (AppLocalizations.of(context)!.apiaryNr),
                                           labelStyle: TextStyle(color: Colors.black),
-                                          //hintText:  (AppLocalizations.of(context)!.apiaryNr),
                                         ),
                                         validator: (value) {
                                           if (value!.isEmpty) {
@@ -403,39 +528,126 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                         }
                                       ),
                                     ),
-                                   
-//numer ula
-                                  SizedBox(
-                                    width: 150,
-                                    child: TextFormField(
-                                      minLines: 1,
-                                      maxLines: 2,
-                                      initialValue: nowyNrUla.toString(),
-                                      keyboardType: TextInputType.number,
-                                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                    SizedBox(
+                                      width: 150,
+                                      child: TextFormField(
+                                        minLines: 1,
+                                        maxLines: 2,
+                                        initialValue: nowyNrUla.toString(),
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                        decoration: InputDecoration(
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(color: Colors.grey)),
+                                          focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(color: Colors.blue)),
+                                          labelText: (AppLocalizations.of(context)!.hIveNr),
+                                          labelStyle: TextStyle(color: Colors.black),
+                                        ),
+                                        validator: (value) {
+                                          if (value!.isEmpty) {
+                                            return (AppLocalizations.of(context)!.enter);
+                                          }
+                                          nowyNrUla = int.parse(value);
+                                          return null;
+                                        }
+                                      ),
+                                    ),
+                                  ]),
+
+// Nowa notatka - dropdown pasieki + przycisk wyboru uli
+                          if (!edycja)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: DropdownButtonFormField<int>(
+                                      value: (nowyNrPasieki != null && nowyNrPasieki! > 0) ? nowyNrPasieki : null,
                                       decoration: InputDecoration(
                                         enabledBorder: OutlineInputBorder(
-                                            borderSide:
-                                                BorderSide(color: Colors.grey)),
+                                            borderSide: BorderSide(color: Colors.grey)),
                                         focusedBorder: OutlineInputBorder(
-                                            borderSide:
-                                                BorderSide(color: Colors.blue)),
-                                        labelText:
-                                            (AppLocalizations.of(context)!.hIveNr),
+                                            borderSide: BorderSide(color: Colors.blue)),
+                                        labelText: AppLocalizations.of(context)!.apiaryNr,
                                         labelStyle: TextStyle(color: Colors.black),
-                                        //hintText:(AppLocalizations.of(context)!.hIveNr),
                                       ),
-                                      validator: (value) {
-                                        if (value!.isEmpty) {
-                                          return (AppLocalizations.of(context)!.enter);
+                                      items: _apiaries.map((apiary) {
+                                        return DropdownMenuItem<int>(
+                                          value: apiary.pasiekaNr,
+                                          child: Text('${AppLocalizations.of(context)!.aPiary} ${apiary.pasiekaNr}'),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          setState(() {
+                                            nowyNrPasieki = value;
+                                            _selectedHiveNrs.clear();
+                                            _availableHives.clear();
+                                            _loadedForApiary = null;
+                                          });
                                         }
-                                        nowyNrUla = int.parse(value);
+                                      },
+                                      validator: (value) {
+                                        if (value == null) {
+                                          return AppLocalizations.of(context)!.enter;
+                                        }
+                                        nowyNrPasieki = value;
                                         return null;
-                                     }
-                                    ), 
+                                      },
+                                    ),
                                   ),
-                                    
-                                  ]),
+                                  if (nowyNrPasieki != null && nowyNrPasieki! > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: SizedBox(
+                                        height: 58,
+                                        child: OutlinedButton.icon(
+                                          icon: Icon(Icons.list, size: 18),
+                                          label: Text(
+                                            AppLocalizations.of(context)!.selectHives,
+                                            style: TextStyle(fontSize: 13),
+                                          ),
+                                          onPressed: () async {
+                                            await _loadHivesForApiary(nowyNrPasieki!);
+                                            if (_availableHives.isEmpty) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text(AppLocalizations.of(context)!.noHivesInApiary)),
+                                              );
+                                              return;
+                                            }
+                                            await _showHiveSelectionDialog();
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+
+// Wybrane ule - przewijany poziomy wiersz
+                          if (!edycja && _selectedHiveNrs.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 10.0),
+                                  child: SizedBox(
+                                    height: 40,
+                                    child: ListView(
+                                      scrollDirection: Axis.horizontal,
+                                      children: (_selectedHiveNrs.toList()..sort()).map((nr) => Padding(
+                                        padding: const EdgeInsets.only(right: 6.0),
+                                        child: Chip(
+                                          label: Text('${AppLocalizations.of(context)!.hIve} $nr', style: TextStyle(fontSize: 12)),
+                                          deleteIcon: Icon(Icons.close, size: 16),
+                                          onDeleted: () {
+                                            setState(() {
+                                              _selectedHiveNrs.remove(nr);
+                                            });
+                                          },
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          visualDensity: VisualDensity.compact,
+                                        ),
+                                      )).toList(),
+                                    ),
+                                  ),
+                                ),
 //tytul
                                SizedBox(
                                 height: 15,
@@ -602,7 +814,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                               shape: const StadiumBorder(
                                 side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
                                 ),
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_formKey1.currentState!.validate()) {
                                   // if (nowyZasobId! >= 4) nowyMiara = 2;
                                   if (edycja) {
@@ -632,12 +844,20 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                       // });
                                     });
                                   } else {
-                                    Notes.insertNotatki(
-                                      dateController.text,
-                                        //notatki[0].id,
+                                    // Zbierz listę uli do zapisu
+                                    List<int> uleDozapisu = [];
+                                    if (_selectedHiveNrs.isNotEmpty) {
+                                      uleDozapisu = _selectedHiveNrs.toList()..sort();
+                                    } else {
+                                      uleDozapisu = [0];
+                                    }
+                                    // Wstaw notatkę dla każdego wybranego ula
+                                    for (final ulNr in uleDozapisu) {
+                                      await Notes.insertNotatki(
+                                        dateController.text,
                                         nowyTytul!,
                                         nowyNrPasieki!,
-                                        nowyNrUla!,
+                                        ulNr,
                                         nowyNotatka!,
                                         0,
                                         nowyPriorytet!,
@@ -645,11 +865,20 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                         '',
                                         '',
                                         nowyUwagi!,
-                                        0); //arch
+                                        0,
+                                      );
+                                    }
                                     NotificationHelper.scheduleAllNotifications();
                                     Provider.of<Notes>(context, listen: false)
                                         .fetchAndSetNotatki()
                                         .then((_) {
+                                      if (uleDozapisu.length > 1) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(
+                                            AppLocalizations.of(context)!.noteCreatedForHives(uleDozapisu.length),
+                                          )),
+                                        );
+                                      }
                                       Navigator.of(context).pop();
                                     });
                                   }

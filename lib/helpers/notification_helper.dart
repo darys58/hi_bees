@@ -371,6 +371,37 @@ class NotificationHelper {
     }
   }
 
+  /// Planuje powiadomienie z podanym tytułem, treścią i datą (publiczne API)
+  static Future<void> scheduleSimpleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime dateTime,
+  }) async {
+    final scheduledDate = tz.TZDateTime(
+      tz.local,
+      dateTime.year,
+      dateTime.month,
+      dateTime.day,
+      dateTime.hour,
+      dateTime.minute,
+    );
+
+    if (scheduledDate.isAfter(tz.TZDateTime.now(tz.local))) {
+      await _scheduleNotification(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+      );
+    }
+  }
+
+  /// Anuluje pojedyncze powiadomienie po ID (bez zapamiętywania w cancelled)
+  static Future<void> cancelNotificationById(int notifId) async {
+    await _plugin.cancel(notifId);
+  }
+
   /// Anuluje wszystkie powiadomienia
   static Future<void> cancelAllNotifications() async {
     await _plugin.cancelAll();

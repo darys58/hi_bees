@@ -9,6 +9,7 @@ import 'package:printing/printing.dart';
 import '../models/queen.dart';
 import '../models/info.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/queen_helpers.dart';
 import '../globals.dart' as globals;
 
 class QueenHistoryScreen extends StatefulWidget {
@@ -98,43 +99,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
   }
 
   List<Widget> _buildMarkIcon(String znak, BuildContext context) {
-    if (znak.isEmpty || znak == '0') return [];
-    if (znak == AppLocalizations.of(context)!.unmarked)
-      return [
-        const Icon(Icons.circle,
-            size: 20.0, color: Color.fromARGB(255, 61, 61, 61))
-      ];
-    if (znak == AppLocalizations.of(context)!.markedWhite)
-      return [
-        const Icon(Icons.check_circle_outline_outlined,
-            size: 20.0, color: Color.fromARGB(255, 0, 0, 0))
-      ];
-    if (znak == AppLocalizations.of(context)!.markedYellow)
-      return [
-        const Icon(Icons.check_circle_rounded,
-            size: 20.0, color: Color.fromARGB(255, 215, 208, 0))
-      ];
-    if (znak == AppLocalizations.of(context)!.markedRed)
-      return [
-        const Icon(Icons.check_circle_rounded,
-            size: 20.0, color: Color.fromARGB(255, 255, 0, 0))
-      ];
-    if (znak == AppLocalizations.of(context)!.markedGreen)
-      return [
-        const Icon(Icons.check_circle_rounded,
-            size: 20.0, color: Color.fromARGB(255, 15, 200, 8))
-      ];
-    if (znak == AppLocalizations.of(context)!.markedBlue)
-      return [
-        const Icon(Icons.check_circle_rounded,
-            size: 20.0, color: Color.fromARGB(255, 0, 102, 255))
-      ];
-    if (znak == AppLocalizations.of(context)!.markedOther)
-      return [
-        const Icon(Icons.check_circle_rounded,
-            size: 20.0, color: Color.fromARGB(255, 158, 166, 172))
-      ];
-    return [];
+    return markToIcon(markToKey(znak));
   }
 
   Future<void> _generateAndSharePdf() async {
@@ -181,7 +146,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                   style: pw.TextStyle(fontSize: 12, font: fontBold),
                 ),
                 pw.TextSpan(
-                  text: queen.rasa,
+                  text: breedToDisplay(breedToKey(queen.rasa), loc),
                   style: pw.TextStyle(fontSize: 10, font: fontRegular),
                 ),
               ],
@@ -193,13 +158,13 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
       // Znak, napis, źródło, data pozyskania
       List<String> detailParts = [];
       if (queen.znak.isNotEmpty && queen.znak != '0') {
-        detailParts.add('${loc.pdfMark}: ${queen.znak}');
+        detailParts.add('${loc.pdfMark}: ${markToDisplay(markToKey(queen.znak), loc)}');
       }
       if (queen.napis.isNotEmpty && queen.napis != '0') {
         detailParts.add('${loc.pdfLabel}: ${queen.napis}');
       }
       if (queen.zrodlo.isNotEmpty && queen.zrodlo != '0') {
-        detailParts.add('${loc.pdfSource}: ${queen.zrodlo}');
+        detailParts.add('${loc.pdfSource}: ${sourceToDisplay(sourceToKey(queen.zrodlo), loc)}');
       }
       if (queen.data.isNotEmpty && queen.data != '0') {
         detailParts.add('${loc.pdfObtainedDate}: ${_zmienDatePelna(queen.data)}');
@@ -480,7 +445,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                           ),
                         ),
                         TextSpan(
-                          text: queen.rasa,
+                          text: breedToDisplay(breedToKey(queen.rasa), AppLocalizations.of(context)!),
                           style: const TextStyle(
                             fontSize: 14,
                             color: Color.fromARGB(255, 0, 0, 0),
@@ -499,7 +464,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold)),
                       if (queen.zrodlo.isNotEmpty && queen.zrodlo != '0')
-                        Text('  ${queen.zrodlo}',
+                        Text('  ${sourceToDisplay(sourceToKey(queen.zrodlo), AppLocalizations.of(context)!)}',
                             style: const TextStyle(fontSize: 14)),
                       if (queen.data.isNotEmpty && queen.data != '0')
                         Text('  ${_zmienDatePelna(queen.data)}',

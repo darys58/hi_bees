@@ -12,6 +12,7 @@ import '../models/photo.dart';
 import '../models/dodatki1.dart';
 import '../models/note.dart';
 import '../globals.dart' as globals;
+import '../helpers/queen_helpers.dart';
 import '../widgets/hives_item.dart';
 
 class SummaryScreen extends StatefulWidget {
@@ -626,7 +627,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                               ),
                             ),
                             TextSpan(
-                              text: _queens[qi].rasa,
+                              text: breedToDisplay(breedToKey(_queens[qi].rasa), AppLocalizations.of(context)!),
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Color.fromARGB(255, 0, 0, 0),
@@ -639,21 +640,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          if (_queens[qi].znak != '' && _queens[qi].znak != '0')
-                            if (_queens[qi].znak == AppLocalizations.of(context)!.unmarked)
-                              const Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61))
-                            else if (_queens[qi].znak == AppLocalizations.of(context)!.markedWhite)
-                              const Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0))
-                            else if (_queens[qi].znak == AppLocalizations.of(context)!.markedYellow)
-                              const Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0))
-                            else if (_queens[qi].znak == AppLocalizations.of(context)!.markedRed)
-                              const Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0))
-                            else if (_queens[qi].znak == AppLocalizations.of(context)!.markedGreen)
-                              const Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8))
-                            else if (_queens[qi].znak == AppLocalizations.of(context)!.markedBlue)
-                              const Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255))
-                            else if (_queens[qi].znak == AppLocalizations.of(context)!.markedOther)
-                              const Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172)),
+                          ...markToIcon(markToKey(_queens[qi].znak)),
                           Text(' ${_queens[qi].napis} ',
                             style: const TextStyle(
                               fontSize: 18,
@@ -661,7 +648,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                               color: Color.fromARGB(255, 0, 0, 0),
                             ),
                           ),
-                          Text('  ${_queens[qi].zrodlo} ${_zmienDateCala(_queens[qi].data)} ',
+                          Text('  ${sourceToDisplay(sourceToKey(_queens[qi].zrodlo), AppLocalizations.of(context)!)} ${_zmienDateCala(_queens[qi].data)} ',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Color.fromARGB(255, 0, 0, 0),

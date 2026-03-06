@@ -5,6 +5,9 @@ import '../screens/syrup_calculator_screen.dart';
 import '../screens/syrup21_calculator_screen.dart';
 import '../screens/syrup11_calculator_screen.dart';
 import '../screens/cake_calculator_screen.dart';
+import '../screens/oxalic_calculator_screen.dart';
+import '../screens/lactic_calculator_screen.dart';
+import '../screens/queen_rearing_screen.dart';
 
 class CalculatorScreen extends StatelessWidget {
   static const routeName = '/calculator';
@@ -79,6 +82,48 @@ class CalculatorScreen extends StatelessWidget {
               child: ListTile(
                 leading: Icon(Icons.cake),
                 title: Text(AppLocalizations.of(context)!.honeySugarCake),
+                trailing: Icon(Icons.chevron_right),
+              ),
+            ),
+          ),
+          // Kwas szczawiowy 3,2%
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context)
+                  .pushNamed(OxalicCalculatorScreen.routeName);
+            },
+            child: Card(
+              child: ListTile(
+                leading: Icon(Icons.science),
+                title: Text(AppLocalizations.of(context)!.oxalicAcidSolution),
+                trailing: Icon(Icons.chevron_right),
+              ),
+            ),
+          ),
+          // Kwas mlekowy 15%
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context)
+                  .pushNamed(LacticCalculatorScreen.routeName);
+            },
+            child: Card(
+              child: ListTile(
+                leading: Icon(Icons.science),
+                title: Text(AppLocalizations.of(context)!.lacticAcidSolution),
+                trailing: Icon(Icons.chevron_right),
+              ),
+            ),
+          ),
+          // Kalendarz wychowu matek
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context)
+                  .pushNamed(QueenRearingScreen.routeName);
+            },
+            child: Card(
+              child: ListTile(
+                leading: Icon(Icons.calendar_month),
+                title: Text(AppLocalizations.of(context)!.queenRearingCalendar),
                 trailing: Icon(Icons.chevron_right),
               ),
             ),

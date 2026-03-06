@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 //import '../helpers/db_helper.dart';
 //import 'package:flutter/services.dart';
 import '../models/queen.dart';
+import '../helpers/queen_helpers.dart';
 
 class QueenEditScreen extends StatefulWidget {
   static const routeName = '/queen_edit';
@@ -88,11 +89,11 @@ class _QueenEditScreenState extends State<QueenEditScreen> {
         // nowyRok = notatki[0].data.substring(0, 4);
         // nowyMiesiac = notatki[0].data.substring(5, 7);
         // nowyDzien = notatki[0].data.substring(8);
-        rasa = queens[0].rasa;
+        rasa = breedToKey(queens[0].rasa);
         linia = queens[0].linia;
-        znak = queens[0].znak;
+        znak = markToKey(queens[0].znak);
         napis = queens[0].napis;
-        zrodlo = queens[0].zrodlo;
+        zrodlo = sourceToKey(queens[0].zrodlo);
         pasieka = queens[0].pasieka;
         ul = queens[0].ul;
         uwagi = queens[0].uwagi;
@@ -106,9 +107,9 @@ class _QueenEditScreenState extends State<QueenEditScreen> {
         // nowyRok = DateFormat('yyyy').format(DateTime.now());
         // nowyMiesiac = DateFormat('MM').format(DateTime.now());
         // nowyDzien = DateFormat('dd').format(DateTime.now());       
-        rasa = AppLocalizations.of(context)!.cArniolan;
-        zrodlo = AppLocalizations.of(context)!.bOught;
-        znak = AppLocalizations.of(context)!.unmarked;
+        rasa = kBreedCarniolan;
+        zrodlo = kSourceBought;
+        znak = kMarkUnmarked;
         linia = '';
         napis = '';
         uwagi = '';
@@ -240,18 +241,18 @@ class _QueenEditScreenState extends State<QueenEditScreen> {
                               child: DropdownButton(
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
-                                value: zrodlo,  
+                                value: zrodlo,
                                 items: [
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.bOught),
-                                                  value: AppLocalizations.of(context)!.bOught),
+                                                  value: kSourceBought),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.cOught),
-                                                  value: AppLocalizations.of(context)!.cOught),
+                                                  value: kSourceCaught),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.oWn),
-                                                  value: AppLocalizations.of(context)!.oWn),                                                                                                        
+                                                  value: kSourceOwn),
                                 ], //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
-                                    zrodlo = newValue!.toString(); 
+                                    zrodlo = newValue!.toString();
                                   });
                                 }, //onChangeDropdownItem
                               ),
@@ -286,34 +287,34 @@ class _QueenEditScreenState extends State<QueenEditScreen> {
                               child: DropdownButton(
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
-                                value: rasa,  
+                                value: rasa,
                                 items: [
                                   DropdownMenuItem(child: Text('Buckfast'),
-                                                  value: 'Buckfast'),
+                                                  value: kBreedBuckfast),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.iTalian),
-                                                  value: AppLocalizations.of(context)!.iTalian),
+                                                  value: kBreedItalian),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.cArniolan),
-                                                  value: AppLocalizations.of(context)!.cArniolan), 
+                                                  value: kBreedCarniolan),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.cAucasian),
-                                                  value: AppLocalizations.of(context)!.cAucasian), 
+                                                  value: kBreedCaucasian),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.cEntral),
-                                                  value: AppLocalizations.of(context)!.cEntral), 
+                                                  value: kBreedCentral),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.iBerian),
-                                                  value: AppLocalizations.of(context)!.iBerian),
+                                                  value: kBreedIberian),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.pErsian),
-                                                  value: AppLocalizations.of(context)!.pErsian), 
+                                                  value: kBreedPersian),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gReek),
-                                                  value: AppLocalizations.of(context)!.gReek), 
+                                                  value: kBreedGreek),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.eAster),
-                                                  value: AppLocalizations.of(context)!.eAster), 
+                                                  value: kBreedEastern),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.aNatolian),
-                                                  value: AppLocalizations.of(context)!.aNatolian),
+                                                  value: kBreedAnatolian),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.oTherQueen),
-                                                  value: AppLocalizations.of(context)!.oTherQueen),                
-                                                    ], //lista elementów do wyboru
+                                                  value: kBreedOther),
+                                ], //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
-                                    rasa = newValue!.toString(); 
+                                    rasa = newValue!.toString();
                                   });
                                 }, //onChangeDropdownItem
                               ),
@@ -372,27 +373,26 @@ class _QueenEditScreenState extends State<QueenEditScreen> {
                               child: DropdownButton(
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
-                                value: znak,  
+                                value: znak,
                                 items: [
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.unmarked),
-                                                  value:AppLocalizations.of(context)!.unmarked),
+                                                  value: kMarkUnmarked),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedWhite),
-                                                  value:AppLocalizations.of(context)!.markedWhite),
+                                                  value: kMarkWhite),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedYellow),
-                                                  value:AppLocalizations.of(context)!.markedYellow),
-                                  //DropdownMenuItem(child: Row( children:[Text(AppLocalizations.of(context)!.markedRed),Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)]),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedRed),                
-                                                  value:AppLocalizations.of(context)!.markedRed),
+                                                  value: kMarkYellow),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedRed),
+                                                  value: kMarkRed),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedGreen),
-                                                  value:AppLocalizations.of(context)!.markedGreen),
+                                                  value: kMarkGreen),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedBlue),
-                                                  value:AppLocalizations.of(context)!.markedBlue),
+                                                  value: kMarkBlue),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedOther),
-                                                  value:AppLocalizations.of(context)!.markedOther),                                                                       
+                                                  value: kMarkOther),
                                 ], //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
-                                    znak = newValue!.toString(); 
+                                    znak = newValue!.toString();
                                   });
                                 }, //onChangeDropdownItem
                               ),

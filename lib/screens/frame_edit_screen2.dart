@@ -288,9 +288,16 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
       else if(globals.numeryWieluRamek == 0) _selectedNumeryWieluRamek=<bool>[true, false, false];
       else if(globals.numeryWieluRamek == 2) _selectedNumeryWieluRamek=<bool>[false, false, true];
 
-      globals.isEuropeanFormat()
-        ? gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych','inny']
-        : gridItemsKolor = ['black','yellow','red','green','blue','white','no\ndata','other'];
+      gridItemsKolor = [
+        AppLocalizations.of(context)!.blackColor.trim(),
+        AppLocalizations.of(context)!.yellowColor.trim(),
+        AppLocalizations.of(context)!.redColor.trim(),
+        AppLocalizations.of(context)!.greenColor.trim(),
+        AppLocalizations.of(context)!.blueColor.trim(),
+        AppLocalizations.of(context)!.whiteColor.trim(),
+        AppLocalizations.of(context)!.noData,
+        AppLocalizations.of(context)!.otherColor,
+      ];
       
       double heightScreen = MediaQuery.of(context).size.height;
       // print('wysokość ekranu');
@@ -890,94 +897,51 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
                     onTap: () {
                       
                     
-                      if(tryb == 'dodaj')
-                        if(globals.isEuropeanFormat()){  
-                          switch (data) {
-                            case 'czarny': 
-                              setState(() {
-                                matkaDodL = 1;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;
-                            case 'żółty': 
-                              setState(() {
-                                matkaDodL = 2;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
-                              }); break;  
-                            case 'czerwony': 
-                              setState(() {
-                                matkaDodL = 3;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
-                              }); break; 
-                            case 'zielony': 
-                              setState(() {
-                                matkaDodL = 4;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
-                              }); break;                        
-                            case 'niebieski': 
-                              setState(() {
-                                matkaDodL = 5;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
-                              }); break; 
-                            case 'biały': 
-                              setState(() {
-                                matkaDodL = 6;
-                                matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;
-                            case 'inny': 
-                              setState(() {
-                                matkaDodL = 7;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
-                              }); break;                       
-                            default:
-                              setState(() {
-                                matkaDodL = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
-                              }); 
-                          }
-                        }else{
-                          switch (data) {
-                            case 'black': 
-                              setState(() {
-                                matkaDodL = 1;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;
-                            case 'yellow': 
-                              setState(() {
-                                matkaDodL = 2;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
-                              }); break;  
-                            case 'red': 
-                              setState(() {
-                                matkaDodL = 3;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
-                              }); break; 
-                            case 'green': 
-                              setState(() {
-                                matkaDodL = 4;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
-                              }); break;                        
-                            case 'blue': 
-                              setState(() {
-                                matkaDodL = 5;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
-                              }); break; 
-                            case 'white': 
-                              setState(() {
-                                matkaDodL = 6;
-                                matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;                     
-                            case 'other': 
-                              setState(() {
-                                matkaDodL = 7;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
-                              }); break;  
-                            default:
-                              setState(() {
-                                matkaDodL = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
-                              }); 
-                          }
+                      if(tryb == 'dodaj'){
+                        int colorIndex = gridItemsKolor.indexOf(data);
+                        switch (colorIndex) {
+                          case 0: // black
+                            setState(() {
+                              matkaDodL = 1;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
+                            }); break;
+                          case 1: // yellow
+                            setState(() {
+                              matkaDodL = 2;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
+                            }); break;
+                          case 2: // red
+                            setState(() {
+                              matkaDodL = 3;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
+                            }); break;
+                          case 3: // green
+                            setState(() {
+                              matkaDodL = 4;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
+                            }); break;
+                          case 4: // blue
+                            setState(() {
+                              matkaDodL = 5;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
+                            }); break;
+                          case 5: // white
+                            setState(() {
+                              matkaDodL = 6;
+                              matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
+                            }); break;
+                          case 7: // other
+                            setState(() {
+                              matkaDodL = 7;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
+                            }); break;
+                          default: // no data (6) or unknown
+                            setState(() {
+                              matkaDodL = 0;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
+                            });
                         }
+                      }
                       
                       Navigator.of(context).pop();
                      
@@ -1057,94 +1021,51 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
                     onTap: () {
                       
                     
-                      if(tryb == 'dodaj')
-                        if(globals.isEuropeanFormat()){  
-                          switch (data) {
-                            case 'czarny': 
-                              setState(() {
-                                matkaDodP = 1;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;
-                            case 'żółty': 
-                              setState(() {
-                                matkaDodP = 2;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
-                              }); break;  
-                            case 'czerwony': 
-                              setState(() {
-                                matkaDodP = 3;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
-                              }); break; 
-                            case 'zielony': 
-                              setState(() {
-                                matkaDodP = 4;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
-                              }); break;                        
-                            case 'niebieski': 
-                              setState(() {
-                                matkaDodP = 5;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
-                              }); break; 
-                            case 'biały': 
-                              setState(() {
-                                matkaDodP = 6;
-                                matkaKolorP = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;                     
-                            case 'inny': 
-                              setState(() {
-                                matkaDodP = 7;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
-                              }); break;  
-                            default:
-                              setState(() {
-                                matkaDodP = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
-                              }); 
-                          }
-                        }else{
-                          switch (data) {
-                            case 'black': 
-                              setState(() {
-                                matkaDodP = 1;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;
-                            case 'yellow': 
-                              setState(() {
-                                matkaDodP = 2;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
-                              }); break;  
-                            case 'red': 
-                              setState(() {
-                                matkaDodP = 3;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
-                              }); break; 
-                            case 'green': 
-                              setState(() {
-                                matkaDodP = 4;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
-                              }); break;                        
-                            case 'blue': 
-                              setState(() {
-                                matkaDodP = 5;
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
-                              }); break; 
-                            case 'white': 
-                              setState(() {
-                                matkaDodP = 6;
-                                matkaKolorP = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;                     
-                            case 'other': 
-                              setState(() {
-                                matkaDodP = 7;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
-                              }); break;  
-                            default:
-                              setState(() {
-                                matkaDodP = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
-                                matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
-                              }); 
-                          }
+                      if(tryb == 'dodaj'){
+                        int colorIndex = gridItemsKolor.indexOf(data);
+                        switch (colorIndex) {
+                          case 0: // black
+                            setState(() {
+                              matkaDodP = 1;
+                              matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
+                            }); break;
+                          case 1: // yellow
+                            setState(() {
+                              matkaDodP = 2;
+                              matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
+                            }); break;
+                          case 2: // red
+                            setState(() {
+                              matkaDodP = 3;
+                              matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
+                            }); break;
+                          case 3: // green
+                            setState(() {
+                              matkaDodP = 4;
+                              matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
+                            }); break;
+                          case 4: // blue
+                            setState(() {
+                              matkaDodP = 5;
+                              matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
+                            }); break;
+                          case 5: // white
+                            setState(() {
+                              matkaDodP = 6;
+                              matkaKolorP = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
+                            }); break;
+                          case 7: // other
+                            setState(() {
+                              matkaDodP = 7;
+                              matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
+                            }); break;
+                          default: // no data (6) or unknown
+                            setState(() {
+                              matkaDodP = 0;
+                              matkaKolorP = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
+                            });
                         }
+                      }
                       
                       Navigator.of(context).pop();
                      

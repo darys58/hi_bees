@@ -25,6 +25,7 @@ import '../screens/infos_edit_screen.dart';
 import '../screens/frame_edit_screen.dart';
 //import '../screens/frame_move_screen.dart';
 import '../screens/frame_edit_screen2.dart';
+import '../helpers/queen_helpers.dart';
 //import '../screens/add_queen_screen.dart';
 
 class InfoScreen extends StatefulWidget {
@@ -1000,7 +1001,7 @@ class _InfoScreenState extends State<InfoScreen> {
             infos[i].parametr == AppLocalizations.of(context)!.queenIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
-            if(infos[i].wartosc == 'wolna' || infos[i].wartosc == 'freed')
+            if(infos[i].wartosc == AppLocalizations.of(context)!.freed)
                image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
             else image4 = Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
             wartosc4 = 'ID' + infos[i].pogoda + ' ' + infos[i].wartosc +
@@ -1014,25 +1015,26 @@ class _InfoScreenState extends State<InfoScreen> {
             infos[i].parametr == " " + AppLocalizations.of(context)!.queen) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
-            if(infos[i].wartosc == 'nie ma znak' || infos[i].wartosc == 'unmarked')
+            final loc = AppLocalizations.of(context)!;
+            if(infos[i].wartosc == loc.unmarked)
               icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);
-            else if(infos[i].wartosc == 'ma inny znak' || infos[i].wartosc == 'marked other')
+            else if(infos[i].wartosc == loc.markedOther)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),);
-            else if(infos[i].wartosc == 'ma biały znak' || infos[i].wartosc == 'marked white') 
+            else if(infos[i].wartosc == loc.markedWhite)
               icon2 = Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),);
-            else if(infos[i].wartosc == 'ma żółty znak' || infos[i].wartosc == 'marked yellow') 
+            else if(infos[i].wartosc == loc.markedYellow)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),);
-            else if(infos[i].wartosc == 'ma czerwony znak' || infos[i].wartosc == 'marked red') 
+            else if(infos[i].wartosc == loc.markedRed)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
-            else if(infos[i].wartosc == 'ma zielony znak' || infos[i].wartosc == 'marked green')
+            else if(infos[i].wartosc == loc.markedGreen)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-            else if(infos[i].wartosc == 'ma niebieski znak' || infos[i].wartosc == 'marked blue')
+            else if(infos[i].wartosc == loc.markedBlue)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),);
-            else if(infos[i].wartosc == 'nie ma' || infos[i].wartosc == 'gone'){
+            else if(infos[i].wartosc == loc.gone){
               icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
               brakMatki = true;
               }
-            else if(infos[i].wartosc == 'brak' || infos[i].wartosc == 'missing'){
+            else if(infos[i].wartosc == loc.missing){
               icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
                brakMatki = true;
               }
@@ -2694,53 +2696,28 @@ class _InfoScreenState extends State<InfoScreen> {
                                   color: Color.fromARGB(255, 0, 0, 0)),
                               ),
                             TextSpan(
-                              text: ('${queens[2].rasa}'),
+                              text: breedToDisplay(breedToKey(queens[2].rasa), AppLocalizations.of(context)!),
                               style: TextStyle(
                                   fontSize: 14,
-                                  //fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0)),
                               ),
-                            // TextSpan(
-                            //   text: (
-                            //     '${queens[0].napis} '),
-                            //   style: TextStyle(
-                            //       fontSize: 18,
-                            //       fontWeight: FontWeight.bold,
-                            //       color: Color.fromARGB(255, 0, 0, 0)),
-                            //   ),
-                
-                            ])),  
-                        
+                            ])),
+
                       if(queens.length > 2)
                         if(queens[2].dataStraty =='') //jezeli matka zyje
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              if(queens[2].znak != '' && queens[2].znak != '0') 
-                                if(queens[2].znak == AppLocalizations.of(context)!.unmarked)
-                                  Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
-                                else if(queens[2].znak == AppLocalizations.of(context)!.markedWhite)
-                                  Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),)
-                                else if(queens[2].znak == AppLocalizations.of(context)!.markedYellow)
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),)
-                                else if(queens[2].znak == AppLocalizations.of(context)!.markedRed)
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)
-                                else if(queens[2].znak == AppLocalizations.of(context)!.markedGreen) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
-                                else if(queens[2].znak == AppLocalizations.of(context)!.markedBlue) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),)
-                                else if(queens[2].znak == AppLocalizations.of(context)!.markedOther) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),),
-                
+                              ...markToIcon(markToKey(queens[2].znak)),
+
                           Text(' ${queens[2].napis} ',
                               style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0))),
-                          Text('  ${queens[2].zrodlo} ${zmienDate_cala(queens[2].data)} ',
+                          Text('  ${sourceToDisplay(sourceToKey(queens[2].zrodlo), AppLocalizations.of(context)!)} ${zmienDate_cala(queens[2].data)} ',
                               style: TextStyle(
                                   fontSize: 14,
-                                  //fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0))),
                            ],),
                        
@@ -2769,53 +2746,28 @@ class _InfoScreenState extends State<InfoScreen> {
                                   color: Color.fromARGB(255, 0, 0, 0)),
                               ),
                             TextSpan(
-                              text: ('${queens[1].rasa}'),
+                              text: breedToDisplay(breedToKey(queens[1].rasa), AppLocalizations.of(context)!),
                               style: TextStyle(
                                   fontSize: 14,
-                                  //fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0)),
                               ),
-                            // TextSpan(
-                            //   text: (
-                            //     '${queens[0].napis} '),
-                            //   style: TextStyle(
-                            //       fontSize: 18,
-                            //       fontWeight: FontWeight.bold,
-                            //       color: Color.fromARGB(255, 0, 0, 0)),
-                            //   ),
-                
-                            ])),  
-                        
+                            ])),
+
                       if(queens.length > 1)
                         if(queens[1].dataStraty =='') //jezeli matka zyje
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              if(queens[1].znak != '' && queens[1].znak != '0') 
-                                if(queens[1].znak == AppLocalizations.of(context)!.unmarked)
-                                  Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
-                                else if(queens[1].znak == AppLocalizations.of(context)!.markedWhite)
-                                  Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),)
-                                else if(queens[1].znak == AppLocalizations.of(context)!.markedYellow)
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),)
-                                else if(queens[1].znak == AppLocalizations.of(context)!.markedRed)
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)
-                                else if(queens[1].znak == AppLocalizations.of(context)!.markedGreen) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
-                                else if(queens[1].znak == AppLocalizations.of(context)!.markedBlue) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),)
-                                else if(queens[1].znak == AppLocalizations.of(context)!.markedOther) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),),
-                
+                              ...markToIcon(markToKey(queens[1].znak)),
+
                           Text(' ${queens[1].napis} ',
                               style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0))),
-                          Text('  ${queens[1].zrodlo} ${zmienDate_cala(queens[1].data)} ',
+                          Text('  ${sourceToDisplay(sourceToKey(queens[1].zrodlo), AppLocalizations.of(context)!)} ${zmienDate_cala(queens[1].data)} ',
                               style: TextStyle(
                                   fontSize: 14,
-                                  //fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0))),
                            ],),
                        
@@ -2845,53 +2797,28 @@ class _InfoScreenState extends State<InfoScreen> {
                                   color: Color.fromARGB(255, 0, 0, 0)),
                               ),
                             TextSpan(
-                              text: ('${queens[0].rasa}'),
+                              text: breedToDisplay(breedToKey(queens[0].rasa), AppLocalizations.of(context)!),
                               style: TextStyle(
                                   fontSize: 14,
-                                  //fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0)),
                               ),
-                            // TextSpan(
-                            //   text: (
-                            //     '${queens[0].napis} '),
-                            //   style: TextStyle(
-                            //       fontSize: 18,
-                            //       fontWeight: FontWeight.bold,
-                            //       color: Color.fromARGB(255, 0, 0, 0)),
-                            //   ),
-                
-                            ])),  
-      //drugi wersz:  znak, napis, zródło, data pozyskania                 
+                            ])),
+      //drugi wersz:  znak, napis, zródło, data pozyskania
                       if(queens.length > 0)
                         if(queens[0].dataStraty =='') //jezeli matka zyje
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              if(queens[0].znak != '' && queens[0].znak != '0') 
-                                if(queens[0].znak == AppLocalizations.of(context)!.unmarked)
-                                  Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
-                                else if(queens[0].znak == AppLocalizations.of(context)!.markedWhite)
-                                  Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),)
-                                else if(queens[0].znak == AppLocalizations.of(context)!.markedYellow)
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),)
-                                else if(queens[0].znak == AppLocalizations.of(context)!.markedRed)
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)
-                                else if(queens[0].znak == AppLocalizations.of(context)!.markedGreen) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
-                                else if(queens[0].znak == AppLocalizations.of(context)!.markedBlue) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),)
-                                else if(queens[0].znak == AppLocalizations.of(context)!.markedOther) 
-                                  Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),),
-                
+                              ...markToIcon(markToKey(queens[0].znak)),
+
                           Text(' ${queens[0].napis} ',
                               style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0))),
-                          Text('  ${queens[0].zrodlo} ${zmienDate_cala(queens[0].data)} ',
+                          Text('  ${sourceToDisplay(sourceToKey(queens[0].zrodlo), AppLocalizations.of(context)!)} ${zmienDate_cala(queens[0].data)} ',
                               style: TextStyle(
                                   fontSize: 14,
-                                  //fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 0, 0, 0))),
                            ],),
 //informacje o matce                  
@@ -3169,7 +3096,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         ElevatedButton.icon(
                           onPressed: () => _pickImage(ImageSource.camera),
                           icon: Icon(Icons.camera_alt, size: 20),
-                          label: Text(globals.isEuropeanFormat() ? 'Zdjęcie' : 'Photo'),
+                          label: Text(AppLocalizations.of(context)!.pHoto),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color.fromARGB(255, 252, 193, 104),
                             foregroundColor: Colors.black,
@@ -3181,7 +3108,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         ElevatedButton.icon(
                           onPressed: () => _pickImage(ImageSource.gallery),
                           icon: Icon(Icons.photo_library, size: 20),
-                          label: Text(globals.isEuropeanFormat() ? 'Galeria' : 'Gallery'),
+                          label: Text(AppLocalizations.of(context)!.gAllery),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color.fromARGB(255, 252, 193, 104),
                             foregroundColor: Colors.black,

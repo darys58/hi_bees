@@ -879,7 +879,7 @@ class _HivesScreenState extends State<HivesScreen> {
                   List<Info> infosMatka4 = hivesInfo.where((m4) {
                       return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  m4.parametr == AppLocalizations.of(context)!.queenIs; 
                     }).toList();
-                    if (infosMatka4[0].wartosc == 'wolna' || infosMatka4[0].wartosc == 'freed'){
+                    if (infosMatka4[0].wartosc == 'wolna' || infosMatka4[0].wartosc == 'freed' || infosMatka4[0].wartosc  == 'freed' || infosMatka4[0].wartosc  == 'frei' || infosMatka4[0].wartosc  == 'libre' || infosMatka4[0].wartosc  == 'libera' || infosMatka4[0].wartosc  == 'livre'){
                       matka4 = 'wolna';
                       if (ikona == 'red') {//bo był brak matki
                         ikona = 'orange';

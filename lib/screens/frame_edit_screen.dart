@@ -176,27 +176,85 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
           case 11: matecznikiDod = int.parse(nowaWartosc);break;
           case 12: usunmatDod = int.parse(nowaWartosc);break;
           case 13: switch (nowaWartosc) {
-                    case 'ramka pracy': _selectedToDo = [true, false, false, false];break; // ramka pracy | trzeba wirować | trzeba usunać | mozna izolować
+                    // PL
+                    case 'ramka pracy': _selectedToDo = [true, false, false, false];break;
                     case 'trzeba wirować': _selectedToDo = [false, true, false, false];break;
                     case 'trzeba usunąć': _selectedToDo = [false, false, true, false];break;
                     case 'można izolować': _selectedToDo = [false, false, false, true];break;
-                    case 'work frame': _selectedToDo = [true, false, false, false];break; // ramka pracy | trzeba wirować | trzeba usunać | mozna izolować
+                    // EN
+                    case 'work frame': _selectedToDo = [true, false, false, false];break;
                     case 'to extraction': _selectedToDo = [false, true, false, false];break;
                     case 'to delete': _selectedToDo = [false, false, true, false];break;
                     case 'to insulate': _selectedToDo = [false, false, false, true];break;
+                    // DE
+                    case 'Arbeitsrahmen': _selectedToDo = [true, false, false, false];break;
+                    case 'muss geschleudert werden': _selectedToDo = [false, true, false, false];break;
+                    case 'muss entfernt werden': _selectedToDo = [false, false, true, false];break;
+                    case 'kann isoliert werden': _selectedToDo = [false, false, false, true];break;
+                    // ES
+                    case 'cuadro de trabajo': _selectedToDo = [true, false, false, false];break;
+                    case 'para extraer': _selectedToDo = [false, true, false, false];break;
+                    case 'para eliminar': _selectedToDo = [false, false, true, false];break;
+                    case 'para aislar': _selectedToDo = [false, false, false, true];break;
+                    // FR
+                    case 'cadre de travail': _selectedToDo = [true, false, false, false];break;
+                    case 'à extraire': _selectedToDo = [false, true, false, false];break;
+                    case 'à supprimer': _selectedToDo = [false, false, true, false];break;
+                    case 'à isoler': _selectedToDo = [false, false, false, true];break;
+                    // IT
+                    case 'telaino di lavoro': _selectedToDo = [true, false, false, false];break;
+                    case 'da smelare': _selectedToDo = [false, true, false, false];break;
+                    case 'da rimuovere': _selectedToDo = [false, false, true, false];break;
+                    case 'da isolare': _selectedToDo = [false, false, false, true];break;
+                    // PT
+                    case 'quadro de trabalho': _selectedToDo = [true, false, false, false];break;
+                    case 'para centrifugar': _selectedToDo = [false, true, false, false];break;
+                    case 'para remover': _selectedToDo = [false, false, true, false];break;
+                    case 'para isolar': _selectedToDo = [false, false, false, true];break;
                   default: _selectedToDo = [true, false, false, false];
                   }break;
           case 14: switch (nowaWartosc) {
-                    case 'usuń ramka': _selectedIsDone = <bool>[true, false, false, false, false];break; //usuń ramka | wstaw ramka | izolacja | przesuń w lewo | przesuń w prawo
+                    // PL
+                    case 'usuń ramka': _selectedIsDone = <bool>[true, false, false, false, false];break;
                     case 'wstaw ramka': _selectedIsDone = <bool>[false, true, false, false, false];break;
                     case 'izolacja': _selectedIsDone = <bool>[false, false, true, false, false];break;
                     case 'przesuń w lewo': _selectedIsDone = <bool>[false, false, false, true, false];break;
                     case 'przesuń w prawo': _selectedIsDone = <bool>[false, false, false, false, true];break;
-                    case 'deleted': _selectedIsDone = <bool>[true, false, false, false, false];break; //usuń ramka | wstaw ramka | izolacja | przesuń w lewo | przesuń w prawo
+                    // EN
+                    case 'deleted': _selectedIsDone = <bool>[true, false, false, false, false];break;
                     case 'inserted': _selectedIsDone = <bool>[false, true, false, false, false];break;
                     case 'insulated': _selectedIsDone = <bool>[false, false, true, false, false];break;
                     case 'moved left': _selectedIsDone = <bool>[false, false, false, true, false];break;
                     case 'moved right': _selectedIsDone = <bool>[false, false, false, false, true];break;
+                    // DE
+                    case 'Rahmen entfernen': _selectedIsDone = <bool>[true, false, false, false, false];break;
+                    case 'Rahmen einfügen': _selectedIsDone = <bool>[false, true, false, false, false];break;
+                    case 'Isolation': _selectedIsDone = <bool>[false, false, true, false, false];break;
+                    case 'nach links schieben': _selectedIsDone = <bool>[false, false, false, true, false];break;
+                    case 'nach rechts schieben': _selectedIsDone = <bool>[false, false, false, false, true];break;
+                    // ES
+                    case 'eliminar cuadro': _selectedIsDone = <bool>[true, false, false, false, false];break;
+                    case 'insertar cuadro': _selectedIsDone = <bool>[false, true, false, false, false];break;
+                    case 'aislamiento': _selectedIsDone = <bool>[false, false, true, false, false];break;
+                    case 'mover a la izquierda': _selectedIsDone = <bool>[false, false, false, true, false];break;
+                    case 'mover a la derecha': _selectedIsDone = <bool>[false, false, false, false, true];break;
+                    // FR
+                    case 'supprimer cadre': _selectedIsDone = <bool>[true, false, false, false, false];break;
+                    case 'insérer cadre': _selectedIsDone = <bool>[false, true, false, false, false];break;
+                    case 'isolation': _selectedIsDone = <bool>[false, false, true, false, false];break;
+                    case 'déplacer à gauche': _selectedIsDone = <bool>[false, false, false, true, false];break;
+                    case 'déplacer à droite': _selectedIsDone = <bool>[false, false, false, false, true];break;
+                    // IT + PT (isolamento - shared)
+                    case 'rimuovi telaino': _selectedIsDone = <bool>[true, false, false, false, false];break;
+                    case 'inserisci telaino': _selectedIsDone = <bool>[false, true, false, false, false];break;
+                    case 'isolamento': _selectedIsDone = <bool>[false, false, true, false, false];break; // IT + PT
+                    case 'sposta a sinistra': _selectedIsDone = <bool>[false, false, false, true, false];break;
+                    case 'sposta a destra': _selectedIsDone = <bool>[false, false, false, false, true];break;
+                    // PT
+                    case 'remover quadro': _selectedIsDone = <bool>[true, false, false, false, false];break;
+                    case 'inserir quadro': _selectedIsDone = <bool>[false, true, false, false, false];break;
+                    case 'mover à esquerda': _selectedIsDone = <bool>[false, false, false, true, false];break;
+                    case 'mover à direita': _selectedIsDone = <bool>[false, false, false, false, true];break;
                   default: _selectedIsDone = <bool>[true, false, false, false, false];
                   }break;
           default:
@@ -265,9 +323,16 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       else if(globals.numeryWieluRamek == 0) _selectedNumeryWieluRamek=<bool>[true, false, false];
       else if(globals.numeryWieluRamek == 2) _selectedNumeryWieluRamek=<bool>[false, false, true];
 
-      globals.isEuropeanFormat()
-        ? gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych','inny']
-        : gridItemsKolor = ['black','yellow','red','green','blue','white','no\ndata','other'];
+      gridItemsKolor = [
+        AppLocalizations.of(context)!.blackColor.trim(),
+        AppLocalizations.of(context)!.yellowColor.trim(),
+        AppLocalizations.of(context)!.redColor.trim(),
+        AppLocalizations.of(context)!.greenColor.trim(),
+        AppLocalizations.of(context)!.blueColor.trim(),
+        AppLocalizations.of(context)!.whiteColor.trim(),
+        AppLocalizations.of(context)!.noData,
+        AppLocalizations.of(context)!.otherColor,
+      ];
       
       double heightScreen = MediaQuery.of(context).size.height;
       // print('wysokość ekranu');
@@ -760,202 +825,98 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                         matkaDod = 0;
                         matecznikiDod = 0;
                         usunmatDod = 0;
-                      
-                        if(globals.isEuropeanFormat()){  
-                          switch (data) {
-                            case 'czarny': 
-                              setState(() {
-                                //matkaDod = 1;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '1';
-                              }); break;
-                            case 'żółty': 
-                              setState(() {
-                                //matkaDod = 2;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '2';
-                              }); break;  
-                            case 'czerwony': 
-                              setState(() {
-                                //matkaDod = 3;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '3';
-                              }); break; 
-                            case 'zielony': 
-                              setState(() {
-                                //matkaDod = 4;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '4';
-                              }); break;                        
-                            case 'niebieski': 
-                              setState(() {
-                                //matkaDod = 5;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '5';
-                              }); break; 
-                            case 'biały': 
-                              setState(() {
-                                //matkaDod = 6;
-                                matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '6';
-                              }); break; 
-                            case 'inny': 
-                              setState(() {
-                                //matkaDod = 7;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '7';
-                              }); break;                     
-                            default:
-                              setState(() {
-                                //matkaDod = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '0';
-                              }); 
-                          }
-                        }else{
-                          switch (data) {
-                            case 'black': 
-                              setState(() {
-                                //matkaDod = 1;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '1';
-                              }); break;
-                            case 'yellow': 
-                              setState(() {
-                                //matkaDod = 2;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '2';
-                              }); break;  
-                            case 'red': 
-                              setState(() {
-                                //matkaDod = 3;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '3';
-                              }); break; 
-                            case 'green': 
-                              setState(() {
-                                //matkaDod = 4;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '4';
-                              }); break;                        
-                            case 'blue': 
-                              setState(() {
-                                //matkaDod = 5;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '5';
-                              }); break; 
-                            case 'white': 
-                              setState(() {
-                                //matkaDod = 6;
-                                matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '6';
-                              }); break;                     
-                            case 'other': 
-                              setState(() {
-                                //matkaDod = 7;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '7';
-                              }); break;  
-                            default:
-                              setState(() {
-                                //matkaDod = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
-                                nowyZasob = 10; nowaWartosc = '0';
-                              }); 
-                          }
 
+                        int colorIndex = gridItemsKolor.indexOf(data);
+                        switch (colorIndex) {
+                          case 0: // black
+                            setState(() {
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
+                              nowyZasob = 10; nowaWartosc = '1';
+                            }); break;
+                          case 1: // yellow
+                            setState(() {
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
+                              nowyZasob = 10; nowaWartosc = '2';
+                            }); break;
+                          case 2: // red
+                            setState(() {
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
+                              nowyZasob = 10; nowaWartosc = '3';
+                            }); break;
+                          case 3: // green
+                            setState(() {
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
+                              nowyZasob = 10; nowaWartosc = '4';
+                            }); break;
+                          case 4: // blue
+                            setState(() {
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
+                              nowyZasob = 10; nowaWartosc = '5';
+                            }); break;
+                          case 5: // white
+                            setState(() {
+                              matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
+                              nowyZasob = 10; nowaWartosc = '6';
+                            }); break;
+                          case 7: // other
+                            setState(() {
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
+                              nowyZasob = 10; nowaWartosc = '7';
+                            }); break;
+                          default: // no data (6) or unknown
+                            setState(() {
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
+                              nowyZasob = 10; nowaWartosc = '0';
+                            });
                         }
-                      
+
                       }
                     
-                      if(tryb == 'dodaj')
-                        if(globals.isEuropeanFormat()){  
-                          switch (data) {
-                            case 'czarny': 
-                              setState(() {
-                                matkaDod = 1;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;
-                            case 'żółty': 
-                              setState(() {
-                                matkaDod = 2;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
-                              }); break;  
-                            case 'czerwony': 
-                              setState(() {
-                                matkaDod = 3;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
-                              }); break; 
-                            case 'zielony': 
-                              setState(() {
-                                matkaDod = 4;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
-                              }); break;                        
-                            case 'niebieski': 
-                              setState(() {
-                                matkaDod = 5;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
-                              }); break; 
-                            case 'biały': 
-                              setState(() {
-                                matkaDod = 6;
-                                matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;                     
-                            case 'inny': 
-                              setState(() {
-                                matkaDod = 7;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
-                              }); break;  
-                            default:
-                              setState(() {
-                                matkaDod = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
-                              }); 
-                          }
-                        }else{
-                          switch (data) {
-                            case 'black': 
-                              setState(() {
-                                matkaDod = 1;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;
-                            case 'yellow': 
-                              setState(() {
-                                matkaDod = 2;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
-                              }); break;  
-                            case 'red': 
-                              setState(() {
-                                matkaDod = 3;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
-                              }); break; 
-                            case 'green': 
-                              setState(() {
-                                matkaDod = 4;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
-                              }); break;                        
-                            case 'blue': 
-                              setState(() {
-                                matkaDod = 5;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
-                              }); break; 
-                            case 'white': 
-                              setState(() {
-                                matkaDod = 6;
-                                matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
-                              }); break;                     
-                            case 'other': 
-                              setState(() {
-                                matkaDod = 7;
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
-                              }); break;  
-                            default:
-                              setState(() {
-                                matkaDod = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
-                                matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
-                              }); 
-                          }
+                      if(tryb == 'dodaj'){
+                        int colorIndex = gridItemsKolor.indexOf(data);
+                        switch (colorIndex) {
+                          case 0: // black
+                            setState(() {
+                              matkaDod = 1;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
+                            }); break;
+                          case 1: // yellow
+                            setState(() {
+                              matkaDod = 2;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 215, 208, 0),size: 30.0);
+                            }); break;
+                          case 2: // red
+                            setState(() {
+                              matkaDod = 3;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 0, 0),size: 30.0);
+                            }); break;
+                          case 3: // green
+                            setState(() {
+                              matkaDod = 4;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 15, 200, 8),size: 30.0);
+                            }); break;
+                          case 4: // blue
+                            setState(() {
+                              matkaDod = 5;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 0, 102, 255),size: 30.0);
+                            }); break;
+                          case 5: // white
+                            setState(() {
+                              matkaDod = 6;
+                              matkaKolor = Icon(Icons.brightness_1_outlined,color: Color.fromARGB(255, 0, 0, 0),size: 30.0);
+                            }); break;
+                          case 7: // other
+                            setState(() {
+                              matkaDod = 7;
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 158, 166, 172),size: 30.0);
+                            }); break;
+                          default: // no data (6) or unknown
+                            setState(() {
+                              matkaDod = 0; //zeby jej nie zapisywac w bazie gdyby ktoś wybrał ten przycisk kasujący ewentualnmy poprzedni wybór
+                              matkaKolor = Icon(Icons.brightness_1,color: Color.fromARGB(255, 255, 255, 255),size: 30.0);
+                            });
                         }
+                      }
                       
                       Navigator.of(context).pop();
                      

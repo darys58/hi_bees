@@ -48,6 +48,9 @@ import './screens/syrup_calculator_screen.dart';
 import './screens/syrup21_calculator_screen.dart';
 import './screens/syrup11_calculator_screen.dart';
 import './screens/cake_calculator_screen.dart';
+import './screens/oxalic_calculator_screen.dart';
+import './screens/lactic_calculator_screen.dart';
+import './screens/queen_rearing_screen.dart';
 import './screens/summary_screen.dart';
 import './screens/nfc_settings_screen.dart';
 import './screens/apiarys_map_screen.dart';
@@ -343,6 +346,9 @@ class _MyAppState extends State<MyApp> {
           Syrup21CalculatorScreen.routeName: (ctx) => Syrup21CalculatorScreen(),
           Syrup11CalculatorScreen.routeName: (ctx) => Syrup11CalculatorScreen(),
           CakeCalculatorScreen.routeName: (ctx) => CakeCalculatorScreen(),
+          OxalicCalculatorScreen.routeName: (ctx) => OxalicCalculatorScreen(),
+          LacticCalculatorScreen.routeName: (ctx) => LacticCalculatorScreen(),
+          QueenRearingScreen.routeName: (ctx) => QueenRearingScreen(),
           SummaryScreen.routeName: (ctx) => SummaryScreen(),
           NfcSettingsScreen.routeName: (ctx) => NfcSettingsScreen(),
           ApiaryMapScreen.routeName: (ctx) => ApiaryMapScreen(),

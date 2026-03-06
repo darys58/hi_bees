@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 // import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../globals.dart' as globals;
 
 import '../screens/activation_screen.dart';
@@ -159,10 +160,65 @@ class AboutScreen extends StatelessWidget {
                   title: Text(AppLocalizations.of(context)!.refreshActivation),
                   trailing: Icon(Icons.chevron_right),
                 ),
-              ),           
+              ),
              ),
 
+            SizedBox(height: 20),
 
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        final uri = Uri.parse('https://www.heymaya.eu');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          Icon(Icons.language, color: Colors.orange[700]),
+                          SizedBox(width: 12),
+                          Text(
+                            'www.heymaya.eu',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blue[700],
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () async {
+                        final uri = Uri.parse('mailto:maya@heymaya.eu');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri);
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          Icon(Icons.email, color: Colors.orange[700]),
+                          SizedBox(width: 12),
+                          Text(
+                            'maya@heymaya.eu',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blue[700],
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
 
 //ustawienia

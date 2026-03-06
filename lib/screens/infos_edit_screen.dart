@@ -52,7 +52,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   List<Info> info = [];
   TextEditingController dateController = TextEditingController();
   //int _nowaIloscRamek = 0; //zmieniana nowym wpisem
-  List<bool> _selectedZakresUli = <bool>[true, false]; //tylko ten | wszystkie
+  List<bool> _selectedZakresUli = <bool>[true, false, false]; //tylko ten | wszystkie | wybrane
+  List<int> _selectedHiveNumbers = []; //numery wybranych uli (dla trybu "wybrane")
 
   // Zmienne stanu dla sekcji "Przypomnij"
   bool _przypomnienieEnabled = false;
@@ -296,6 +297,126 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     super.didChangeDependencies();
   }
 
+  //dialog z wyborem uli do zaznaczenia (checkboxy)
+  void _showHiveSelectionDialog() {
+    Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowaPasieka).then((_) {
+      final hivesData = Provider.of<Hives>(context, listen: false);
+      final hives = hivesData.items;
+      // kopia zaznaczonych uli do edycji w dialogu
+      List<int> tempSelected = List<int>.from(_selectedHiveNumbers);
+
+      showDialog(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final allSelected = tempSelected.length == hives.length && hives.isNotEmpty;
+            return AlertDialog(
+              title: Text(AppLocalizations.of(context)!.selectHive, textAlign: TextAlign.center),
+              content: SizedBox(
+                width: 300,
+                height: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Zaznacz/Odznacz wszystkie
+                    InkWell(
+                      onTap: () {
+                        setDialogState(() {
+                          if (allSelected) {
+                            tempSelected.clear();
+                          } else {
+                            tempSelected = hives.map((h) => h.ulNr).toList();
+                          }
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              allSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              allSelected
+                                ? AppLocalizations.of(context)!.deselectAll
+                                : AppLocalizations.of(context)!.selectAll,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Divider(),
+                    // Lista uli z checkboxami
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Material(
+                          color: Colors.white,
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: hives.length,
+                            itemBuilder: (ctx, i) {
+                              final hive = hives[i];
+                              final isChecked = tempSelected.contains(hive.ulNr);
+                              return CheckboxListTile(
+                                title: Text('${AppLocalizations.of(context)!.hive} ${hive.ulNr}'),
+                                value: isChecked,
+                                activeColor: Theme.of(context).primaryColor,
+                                onChanged: (bool? value) {
+                                  setDialogState(() {
+                                    if (value == true) {
+                                      tempSelected.add(hive.ulNr);
+                                    } else {
+                                      tempSelected.remove(hive.ulNr);
+                                    }
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    // anulowano - powrót do "ten ul"
+                    setState(() {
+                      _selectedZakresUli = [true, false, false];
+                    });
+                  },
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    setState(() {
+                      if (tempSelected.isEmpty) {
+                        // zaznaczono 0 uli - powrót do "ten ul"
+                        _selectedZakresUli = [true, false, false];
+                        _selectedHiveNumbers = [];
+                      } else {
+                        _selectedHiveNumbers = tempSelected..sort();
+                      }
+                    });
+                  },
+                  child: Text(AppLocalizations.of(context)!.saveZ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    });
+  }
+
   //dialog z wyborem liczby dni (0-30) - wzorowany na raport_screen
   void _showDaysPickerDialog() {
     showDialog(
@@ -511,24 +632,50 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             ),
                         ]),  
                         SizedBox(width: 10),
-//ten ul czy wszystkie - dla dodawaia dokarmiania lub leczenia
-                        if(edycja == false && (nowaKategoria == 'feeding' || nowaKategoria == 'treatment')) //jezeli dodawanie dokarmiania lub leczenia
-                          Column(
+//dla edycji i dodawania bez dokarmiania i leczenia i doposazenia
+                          if(edycja == true || (edycja == false && (nowaKategoria != 'feeding' && nowaKategoria != 'treatment' && nowaKategoria != 'equipment'))) //jezeli nie jest to dodawanie dokarmiania, leczenia lub wyposazenia
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(AppLocalizations.of(context)!.hIveNr),
+                                OutlinedButton(
+                                    style: buttonSumaZasobow,
+                                    onPressed: null,
+                                    child: Text(nowyUl.toString(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                        color: Color.fromARGB(255, 0, 0,0))),
+                            )]) ,
+
+
+                    ]),
+//ten ul czy wszystkie - dla dodawaia doposazenia, dokarmiania lub leczenia (osobny wiersz)
+                    if(edycja == false && (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'equipment')) //jezeli dodawanie dokarmiania, leczenia lub wyposazenia
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: Center(
+                          child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(AppLocalizations.of(context)!.hIveNr),
                               ToggleButtons(
-                                direction: Axis.horizontal, 
+                                direction: Axis.horizontal,
                                 onPressed: (int index) {
                                   setState(() {
                                     // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
                                     for (int i = 0; i < _selectedZakresUli.length; i++) {
                                       _selectedZakresUli[i] = i == index;
                                     }
-                                    // Przy wyborze “wszystkie ule” wyłącz przypomnienie
-                                    if (_selectedZakresUli[1] == true) {
+                                    // Przy wyborze “wszystkie ule” lub “wybrane” wyłącz przypomnienie
+                                    if (_selectedZakresUli[1] == true || _selectedZakresUli[2] == true) {
                                       _przypomnienieEnabled = false;
+                                    }
+                                    // Przy wyborze “wybrane” pokaż dialog z listą uli
+                                    if (index == 2) {
+                                      _showHiveSelectionDialog();
                                     }
                                   });
                                 },
@@ -544,31 +691,23 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 ),
                                 isSelected: _selectedZakresUli,
                                 children: [ //napisy na przełącznikach
-                                  Text(nowyUl.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                                  Text(' ' + AppLocalizations.of(context)!.all + '  ', textAlign: TextAlign.center),
-                                ],  //lewa, obie, prawa
+                                  Text(nowyUl.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  Text(' ' + AppLocalizations.of(context)!.all + '  ', style: const TextStyle(fontSize: 16), textAlign: TextAlign.center),
+                                  _selectedHiveNumbers.isEmpty
+                                    ? Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                        child: Text(AppLocalizations.of(context)!.selected, style: const TextStyle(fontSize: 16)),
+                                      )
+                                    : Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                        child: Text('${_selectedHiveNumbers.length} ${AppLocalizations.of(context)!.hives}', style: const TextStyle( fontSize: 16)),//fontWeight: FontWeight.bold,
+                                      ),
+                                ],  //ten ul, wszystkie, wybrane
                               ),
                             ],
                           ),
-//dla edycji i dodawania bez dokarmiania i leczenia                              
-                          if(edycja == true || (edycja == false && (nowaKategoria != 'feeding' && nowaKategoria != 'treatment'))) //jezeli nie jest to dodawanie dokarmiania lub leczenia
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(AppLocalizations.of(context)!.hIveNr),
-                                OutlinedButton(
-                                    style: buttonSumaZasobow,
-                                    onPressed: null,
-                                    child: Text(nowyUl.toString(),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                        color: Color.fromARGB(255, 0, 0,0))),
-                            )]) ,  
-                        
-                          
-                    ]),
+                        ),
+                      ),
 
                     SizedBox(
                       height: 20,
@@ -2050,13 +2189,13 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                       children: [
                         Text(
                           AppLocalizations.of(context)!.remind,
-                          style: TextStyle(fontSize: 16, color: _selectedZakresUli[1] == true ? Colors.grey : Colors.black),
+                          style: TextStyle(fontSize: 16, color: (_selectedZakresUli[1] == true || _selectedZakresUli[2] == true) ? Colors.grey : Colors.black),
                         ),
                         Switch(
                           value: _przypomnienieEnabled,
                           activeColor: Theme.of(context).primaryColor,
-                          onChanged: _selectedZakresUli[1] == true
-                              ? null // zablokowany przy "wszystkie ule"
+                          onChanged: (_selectedZakresUli[1] == true || _selectedZakresUli[2] == true)
+                              ? null // zablokowany przy "wszystkie ule" lub "wybrane"
                               : (bool value) {
                                   setState(() {
                                     _przypomnienieEnabled = value;
@@ -2402,7 +2541,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   });
                                 };
                               });
-                            }else{ //dodawanie tego samego info dla wszystkich uli
+                            }else if(_selectedZakresUli[1] == true){ //dodawanie tego samego info dla wszystkich uli
                               //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
                               Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowaPasieka,)
                                 .then((_) {
@@ -2431,6 +2570,29 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   Navigator.of(context).pop();
                                 });
                                 });
+                            }else if(_selectedZakresUli[2] == true){ //dodawanie info dla wybranych uli
+                              for (var ulNr in _selectedHiveNumbers) {
+                                Infos.insertInfo(
+                                  '${dateController.text}.$nowaPasieka.$ulNr.$nowaKategoria.$nowyParametr',
+                                  dateController.text,
+                                  nowaPasieka,
+                                  ulNr,
+                                  nowaKategoria,
+                                  nowyParametr,
+                                  nowyWartosc,
+                                  nowyMiara!,
+                                  '',//info[0].pogoda,
+                                  '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                  formatterHm.format(DateTime.now()),
+                                  nowyUwagi!,
+                                  0, //info[0].arch,
+                                );
+                              }
+                              Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)
+                              .then((_) {
+                                globals.odswiezBelkiUliDL = true; //odświezenie belek uli
+                                Navigator.of(context).pop();
+                              });
                             }
                           }
 
@@ -2494,9 +2656,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           if (nowaKategoria == 'queen') {                                          
                           
   //** */ Quality - matka1
-                            if (nowyParametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) 
-                              if (nowyWartosc == 'mała' || nowyWartosc == 'słaba' || nowyWartosc == 'zła' || nowyWartosc == 'stara' ||
-                                  nowyWartosc == 'small' || nowyWartosc == 'to exchange' || nowyWartosc == 'canceled' || nowyWartosc == 'weak' ) {
+                            final loc = AppLocalizations.of(context)!;
+                            if (nowyParametr == loc.queen + '  ' + loc.isIs)
+                              if (nowyWartosc == loc.small || nowyWartosc == loc.weak ||
+                                  nowyWartosc == loc.canceled || nowyWartosc == loc.exchange) {
                                 matka1 = 'zła';
                                 ikona = 'orange';                              
                                 if (matka2 == 'brak') matka2 = '';
@@ -2508,72 +2671,42 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 if (matka2 == 'brak') matka2 = '';
                               }
  //** */ Mark + Number matka2
-                            if (nowyParametr == " " + AppLocalizations.of(context)!.queen)
-                              switch (nowyWartosc) {
-                                case 'nie ma znak': matka2 = 'niez'; ikona = 'green';//nieznaczona
-                                  break;
-                                case 'unmarked': matka2 = 'niez'; ikona = 'green';//nieznaczona
-                                  break;
-                                case 'ma inny znak': matka2 = 'inny ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'marked other': matka2 = 'inny ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'ma biały znak': matka2 = 'biał ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'marked white': matka2 = 'biał ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'ma żółty znak': matka2 = 'żółt ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'marked yellow': matka2 = 'żółt ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'ma czerwony znak': matka2 = 'czer ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'marked red': matka2 = 'czer ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'ma zielony znak': matka2 = 'ziel ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'marked green': matka2 = 'ziel ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'ma niebieski znak': matka2 = 'nieb ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'marked blue': matka2 = 'nieb ' + nowyMiara!; ikona = 'green';//kolor + numer matki
-                                  break;
-                                case 'nie ma': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
-                                  ikona = 'red';
-                                  break;
-                                case 'gone': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
-                                  ikona = 'red';
-                                  break;
-                                case 'brak': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = ''; matka5 = '';
-                                  ikona = 'red';
-                                  break;
-                                case 'missing': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
-                                  ikona = 'red';
-                                  break;
+                            if (nowyParametr == " " + loc.queen) {
+                              if (nowyWartosc == loc.unmarked) { matka2 = 'niez'; ikona = 'green'; }
+                              else if (nowyWartosc == loc.markedOther) { matka2 = 'inny ' + nowyMiara!; ikona = 'green'; }
+                              else if (nowyWartosc == loc.markedWhite) { matka2 = 'biał ' + nowyMiara!; ikona = 'green'; }
+                              else if (nowyWartosc == loc.markedYellow) { matka2 = 'żółt ' + nowyMiara!; ikona = 'green'; }
+                              else if (nowyWartosc == loc.markedRed) { matka2 = 'czer ' + nowyMiara!; ikona = 'green'; }
+                              else if (nowyWartosc == loc.markedGreen) { matka2 = 'ziel ' + nowyMiara!; ikona = 'green'; }
+                              else if (nowyWartosc == loc.markedBlue) { matka2 = 'nieb ' + nowyMiara!; ikona = 'green'; }
+                              else if (nowyWartosc == loc.gone || nowyWartosc == loc.missing) {
+                                matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = ''; matka5 = '';
+                                ikona = 'red';
                               }
+                            }
 //** */ State matka3 - czy unasienniona?
-                            if (nowyParametr == AppLocalizations.of(context)!.queen + " -") //State
-                              if (nowyWartosc == 'dziewica' || nowyWartosc == 'virgine') {
+                            if (nowyParametr == loc.queen + " -") //State
+                              if (nowyWartosc == loc.virgine) {
                                 matka3 = 'nieunasienniona';
                                 if (ikona == 'red') { //bo był brak matki
                                   ikona = 'orange';
                                 }
                                 if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
-                              } else if (nowyWartosc == 'trutówka' || nowyWartosc == 'drone laying') {
+                              } else if (nowyWartosc == loc.droneLaying) {
                                 matka3 = 'trutowa';
                                 ikona = 'orange';
                                 if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
                               } else {
                                 matka3 = 'unasienniona';
                                 if (ikona != 'yellow') { //jezeli nie toDo
-                                  ikona = 'green'; 
+                                  ikona = 'green';
                                 }
                                 if (matka2 == 'brak') matka2 = '';
                               }
                                                                                    
     //** */ Start matka4  - czy ograniczona?
-                            if (nowyParametr == AppLocalizations.of(context)!.queenIs) //Start
-                              if (nowyWartosc == 'wolna' || nowyWartosc == 'freed'){
+                            if (nowyParametr == loc.queenIs) //Start
+                              if (nowyWartosc == loc.freed){
                                 matka4 = 'wolna';
                                 if (ikona == 'red') {//bo był brak matki
                                   ikona = 'orange';
@@ -2587,7 +2720,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 if (matka2 == 'brak') matka2 = '';
                               }
      //** */ Born matka5  - rocznik
-                            if (nowyParametr == AppLocalizations.of(context)!.queenWasBornIn){ //Born
+                            if (nowyParametr == loc.queenWasBornIn){ //Born
                               matka5 = nowyWartosc;
                               if (ikona == 'red') { //bo był brak matki
                                 ikona = 'orange';

@@ -333,7 +333,7 @@ class HivesItem extends StatelessWidget {
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))
 //czy jest ograniczona
-                        if(hive.matka4 == 'wolna')
+                        if(hive.matka4  == 'wolna')
                           Image.asset('assets/image/matka12.png',
                              width: 27, height: 16, fit: BoxFit.fill)
                         else if (hive.matka4 == 'ograniczona')
@@ -589,7 +589,10 @@ class MyHiveToDo extends CustomPainter {
     var path = Path();
 
     //ramka pracy
-    if (ul.todo == 'ramka pracy' || ul.todo == 'work frame') {
+    if (ul.todo == 'ramka pracy' || ul.todo == 'work frame' ||
+        ul.todo == 'Arbeitsrahmen' || ul.todo == 'cuadro de trabajo' ||
+        ul.todo == 'cadre de travail' || ul.todo == 'telaino di lavoro' ||
+        ul.todo == 'quadro de trabalho') {
       var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
       radians = math.pi / 4;
 
@@ -609,7 +612,10 @@ class MyHiveToDo extends CustomPainter {
     }
 
     //to insutate
-    if (ul.todo == 'można izolować' || ul.todo == 'to insulate') {
+    if (ul.todo == 'można izolować' || ul.todo == 'to insulate' ||
+        ul.todo == 'kann isoliert werden' || ul.todo == 'para aislar' ||
+        ul.todo == 'à isoler' || ul.todo == 'da isolare' ||
+        ul.todo == 'para isolar') {
       sides = 4;
       radians = math.pi / 4;
       //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
@@ -623,7 +629,10 @@ class MyHiveToDo extends CustomPainter {
     }
 
     //to delete
-    if (ul.todo == 'trzeba usunąć' || ul.todo == 'to delete') {
+    if (ul.todo == 'trzeba usunąć' || ul.todo == 'to delete' ||
+        ul.todo == 'muss entfernt werden' || ul.todo == 'para eliminar' ||
+        ul.todo == 'à supprimer' || ul.todo == 'da rimuovere' ||
+        ul.todo == 'para remover') {
       sides = 3;
       radians = math.pi / 6;
       var angle = (math.pi * 2) / sides; //kąt
@@ -644,7 +653,10 @@ class MyHiveToDo extends CustomPainter {
     }
 
     //to extraction
-    if (ul.todo == 'trzeba wirować' || ul.todo == 'to extraction') {
+    if (ul.todo == 'trzeba wirować' || ul.todo == 'to extraction' ||
+        ul.todo == 'muss geschleudert werden' || ul.todo == 'para extraer' ||
+        ul.todo == 'à extraire' || ul.todo == 'da smelare' ||
+        ul.todo == 'para centrifugar') {
       double radiusEx = 4;
       sides = 6;
       radians = 0;

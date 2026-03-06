@@ -13,6 +13,7 @@ import '../screens/queen_history_screen.dart';
 import '../globals.dart' as globals;
 //import '../models/frames.dart';
 import '../models/queen.dart';
+import '../helpers/queen_helpers.dart';
 import '../models/hives.dart';
 import '../models/hive.dart';
 import '../models/infos.dart';
@@ -239,22 +240,18 @@ class _QueenItemState extends State<QueenItem> {
                     0, //info[0].arch,
                   ).then((_) {
                     String matka2 = '';
-                    if(matki.znak != '' && matki.znak != '0') 
-                      if(matki.znak == AppLocalizations.of(context)!.unmarked){
-                        matka2 = 'niez ';
-                      } else if(matki.znak == AppLocalizations.of(context)!.markedWhite){
-                        matka2 = 'biał ' + matki.napis; //znak + napis na opalitku
-                      }else if(matki.znak == AppLocalizations.of(context)!.markedYellow){
-                        matka2 = 'żółt ' + matki.napis; 
-                      }else if(matki.znak == AppLocalizations.of(context)!.markedRed){
-                        matka2 = 'czer ' + matki.napis; 
-                      }else if(matki.znak == AppLocalizations.of(context)!.markedGreen){
-                        matka2 = 'ziel ' + matki.napis; 
-                      }else if(matki.znak == AppLocalizations.of(context)!.markedBlue){
-                        matka2 = 'nieb ' + matki.napis; 
-                      }else if(matki.znak == AppLocalizations.of(context)!.markedOther){
-                        matka2 = 'inny ' + matki.napis; 
-                      } 
+                    final znakKey = markToKey(matki.znak);
+                    if(znakKey != '' && znakKey != '0') {
+                      switch(znakKey) {
+                        case kMarkUnmarked: matka2 = 'niez '; break;
+                        case kMarkWhite: matka2 = 'biał ' + matki.napis; break;
+                        case kMarkYellow: matka2 = 'żółt ' + matki.napis; break;
+                        case kMarkRed: matka2 = 'czer ' + matki.napis; break;
+                        case kMarkGreen: matka2 = 'ziel ' + matki.napis; break;
+                        case kMarkBlue: matka2 = 'nieb ' + matki.napis; break;
+                        case kMarkOther: matka2 = 'inny ' + matki.napis; break;
+                      }
+                    }
                     DBHelper.updateUleMatka2('${globals.pasiekaID}.${globals.ulID}', matka2).then((_) { //ul.id, ul.matka2
                       DBHelper.updateUle('${globals.pasiekaID}.${globals.ulID}', 'ikona', 'green').then((_) {
                         //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
@@ -345,34 +342,20 @@ class _QueenItemState extends State<QueenItem> {
                           color: Color.fromARGB(255, 0, 0, 0)),
                       ),
                     TextSpan(
-                      text: ('${matki.rasa}'),
+                      text: breedToDisplay(breedToKey(matki.rasa), AppLocalizations.of(context)!),
                       style: TextStyle(
                           fontSize: 14,
                           //fontWeight: FontWeight.bold,
                           color: Color.fromARGB(255, 0, 0, 0)),
                       ),
-                    
+
                     ])),
               subtitle: Column(
                 children: [
                   Row(
                     children: [
-//znak?       
-                      if(matki.znak != '' && matki.znak != '0') 
-                        if(matki.znak == AppLocalizations.of(context)!.unmarked)
-                          Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
-                        else if(matki.znak == AppLocalizations.of(context)!.markedWhite)
-                          Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),)
-                        else if(matki.znak == AppLocalizations.of(context)!.markedYellow)
-                          Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),)
-                        else if(matki.znak == AppLocalizations.of(context)!.markedRed)
-                          Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)
-                        else if(matki.znak == AppLocalizations.of(context)!.markedGreen) 
-                          Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
-                        else if(matki.znak == AppLocalizations.of(context)!.markedBlue) 
-                          Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),)
-                        else if(matki.znak == AppLocalizations.of(context)!.markedOther) 
-                          Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),),
+//znak?
+                      ...markToIcon(markToKey(matki.znak)),
 
 
 //numer opalitka                      
@@ -482,7 +465,7 @@ class _QueenItemState extends State<QueenItem> {
                   Row(children: [
 //zrodlo                  
                     if(matki.zrodlo != '' && matki.zrodlo  != '0')
-                      Text('${matki.zrodlo}',
+                      Text(sourceToDisplay(sourceToKey(matki.zrodlo), AppLocalizations.of(context)!),
                       style: const TextStyle(
                         fontSize: 13,
                         color: Color.fromARGB(255, 0, 0, 0),

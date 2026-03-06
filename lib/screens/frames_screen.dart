@@ -1587,6 +1587,11 @@ class MyHive extends CustomPainter {
 
           switch (ramki[i].wartosc) {
             case 'work frame': //ramka pracy
+            case 'Arbeitsrahmen': // DE
+            case 'cuadro de trabajo': // ES
+            case 'cadre de travail': // FR
+            case 'telaino di lavoro': // IT
+            case 'quadro de trabalho': // PT
               var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
               radians = math.pi / 4;
 
@@ -1604,6 +1609,11 @@ class MyHive extends CustomPainter {
               canvas.drawPath(path, paintStroke);
               break;
             case 'to delete': //do wycofania
+            case 'muss entfernt werden': // DE
+            case 'para eliminar': // ES
+            case 'à supprimer': // FR
+            case 'da rimuovere': // IT
+            case 'para remover': // PT
               sides = 3;
               radians = math.pi / 6;
               var angle = (math.pi * 2) / sides; //kąt
@@ -1622,6 +1632,11 @@ class MyHive extends CustomPainter {
               canvas.drawPath(path, paintStroke);
               break;
             case 'to extraction': //do wirowania
+            case 'muss geschleudert werden': // DE
+            case 'para extraer': // ES
+            case 'à extraire': // FR
+            case 'da smelare': // IT
+            case 'para centrifugar': // PT
               double radiusEx = 4;
               sides = 6;
               radians = 0;
@@ -1641,6 +1656,11 @@ class MyHive extends CustomPainter {
               canvas.drawPath(path, paintStroke);
               break;
             case 'to insulate': //ramka dobra do zaizolowania na niej matki
+            case 'kann isoliert werden': // DE
+            case 'para aislar': // ES
+            case 'à isoler': // FR
+            case 'da isolare': // IT
+            case 'para isolar': // PT
               sides = 4;
               radians = math.pi / 4;
               //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
@@ -1713,24 +1733,23 @@ class MyHive extends CustomPainter {
               path.close();
               canvas.drawPath(path, paintStroke);
               break;
-            case 'można izolować': //ramka dobra do zaizolowania na niej matki
+            case 'można izolować': //ramka dobra do zaizolowania na niej matki - PL handled by 'to insulate' group above
               sides = 4;
               radians = math.pi / 4;
-              //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
 
               canvas.drawLine(
                   Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 9),
                   Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 9),
-                  linePaint); // - (kreska pozioma) dla poszczególnych ramek
+                  linePaint);
 
               canvas.drawLine(
                   Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 3),
                   Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 10),
-                  linePaint); // | (kreska pionowa lewa)
+                  linePaint);
               canvas.drawLine(
                   Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 3),
                   Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 10),
-                  linePaint); // | (kreska pionowa prawa)
+                  linePaint);
               break;
           }
           break;
@@ -1748,6 +1767,11 @@ class MyHive extends CustomPainter {
 
           switch (ramki[i].wartosc) {
             case 'moved left': //przesunieto w lewo
+            case 'nach links schieben': // DE
+            case 'mover a la izquierda': // ES
+            case 'déplacer à gauche': // FR
+            case 'sposta a sinistra': // IT
+            case 'mover à esquerda': // PT
               sides = 3;
               radians = math.pi; //w lewo
               var angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
@@ -1766,6 +1790,11 @@ class MyHive extends CustomPainter {
               canvas.drawPath(path, paintStroke);
               break;
             case 'moved right': //przesunięto w prawo
+            case 'nach rechts schieben': // DE
+            case 'mover a la derecha': // ES
+            case 'déplacer à droite': // FR
+            case 'sposta a destra': // IT
+            case 'mover à direita': // PT
               sides = 3;
               radians = 0; //w prawo
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
@@ -1784,6 +1813,11 @@ class MyHive extends CustomPainter {
               canvas.drawPath(path, paintStroke);
               break;
             case 'inserted': //wstawiono
+            case 'Rahmen einfügen': // DE
+            case 'insertar cuadro': // ES
+            case 'insérer cadre': // FR
+            case 'inserisci telaino': // IT
+            case 'inserir quadro': // PT
               sides = 3;
               radians = math.pi / 6; //w górę
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
@@ -1802,6 +1836,11 @@ class MyHive extends CustomPainter {
               canvas.drawPath(path, paintStroke);
               break;
             case 'deleted': //wycofano, usunieto
+            case 'Rahmen entfernen': // DE
+            case 'eliminar cuadro': // ES
+            case 'supprimer cadre': // FR
+            case 'rimuovi telaino': // IT
+            case 'remover quadro': // PT
               sides = 3;
               radians = math.pi / 2; //w dół
               var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
@@ -1820,6 +1859,10 @@ class MyHive extends CustomPainter {
               canvas.drawPath(path, paintStroke);
               break;
             case 'insulated': //zaizolowano - załoono izolator
+            case 'Isolation': // DE
+            case 'aislamiento': // ES
+            case 'isolation': // FR
+            case 'isolamento': // IT + PT
               canvas.drawLine(
                   Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
                   Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),

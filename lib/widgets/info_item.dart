@@ -645,7 +645,7 @@ class InfoItem extends StatelessWidget {
                                 ),
 //jezeli to matka (3)unasiennienie to: wartość zmieniana                             
                             info.parametr == AppLocalizations.of(context)!.queen + " -"
-                              ? info.wartosc == 'dziewica'
+                              ? info.wartosc == 'dziewica' || info.wartosc == 'virgine' || info.wartosc == 'unbegattet' || info.wartosc == 'virgen' || info.wartosc == 'vierge' || info.wartosc == 'vergine' || info.wartosc == 'virgem'
                                 ? TextSpan(
                                   text: (AppLocalizations.of(context)!.virgine1), //nieunasienniona
                                   style: TextStyle(
@@ -653,7 +653,7 @@ class InfoItem extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                       color: Color.fromARGB(255, 0, 0, 0)),
                                 )
-                                : info.wartosc == 'naturalna'
+                                : info.wartosc == 'naturalna' || info.wartosc == 'naturally mated' || info.wartosc == 'natürlich' || info.wartosc == 'natural' || info.wartosc == 'naturelle' || info.wartosc == 'fecondata naturalmente' || info.wartosc == 'fecundada naturalmente'
                                   ? TextSpan(
                                       text: (AppLocalizations.of(context)!.naturallyMated1),//un. naturalnie
                                       style: TextStyle(
@@ -661,7 +661,7 @@ class InfoItem extends StatelessWidget {
                                           fontWeight: FontWeight.bold,
                                           color: Color.fromARGB(255, 0, 0, 0)),
                                     )
-                                    : info.wartosc == 'sztuczna' 
+                                    : info.wartosc == 'sztuczna' || info.wartosc == 'artificially inseminated' || info.wartosc == 'künstlich' || info.wartosc == 'artificial' || info.wartosc == 'inséminée' || info.wartosc == 'inseminata artificialmente' || info.wartosc == 'inseminada artificialmente'
                                       ? TextSpan(
                                           text: (AppLocalizations.of(context)!.artificiallyInseminated1),//inseminowana
                                           style: TextStyle(
