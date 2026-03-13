@@ -163,61 +163,68 @@ class AboutScreen extends StatelessWidget {
               ),
              ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 50),
 
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onTap: () async {
-                        final uri = Uri.parse('https://www.heymaya.eu');
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        }
-                      },
-                      child: Row(
-                        children: [
-                          Icon(Icons.language, color: Colors.orange[700]),
-                          SizedBox(width: 12),
-                          Text(
-                            'www.heymaya.eu',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.blue[700],
-                              decoration: TextDecoration.underline,
+          
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 0.0),
+                  child: Column(                    
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          final uri = Uri.parse('https://www.heymaya.eu');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(Icons.language, color: Colors.orange[700]),
+                            SizedBox(width: 12),
+                            Text(
+                              'www.heymaya.eu',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue[700],
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 22),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: () async {
-                        final uri = Uri.parse('mailto:maya@heymaya.eu');
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri);
-                        }
-                      },
-                      child: Row(
-                        children: [
-                          Icon(Icons.email, color: Colors.orange[700]),
-                          SizedBox(width: 12),
-                          Text(
-                            'maya@heymaya.eu',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.blue[700],
-                              decoration: TextDecoration.underline,
+                      SizedBox(height: 22),
+                      
+                      GestureDetector(
+                        onTap: () async {
+                          final uri = Uri.parse('mailto:maya@heymaya.eu');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri);
+                          }
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(Icons.email, color: Colors.orange[700]),
+                            SizedBox(width: 12),
+                            Text(
+                              'maya@heymaya.eu',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue[700],
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 18),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                    ],
+                  ),
+              
             ),
 
 
@@ -288,128 +295,8 @@ class AboutScreen extends StatelessWidget {
 //               ),
 //             ),
 
-            /* Card(child: ListTile(title: Text('One-line ListTile'))),
-            Card(
-              child: ListTile(
-                leading: FlutterLogo(),
-                title: Text('One-line with leading widget'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                title: Text('One-line with trailing widget'),
-                trailing: Icon(Icons.more_vert),
-              ),
-            ), 
-        
-            Card(
-              child: ListTile(
-                title: Text('One-line dense ListTile'),
-                dense: true,
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: FlutterLogo(size: 56.0),
-                title: Text('Two-line ListTile'),
-                subtitle: Text('Here is a second line'),
-                trailing: Icon(Icons.more_vert),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: FlutterLogo(size: 72.0),
-                title: Text('Three-line ListTile'),
-                subtitle: Text(
-                  'A sufficiently long subtitle warrants three lines.'
-                ),
-                trailing: Icon(Icons.more_vert),
-                isThreeLine: true,
-              ),
-           ),
-       */
+           
           ],
         ));
   }
 }
-/*
-final String language = allTranslations.currentLanguage;
-final String buttonText = language == 'pl' ? '=> English' : '=> Français'; 
-
-child: Column(
-          children: <Widget>[
-            RaisedButton(
-              child: Text(buttonText),
-              onPressed: () async {
-                await allTranslations.setNewLanguage(language == 'pl' ? 'en' : 'pl');
-                setState((){
-                  //lll
-               });
-              },
-            ),
-            Text(allTranslations.text('ulubione')),
-          ],
-        ),*/
-
-
-// try {
-
-// //   NfcManager.instance.startSession(
-// //   pollingOptions: {NfcPollingOption.iso15693}, // You can also specify iso18092 and iso15693.
-// //   onDiscovered: (NfcTag tag) async {
-// //     // Do something with an NfcTag instance...
-// //     print(tag);
-// //     globals.status = 'tag = $tag';
-
-// //     // Stop the session when no longer needed.
-// //     await NfcManager.instance.stopSession();
-// //   },
-// // );
-
-//       NfcManager.instance.startSession(
-//         pollingOptions: {NfcPollingOption.iso15693},
-//         onDiscovered: (NfcTag tag) async {
-//           try {
-//             final iso15693 = tag.data['iso15693'];
-//             //String? tagId = _bytesToHex(Uint8List.fromList(List<int>.from(iso15693['identifier'])));
-//             String? tagId = (Uint8List.fromList(List<int>.from(iso15693['identifier']))).toString();
-// print(tagId);
-
-// globals.status = tagId;
-//             if (tagId == null) {
-//               Navigator.of(context).pop(); // Zamknij dialog skanowania
-//               _showErrorDialog(context, AppLocalizations.of(context)!.nfcTagReadError1);
-//               NfcManager.instance.stopSession();
-//               return;
-//             }
-
-//             Navigator.of(context).pop(); // Zamknij dialog skanowania
-
-//             // Szukanie ula przypisanego do tagu
-//             final hiveData = await _findHiveByNfcTag(tagId);
-
-//             if (hiveData != null) {
-//               // Tag jest przypisany - nawiguj do ula
-//               await _navigateToHive(context, hiveData);
-//             } else {
-//               // Tag nie jest przypisany - pokaz dialog wyboru ula
-//               _showHiveSelectionDialog(context, tagId);
-//             }
-
-//             NfcManager.instance.stopSession();
-//           } catch (e) {
-//             Navigator.of(context).pop();
-//             _showErrorDialog(context, AppLocalizations.of(context)!.nfcTagReadError2);
-//             NfcManager.instance.stopSession();
-//           }
-//         },
-//         onError: (error) async {
-//           Navigator.of(context).pop();
-//           _showErrorDialog(context, AppLocalizations.of(context)!.nfcTagReadError3);
-//         },
-//       );
-//     } catch (e) {
-//       Navigator.of(context).pop();
-//       _showErrorDialog(context, AppLocalizations.of(context)!.nfcTagReadError4);
-//     }
-//   }

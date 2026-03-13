@@ -258,8 +258,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
       hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 233, 229, 1), size: 30);
     } else if (hive.ikona == 'orange') {
       hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 233, 132, 1), size: 30);
-    } else {
+     } else if (hive.ikona == 'red') {
       hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 255, 0, 0), size: 30);
+    } else if (hive.ikona == 'black') {
+      hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 0, 0, 0), size: 30);
+    } else {
+      hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 100, 100,100), size: 30);
     }
 
     // Szerokość belki zasobów

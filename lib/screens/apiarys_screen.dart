@@ -28,6 +28,7 @@ import '../models/infos.dart';
 import '../widgets/apiarys_item.dart';
 import '../widgets/note_priorytet_item.dart';
 import '../screens/voice_screen.dart';
+import '../screens/voice_screen2.dart';
 //import '../screens/subscription_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/harvest_screen.dart';
@@ -130,10 +131,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.10.80 22.02.2026 - apiarys_map_screen - mapa do lokalizacji, mapa lokalizacji wszystkich pasiek, progress bar w zarządzaniu danymi,
   //1.9.11.81 23.02.2026 - poprawka - problem z aktualizacją na iPhone i z importem - blokada na zdjeciach
   //1.9.12.82 23.02.2026 - poprawka kolejna -  catchError w bazie + Timeout 15s, kalendarz z zadaniami w Notesie, wyświetlanie zadań w summary_screen
-  //1.9.13.83 05.03.2025 - tłumaczenie na: de, es, fr, it, pt, przenoszenie i kasowanie ula, przypisanie notatki do wielu uli, kalkulatory kwasów, wychów matek
-
-  final wersja = '1.9.13.83'; //wersja aplikacji na iOS
-  final dataWersji = '2026-03-05';
+  //1.9.13.83 05.03.2026 - tłumaczenie na: de, es, fr, it, pt, przenoszenie i kasowanie ula, przypisanie notatki do wielu uli, kalkulatory kwasów, wychów matek
+  //1.9.14.84 09.03.2026 - przełacznik do testowania voice_scree2, inne dźwięki z regulacją głosności
+  
+  final wersja = '1.9.14.84'; //wersja aplikacji na iOS
+  final dataWersji = '2026-03-09';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;
@@ -1622,10 +1624,13 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                           child: ElevatedButton(
                             style: buttonStyle,
                             onPressed: () {
-                              //_isInit = true,
-                              Navigator.of(context).pushNamed(
-                                VoiceScreen.routeName,
-                              );                                    
+                              globals.voice2 == false
+                                ? Navigator.of(context).pushNamed(
+                                    VoiceScreen.routeName,
+                                  )
+                                : Navigator.of(context).pushNamed(
+                                    VoiceScreen2.routeName,
+                                  );                                    
                             },
                             child: Text(
                                 AppLocalizations.of(context)!.voiceControl,

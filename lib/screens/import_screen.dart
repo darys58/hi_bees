@@ -3352,7 +3352,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     DBHelper.updateDodatki1('a', '$value');
                     setState(() {
                       isSwitched = value;
-                      //print(isSwitched);
+                      print(isSwitched);
                     });
                   },
                 ),

@@ -75,6 +75,8 @@ int raportNrStrony = 1; //numer strony dla wykresu raportu zbiorów lub leczenia
 int raportIleUliNaStronie = 20; //ilość uli na stronie w raporcie zbiorów lub leczenia (od 1 do 20)
 String rokRaportow = 'wszystkie'; //DateTime.now().toString().substring(0, 4); //rok wybrany w Info do raportów
 
+bool voice2 = false; //czy ma być uruchomiony voice_screen2
+
 //z/do tabeli Memory
 //String id = '';
 //String email = '';

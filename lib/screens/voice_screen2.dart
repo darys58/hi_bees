@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:hi_bees/helpers/db_helper.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_beep/flutter_beep.dart';
+import '../helpers/sound_helper.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:rhino_flutter/rhino.dart';
@@ -91,6 +91,7 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
   double hightSave =
       100; //wysokość wiersza "Save" - zapis zasobu lub info do bazy
   double marginRow = 10; //marginesy dla wierszy 'ul,korpus,ramka' i...
+  int matkaID = 0; //numer id matki - index z tabeli "matka"
   //Locale myLocale = 'en_US'
   //AudioPlayer player = AudioPlayer();
 //String  test = "0";
@@ -238,9 +239,12 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
 
   int zwloka = 1500;
 
+  final _sound = SoundHelper();
+
   @override
   void initState() {
     super.initState();
+    _sound.init(); //preload dźwięków
     setState(() {
       isButtonDisabled = true;
       rhinoText = "";
@@ -277,6 +281,7 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
     _inferenceTimer?.cancel(); //anulowanie timera
     _picovoiceManager?.stop(); //zatrzymanie nasłuchiwania
     _picovoiceManager?.delete(); //zwolnienie zasobów natywnych Picovoice
+    _sound.dispose(); //zwolnienie odtwarzaczy dźwięku
     WakelockPlus.disable(); //usunięcie blokady wygaszania ekranu
     super.dispose();
   }
@@ -420,9 +425,7 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
     setState(() {
       wakeWordDetected = true;
       rhinoText = AppLocalizations.of(context)!.hiBeesDetected;
-      platform == 'android'
-        ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
-        : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
+      _sound.play('wake_word');
     });
   }
 
@@ -447,16 +450,12 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
         if (wakeWordDetected) {
           //jest wybudzenie - usłyszano hej Maja w trakcie oczekiwania
           rhinoText = AppLocalizations.of(context)!.hiBeesDetected;
-          platform == 'android'
-            ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
-            : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
+          _sound.play('wake_word');
         } else {
           //powrót do oczekiwania na wybudzenie
           setState(() {
             rhinoText = AppLocalizations.of(context)!.listeningForHiBees;
-            platform == 'android'
-              ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_PROMPT)
-              : FlutterBeep.playSysSound(iOSSoundIDs.JBL_Begin);
+            _sound.play('listening');
           });
         }
       } else {
@@ -4845,18 +4844,16 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
     //     '', //uwagi
     //     0); //niezarchiwizowane
 
-    platform == 'android'
-        ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
-        : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-    //print('beep - JBL_NoMatch - insertInfo - zapis info do bazy');
-  
+    _sound.play('success');
+    //print('beep - success - insertInfo - zapis info do bazy');
+
   }
 
   
   /** ZAPIS INFO DO BAZY */
 
   //info(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ileUli INTEGER, data TEXT, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, uwagi TEXT)');
-  zapisInfoDoBazy(String kat, String param, String wart, String miar) {
+  zapisInfoDoBazy(String kat, String param, String wart, String miar) async {
     if (ustawianaData != '')
       formattedDate = ustawianaData;
     else
@@ -4972,10 +4969,8 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
           }
         }
       });
-      platform == 'android'
-          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
-          : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-      //print('beep - JBL_NoMatch - zapis ula do bazy');
+      _sound.play('success');
+      //print('beep - success - zapis ula do bazy');
      
     } else {
       //** WAPIS DLA JEDNEGO ula */
@@ -4988,6 +4983,14 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
       //   //korpusNr = 0; //zeby nie wyświetlał danych o korpusie tylko tekst info
       // }
 //print('ZAPIS INFO DO BAZY zzzzzzzzzzzzzzzzzzzzzz');
+  //jezeli info dotyczy matki
+      if(kat == 'queen'){
+        //pobranie ID matki przypisanej do tego ula
+        final data = await DBHelper.getQueenID(nrXXOfApiary, nrXXOfHive);
+        if (data.isNotEmpty) {
+          matkaID = data[0]['id'] as int; //numer id matki - index z tabeli "matka"
+        }
+      }
       Infos.insertInfo(
           '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$kat.$param', //id
           formattedDate, //data
@@ -4997,7 +5000,9 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
           param, //parametr
           wart, //wartosc
           miar, //miara
-          icon, //ikona pogody
+          matkaID > 0 //jezeli jest ID matki a jak nie ma to '' //ikona pogody
+            ?  matkaID.toString()
+            :'',
           '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
           formatedTime, //czas
           '', //uwagi
@@ -5233,16 +5238,12 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
           });
         });
       });
-      platform == 'android'
-          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
-          : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-         // print('beep - voice_screen: zapis Info do bazy');
-      
+      _sound.play('success');
+         // print('beep - success - zapis Info do bazy');
+
       }else{
-        platform == 'android'
-          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
-          : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-          // print('beep - voice_screen: zapis Info do bazy');
+        _sound.play('success');
+          // print('beep - success - zapis Info do bazy');
       }
     }
   }
@@ -5364,11 +5365,8 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
     }
 
     //wciśnięcie START
-    platform == 'android'
-        ? FlutterBeep.playSysSound(
-            AndroidSoundIDs.TONE_PROP_BEEP2) // było TONE_CDMA_ONE_MIN_BEEP
-        : FlutterBeep.playSysSound(iOSSoundIDs.JBL_Begin);
-   // print('beep - JBL_Begin - start');
+    _sound.play('start');
+   // print('beep - start');
   }
 
   Future<void> _stopProcessing() async {
@@ -5401,21 +5399,14 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
   beep(m) {
     switch (m) {
       case 'close':
-        platform == 'android'
-            ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_ACK)
-            : FlutterBeep.playSysSound(iOSSoundIDs.CameraShutter);
+        _sound.play('close');
         break;
       case 'open':
-        platform == 'android'
-            ? FlutterBeep.playSysSound(
-                AndroidSoundIDs.TONE_CDMA_KEYPAD_VOLUME_KEY_LITE)
-            : FlutterBeep.playSysSound(iOSSoundIDs.EndRecording);
-        //print('beep - EndRecording - "open"');
+        _sound.play('open');
+        //print('beep - "open"');
         break;
       case 'error':
-        platform == 'android'
-            ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_NACK)
-            : FlutterBeep.playSysSound(iOSSoundIDs.VCCallUpgrade);
+        _sound.play('error');
         break;
     }
   }
@@ -7836,7 +7827,7 @@ print('openDialog = $openDialog');
                             : isProcessing
                                 ? _stopProcessing
                                 : _startProcessing,
-                        child: Text(isProcessing ? "STOP" : "START",
+                        child: Text(isProcessing ? "STOP2" : "START2",
                             style: const TextStyle(
                                 fontSize: 16,
                                 color: Color.fromARGB(255, 0, 0,

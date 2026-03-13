@@ -1241,6 +1241,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                           });
                                         }
                                     });
+                                  Navigator.of(context).pop();
                                   }); 
                                                  
                                 }

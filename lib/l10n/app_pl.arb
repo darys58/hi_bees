@@ -866,6 +866,27 @@
     "qrCancelNotifications": "Anuluj",
     "qrReschedule": "Ustaw ponownie",
     "qrNotificationsScheduled": "Zaplanowano powiadomień",
-    "qrNotificationsCancelled": "Powiadomienia anulowane"
+    "qrNotificationsCancelled": "Powiadomienia anulowane",
+
+    "soundVolume": "Głośność dźwięków",
+    "@soundVolume": {},
+    "soundWakeWord": "Wykryto Hey Maya",
+    "@soundWakeWord": {},
+    "soundStart": "Start nasłuchiwania",
+    "@soundStart": {},
+    "soundListening": "Powrót do nasłuchu",
+    "@soundListening": {},
+    "soundSuccess": "Zapis do bazy",
+    "@soundSuccess": {},
+    "soundOpen": "Nowy kontekst",
+    "@soundOpen": {},
+    "soundClose": "Zamknięcie",
+    "@soundClose": {},
+    "soundError": "Błąd",
+    "@soundError": {},
+    "soundPlay": "Odtwórz",
+    "@soundPlay": {},
+    "masterVolume": "Głośność główna",
+    "@masterVolume": {}
 
 }

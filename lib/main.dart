@@ -12,6 +12,7 @@ import './screens/frames_screen.dart';
 import './screens/hives_screen.dart';
 import './screens/apiarys_screen.dart';
 import './screens/voice_screen.dart'; //blokowanie działania Picovoce  - usunięto: picovoice_flutter: ^3.0.1
+import './screens/voice_screen2.dart';
 import './screens/infos_screen.dart';
 import './screens/frames_detail_screen.dart';
 //import './screens/subscription_screen.dart';
@@ -309,6 +310,7 @@ class _MyAppState extends State<MyApp> {
           FramesScreen.routeName: (ctx) => FramesScreen(),
           HivesScreen.routeName: (ctx) => HivesScreen(),
           VoiceScreen.routeName: (ctx) => VoiceScreen(), //blokowanie działania Picovoce
+          VoiceScreen2.routeName: (ctx) => VoiceScreen2(),
           InfoScreen.routeName: (ctx) => InfoScreen(),
           // SubsScreen.routeName: (ctx) => SubsScreen(), //blokowanie subskrypcji bo błedy kompilacji androida
           FramesDetailScreen.routeName: (ctx) => FramesDetailScreen(),

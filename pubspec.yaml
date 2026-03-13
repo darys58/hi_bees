@@ -5,7 +5,7 @@ description: A new Flutter project.
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.9.13+83
+version: 1.9.14+84
 
 environment:
   sdk: '>=2.18.5 <3.0.0'
@@ -31,6 +31,7 @@ dependencies:
   intl: ^0.19.0
   provider: ^6.0.5
   flutter_beep: ^1.0.0
+  audioplayers: ^6.1.0
   wakelock_plus: ^1.2.10
   http: ^1.2.2
   device_info_plus: ^11.2.0
@@ -108,6 +109,13 @@ flutter:
     - assets/image/rain.png
     - assets/image/EN.png
     - assets/image/PL.png
+    - assets/audio/wake_word.wav
+    - assets/audio/start.wav
+    - assets/audio/listening.wav
+    - assets/audio/success.wav
+    - assets/audio/open.wav
+    - assets/audio/close.wav
+    - assets/audio/error.wav
    # - assets/audio/sound7.mp3
   
   

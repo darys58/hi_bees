@@ -851,6 +851,27 @@
     "qrCancelNotifications": "Cancelar",
     "qrReschedule": "Reprogramar",
     "qrNotificationsScheduled": "Notificaciones programadas",
-    "qrNotificationsCancelled": "Notificaciones canceladas"
+    "qrNotificationsCancelled": "Notificaciones canceladas",
+
+    "soundVolume": "Volumen de sonidos",
+    "@soundVolume": {},
+    "soundWakeWord": "Hey Maya detectado",
+    "@soundWakeWord": {},
+    "soundStart": "Iniciar escucha",
+    "@soundStart": {},
+    "soundListening": "Volver a escuchar",
+    "@soundListening": {},
+    "soundSuccess": "Guardado en base de datos",
+    "@soundSuccess": {},
+    "soundOpen": "Nuevo contexto",
+    "@soundOpen": {},
+    "soundClose": "Cerrar",
+    "@soundClose": {},
+    "soundError": "Error",
+    "@soundError": {},
+    "soundPlay": "Reproducir",
+    "@soundPlay": {},
+    "masterVolume": "Volumen principal",
+    "@masterVolume": {}
 
 }

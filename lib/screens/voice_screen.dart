@@ -89,9 +89,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
   double hightSave =
       100; //wysokość wiersza "Save" - zapis zasobu lub info do bazy
   double marginRow = 10; //marginesy dla wierszy 'ul,korpus,ramka' i...
+  int matkaID = 0; //numer id matki - index z tabeli "matka"
   //Locale myLocale = 'en_US'
   //AudioPlayer player = AudioPlayer();
-//String  test = "0";
   bool readyApiary = false; //ustalony numer pasieki
   bool readyAllHives = false; //polecenia dla wszy
   bool readyHive = false; //ustalony numer ula
@@ -4867,7 +4867,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   /** ZAPIS INFO DO BAZY */
 
   //info(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ileUli INTEGER, data TEXT, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, uwagi TEXT)');
-  zapisInfoDoBazy(String kat, String param, String wart, String miar) {
+  zapisInfoDoBazy(String kat, String param, String wart, String miar) async{
     if (ustawianaData != '')
       formattedDate = ustawianaData;
     else
@@ -4896,7 +4896,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
               param, //parametr
               wart, //wartosc
               miar, //miara
-              icon, //ikona pogody
+              '', //ikona pogody
               '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
               formatedTime, //czas
               '', //uwagi
@@ -4999,6 +4999,20 @@ class _VoiceScreenState extends State<VoiceScreen> {
       //   //korpusNr = 0; //zeby nie wyświetlał danych o korpusie tylko tekst info
       // }
 //print('ZAPIS INFO DO BAZY zzzzzzzzzzzzzzzzzzzzzz');
+//jezeli info dotyczy matki
+      if(kat == 'queen'){ 
+        //pobranie ID matki przypisanej do tego ula
+      //   DBHelper.getQueenID(nrXXOfApiary, nrXXOfHive).then((data) { 
+      //     if (data.isNotEmpty) {
+      //       matkaID = data[0]['id'] as int; //numer id matki - index z tabeli "matka"
+      //     }
+      //   });
+      // }
+      final data = await DBHelper.getQueenID(nrXXOfApiary, nrXXOfHive);                                                
+        if (data.isNotEmpty) {                                                                                           
+          matkaID = data[0]['id'] as int; //numer id matki - index z tabeli "matka"                                      
+        }                                                                                                                
+      } 
       Infos.insertInfo(
           '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$kat.$param', //id
           formattedDate, //data
@@ -5008,7 +5022,9 @@ class _VoiceScreenState extends State<VoiceScreen> {
           param, //parametr
           wart, //wartosc
           miar, //miara
-          icon, //ikona pogody
+          matkaID > 0 //jezeli jest ID matki a jak nie ma to '' //ikona pogody
+            ?  matkaID.toString()
+            :'',
           '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
           formatedTime, //czas
           '', //uwagi

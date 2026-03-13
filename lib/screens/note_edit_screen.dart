@@ -165,8 +165,12 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                       ),
                     ),
                     Divider(),
-                    // Lista uli z checkboxami
+                    // Lista uli z checkboxami  
                     Expanded(
+                       child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Material(
+                          color: Colors.white,
                       child: ListView.builder(
                         padding: EdgeInsets.zero,
                         itemCount: _availableHives.length,
@@ -188,7 +192,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                             },
                           );
                         },
-                      ),
+                      ),),),
                     ),
                   ],
                 ),

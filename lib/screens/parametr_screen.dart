@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
+import '../helpers/sound_helper.dart';
 import '../screens/parametry_ula_screen.dart';
 import '../screens/parametr_edit_screen.dart';
 //import '../models/info.dart';
@@ -23,6 +24,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
   double miodMala = 0;
   double miodDuza = 0;
   bool _showZakupySprzedaz = true;
+  final _sound = SoundHelper();
+  bool _soundReady = false;
+  bool isSwitched = false;
 
   @override
   void didChangeDependencies() {
@@ -34,6 +38,12 @@ class _ParametrScreenState extends State<ParametrScreen> {
       Provider.of<Infos>(context, listen: false).fetchAndSetInfos().then((_) {
         //wszystkie informacje dla wybranej pasieki i ula
       });
+      //inicjalizacja dźwięków (tylko gdy sterowanie głosem aktywne)
+      if (globals.key != '' && globals.key != 'bez_klucza') {
+        _sound.init().then((_) {
+          if (mounted) setState(() => _soundReady = true);
+        });
+      }
       //inicjalizacja przełącznika Zakupy/Sprzedaż
       final dod1Init = Provider.of<Dodatki1>(context, listen: false).items;
       if (dod1Init.isNotEmpty) {
@@ -53,6 +63,15 @@ class _ParametrScreenState extends State<ParametrScreen> {
       //   });
       // }
       // });
+      if (globals.voice2 == true) {
+        setState(() {
+          isSwitched = true;
+        });
+      } else {
+        setState(() {
+          isSwitched = false;
+        });
+      }
     }
     _isInit = false;
     //Provider.of<Rests>(context, listen: false).fetchAndSetRests(); //dostawca restauracji
@@ -79,6 +98,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
     //uzyskanie dostępu do danych w pamięci
     // final memData = Provider.of<Memory>(context, listen: false);
     // final mem = memData.items;
+
+    
+
     final dod1Data = Provider.of<Dodatki1>(context);
     final dod1 = dod1Data.items;
 
@@ -397,6 +419,10 @@ class _ParametrScreenState extends State<ParametrScreen> {
                     ),
                   ),
 
+//głośność dźwięków (tylko gdy sterowanie głosem aktywne)
+                  if (globals.key != '' && globals.key != 'bez_klucza' && _soundReady)
+                    _buildSoundVolumeSection(context),
+
 //ul TYP A
 
                   GestureDetector(
@@ -590,5 +616,142 @@ class _ParametrScreenState extends State<ParametrScreen> {
        */
                 ],
               ));
+  }
+
+  /// Mapowanie nazwy dźwięku na klucz lokalizacji.
+  String _soundLabel(BuildContext context, String name) {
+    final l = AppLocalizations.of(context)!;
+    switch (name) {
+      case 'wake_word': return l.soundWakeWord;
+      case 'start': return l.soundStart;
+      case 'listening': return l.soundListening;
+      case 'success': return l.soundSuccess;
+      case 'open': return l.soundOpen;
+      case 'close': return l.soundClose;
+      case 'error': return l.soundError;
+      default: return name;
+    }
+  }
+
+  /// Sekcja głośności dźwięków w Parametryzacji.
+  Widget _buildSoundVolumeSection(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Card(
+              child: ListTile(
+                //leading: Icon(Icons.settings),
+                title: Text('Voice screen 2', style: const TextStyle(fontWeight: FontWeight.bold)),
+                //subtitle: Text(AppLocalizations.of(context)!.onlyInspection),
+                trailing: Switch.adaptive(
+                  value: isSwitched,
+                  onChanged: (value) {
+                    globals.voice2 = value;
+                    //DBHelper.updateDodatki1('a', '$value');
+                    setState(() {
+                      isSwitched = value;
+                      print(isSwitched);
+                    });
+                  },
+                ),
+              ),
+            ),
+            
+            // nagłówek sekcji
+            ListTile(
+              leading: const Icon(Icons.volume_up),
+              title: Text(
+                l.soundVolume,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            // suwak głównej głośności
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(l.masterVolume,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Slider(
+                      value: _sound.masterVolume,
+                      min: 0.0,
+                      max: 1.0,
+                      divisions: 20,
+                      label: '${(_sound.masterVolume * 100).round()}%',
+                      onChanged: (v) {
+                        setState(() => _sound.masterVolume = v);
+                      },
+                      onChangeEnd: (_) => _sound.saveVolumes(),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 40,
+                    child: Text('${(_sound.masterVolume * 100).round()}%',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            // suwaki poszczególnych dźwięków
+            ...SoundHelper.soundNames.map((name) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                child: Row(
+                  children: [
+                    // przycisk odtwarzania
+                    IconButton(
+                      icon: const Icon(Icons.play_circle_outline, size: 28),
+                      tooltip: l.soundPlay,
+                      onPressed: () => _sound.play(name),
+                    ),
+                    // nazwa dźwięku
+                    SizedBox(
+                      width: 100,
+                      child: Text(
+                        _soundLabel(context, name),
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    // suwak
+                    Expanded(
+                      child: Slider(
+                        value: _sound.volumes[name] ?? 1.0,
+                        min: 0.0,
+                        max: 1.0,
+                        divisions: 20,
+                        label: '${((_sound.volumes[name] ?? 1.0) * 100).round()}%',
+                        onChanged: (v) {
+                          setState(() => _sound.volumes[name] = v);
+                        },
+                        onChangeEnd: (_) => _sound.saveVolumes(),
+                      ),
+                    ),
+                    // wartość %
+                    SizedBox(
+                      width: 40,
+                      child: Text(
+                        '${((_sound.volumes[name] ?? 1.0) * 100).round()}%',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
   }
 }
