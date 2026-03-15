@@ -1418,30 +1418,34 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
         //to zapisz w globals datę tego przeglądu
         globals.dataAktualnegoPrzegladu = '$formattedDate';
         //print('info = ${info[0].id}, kategoria = ${info[0].kategoria}, czas = ${info[0].czas}');
-      }else{ //a jezeli jeszcze nie ma takego wpisu
-        //print('jeszcze nie ma wpisu');
-        //to zapis przegladu do info 'inspection"
-        Infos.insertInfo(
-          '$formattedDate.$nowyNrPasieki.$nowyNrUla.inspection.${AppLocalizations.of(context)!.inspection}', //id
-          formattedDate, //data
-          nowyNrPasieki!, //pasiekaNr
-          nowyNrUla!, //ulNr
-          'inspection', //karegoria
-          AppLocalizations.of(context)!.inspection, //parametr
-          ikona, //wartosc
-          '', //miara
-          '',//icon, //ikona pogody
-          '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
-          formatterHm.format(DateTime.now()), //formatedTime, //czas
-          '', //uwagi
-          0 //arch
-        ).then((_) {
-          Provider.of<Infos>(context, listen: false)
-              .fetchAndSetInfosForHive(nowyNrPasieki,nowyNrUla)
-              .then((_) {
-            // print(
-            //     'edit_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');
-          });
+      }else{ //a jezeli jeszcze nie ma takego wpisu w providerze
+        //dodatkowe sprawdzenie bezpośrednio w bazie (provider może nie być jeszcze załadowany)
+        DBHelper.inspectionExists(formattedDate, nowyNrPasieki!, nowyNrUla!, AppLocalizations.of(context)!.inspection).then((exists) {
+          if(exists){
+            globals.dataAktualnegoPrzegladu = '$formattedDate';
+          }else{
+            //to zapis przegladu do info 'inspection"
+            Infos.insertInfo(
+              '$formattedDate.$nowyNrPasieki.$nowyNrUla.inspection.${AppLocalizations.of(context)!.inspection}', //id
+              formattedDate, //data
+              nowyNrPasieki!, //pasiekaNr
+              nowyNrUla!, //ulNr
+              'inspection', //karegoria
+              AppLocalizations.of(context)!.inspection, //parametr
+              ikona, //wartosc
+              '', //miara
+              '',//icon, //ikona pogody
+              '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+              formatterHm.format(DateTime.now()), //formatedTime, //czas
+              '', //uwagi
+              0 //arch
+            ).then((_) {
+              Provider.of<Infos>(context, listen: false)
+                  .fetchAndSetInfosForHive(nowyNrPasieki,nowyNrUla)
+                  .then((_) {
+              });
+            });
+          }
         });
       }
     }//else{print('juz jest wpis = ${globals.dataAktualnegoPrzegladu}');}

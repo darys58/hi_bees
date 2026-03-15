@@ -33,6 +33,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
   //var now = new DateTime.now();
   //var formatterY = new DateFormat('yyyy-MM-dd');
   bool _isInit = true;
+  bool _isBodyMode = false; // true = przenoszenie korpusu, false = przenoszenie ramki
   var formatterHm = new DateFormat('H:mm');
   int? nrPasieki;
   int _sourceUl = 1; // zapamiętany numer ula źródłowego do przywracania kontekstu
@@ -88,6 +89,8 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
       final idKorpusu = routeArgs['idKorpusu'];
       final idRamki = routeArgs['idRamki'];
       final idData = routeArgs['idData'];
+      final tryb = routeArgs['tryb'] ?? 'ramka';
+      _isBodyMode = (tryb == 'korpus');
       //print('ramka = $idRamki, pasieka = $idPasieki , ul = $idUla');
 
 
@@ -748,7 +751,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
             onPressed: () => _restoreAndPop(),
           ),
           title: Text(
-            AppLocalizations.of(context)!.mOvingFrame + ' (' + AppLocalizations.of(context)!.apiary + ' $nrPasieki)',
+            (_isBodyMode ? AppLocalizations.of(context)!.mOvingBody : AppLocalizations.of(context)!.mOvingFrame) + ' (' + AppLocalizations.of(context)!.apiary + ' $nrPasieki)',
             style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
           ),
         ),
@@ -775,7 +778,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(AppLocalizations.of(context)!.mOveFrameFrom,
+                                      Text(_isBodyMode ? AppLocalizations.of(context)!.mOveBodyFrom : AppLocalizations.of(context)!.mOveFrameFrom,
                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color.fromARGB(255, 0, 0, 0))
                                       ),
                                     ]
@@ -847,7 +850,8 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                               color: Color.fromARGB(255, 0, 0,0))),
                                         )])  ,
 
-//ramka do przeniesienia
+//ramka do przeniesienia (ukryta w trybie korpusu)
+                                if (!_isBodyMode) ...[
                                 SizedBox(width: 10),
 
                                 Column(
@@ -862,9 +866,9 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                               style: const TextStyle(
                                                 fontSize: 18,
                                                 color: Color.fromARGB(255, 0, 0,0))),
-                                          )])
-                                                           
-                                
+                                          )]),
+                                ]
+
                                 ],
                               ),
 
@@ -882,7 +886,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(AppLocalizations.of(context)!.mOveFrameTo,
+                                      Text(_isBodyMode ? AppLocalizations.of(context)!.mOveBodyTo : AppLocalizations.of(context)!.mOveFrameTo,
                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color.fromARGB(255, 0, 0, 0))
                                       ),
                                     ]
@@ -1052,7 +1056,8 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                         ],  //lewa, obie, prawa
                                       ),
                                   ]),
-//miejse docelowe ramki
+//miejse docelowe ramki (ukryte w trybie korpusu)
+                                if (!_isBodyMode) ...[
                                 SizedBox(width: 10),
                                   Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1066,7 +1071,8 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                               style: const TextStyle(
                                                 fontSize: 18,
                                                 color: Color.fromARGB(255, 0, 0,0))),
-                                          )])
+                                          )]),
+                                ]
 
                               ]),
                                             
@@ -1097,30 +1103,38 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                 //  print('nrPasieki = $nrPasieki, nrUlaZ = ${globals.nrUlaPrzeniesZ}, nrUlaDo = ${globals.nrUlaPrzeniesDo}, nrKorpusuZ = ${globals.nrKorpusuPrzeniesZ}, nrKorpusuDo = ${globals.nrKorpusuPrzeniesDo}');
                                 //  print (' nrRamkiZ = ${globals.nrRamkiPrzeniesZ}, nrRamkiDo = ${globals.nrRamkiPrzeniesDo}; korpus = $korpus');
                                  
-                                  //przeniesienie ramki do innego korpusu/ula/pasieki
+                                  //przeniesienie ramki/korpusu do innego korpusu/ula/pasieki
                                   Provider.of<Frames>(context, listen: false)
                                     .fetchAndSetFramesForHive(nrPasieki, globals.nrUlaPrzeniesZ)
                                     .then((_) {
                                       //dla wszystkich zasobów wykonanie kopii ramki i zmiana "przed", "po", korpusu i ewentualnie ula
                                       final framesData1 = Provider.of<Frames>(context, listen: false);
+                                      List<Frame> frames;
+                                      if (_isBodyMode) {
+                                        //wszystkie ramki w wybranym korpusie (z wybranej daty, ramkaNr > 0, ramkaNrPo != 0)
+                                        frames = framesData1.items.where((fr) {
+                                          return fr.data == dateController.text && fr.korpusNr == globals.nrKorpusuPrzeniesZ && fr.ramkaNr > 0 && fr.ramkaNrPo != 0;
+                                        }).toList();
+                                      } else {
                                         //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
-                                      List<Frame> frames = framesData1.items.where((fr) {
-                                        return fr.ramkaNr == globals.nrRamkiPrzeniesZ && fr.data == dateController.text  && fr.korpusNr == globals.nrKorpusuPrzeniesZ; //return fr.data.contains('2024-04-04');
-                                      }).toList();
-                                        //print('frames.length = ${frames.length}');
+                                        frames = framesData1.items.where((fr) {
+                                          return fr.ramkaNr == globals.nrRamkiPrzeniesZ && fr.data == dateController.text  && fr.korpusNr == globals.nrKorpusuPrzeniesZ;
+                                        }).toList();
+                                      }
                                         //dla kazdego zasobu - zapis z innym id oraz modyfikacja ramkaNr, ramkaNrPo, korpusNr i ewentualnie ulNr
                                       for (var i = 0; i < frames.length; i++) {
-                                        //print('frames[i].zasob = ${frames[i].zasob}');
+                                        // w trybie korpusu ramka zachowuje swój numer; w trybie ramki - numer docelowy
+                                        int targetFrameNr = _isBodyMode ? frames[i].ramkaNr : globals.nrRamkiPrzeniesDo;
                                         if(frames[i].zasob != 14){ //jezeli zasób jest rózny od "isDone" czyli prawdopodobnie nie jest = "usuń ramka"
                                           Frames.insertFrame(
-                                            '${globals.dataPrzeniesRamke}.$nrPasiekiDo.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.${globals.nrRamkiPrzeniesDo}.${frames[i].strona}.${frames[i].zasob}',
+                                            '${globals.dataPrzeniesRamke}.$nrPasiekiDo.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.$targetFrameNr.${frames[i].strona}.${frames[i].zasob}',
                                             globals.dataPrzeniesRamke,
                                             nrPasiekiDo,
                                             globals.nrUlaPrzeniesDo,
                                             globals.nrKorpusuPrzeniesDo,
                                             korpus,//2-korpus, 1-półkorpus
                                             0,//ramkaNr przed (0 bo jest wstawiana)
-                                            globals.nrRamkiPrzeniesDo, //ramkaNrPo
+                                            targetFrameNr, //ramkaNrPo
                                             frames[i].rozmiar,
                                             frames[i].strona,
                                             frames[i].zasob,
@@ -1132,14 +1146,14 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                         }
                                         else{ //więc jezeli jest "usuń ramka" to zamień na "wstaw ramka"
                                           Frames.insertFrame(
-                                              '${globals.dataPrzeniesRamke}.$nrPasiekiDo.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.${globals.nrRamkiPrzeniesDo}.${frames[i].strona}.${frames[i].zasob}',
+                                              '${globals.dataPrzeniesRamke}.$nrPasiekiDo.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.$targetFrameNr.${frames[i].strona}.${frames[i].zasob}',
                                               globals.dataPrzeniesRamke,
                                               nrPasiekiDo,
                                               globals.nrUlaPrzeniesDo,
                                               globals.nrKorpusuPrzeniesDo,
                                               korpus,//2-korpus, 1-półkorpus
                                               0,//ramkaNr
-                                              globals.nrRamkiPrzeniesDo, //ramkaNrPo
+                                              targetFrameNr, //ramkaNrPo
                                               frames[i].rozmiar,
                                               frames[i].strona,
                                               frames[i].zasob,
@@ -1152,6 +1166,45 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       }
                                       //poniewaz moze nie być "zasob == 14"  czyli "usun ramka", na wszelki wypadek zapis:
                                       if (frames.isNotEmpty) {
+                                      if (_isBodyMode) {
+                                        // dla każdej unikalnej ramki w korpusie - wpisy "wstaw" i "usuń"
+                                        Set<int> frameNumbers = {};
+                                        for (var fr in frames) {
+                                          frameNumbers.add(fr.ramkaNr);
+                                        }
+                                        for (int frameNr in frameNumbers) {
+                                          //"wstaw ramka" dla ramki Do
+                                          Frames.insertFrame(
+                                              '${globals.dataPrzeniesRamke}.$nrPasiekiDo.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.$frameNr.1.14',
+                                              globals.dataPrzeniesRamke,
+                                              nrPasiekiDo,
+                                              globals.nrUlaPrzeniesDo,
+                                              globals.nrKorpusuPrzeniesDo,
+                                              korpus,
+                                              0,
+                                              frameNr,
+                                              frames[0].rozmiar,
+                                              1,
+                                              14,
+                                              AppLocalizations.of(context)!.inserted,
+                                              0);
+                                          // "usuń ramka" dla ramki Z
+                                          Frames.insertFrame(
+                                              '${dateController.text}.$nrPasieki.${globals.nrUlaPrzeniesZ}.${globals.nrKorpusuPrzeniesZ}.0.$frameNr.1.14',
+                                              dateController.text,
+                                              nrPasieki!,
+                                              globals.nrUlaPrzeniesZ,
+                                              globals.nrKorpusuPrzeniesZ,
+                                              frames[0].typ,
+                                              frameNr,
+                                              0,
+                                              frames[0].rozmiar,
+                                              1,
+                                              14,
+                                              AppLocalizations.of(context)!.deleted,
+                                              0);
+                                        }
+                                      } else {
                                       //"wstaw ramka" dla ramki Do
                                       Frames.insertFrame(
                                               '${globals.dataPrzeniesRamke}.$nrPasiekiDo.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.${globals.nrRamkiPrzeniesDo}.1.14',
@@ -1182,6 +1235,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                               14,
                                               AppLocalizations.of(context)!.deleted, //usuń ramka
                                               0);
+                                      } // if/else _isBodyMode
                                       } // if (frames.isNotEmpty)
 
                                       //sprawdzenie czy w docelowym ulu istnieje przegląd z wybraną datą

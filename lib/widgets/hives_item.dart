@@ -107,6 +107,7 @@ class HivesItem extends StatelessWidget {
       },
       child: Container(
       child: Card(
+         color: hive.ikona == 'black' ? const Color.fromARGB(255, 200, 200, 200) : null,
          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5),
             ),
@@ -117,6 +118,7 @@ class HivesItem extends StatelessWidget {
         child: Padding(
             padding: const EdgeInsets.all(1),
             child: ListTile(
+              tileColor: hive.ikona == 'black' ? const Color.fromARGB(255, 200, 200, 200) : null,
               // onTap: () {
               //   globals.dataInspekcji = frame.data;
               // Navigator.of(context).pushNamed(
@@ -253,7 +255,7 @@ class HivesItem extends StatelessWidget {
                         Container(
                           //szare body
                           //alignment: Alignment.center,
-                          color: Color.fromARGB(172, 255, 255, 255),
+                          //color: Color.fromARGB(172, 255, 255, 255),
                           // ignore: sort_child_properties_last
                           child: CustomPaint(
                             painter: MyHiveQueen(ul: hive),
@@ -266,7 +268,7 @@ class HivesItem extends StatelessWidget {
                         Container(
                           //szare body
                           //alignment: Alignment.center,
-                          color: Color.fromARGB(172, 255, 255, 255),
+                          //color: Color.fromARGB(172, 255, 255, 255),
                           // ignore: sort_child_properties_last
                           child: CustomPaint(
                             painter: MyHiveToDo(ul: hive),

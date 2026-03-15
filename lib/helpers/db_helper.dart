@@ -727,11 +727,22 @@ class DBHelper {
     return db.rawQuery('SELECT * FROM zdjecia ORDER BY data DESC');
   }
 
+  //sprawdzenie czy rekord inspekcji istnieje w bazie (bezpośrednio, nie przez provider)
+  static Future<bool> inspectionExists(String data, int pasieka, int ul, String parametr) async {
+    final db = await DBHelper.database();
+    final result = await db.query('info',
+      where: 'data = ? AND pasiekaNr = ? AND ulNr = ? AND kategoria = ? AND parametr = ?',
+      whereArgs: [data, pasieka, ul, 'inspection', parametr],
+      limit: 1,
+    );
+    return result.isNotEmpty;
+  }
+
   //usuniecie rekordu z tabeli info - dla frame_screen
   static Future<void> deleteInfo(String id) async {
     final db = await DBHelper.database();
     //print('DBhelper: delete info id = $id');
-    db.delete('info', where: 'id= ?', whereArgs: [id]);
+    await db.delete('info', where: 'id= ?', whereArgs: [id]);
   }
 
   //usuniecie rekordu z tabeli ule - dla info_item

@@ -752,20 +752,20 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                             1, //nieaktualne zasoby bo mogła być zmiana ???
                           ).then((_) {
                             //ustawienie szarej ikony w info o przeglądzie
-                            Infos.insertInfo(
-                                '${hive[0].przeglad}.${hive[0].pasiekaNr}.${hive[0].ulNr}.inspection.' + AppLocalizations.of(context)!.inspection, //id
-                                hive[0].przeglad, //data
-                                hive[0].pasiekaNr, //pasiekaNr
-                                hive[0].ulNr, //ulNr
-                                'inspection', //karegoria
-                                AppLocalizations.of(context)!.inspection, //parametr
-                                AppLocalizations.of(context)!.edited, //wartosc
-                                '', //miara
-                                '',//pogoda
-                                '',//temp
-                                '00:00', //czas
-                                '',//uwagi
-                                0);
+                            // Infos.insertInfo(
+                            //     '${hive[0].przeglad}.${hive[0].pasiekaNr}.${hive[0].ulNr}.inspection.' + AppLocalizations.of(context)!.inspection, //id
+                            //     hive[0].przeglad, //data
+                            //     hive[0].pasiekaNr, //pasiekaNr
+                            //     hive[0].ulNr, //ulNr
+                            //     'inspection', //karegoria
+                            //     AppLocalizations.of(context)!.inspection, //parametr
+                            //     AppLocalizations.of(context)!.edited, //wartosc
+                            //     '', //miara
+                            //     '',//pogoda
+                            //     '',//temp
+                            //     '00:00', //czas
+                            //     '',//uwagi
+                            //     0);
                             //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
                             Provider.of<Hives>(context, listen: false)
                                 .fetchAndSetHives(

@@ -196,15 +196,13 @@ class _FramesScreenState extends State<FramesScreen> {
             Provider.of<Infos>(context, listen: false)
                 .fetchAndSetInfosForHive(globals.pasiekaID, globals.ulID)
                 .then((_) {
-              //wszystkie informacje dla wybranego pasieki i ula
-            });
+              //wszystkie informacje dla wybranego pasieki i ula - setState dopiero po załadowaniu infos
+              //żeby nie było race condition przy sprawdzaniu inspekcji w frame_edit_screen
+              setState(() {});
 
-            setState(() {
-              // _isLoading = false; //zatrzymanie wskaznika ładowania dań
+              // Przewiń do wybranej daty po setState i zbudowaniu widoku
+              _scrollToSelectedDate();
             });
-
-            // Przewiń do wybranej daty po setState i zbudowaniu widoku
-            _scrollToSelectedDate();
           });
         });
 
@@ -430,9 +428,19 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pop();
               Navigator.of(context).pushNamed(
                   FrameMoveScreen.routeName,
-                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData},
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData, 'tryb': 'ramka'},
                 );
             }, child: Text((AppLocalizations.of(context)!.mOvingFrame), //przenies ramkę
+            style: TextStyle(fontSize: 18)),
+            ),
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameMoveScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData, 'tryb': 'korpus'},
+                );
+            }, child: Text((AppLocalizations.of(context)!.mOvingBody), //przenies korpus
             style: TextStyle(fontSize: 18)),
             ),
           

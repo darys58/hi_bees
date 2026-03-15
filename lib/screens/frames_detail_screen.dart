@@ -66,9 +66,18 @@ class _FramesDetailScreenState extends State<FramesDetailScreen> {
               Navigator.of(context).pop();
               Navigator.of(context).pushNamed(
                   FrameMoveScreen.routeName,
-                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData},
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData, 'tryb': 'ramka'},
                 );
             }, child: Text((AppLocalizations.of(context)!.mOvingFrame),
+            style: TextStyle(fontSize: 18)),
+            ),
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameMoveScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData, 'tryb': 'korpus'},
+                );
+            }, child: Text((AppLocalizations.of(context)!.mOvingBody),
             style: TextStyle(fontSize: 18)),
             ),
           ],
