@@ -838,7 +838,7 @@
     "lacticColonies": "Nombre de colonies",
     "lacticAcidRecipe": "Solution d'acide lactique à 15 % pour la pulvérisation des cadres.\nDose : 10 ml par cadre (environ 50 ml par colonie).",
     "queenRearingCalendar": "Élevage de reines",
-    "qrGraftingDate": "Date de greffage",
+    "qrGraftingDate": "Date de\ngreffage",
     "qrNotifTime": "Heure",
     "qrDay": "Jour",
     "qrGrafting": "Transfert de larves âgées d'un jour",
@@ -855,6 +855,14 @@
     "qrReschedule": "Reprogrammer",
     "qrNotificationsScheduled": "Notifications programmées",
     "qrNotificationsCancelled": "Notifications annulées",
+    "qrNewCalendar": "Nouveau calendrier d'élevage",
+    "@qrNewCalendar": {},
+    "qrCalendarName": "Nom",
+    "@qrCalendarName": {},
+    "qrDeleteCalendar": "Supprimer le calendrier ?",
+    "@qrDeleteCalendar": {},
+    "qrNoCalendars": "Aucun calendrier d'élevage.\nAjoutez-en un avec le bouton +",
+    "@qrNoCalendars": {},
 
     "soundVolume": "Volume des sons",
     "@soundVolume": {},
@@ -875,6 +883,8 @@
     "soundPlay": "Écouter",
     "@soundPlay": {},
     "masterVolume": "Volume principal",
-    "@masterVolume": {}
+    "@masterVolume": {},
+    "withoutApiary": "Sans rucher",
+    "@withoutApiary": {}
 
 }

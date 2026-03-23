@@ -4762,13 +4762,16 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
         // print(hives.length);
         // print(ileUli);
 
-        //DBHelper.updateIleUli(nrXXOfApiary, ileUli); //
+        //ilość uli zlikwidowanych  - do obliczenia nilości uli w pasiece
+        final hiveZlikwidowane = hivesData.items.where((element) {
+                return element.ikona == ('black');
+              }); 
 
         //zapis do tabeli "pasieki"
         Apiarys.insertApiary(
           '$nrXXOfApiary',
           nrXXOfApiary, //pasieka nr
-          ileUli, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
+          ileUli - hiveZlikwidowane.length, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
           formattedDate, //przeglad
           globals.ikonaPasieki, //ikona nie zmieniana w tym skrypcie
           '??', //opis
@@ -5222,13 +5225,16 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
             // print(hives.length);
             // print(ileUli);
 
-            //DBHelper.updateIleUli(nrXXOfApiary, ileUli); //
+            //ilość uli zlikwidowanych  - do obliczenia nilości uli w pasiece
+            final hiveZlikwidowane = hivesData.items.where((element) {
+                    return element.ikona == ('black');
+                  }); 
 
             //zapis do tabeli "pasieki"
             Apiarys.insertApiary(
               '$nrXXOfApiary',
               nrXXOfApiary, //pasieka nr
-              ileUli, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
+              ileUli - hiveZlikwidowane.length, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
               formattedDate, //przeglad
               globals.ikonaPasieki, //ikona nie zmieniana w tym skrypcie
               '??', //opis

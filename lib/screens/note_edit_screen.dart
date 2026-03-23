@@ -566,7 +566,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                 children: [
                                   Expanded(
                                     child: DropdownButtonFormField<int>(
-                                      value: (nowyNrPasieki != null && nowyNrPasieki! > 0) ? nowyNrPasieki : null,
+                                      value: nowyNrPasieki ?? 0,
                                       decoration: InputDecoration(
                                         enabledBorder: OutlineInputBorder(
                                             borderSide: BorderSide(color: Colors.grey)),
@@ -575,12 +575,18 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                         labelText: AppLocalizations.of(context)!.apiaryNr,
                                         labelStyle: TextStyle(color: Colors.black),
                                       ),
-                                      items: _apiaries.map((apiary) {
-                                        return DropdownMenuItem<int>(
-                                          value: apiary.pasiekaNr,
-                                          child: Text('${AppLocalizations.of(context)!.aPiary} ${apiary.pasiekaNr}'),
-                                        );
-                                      }).toList(),
+                                      items: [
+                                        DropdownMenuItem<int>(
+                                          value: 0,
+                                          child: Text(AppLocalizations.of(context)!.withoutApiary),
+                                        ),
+                                        ..._apiaries.map((apiary) {
+                                          return DropdownMenuItem<int>(
+                                            value: apiary.pasiekaNr,
+                                            child: Text('${AppLocalizations.of(context)!.aPiary} ${apiary.pasiekaNr}'),
+                                          );
+                                        }),
+                                      ],
                                       onChanged: (value) {
                                         if (value != null) {
                                           setState(() {
@@ -590,13 +596,6 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                             _loadedForApiary = null;
                                           });
                                         }
-                                      },
-                                      validator: (value) {
-                                        if (value == null) {
-                                          return AppLocalizations.of(context)!.enter;
-                                        }
-                                        nowyNrPasieki = value;
-                                        return null;
                                       },
                                     ),
                                   ),

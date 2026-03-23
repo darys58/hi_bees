@@ -838,7 +838,7 @@
     "lacticColonies": "Número de colonias",
     "lacticAcidRecipe": "Solución de ácido láctico al 15 % para rociar abejas en cuadros.\nDosis: 10 ml por cuadro (aprox. 50 ml por colonia).",
     "queenRearingCalendar": "Cría de reinas",
-    "qrGraftingDate": "Fecha de traslarve",
+    "qrGraftingDate": "Fecha de\ntraslarve",
     "qrNotifTime": "Hora",
     "qrDay": "Día",
     "qrGrafting": "Transferencia de larvas de un día",
@@ -855,6 +855,14 @@
     "qrReschedule": "Reprogramar",
     "qrNotificationsScheduled": "Notificaciones programadas",
     "qrNotificationsCancelled": "Notificaciones canceladas",
+    "qrNewCalendar": "Nuevo calendario de cría",
+    "@qrNewCalendar": {},
+    "qrCalendarName": "Nombre",
+    "@qrCalendarName": {},
+    "qrDeleteCalendar": "¿Eliminar calendario?",
+    "@qrDeleteCalendar": {},
+    "qrNoCalendars": "Sin calendarios de cría de reinas.\nAñade uno con el botón +",
+    "@qrNoCalendars": {},
 
     "soundVolume": "Volumen de sonidos",
     "@soundVolume": {},
@@ -875,6 +883,8 @@
     "soundPlay": "Reproducir",
     "@soundPlay": {},
     "masterVolume": "Volumen principal",
-    "@masterVolume": {}
+    "@masterVolume": {},
+    "withoutApiary": "Sin colmenar",
+    "@withoutApiary": {}
 
 }

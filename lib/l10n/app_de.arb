@@ -838,7 +838,7 @@
     "lacticColonies": "Anzahl der Völker",
     "lacticAcidRecipe": "15%ige Milchsäurelösung zum Besprühen der Bienen auf den Waben.\nDosierung: 10 ml pro Wabe (ca. 50 ml pro Bienenvolk).",
     "queenRearingCalendar": "Königinnenzucht",
-    "qrGraftingDate": "Umlarv-Datum",
+    "qrGraftingDate": "Umlarvungs-\ndatum",
     "qrNotifTime": "Uhrzeit",
     "qrDay": "Tag",
     "qrGrafting": "Übertragen von eintägigen Larven",
@@ -855,6 +855,14 @@
     "qrReschedule": "Neu planen",
     "qrNotificationsScheduled": "Benachrichtigungen geplant",
     "qrNotificationsCancelled": "Benachrichtigungen abgebrochen",
+    "qrNewCalendar": "Neuer Zuchtkalender",
+    "@qrNewCalendar": {},
+    "qrCalendarName": "Name",
+    "@qrCalendarName": {},
+    "qrDeleteCalendar": "Kalender löschen?",
+    "@qrDeleteCalendar": {},
+    "qrNoCalendars": "Keine Königinnenzucht-Kalender.\nNeuen mit + hinzufügen",
+    "@qrNoCalendars": {},
 
     "soundVolume": "Lautstärke",
     "@soundVolume": {},
@@ -875,6 +883,8 @@
     "soundPlay": "Abspielen",
     "@soundPlay": {},
     "masterVolume": "Hauptlautstärke",
-    "@masterVolume": {}
+    "@masterVolume": {},
+    "withoutApiary": "Ohne Bienenstand",
+    "@withoutApiary": {}
 
 }

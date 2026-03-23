@@ -134,8 +134,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.13.83 05.03.2026 - tłumaczenie na: de, es, fr, it, pt, przenoszenie i kasowanie ula, przypisanie notatki do wielu uli, kalkulatory kwasów, wychów matek
   //1.9.14.84 09.03.2026 - przełacznik do testowania voice_scree2, inne dźwięki z regulacją głosności
   //1.9.15.85 15.03.2026 - przenoszenie korpusów, szare tło likwidowanego ula, wyjście po przenoszeniu ramki, w frames_detail_item zaremowanie zmiany na szary napis "przegląd" bo zeruje datę (00:00)
+  //1.9.16.86 17.03.2026 - odejmownie zlikwidowanych uli od ogólnej ilości uli w pasiece (Pasieka - ilość uli), notatki bez wymuszania numeru pasieki, wiele kalendarzy wychowu matek,
   
-  final wersja = '1.9.15.85'; //wersja aplikacji na iOS
+  final wersja = '1.9.16.86'; //wersja aplikacji na iOS
   final dataWersji = '2026-03-15';
   final now = DateTime.now();
   late DateFormat formatter;

@@ -838,7 +838,7 @@
     "lacticColonies": "Numero di colonie",
     "lacticAcidRecipe": "Soluzione di acido lattico al 15% per la nebulizzazione delle api sui telaini.\nDose: 10 ml per telaino (circa 50 ml per colonia).",
     "queenRearingCalendar": "Allevamento regine",
-    "qrGraftingDate": "Data di traslarva",
+    "qrGraftingDate": "Data di\ntraslarva",
     "qrNotifTime": "Ora",
     "qrDay": "Giorno",
     "qrGrafting": "Trasferimento di larve di un giorno",
@@ -855,6 +855,14 @@
     "qrReschedule": "Riprogramma",
     "qrNotificationsScheduled": "Notifiche programmate",
     "qrNotificationsCancelled": "Notifiche annullate",
+    "qrNewCalendar": "Nuovo calendario di allevamento",
+    "@qrNewCalendar": {},
+    "qrCalendarName": "Nome",
+    "@qrCalendarName": {},
+    "qrDeleteCalendar": "Eliminare il calendario?",
+    "@qrDeleteCalendar": {},
+    "qrNoCalendars": "Nessun calendario di allevamento regine.\nAggiungine uno con il pulsante +",
+    "@qrNoCalendars": {},
 
     "soundVolume": "Volume dei suoni",
     "@soundVolume": {},
@@ -875,6 +883,8 @@
     "soundPlay": "Riproduci",
     "@soundPlay": {},
     "masterVolume": "Volume principale",
-    "@masterVolume": {}
+    "@masterVolume": {},
+    "withoutApiary": "Senza apiario",
+    "@withoutApiary": {}
 
 }

@@ -838,7 +838,7 @@
     "lacticColonies": "Número de colónias",
     "lacticAcidRecipe": "Solução de ácido láctico a 15% para pulverização de abelhas nos quadros.\nDose: 10 ml por quadro (aproximadamente 50 ml por colmeia).",
     "queenRearingCalendar": "Criação de rainhas",
-    "qrGraftingDate": "Data de enxertia",
+    "qrGraftingDate": "Data de\nenxertia",
     "qrNotifTime": "Hora",
     "qrDay": "Dia",
     "qrGrafting": "Transferência de larvas com um dia de idade",
@@ -855,6 +855,14 @@
     "qrReschedule": "Reprogramar",
     "qrNotificationsScheduled": "Notificações programadas",
     "qrNotificationsCancelled": "Notificações canceladas",
+    "qrNewCalendar": "Novo calendário de criação",
+    "@qrNewCalendar": {},
+    "qrCalendarName": "Nome",
+    "@qrCalendarName": {},
+    "qrDeleteCalendar": "Eliminar calendário?",
+    "@qrDeleteCalendar": {},
+    "qrNoCalendars": "Sem calendários de criação de rainhas.\nAdicione um com o botão +",
+    "@qrNoCalendars": {},
 
     "soundVolume": "Volume dos sons",
     "@soundVolume": {},
@@ -875,6 +883,8 @@
     "soundPlay": "Reproduzir",
     "@soundPlay": {},
     "masterVolume": "Volume principal",
-    "@masterVolume": {}
+    "@masterVolume": {},
+    "withoutApiary": "Sem apiário",
+    "@withoutApiary": {}
 
 }

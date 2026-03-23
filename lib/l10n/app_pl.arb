@@ -853,7 +853,7 @@
     "lacticColonies": "Liczba rodzin",
     "lacticAcidRecipe": "Roztwór 15% kwasu mlekowego do spryskiwania pszczół na ramkach.\nDawka: 10 ml na ramkę obsiadaną (ok. 50 ml na rodzinę).",
     "queenRearingCalendar": "Wychów matek",
-    "qrGraftingDate": "Data przeszczepu",
+    "qrGraftingDate": "Data\nprzekładania",
     "qrNotifTime": "Godzina",
     "qrDay": "Dzień",
     "qrGrafting": "Przekładanie larw jednodniowych",
@@ -870,6 +870,14 @@
     "qrReschedule": "Ustaw ponownie",
     "qrNotificationsScheduled": "Zaplanowano powiadomień",
     "qrNotificationsCancelled": "Powiadomienia anulowane",
+    "qrNewCalendar": "Nowy kalendarz wychowu",
+    "@qrNewCalendar": {},
+    "qrCalendarName": "Nazwa",
+    "@qrCalendarName": {},
+    "qrDeleteCalendar": "Usunąć kalendarz?",
+    "@qrDeleteCalendar": {},
+    "qrNoCalendars": "Brak kalendarzy wychowu matek.\nDodaj nowy przyciskiem +",
+    "@qrNoCalendars": {},
 
     "soundVolume": "Głośność dźwięków",
     "@soundVolume": {},
@@ -890,6 +898,8 @@
     "soundPlay": "Odtwórz",
     "@soundPlay": {},
     "masterVolume": "Głośność główna",
-    "@masterVolume": {}
+    "@masterVolume": {},
+    "withoutApiary": "Bez pasieki",
+    "@withoutApiary": {}
 
 }

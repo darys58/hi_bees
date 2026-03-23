@@ -505,12 +505,16 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                                       final hives = hivesData.items;
                                       int ileUli = hives.length;
                                       //print('ile uli w pasiece = $ileUli');
-               
+                                      //ilość uli zlikwidowanych  - do obliczenia nilości uli w pasiece
+                                      final hiveZlikwidowane = hivesData.items.where((element) {
+                                              return element.ikona == ('black');
+                                            }); 
+                                      
                                       //zapis do tabeli "pasieki"
                                       Apiarys.insertApiary(
                                         '${nowyNrPasieki}',
                                         nowyNrPasieki, //pasieka nr
-                                        ileUli, //ileUli + iloscUli, //ile uli + 
+                                        ileUli - hiveZlikwidowane.length, //ileUli + iloscUli, //ile uli + 
                                         dateController.text, //przeglad
                                         'green', //ikona
                                         '??', //opis

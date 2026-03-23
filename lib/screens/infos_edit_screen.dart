@@ -2805,13 +2805,15 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   // print('*****');
                                 }
                                 
-                                
-                                
+                                //ilość uli zlikwidowanych  - do obliczenia nilości uli w pasiece
+                                final hiveZlikwidowane = hivesData.items.where((element) {
+                                        return element.ikona == ('black');
+                                      }); 
                                 //zapis do tabeli "pasieki"
                                 Apiarys.insertApiary(
                                   '${nowaPasieka}',
                                   nowaPasieka, //pasieka nr
-                                  ileUli, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
+                                  ileUli - hiveZlikwidowane.length, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
                                   dateController.text, //przeglad
                                   globals.ikonaPasieki, //ikona
                                   '??', //opis

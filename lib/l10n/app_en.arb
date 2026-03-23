@@ -1631,7 +1631,7 @@
     "@lacticAcidRecipe": {},
     "queenRearingCalendar": "Queen rearing",
     "@queenRearingCalendar": {},
-    "qrGraftingDate": "Grafting date",
+    "qrGraftingDate": "Grafting\ndate",
     "@qrGraftingDate": {},
     "qrNotifTime": "Time",
     "@qrNotifTime": {},
@@ -1665,6 +1665,14 @@
     "@qrNotificationsScheduled": {},
     "qrNotificationsCancelled": "Notifications cancelled",
     "@qrNotificationsCancelled": {},
+    "qrNewCalendar": "New rearing calendar",
+    "@qrNewCalendar": {},
+    "qrCalendarName": "Name",
+    "@qrCalendarName": {},
+    "qrDeleteCalendar": "Delete calendar?",
+    "@qrDeleteCalendar": {},
+    "qrNoCalendars": "No queen rearing calendars.\nAdd a new one with the + button",
+    "@qrNoCalendars": {},
 
     "soundVolume": "Sound Volume",
     "@soundVolume": {},
@@ -1685,5 +1693,7 @@
     "soundPlay": "Play",
     "@soundPlay": {},
     "masterVolume": "Master volume",
-    "@masterVolume": {}
+    "@masterVolume": {},
+    "withoutApiary": "Without apiary",
+    "@withoutApiary": {}
 }

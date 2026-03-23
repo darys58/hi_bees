@@ -279,12 +279,15 @@ class _QueenItemState extends State<QueenItem> {
                                   //     '${hives[i].id},${hives[i].pasiekaNr},${hives[i].ulNr},${hives[i].przeglad},${hives[i].ikona},${hives[i].ramek}');
                                   // print('*****');
                             }
-                                                 
+                            //ilość uli zlikwidowanych  - do obliczenia nilości uli w pasiece
+                            final hiveZlikwidowane = hivesData.items.where((element) {
+                                    return element.ikona == ('black');
+                                  });                     
                             //zapis do tabeli "pasieki"
                             Apiarys.insertApiary(
                               '${globals.pasiekaID}',
                               globals.pasiekaID, //pasieka nr
-                              ileUli, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
+                              ileUli - hiveZlikwidowane.length, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
                               dateController.text, //przeglad
                               globals.ikonaPasieki, //ikona
                               '??', //opis
