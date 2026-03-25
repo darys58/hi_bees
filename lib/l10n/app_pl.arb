@@ -900,6 +900,10 @@
     "masterVolume": "Głośność główna",
     "@masterVolume": {},
     "withoutApiary": "Bez pasieki",
-    "@withoutApiary": {}
+    "@withoutApiary": {},
+    "hiveNews": "Aktualności ula",
+    "@hiveNews": {},
+    "photos": "Zdjęcia",
+    "@photos": {}
 
 }

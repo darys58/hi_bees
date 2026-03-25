@@ -208,7 +208,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.ostatnieInformacje),
+          title: Text(AppLocalizations.of(context)!.hiveNews),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -223,7 +223,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     if (hiveList.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.ostatnieInformacje),
+          title: Text(AppLocalizations.of(context)!.hiveNews),
         ),
         body: Center(
           child: Text(AppLocalizations.of(context)!.nOData),
@@ -277,7 +277,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.ostatnieInformacje),
+        title: Text(AppLocalizations.of(context)!.hiveNews),
       ),
       body: GestureDetector(
         onHorizontalDragEnd: (details) {
@@ -364,7 +364,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
           //   const SizedBox(height: 8),
 
           // --- Segment 2: Ramki ---
-          if (hasFrameReviewData)
+          if (hasFrameReviewData && globals.showSummaryFrames)
           Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -505,7 +505,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
           ),
 
           // --- Segment: Galeria zdjęć ---
-          if (_photos.isNotEmpty)
+          if (_photos.isNotEmpty && globals.showSummaryPhotos)
             // Card(
             //   shape: RoundedRectangleBorder(
             //     borderRadius: BorderRadius.circular(8),
@@ -562,9 +562,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
        //     ),
 
           // --- Segment: Rodzina ---
-          // if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
-          //   const SizedBox(height: 8),
-          if (_colonyForce.isNotEmpty || _colonyState.isNotEmpty)
+          if ((_colonyForce.isNotEmpty || _colonyState.isNotEmpty) && globals.showSummaryColony)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -595,9 +593,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Matka ---
-          // if (_queens.isNotEmpty)
-          //   const SizedBox(height: 8),
-          if (_queens.isNotEmpty)
+          if (_queens.isNotEmpty && globals.showSummaryQueen)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -734,8 +730,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Zbiory ---
-          // --- Segment: Zbiory ---
-          if (_lastHarvestHoneyKg > 0)
+          if (_lastHarvestHoneyKg > 0 && globals.showSummaryHarvest)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -774,9 +769,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Dokarmianie ---
-          // if (_lastFeeding != null)
-          //   const SizedBox(height: 8),
-          if (_lastFeeding != null)
+          if (_lastFeeding != null && globals.showSummaryFeeding)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -813,9 +806,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Leczenie ---
-          // if (_lastTreatment != null)
-          //   const SizedBox(height: 8),
-          if (_lastTreatment != null)
+          if (_lastTreatment != null && globals.showSummaryTreatment)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),

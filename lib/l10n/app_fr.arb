@@ -885,6 +885,10 @@
     "masterVolume": "Volume principal",
     "@masterVolume": {},
     "withoutApiary": "Sans rucher",
-    "@withoutApiary": {}
+    "@withoutApiary": {},
+    "hiveNews": "Actualités de la ruche",
+    "@hiveNews": {},
+    "photos": "Photos",
+    "@photos": {}
 
 }

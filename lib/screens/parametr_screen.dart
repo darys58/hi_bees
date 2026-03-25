@@ -7,6 +7,7 @@ import '../helpers/db_helper.dart';
 import '../helpers/sound_helper.dart';
 import '../screens/parametry_ula_screen.dart';
 import '../screens/parametr_edit_screen.dart';
+import '../screens/hive_news_settings_screen.dart';
 //import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/dodatki1.dart';
@@ -415,6 +416,19 @@ class _ParametrScreenState extends State<ParametrScreen> {
                           });
                           globals.showZakupySprzedaz = value;
                         },
+                      ),
+                    ),
+                  ),
+
+//Aktualności ula
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushNamed(HiveNewsSettingsScreen.routeName);
+                    },
+                    child: Card(
+                      child: ListTile(
+                        title: Text(AppLocalizations.of(context)!.hiveNews),
+                        trailing: const Icon(Icons.chevron_right),
                       ),
                     ),
                   ),

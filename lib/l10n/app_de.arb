@@ -885,6 +885,10 @@
     "masterVolume": "Hauptlautstärke",
     "@masterVolume": {},
     "withoutApiary": "Ohne Bienenstand",
-    "@withoutApiary": {}
+    "@withoutApiary": {},
+    "hiveNews": "Beuten-Neuigkeiten",
+    "@hiveNews": {},
+    "photos": "Fotos",
+    "@photos": {}
 
 }

@@ -10,6 +10,7 @@ import '../screens/import_screen.dart';
 import '../screens/about_screen.dart';
 import '../screens/parametr_screen.dart';
 import '../screens/calculator_screen.dart';
+import '../screens/queen_rearing_screen.dart';
 import '../screens/nfc_settings_screen.dart';
 import '../screens/apiarys_all_map_screen.dart';
 import '../screens/notification_settings_screen.dart';
@@ -271,6 +272,19 @@ class SettingsScreen extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(Icons.calculate),
                   title: Text(AppLocalizations.of(context)!.calculator),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
+//wychów matek
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushNamed(QueenRearingScreen.routeName);
+              },
+              child: Card(
+                child: ListTile(
+                  leading: Icon(Icons.calendar_month),
+                  title: Text(AppLocalizations.of(context)!.queenRearingCalendar),
                   trailing: Icon(Icons.chevron_right),
                 ),
               ),

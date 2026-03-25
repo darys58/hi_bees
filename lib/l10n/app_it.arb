@@ -885,6 +885,10 @@
     "masterVolume": "Volume principale",
     "@masterVolume": {},
     "withoutApiary": "Senza apiario",
-    "@withoutApiary": {}
+    "@withoutApiary": {},
+    "hiveNews": "Novità dell'arnia",
+    "@hiveNews": {},
+    "photos": "Foto",
+    "@photos": {}
 
 }

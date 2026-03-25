@@ -25,6 +25,7 @@ import './screens/frame_move_screen.dart';
 import './screens/frame_edit_screen2.dart';
 import './screens/harvest_screen.dart';
 import './screens/parametr_screen.dart';
+import './screens/hive_news_settings_screen.dart';
 import './screens/apiarys_weather_edit_screen.dart';
 import './screens/infos_edit_screen.dart';
 import './screens/parametr_edit_screen.dart';
@@ -324,6 +325,7 @@ class _MyAppState extends State<MyApp> {
           HarvestScreen.routeName:(ctx) => HarvestScreen(),
           HarvestEditScreen.routeName: (ctx) => HarvestEditScreen(),
           ParametrScreen.routeName: (ctx) => ParametrScreen(),
+          HiveNewsSettingsScreen.routeName: (ctx) => HiveNewsSettingsScreen(),
           WeatherEditScreen.routeName: (ctx) => WeatherEditScreen(),
           InfosEditScreen.routeName: (ctx) => InfosEditScreen(),
           ParametrEditScreen.routeName: (ctx) => ParametrEditScreen(),

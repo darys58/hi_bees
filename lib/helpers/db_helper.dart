@@ -230,6 +230,12 @@ class DBHelper {
     db.update('memory', {'memjezyk': text}, where: 'dev = ?', whereArgs: [dev]);
   }
 
+  //update memory - mem1 (widoczność kategorii w Aktualności ula)
+  static Future<void> updateMem1(String dev, String text) async {
+    final db = await DBHelper.database();
+    db.update('memory', {'mem1': text}, where: 'dev = ?', whereArgs: [dev]);
+  }
+
   //update dodatki1 - dla import_screen
   static Future<void> updateDodatki1(String pole, String wartosc) async {
     final db = await DBHelper.database();

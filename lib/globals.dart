@@ -77,6 +77,17 @@ String rokRaportow = 'wszystkie'; //DateTime.now().toString().substring(0, 4); /
 
 bool voice2 = false; //czy ma być uruchomiony voice_screen2
 
+// Aktualności ula - widoczność kategorii (0=ukryta, 1=widoczna)
+// Pozycje: 0-ramki, 1-rodzina, 2-matka, 3-zbiory, 4-dokarmianie, 5-leczenie, 6-zdjęcia
+String summaryVisibility = '1111111'; // domyślnie wszystko widoczne
+bool get showSummaryFrames => summaryVisibility.length > 0 && summaryVisibility[0] == '1';
+bool get showSummaryColony => summaryVisibility.length > 1 && summaryVisibility[1] == '1';
+bool get showSummaryQueen => summaryVisibility.length > 2 && summaryVisibility[2] == '1';
+bool get showSummaryHarvest => summaryVisibility.length > 3 && summaryVisibility[3] == '1';
+bool get showSummaryFeeding => summaryVisibility.length > 4 && summaryVisibility[4] == '1';
+bool get showSummaryTreatment => summaryVisibility.length > 5 && summaryVisibility[5] == '1';
+bool get showSummaryPhotos => summaryVisibility.length > 6 && summaryVisibility[6] == '1';
+
 //z/do tabeli Memory
 //String id = '';
 //String email = '';

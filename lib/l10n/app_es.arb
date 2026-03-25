@@ -885,6 +885,10 @@
     "masterVolume": "Volumen principal",
     "@masterVolume": {},
     "withoutApiary": "Sin colmenar",
-    "@withoutApiary": {}
+    "@withoutApiary": {},
+    "hiveNews": "Novedades de la colmena",
+    "@hiveNews": {},
+    "photos": "Fotos",
+    "@photos": {}
 
 }

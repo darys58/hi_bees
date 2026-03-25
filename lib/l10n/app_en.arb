@@ -1695,5 +1695,9 @@
     "masterVolume": "Master volume",
     "@masterVolume": {},
     "withoutApiary": "Without apiary",
-    "@withoutApiary": {}
+    "@withoutApiary": {},
+    "hiveNews": "Hive news",
+    "@hiveNews": {},
+    "photos": "Photos",
+    "@photos": {}
 }

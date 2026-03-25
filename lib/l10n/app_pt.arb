@@ -885,6 +885,10 @@
     "masterVolume": "Volume principal",
     "@masterVolume": {},
     "withoutApiary": "Sem apiário",
-    "@withoutApiary": {}
+    "@withoutApiary": {},
+    "hiveNews": "Novidades da colmeia",
+    "@hiveNews": {},
+    "photos": "Fotos",
+    "@photos": {}
 
 }
