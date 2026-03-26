@@ -24,7 +24,18 @@ class InfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final info = Provider.of<Info>(context, listen: false);
     final loc = AppLocalizations.of(context)!;
-    final isLiquidationOrTransfer = info.parametr == loc.hiveLiquidation || info.parametr == loc.hiveTransfer;
+    // Porównanie ze wszystkimi tłumaczeniami, bo parametr jest zapisany w języku w którym był utworzony
+    const liquidationValues = {
+      'likwidacja ula', 'hive liquidation', 'liquidation der Beute',
+      'liquidation de la ruche', 'liquidacion de colmena',
+      'liquidação da colmeia', 'liquidazione arnia',
+    };
+    const transferValues = {
+      'przeniesienie ula', 'hive transfer', 'Umsetzung der Beute',
+      'transfert de la ruche', 'traslado de colmena',
+      'transferência da colmeia', 'trasferimento arnia',
+    };
+    final isLiquidationOrTransfer = liquidationValues.contains(info.parametr) || transferValues.contains(info.parametr);
     List<Hive> hive = [];
    
     

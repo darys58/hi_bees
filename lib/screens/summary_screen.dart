@@ -10,6 +10,7 @@ import '../models/infos.dart';
 import '../models/queen.dart';
 import '../models/photo.dart';
 import '../models/dodatki1.dart';
+import '../models/harvest.dart';
 import '../models/note.dart';
 import '../globals.dart' as globals;
 import '../helpers/queen_helpers.dart';
@@ -136,7 +137,20 @@ class _SummaryScreenState extends State<SummaryScreen> {
           // Sum all honey from the latest date (small frames + big frames + kg)
           if (latestDate.isNotEmpty) {
             double totalGrams = 0;
-            final wagaDm2 = int.parse(dod1[0].b);
+            final defaultWagaDm2 = int.parse(dod1[0].b);
+            // Sprawdź czy istnieje harvest.g dla tej daty miodobrania
+            final harvestsData = Provider.of<Harvests>(context, listen: false);
+            int wagaDm2 = defaultWagaDm2;
+            for (var h in harvestsData.items) {
+              if (h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty) {
+                DateTime hDt = DateTime.parse(h.data.substring(0, 10));
+                DateTime lDt = DateTime.parse(latestDate.substring(0, 10));
+                if (hDt.difference(lDt).inDays.abs() <= 3) {
+                  wagaDm2 = int.tryParse(h.g) ?? defaultWagaDm2;
+                  break;
+                }
+              }
+            }
             for (final info in infosData.items) {
               if (info.kategoria == 'harvest' && info.data == latestDate && info.wartosc.isNotEmpty) {
                 if (info.parametr == paramSmall) {

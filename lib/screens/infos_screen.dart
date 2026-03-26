@@ -19,6 +19,7 @@ import '../models/photo.dart';
 import '../widgets/info_item.dart';
 import '../models/dodatki1.dart';
 import '../models/dodatki2.dart';
+import '../models/harvest.dart';
 import '../models/queen.dart';
 import '../screens/queens_screen.dart';
 import '../screens/infos_edit_screen.dart';
@@ -621,6 +622,21 @@ class _InfoScreenState extends State<InfoScreen> {
     }
   }
 
+  // Pobiera wartość b (waga miodu na 1dm²) z Harvest.g jeśli istnieje dla danej daty
+  int _getBForDate(String infoDate, int defaultB, List<Harvest> zbioryMiod) {
+    if (zbioryMiod.isEmpty) return defaultB;
+    DateTime infoDateTime = DateTime.parse(infoDate.substring(0, 10));
+    for (var harvest in zbioryMiod) {
+      if (harvest.g.isEmpty) continue;
+      DateTime harvestDateTime = DateTime.parse(harvest.data.substring(0, 10));
+      int daysDiff = harvestDateTime.difference(infoDateTime).inDays.abs();
+      if (daysDiff <= 3) {
+        return int.tryParse(harvest.g) ?? defaultB;
+      }
+    }
+    return defaultB;
+  }
+
   @override
   Widget build(BuildContext context) {
     //przekazanie hiveNr z hives_item za pomocą navigatora
@@ -720,7 +736,14 @@ class _InfoScreenState extends State<InfoScreen> {
 
 //******************************************************** */
     //dla kazdego info - podliczenie roczne zbiorów i przygotowanie danych do wykresów
- //******************************************************** */   
+ //******************************************************** */
+    // Pobierz zbiory miodu z harvest.g (per miodobranie waga dm²)
+    final harvestsDataForB = Provider.of<Harvests>(context, listen: false);
+    List<Harvest> zbioryMiodG = harvestsDataForB.items.where((h) =>
+      h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty
+    ).toList();
+    int defaultB = dod1.isNotEmpty ? int.parse(dod1[0].b) : 250;
+
     for (var i = 0; i < infos.length; i++) {
       // print(
       //     '${infos[i].id},${infos[i].data},${infos[i].pasiekaNr},${infos[i].ulNr},${infos[i].kategoria},${infos[i].parametr},${infos[i].wartosc},${infos[i].miara},${infos[i].pogoda},${infos[i].temp},${infos[i].czas},${infos[i].uwagi},${infos[i].arch}');
@@ -737,12 +760,12 @@ class _InfoScreenState extends State<InfoScreen> {
           if(infos[i].pogoda == '') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
           else dm = double.parse(infos[i].pogoda);
          
-          miod = miod + (double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000);
+          miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
           //dane do wykresu
           if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
             daneZbioruMioduDoWykresu.add({ //to dodaj następny słupek wykresu
               "x": miodSlupekNr,         // Kolejna wartość osi X
-              "value": double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000,   // Wartość słupka
+              "value": double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000,   // Wartość słupka
               "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X - data zbioru
             });
             tempDataZbioru = infos[i].data; //zapamietanie daty zbioru
@@ -750,7 +773,7 @@ class _InfoScreenState extends State<InfoScreen> {
           }else{ //jezeli data jest taka sama jak przy ostatnim wpisie to dodaj wartość zbióru do poprzedniego słupka wykresu
             daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //tzn. edytuj poprzednią wartość "value"
             = daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //dodając do niej
-            + double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000; //kolejną wartość bo jest taka sama data zbioru 
+            + double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000; //kolejną wartość bo jest taka sama data zbioru 
           }
         }
         //dla bierzącego roku i danego rodzaju zbioru (miód, duza ramka)
@@ -760,12 +783,12 @@ class _InfoScreenState extends State<InfoScreen> {
           if(infos[i].pogoda == '') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
           else dm = double.parse(infos[i].pogoda);
           //print('dod1[0].b = ${dod1[0].b}');
-          miod = miod + double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000;//np: 1(ilość ramek) x 245(waga 1dm2) x 78725/10000(ilość dm2 wezy w ramce)
+          miod = miod + double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000;//np: 1(ilość ramek) x 245(waga 1dm2) x 78725/10000(ilość dm2 wezy w ramce)
           //dane do wykresu
           if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
             daneZbioruMioduDoWykresu.add({ //to dodaj następny słupek wykresu
               "x": miodSlupekNr,         // Kolejna wartość osi X
-              "value": double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000,   // Wartość słupka
+              "value": double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000,   // Wartość słupka
               "label": "${zmienDate5_10(infos[i].data.substring(5, 10))}"  // Etykieta dla osi X - data zbioru
             });
             tempDataZbioru = infos[i].data; //zapamietanie daty zbioru
@@ -773,7 +796,7 @@ class _InfoScreenState extends State<InfoScreen> {
           }else{ //jezeli data jest taka sama jak przy ostatnim wpisie to dodaj wartość zbióru do poprzedniego słupka wykresu
             daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //tzn. edytuj poprzednią wartość "value"
             = daneZbioruMioduDoWykresu[daneZbioruMioduDoWykresu.length - 1]['value'] //dodając do niej
-            + double.parse(infos[i].wartosc) * int.parse(dod1[0].b) * dm/10000; //kolejną wartość bo jest taka sama data zbioru 
+            + double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000; //kolejną wartość bo jest taka sama data zbioru 
           }
         }
         //dla bierzącego roku i danego rodzaju zbioru (miód w kg)

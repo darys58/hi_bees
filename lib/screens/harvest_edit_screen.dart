@@ -8,6 +8,7 @@ import '../helpers/db_helper.dart';
 import 'package:flutter/services.dart';
 
 import '../models/harvest.dart';
+import '../models/dodatki1.dart';
 
 class HarvestEditScreen extends StatefulWidget {
   static const routeName = '/harvest_edit';
@@ -30,6 +31,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
   double? nowyIlosc;
   int? nowyMiara;
   String? nowyUwagi;
+  String? nowyG; // średnia waga miodu na 1 dm² dla tego miodobrania
   bool edycja = false;
   String tytulEkranu = 'Edycja zbioru';
   List<Harvest> zbior = [];
@@ -65,6 +67,13 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
       nowyIlosc = zbior[0].ilosc;
       nowyMiara = zbior[0].miara;
       nowyUwagi = zbior[0].uwagi;
+      // Jeśli g puste, użyj domyślnej z Dodatki1.b
+      if (zbior[0].g.isNotEmpty) {
+        nowyG = zbior[0].g;
+      } else {
+        final dod1 = Provider.of<Dodatki1>(context, listen: false).items;
+        nowyG = dod1.isNotEmpty ? dod1[0].b : '250';
+      }
       tytulEkranu = AppLocalizations.of(context)!.editingHarvest;
     } else {
       edycja = false;
@@ -78,6 +87,9 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
       nowyIlosc = 0;
       nowyMiara = 1;
       nowyUwagi = '';
+      // Domyślna waga dm² z Dodatki1.b
+      final dod1 = Provider.of<Dodatki1>(context, listen: false).items;
+      nowyG = dod1.isNotEmpty ? dod1[0].b : '250';
       tytulEkranu = AppLocalizations.of(context)!.addHarvest;
    }
    //print('zbior = ${zbior[0].data}');
@@ -194,7 +206,10 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                               
                          
 //zasób
-
+                              SizedBox(
+                                height: 10,
+                              ),
+                              
                               Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -322,18 +337,42 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                             ),
                                           ),
                                   ]),
+
+
+
+
+// waga miodu na 1 dm² - tylko dla miodu (zasobId == 1)
+                              SizedBox(
+                                height: 10,
+                              ),
+                              if (nowyZasobId == 1) ...[
+                                SizedBox(height: 20),
+                                TextFormField(
+                                  key: ValueKey('waga_dm2'),
+                                  initialValue: nowyG ?? '250',
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                  decoration: InputDecoration(
+                                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                                    focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                    labelText: AppLocalizations.of(context)!.weightDmFrame + ' (g)',
+                                    labelStyle: TextStyle(color: Colors.black),
+                                    //hintText: '250',
+                                  ),
+                                  validator: (value) {
+                                    if (value != null && value.isNotEmpty) {
+                                      nowyG = value;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
 //uwagi
                               SizedBox(
                                 height: 20,
                               ),
-                              // Row(
-                              //     mainAxisAlignment: MainAxisAlignment.start,
-                              //     crossAxisAlignment: CrossAxisAlignment.end,
-                              //     children: <Widget>[
-                                    // SizedBox(
-                                    //   width: 270,
-                                    //   child: 
                                       TextFormField(
+                                          key: ValueKey('uwagi'),
                                           minLines: 1,
                                           maxLines: 5,
                                           initialValue: nowyUwagi,
@@ -346,19 +385,11 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                                     .cOmments),
                                             labelStyle:
                                                 TextStyle(color: Colors.black),
-                                            // hintText:
-                                            //     (AppLocalizations.of(context)!
-                                            //         .comments),
                                           ),
                                           validator: (value) {
-                                            // if (value!.isEmpty) {
-                                            //   return ('uwagi');
-                                            // }
                                             nowyUwagi = value;
                                             return null;
                                           }),
-                                    //),
-                                 // ]),
                             ]),
                       ),
                       SizedBox(
@@ -380,19 +411,14 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                 if (_formKey1.currentState!.validate()) {
                                   if (nowyZasobId! >= 4) nowyMiara = 2;
                                   if (edycja) {
-                                    DBHelper.updateZbiory(zbior[0].id, 
+                                    DBHelper.updateZbiory(zbior[0].id,
                                       dateController.text,
-                                      // nowyRok +
-                                      //         '-' +
-                                      //         nowyMiesiac +
-                                      //         '-' +
-                                      //         nowyDzien,
                                           nowyNrPasieki!,
                                           nowyZasobId!,
                                           nowyIlosc!,
                                           nowyMiara!,
                                           nowyUwagi!,
-                                          '',
+                                          nowyZasobId == 1 ? (nowyG ?? '') : '',
                                           '',
                                           0)
                                         .then((_) {
@@ -408,19 +434,13 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                     });
                                   } else {
                                     Harvests.insertZbiory(
-                                        //zbior[0].id,
                                         dateController.text,
-                                        // nowyRok +
-                                        //     '-' +
-                                        //     nowyMiesiac +
-                                        //     '-' +
-                                        //     nowyDzien,
                                         nowyNrPasieki!,
                                         nowyZasobId!,
                                         nowyIlosc!,
                                         nowyMiara!,
                                         nowyUwagi!,
-                                        '',
+                                        nowyZasobId == 1 ? (nowyG ?? '') : '',
                                         '',
                                         0); //arch
                                     Provider.of<Harvests>(context,

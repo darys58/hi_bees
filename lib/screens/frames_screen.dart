@@ -277,76 +277,53 @@ class _FramesScreenState extends State<FramesScreen> {
 
 //okno legendy oznaczeń EN
   Future<void> _dialogBuilderHelp(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           contentPadding: EdgeInsets.only(left: 15, right: 15),
-          //title: const Text('Inspection - say e.g.:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),),
           content: Container(
             child: SingleChildScrollView(
               child: Column(children: <Widget>[
-                //for (var i = 0; i < frames.length; i++) {}
-                //Text(frames[0].data),
                 Container(
-                  //szare body
-                  //alignment: Alignment.center,
                   color: Color.fromARGB(173, 173, 173, 173),
-                  // ignore: sort_child_properties_last
                   child: CustomPaint(
-                    painter: MyHiveHelp(),
-                    size: Size(200, 365),
-                  ),
-                  margin: EdgeInsets.all(20),
-                  //padding: EdgeInsets.all(10),
-                ),
-              ]),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(AppLocalizations.of(context)!.disable),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-//okno legendy oznaczeń PL
-  Future<void> _dialogBuilderHelpPl(BuildContext context) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          contentPadding: EdgeInsets.only(left: 15, right: 15),
-          //title: const Text('Inspection - say e.g.:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),),
-          content: Container(
-            child: SingleChildScrollView(
-              child: Column(children: <Widget>[
-                //for (var i = 0; i < frames.length; i++) {}
-                //Text(frames[0].data),
-                Container(
-                  //szare body
-                  //alignment: Alignment.center,
-                  color: Color.fromARGB(173, 173, 173, 173),
-                  // ignore: sort_child_properties_last
-                  child: CustomPaint(
-                    painter: MyHiveHelpPl(),
+                    painter: MyHiveHelp(labels: [
+                      loc.legendWorkFrame,
+                      loc.legendToDelete,
+                      loc.legendToExtraction,
+                      loc.legendToInsulate,
+                      loc.legendQueen,
+                      loc.legendWaxFoundation,
+                      loc.legendWaxComb,
+                      loc.legendHoneySealed,
+                      loc.legendHoneyFood,
+                      loc.legendPollen,
+                      loc.legendEggs,
+                      loc.legendLarvae,
+                      loc.legendCoveredBrood,
+                      loc.legendDrone,
+                      loc.legendInserted,
+                      loc.legendDeleted,
+                      loc.legendMovedLeft,
+                      loc.legendMovedRight,
+                      loc.legendInsulated,
+                      loc.legendQueenCell,
+                      loc.legendDeleteQueenCell,
+                      loc.legendExcluder,
+                      loc.legendBodyNumber,
+                    ]),
                     size: Size(200, 365),
                   ),
                   margin: EdgeInsets.all(15),
-                  //padding: EdgeInsets.all(10),
                 ),
               ]),
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text(AppLocalizations.of(context)!.disable),
+              child: Text(loc.disable),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -603,9 +580,7 @@ class _FramesScreenState extends State<FramesScreen> {
           ), 
           IconButton(
             icon: Icon(Icons.help_center, color: Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => globals.isEuropeanFormat()
-                ? _dialogBuilderHelpPl(context)
-                : _dialogBuilderHelp(context),
+            onPressed: () => _dialogBuilderHelp(context),
           ),
           IconButton(
             icon: Icon(Icons.edit),
@@ -690,13 +665,9 @@ class _FramesScreenState extends State<FramesScreen> {
                                         child: Container(
                                           padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
                                           child: Center(
-                                            child: 
-                                              globals.isEuropeanFormat()
-                                                ? Text('${zmienDate(_daty[index].data)}', 
+                                            child:
+                                              Text('${zmienDate(_daty[index].data)}',
                                                     style: const TextStyle(color: Colors.black,fontSize: 17.0),
-                                                  )
-                                                : Text( _daty[index].data,
-                                                    style: TextStyle(color: Colors.black,fontSize: 17.0),
                                                   )),
                                         ),
                                       )
@@ -705,11 +676,7 @@ class _FramesScreenState extends State<FramesScreen> {
                                         child: Container(
                                           padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
                                           child: Center(
-                                              child: globals.isEuropeanFormat()
-                                                ? Text('${zmienDate(_daty[index].data)}',
-                                                    style: TextStyle(color: Colors.grey,fontSize: 17.0),
-                                                  )
-                                                : Text(_daty[index].data,
+                                              child: Text('${zmienDate(_daty[index].data)}',
                                                     style: TextStyle(color: Colors.grey,fontSize: 17.0),
                                                   )),
                                         ),
@@ -1989,6 +1956,14 @@ class MyHive extends CustomPainter {
 }
 
 class MyHiveHelp extends CustomPainter {
+  final List<String> labels;
+  MyHiveHelp({required this.labels});
+  // labels[0]=workFrame, [1]=toDelete, [2]=toExtraction, [3]=toInsulate,
+  // [4]=queen, [5]=waxFoundation, [6]=waxComb, [7]=honeySealed,
+  // [8]=honeyFood, [9]=pollen, [10]=eggs, [11]=larvae,
+  // [12]=coveredBrood, [13]=drone, [14]=inserted, [15]=deleted,
+  // [16]=movedLeft, [17]=movedRight, [18]=insulated, [19]=queenCell,
+  // [20]=deleteQueenCell, [21]=excluder, [22]=bodyNumber
   @override
   void paint(Canvas canvas, Size size) {
     Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
@@ -2079,7 +2054,7 @@ class MyHiveHelp extends CustomPainter {
     path.close();
     canvas.drawPath(path, paintStroke);
     var opisSpan = TextSpan(
-      text: '- work frame',
+      text: '- ${labels[0]}',
       style: textStyle,
     );
     var textOpis = TextPainter(
@@ -2109,7 +2084,7 @@ class MyHiveHelp extends CustomPainter {
     path.close();
     canvas.drawPath(path, paintStroke);
     opisSpan = TextSpan(
-      text: '- to delete',
+      text: '- ${labels[1]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2140,7 +2115,7 @@ class MyHiveHelp extends CustomPainter {
     path.close();
     canvas.drawPath(path, paintStroke);
     opisSpan = TextSpan(
-      text: '- to extraction',
+      text: '- ${labels[2]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2161,7 +2136,7 @@ class MyHiveHelp extends CustomPainter {
     canvas.drawLine(Offset(7, 62), Offset(7, 68), linePaint); // | (kreska pionowa lewa)
     canvas.drawLine(Offset(13, 62), Offset(13, 68), linePaint);
     opisSpan = TextSpan(
-      text: '- to insulate',
+      text: '- ${labels[3]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2176,7 +2151,7 @@ class MyHiveHelp extends CustomPainter {
 //queen
     canvas.drawCircle(Offset(10, 80), 3, matka);
     opisSpan = TextSpan(
-      text: '- queen',
+      text: '- ${labels[4]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2191,7 +2166,7 @@ class MyHiveHelp extends CustomPainter {
 //comb
     canvas.drawLine(Offset(10, 105), Offset(10, 115), combPaint);
     opisSpan = TextSpan(
-      text: '- wax comb',
+      text: '- ${labels[6]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2206,7 +2181,7 @@ class MyHiveHelp extends CustomPainter {
 //wax
     canvas.drawLine(Offset(10, 90), Offset(10, 100), waxPaint);
     opisSpan = TextSpan(
-      text: '- wax foundation',
+      text: '- ${labels[5]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2221,7 +2196,7 @@ class MyHiveHelp extends CustomPainter {
 //sealed
     canvas.drawLine(Offset(10, 135), Offset(10, 145), sealedPaint);
     opisSpan = TextSpan(
-      text: '- honey sealed',
+      text: '- ${labels[7]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2236,7 +2211,7 @@ class MyHiveHelp extends CustomPainter {
 //honey
     canvas.drawLine(Offset(10, 120), Offset(10, 130), honeyPaint);
     opisSpan = TextSpan(
-      text: '- honey/food',
+      text: '- ${labels[8]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2252,7 +2227,7 @@ class MyHiveHelp extends CustomPainter {
 //pollen
     canvas.drawLine(Offset(10, 150), Offset(10, 160), pollenPaint);
     opisSpan = TextSpan(
-      text: '- pollen',
+      text: '- ${labels[9]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2267,7 +2242,7 @@ class MyHiveHelp extends CustomPainter {
 //eggs
     canvas.drawLine(Offset(10, 165), Offset(10, 175), eggPaint);
     opisSpan = TextSpan(
-      text: '- eggs',
+      text: '- ${labels[10]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2282,7 +2257,7 @@ class MyHiveHelp extends CustomPainter {
 //larvae
     canvas.drawLine(Offset(10, 180), Offset(10, 190), larvaePaint);
     opisSpan = TextSpan(
-      text: '- larvae',
+      text: '- ${labels[11]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2297,7 +2272,7 @@ class MyHiveHelp extends CustomPainter {
 //brood
     canvas.drawLine(Offset(10, 195), Offset(10, 205), broodPaint);
     opisSpan = TextSpan(
-      text: '- covered brood',
+      text: '- ${labels[12]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2312,7 +2287,7 @@ class MyHiveHelp extends CustomPainter {
 //drone
     canvas.drawLine(Offset(10, 210), Offset(10, 220), dronePaint);
     opisSpan = TextSpan(
-      text: '- drone',
+      text: '- ${labels[13]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2342,7 +2317,7 @@ class MyHiveHelp extends CustomPainter {
     path.close();
     canvas.drawPath(path, paintStroke);
     opisSpan = TextSpan(
-      text: '- inserted',
+      text: '- ${labels[14]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2372,7 +2347,7 @@ class MyHiveHelp extends CustomPainter {
     path.close();
     canvas.drawPath(path, paintStroke);
     opisSpan = TextSpan(
-      text: '- deleted',
+      text: '- ${labels[15]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2402,7 +2377,7 @@ class MyHiveHelp extends CustomPainter {
     path.close();
     canvas.drawPath(path, paintStroke);
     opisSpan = TextSpan(
-      text: '- moved left',
+      text: '- ${labels[16]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2432,7 +2407,7 @@ class MyHiveHelp extends CustomPainter {
     path.close();
     canvas.drawPath(path, paintStroke);
     opisSpan = TextSpan(
-      text: '- moved right',
+      text: '- ${labels[17]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2449,7 +2424,7 @@ class MyHiveHelp extends CustomPainter {
     canvas.drawLine(Offset(4, 285), Offset(4, 293), linePaint); // | (kreska pionowa lewa)
     canvas.drawLine(Offset(16, 285), Offset(16, 293), linePaint);
     opisSpan = TextSpan(
-      text: '- insulated',
+      text: '- ${labels[18]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2464,7 +2439,7 @@ class MyHiveHelp extends CustomPainter {
 //queen cell
     canvas.drawCircle(Offset(10, 305), 3, matecznik);
     opisSpan = TextSpan(
-      text: '- queen cell',
+      text: '- ${labels[19]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2479,7 +2454,7 @@ class MyHiveHelp extends CustomPainter {
 //delete queen cell
     canvas.drawCircle(Offset(10, 320), 3, delMat);
     opisSpan = TextSpan(
-      text: '- delete queen cell',
+      text: '- ${labels[20]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2495,7 +2470,7 @@ class MyHiveHelp extends CustomPainter {
     canvas.drawLine(
         Offset(4, 335), Offset(16, 335), lineExcluder); // - (kreska pozioma)
     opisSpan = TextSpan(
-      text: '- excluder',
+      text: '- ${labels[21]}',
       style: textStyle,
     );
     textOpis = TextPainter(
@@ -2509,550 +2484,7 @@ class MyHiveHelp extends CustomPainter {
     textOpis.paint(canvas, Offset(20, 325));
 //nr body
     opisSpan = TextSpan(
-      text: '1 - body number',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(6, 340));
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter old) {
-    //throw UnimplementedError();
-    return true;
-  }
-}
-
-class MyHiveHelpPl extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
-    Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
-    // Paint obrysPaint = Paint()
-    //   ..strokeWidth = 1
-    //   ..color = Color.fromARGB(255, 122, 122, 122); //obrys
-    Paint honeyPaint = Paint()
-      ..strokeWidth = 4
-      ..color = Color.fromARGB(255, 222, 156,
-          1); //(1) honey / miód, nakrop 255, 252, 193, 104//,255, 206, 144, 1
-    Paint sealedPaint = Paint()
-      ..strokeWidth = 4
-      ..color =
-          Color.fromARGB(255, 131, 92, 0); //(2) sealed / zasklep, miód poszyty
-    Paint pollenPaint = Paint()
-      ..strokeWidth = 4
-      ..color = Color.fromARGB(255, 0, 197, 0); //(3) pollen / pierzga
-    Paint broodPaint = Paint()
-      ..strokeWidth = 4
-      ..color = Color.fromARGB(255, 255, 17, 0); //(4) brook / czerw
-    Paint larvaePaint = Paint()
-      ..strokeWidth = 4
-      ..color = Color.fromARGB(255, 253, 195, 192); //(5) larvae / larwy
-    Paint eggPaint = Paint()
-      ..strokeWidth = 4
-      ..color = Color.fromARGB(255, 255, 255, 255); //(6) eggs / jaja
-    Paint dronePaint = Paint()
-      ..strokeWidth = 4
-      ..color = Color.fromARGB(255, 114, 0, 0); //(7) drone / trut
-    Paint waxPaint = Paint()
-      ..strokeWidth = 1
-      ..color = Color.fromARGB(255, 255, 255, 0); //(8) wax / węza
-    Paint combPaint = Paint()
-      ..strokeWidth = 4
-      ..color = Color.fromARGB(
-          255, 255, 255, 0); //(9) comb, wax comb / susz, woszczyna
-    Paint matka = Paint()
-      ..color = Color.fromARGB(255, 59, 59, 59)
-      ..style = PaintingStyle.fill; //matka
-    Paint matecznik = Paint()
-      ..color = Color.fromARGB(255, 255, 17, 0)
-      ..style = PaintingStyle.fill
-      ..strokeWidth = 1; //matecznik
-    Paint delMat = Paint()
-      ..color = Color.fromARGB(255, 153, 125, 125)
-      ..style = PaintingStyle.fill //stroke
-      ..strokeWidth = 1; //mateczniki usuniete
-
-    Paint paintStroke = Paint()
-      ..color = Color.fromARGB(255, 0, 0, 0)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke //fill
-      ..strokeCap = StrokeCap.round;
-    // Paint paintStroke = Paint()
-    //   ..color = Color.fromARGB(255, 0, 0, 0)
-    //   ..strokeWidth = 1
-    //   ..style = PaintingStyle.fill //stroke
-    //   ..strokeCap = StrokeCap.round;
-
-    //wielokąty
-    double sides = 3;
-    double radius = 5;
-    double radians = 0; //kąt - początek rysowania
-    //3.14 - trójkąt w lewo, //1,57(/2) - w dół //(/6) - w górę, 0 - w prawo
-    //double wDol = math.pi/2; //1,57 - trójkąt w dół
-    var path = Path();
-
-    //text
-    final textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 15,
-    );
-//ramka pracy
-    var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
-    radians = math.pi / 4;
-
-    Offset center = Offset(10, 20);
-    Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
-
-    path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
-
-    for (int i = 1; i <= sides; i++) {
-      double x = radius * math.cos(radians + angle * i) + center.dx;
-      double y = radius * math.sin(radians + angle * i) + center.dy;
-      path.lineTo(x, y);
-    }
-    path.close();
-    canvas.drawPath(path, paintStroke);
-    var opisSpan = TextSpan(
-      text: '- ramka pracy',
-      style: textStyle,
-    );
-    var textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 10));
-//to delete
-    sides = 3;
-    radians = math.pi / 6;
-    angle = (math.pi * 2) / sides; //kąt
-
-    Offset center1 = Offset(10, 35);
-    Offset startPoint1 = Offset(radius * math.cos(radians), radius * math.sin(radians));
-
-    path.moveTo(startPoint1.dx + center1.dx, startPoint1.dy + center1.dy);
-
-    for (int i = 1; i <= sides; i++) {
-      double x = radius * math.cos(radians + angle * i) + center1.dx;
-      double y = radius * math.sin(radians + angle * i) + center1.dy;
-      path.lineTo(x, y);
-    }
-    path.close();
-    canvas.drawPath(path, paintStroke);
-    opisSpan = TextSpan(
-      text: '- trzeba usunąć',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 25));
-//to extraction
-    double radiusEx = 4;
-    sides = 6;
-    radians = 0;
-    angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
-
-    Offset center2 = Offset(10, 50);
-    Offset startPoint2 = Offset(radiusEx * math.cos(radians), radiusEx * math.sin(radians));
-
-    path.moveTo(startPoint2.dx + center2.dx, startPoint2.dy + center2.dy);
-
-    for (int i = 1; i <= sides; i++) {
-      double x = radiusEx * math.cos(radians + angle * i) + center2.dx;
-      double y = radiusEx * math.sin(radians + angle * i) + center2.dy;
-      path.lineTo(x, y);
-    }
-    path.close();
-    canvas.drawPath(path, paintStroke);
-    opisSpan = TextSpan(
-      text: '- trzeba wirować',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 40));
-//to insutate
-    sides = 4;
-    radians = math.pi / 4;
-    angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
-
-    canvas.drawLine(Offset(7, 68), Offset(13, 68), linePaint); // - (kreska pozioma)
-    canvas.drawLine(Offset(7, 62), Offset(7, 68), linePaint); // | (kreska pionowa lewa)
-    canvas.drawLine(Offset(13, 62), Offset(13, 68), linePaint);
-    opisSpan = TextSpan(
-      text: '- można izolować',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 55));
-//queen
-    canvas.drawCircle(Offset(10, 80), 3, matka);
-    opisSpan = TextSpan(
-      text: '- matka',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 70));
-//comb
-    canvas.drawLine(Offset(10, 105), Offset(10, 115), combPaint);
-    opisSpan = TextSpan(
-      text: '- susz',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 100));
-//wax
-    canvas.drawLine(Offset(10, 90), Offset(10, 100), waxPaint);
-    opisSpan = TextSpan(
-      text: '- węza',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 85));
-
-//sealed
-    canvas.drawLine(Offset(10, 135), Offset(10, 145), sealedPaint);
-    opisSpan = TextSpan(
-      text: '- miód dojrzały',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 130));
-//honey
-    canvas.drawLine(Offset(10, 120), Offset(10, 130), honeyPaint);
-    opisSpan = TextSpan(
-      text: '- miód/pokarm (nakrop)',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 115));
-
-//pollen
-    canvas.drawLine(Offset(10, 150), Offset(10, 160), pollenPaint);
-    opisSpan = TextSpan(
-      text: '- pierzga',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 145));
-//eggs
-    canvas.drawLine(Offset(10, 165), Offset(10, 175), eggPaint);
-    opisSpan = TextSpan(
-      text: '- jajka',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 160));
-//larvae
-    canvas.drawLine(Offset(10, 180), Offset(10, 190), larvaePaint);
-    opisSpan = TextSpan(
-      text: '- larwy',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 175));
-//brood
-    canvas.drawLine(Offset(10, 195), Offset(10, 205), broodPaint);
-    opisSpan = TextSpan(
-      text: '- czerw kryty',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 190));
-//drone
-    canvas.drawLine(Offset(10, 210), Offset(10, 220), dronePaint);
-    opisSpan = TextSpan(
-      text: '- czerw trutowy',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 205));
-//inserted
-    sides = 3;
-    radians = math.pi / 6;
-    angle = (math.pi * 2) / sides; //kąt
-
-    Offset center3 = Offset(10, 232);
-    Offset startPoint3 = Offset(radius * math.cos(radians), radius * math.sin(radians));
-
-    path.moveTo(startPoint3.dx + center3.dx, startPoint3.dy + center3.dy);
-
-    for (int i = 1; i <= sides; i++) {
-      double x = radius * math.cos(radians + angle * i) + center3.dx;
-      double y = radius * math.sin(radians + angle * i) + center3.dy;
-      path.lineTo(x, y);
-    }
-    path.close();
-    canvas.drawPath(path, paintStroke);
-    opisSpan = TextSpan(
-      text: '- wstawiono ramkę',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 220));
-//deleted
-    sides = 3;
-    radians = math.pi / 2;
-    angle = (math.pi * 2) / sides; //kąt
-
-    Offset center4 = Offset(10, 243);
-    Offset startPoint4 = Offset(radius * math.cos(radians), radius * math.sin(radians));
-
-    path.moveTo(startPoint4.dx + center4.dx, startPoint4.dy + center4.dy);
-
-    for (int i = 1; i <= sides; i++) {
-      double x = radius * math.cos(radians + angle * i) + center4.dx;
-      double y = radius * math.sin(radians + angle * i) + center4.dy;
-      path.lineTo(x, y);
-    }
-    path.close();
-    canvas.drawPath(path, paintStroke);
-    opisSpan = TextSpan(
-      text: '- usunięto ramkę',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 235));
-//moved left
-    sides = 3;
-    radians = math.pi; //w lewo
-    angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
-
-    Offset center5 = Offset(12, 259);
-    Offset startPoint5 = Offset(radius * math.cos(radians), radius * math.sin(radians));
-
-    path.moveTo(startPoint5.dx + center5.dx, startPoint5.dy + center5.dy);
-
-    for (int i = 1; i <= sides; i++) {
-      double x = radius * math.cos(radians + angle * i) + center5.dx;
-      double y = radius * math.sin(radians + angle * i) + center5.dy;
-      path.lineTo(x, y);
-    }
-    path.close();
-    canvas.drawPath(path, paintStroke);
-    opisSpan = TextSpan(
-      text: '- przesunięto w lewo',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 250));
-//moved right
-    sides = 3;
-    radians = 0; //w lewo
-    angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
-
-    Offset center6 = Offset(10, 274);
-    Offset startPoint6 = Offset(radius * math.cos(radians), radius * math.sin(radians));
-
-    path.moveTo(startPoint6.dx + center6.dx, startPoint6.dy + center6.dy);
-
-    for (int i = 1; i <= sides; i++) {
-      double x = radius * math.cos(radians + angle * i) + center6.dx;
-      double y = radius * math.sin(radians + angle * i) + center6.dy;
-      path.lineTo(x, y);
-    }
-    path.close();
-    canvas.drawPath(path, paintStroke);
-    opisSpan = TextSpan(
-      text: '- przesunięto w prawo',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 265));
-//insulated
-    canvas.drawLine(Offset(4, 293), Offset(16, 293), linePaint); // - (kreska pozioma)
-    canvas.drawLine(Offset(4, 285), Offset(4, 293), linePaint); // | (kreska pionowa lewa)
-    canvas.drawLine(Offset(16, 285), Offset(16, 293), linePaint);
-    opisSpan = TextSpan(
-      text: '- zaizolowano',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 280));
-//queen cell
-    canvas.drawCircle(Offset(10, 305), 3, matecznik);
-    opisSpan = TextSpan(
-      text: '- matecznik',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 295));
-//delete queen cell
-    canvas.drawCircle(Offset(10, 320), 3, delMat);
-    opisSpan = TextSpan(
-      text: '- usunięty matecznik',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 310));
-//iexcluder
-    canvas.drawLine(
-        Offset(4, 335), Offset(16, 335), lineExcluder); // - (kreska pozioma)
-    opisSpan = TextSpan(
-      text: '- krata odgrodowa',
-      style: textStyle,
-    );
-    textOpis = TextPainter(
-      text: opisSpan,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textOpis.layout(
-      minWidth: 0,
-      maxWidth: 200,
-    );
-    textOpis.paint(canvas, Offset(20, 325));
-//nr body
-    opisSpan = TextSpan(
-      text: '1 - numer korpusu',
+      text: '1 - ${labels[22]}',
       style: textStyle,
     );
     textOpis = TextPainter(

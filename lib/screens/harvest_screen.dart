@@ -153,8 +153,8 @@ class _HarvestScreenState extends State<HarvestScreen> {
 
       if (miod > 0) {
         String t = isPl
-            ? '${loc.honey}: ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.38).toStringAsFixed(2).replaceAll('.', ',')} kg)'
-            : '${loc.honey}: ${miod.toStringAsFixed(2)} l (${(miod * 1.38).toStringAsFixed(2)} kg)';
+            ? '${loc.honey}: ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.45).toStringAsFixed(2).replaceAll('.', ',')} kg)'
+            : '${loc.honey}: ${miod.toStringAsFixed(2)} l (${(miod * 1.45).toStringAsFixed(2)} kg)';
         legendRows.add(buildLegendRow(PdfColors.amber, t));
       }
       if (pylek > 0) {
@@ -622,22 +622,22 @@ class _HarvestScreenState extends State<HarvestScreen> {
                                   globals.isEuropeanFormat()
                                   ? TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po polsku
-                                      text: ' (${(miod * 1.38).toStringAsFixed(2).replaceAll('.', ',')} kg)',
+                                      text: ' (${(miod * 1.45).toStringAsFixed(2).replaceAll('.', ',')} kg)',
                                         style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
                                           color: Color.fromARGB(255, 0, 0, 0)),
                                     )
                                   : TextSpan(
                                       //miód: ilość w litrach (ilość w kg) - po angielsku
-                                      text: ' (${(miod * 1.38).toStringAsFixed(2)} kg)',
+                                      text: ' (${(miod * 1.45).toStringAsFixed(2)} kg)',
                                         style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
                                           color: Color.fromARGB(255, 0, 0, 0)),
                                     ),
                                 ])),
 
                         // globals.isEuropeanFormat()
-                        //   ? Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.38).toStringAsFixed(2).replaceAll('.', ',')} kg)',
+                        //   ? Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.45).toStringAsFixed(2).replaceAll('.', ',')} kg)',
                         //     style:  TextStyle(fontSize: 16))
-                        //   : Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2)} l (${(miod * 1.38).toStringAsFixed(2)} kg)',
+                        //   : Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2)} l (${(miod * 1.45).toStringAsFixed(2)} kg)',
                         //     style:  TextStyle(fontSize: 16)),
                       if (pylek != 0)
                          RichText(

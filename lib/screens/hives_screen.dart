@@ -17,6 +17,7 @@ import '../models/dodatki1.dart';
 import '../models/frame.dart';
 import '../models/frames.dart';
 import '../models/hive.dart';
+import '../models/harvest.dart';
 import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
@@ -250,6 +251,23 @@ class _HivesScreenState extends State<HivesScreen> {
         
        
         if(dataZkgOK != '0000-00-00' || dataZmrOK != '0000-00-00' || tempDataZdr != '0000-00-00' ){//jezeli są jakieś daty/wpisy o zbiorach (harvest) dla ula
+          // Sprawdź czy istnieje harvest.g dla daty miodobrania
+          int defaultB = int.parse(dod1[0].b);
+          int bVal = defaultB;
+          String checkDate = dataZmrOK != '0000-00-00' ? dataZmrOK : (tempDataZdr != '0000-00-00' ? tempDataZdr : dataZkgOK);
+          if (checkDate != '0000-00-00') {
+            final harvestsData = Provider.of<Harvests>(context, listen: false);
+            for (var h in harvestsData.items) {
+              if (h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty) {
+                DateTime hDt = DateTime.parse(h.data.substring(0, 10));
+                DateTime cDt = DateTime.parse(checkDate.substring(0, 10));
+                if (hDt.difference(cDt).inDays.abs() <= 3) {
+                  bVal = int.tryParse(h.g) ?? defaultB;
+                  break;
+                }
+              }
+            }
+          }
           //POROWNYWANIE DAT dla małych i duzych ramek
           if(dataZmrOK != '0000-00-00' || tempDataZdr != '0000-00-00' ){
           
@@ -266,7 +284,7 @@ class _HivesScreenState extends State<HivesScreen> {
             //print('ul = $numerUla, wartość tylko mr = ${infosZ_mr[0].wartosc}');
             if(infosZ_mr[0].miara == '') dm_mr = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
             else dm_mr = double.parse(infosZ_mr[0].miara); //wielkość plastra w uzytej ramce w dm2
-            wartoscDouble = double.parse(infosZ_mr[0].wartosc) * int.parse(dod1[0].b) * dm_mr/10000;// zbiór tylko dla małych ramek
+            wartoscDouble = double.parse(infosZ_mr[0].wartosc) * bVal * dm_mr/10000;// zbiór tylko dla małych ramek
             wartosc = (wartoscDouble/1000).toStringAsFixed(2);
             //print('tylko małe = $wartosc');
             dataZbioru = dataZmrOK;
@@ -283,7 +301,7 @@ class _HivesScreenState extends State<HivesScreen> {
             //print('ul = $numerUla, wartość tylko dr = ${infosZ_dr[0].wartosc}');
             if(infosZ_dr[0].miara == '') dm_dr = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
             else dm_dr = double.parse(infosZ_dr[0].miara); //wielkość plastra w uzytej ramce w dm2
-            wartoscDouble = double.parse(infosZ_dr[0].wartosc) * int.parse(dod1[0].b) * dm_dr/10000;// zbiór tylko dla duzych ramek
+            wartoscDouble = double.parse(infosZ_dr[0].wartosc) * bVal * dm_dr/10000;// zbiór tylko dla duzych ramek
             wartosc = (wartoscDouble/1000).toStringAsFixed(2);
             //print('tylko duze = $wartosc');
             dataZbioru = tempDataZdr;
@@ -315,7 +333,7 @@ class _HivesScreenState extends State<HivesScreen> {
               else dm_mr = double.parse(infosZ_mr[0].miara); //wielkość plastra w uzytej ramce w dm2
               if(infosZ_dr[0].miara == '') dm_dr = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm_dr = double.parse(infosZ_dr[0].miara); //wielkość plastra w uzytej ramce w dm2
-              wartoscDouble = (double.parse(infosZ_mr[0].wartosc) * int.parse(dod1[0].b) * dm_mr/10000) + (double.parse(infosZ_dr[0].wartosc) * int.parse(dod1[0].b) * dm_dr/10000);//infosZ[0].wartosc;
+              wartoscDouble = (double.parse(infosZ_mr[0].wartosc) * bVal * dm_mr/10000) + (double.parse(infosZ_dr[0].wartosc) * bVal * dm_dr/10000);//infosZ[0].wartosc;
               wartosc = (wartoscDouble/1000).toStringAsFixed(2);
               //print('tylko duze i małe = $wartosc');
               dataZbioru = dataZmrOK;

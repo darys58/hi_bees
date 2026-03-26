@@ -124,6 +124,22 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
   Map<String, double> sumaLPylek2029 = {};
   Map<String, double> sumaLPylek2030 = {};
 
+  // Pobiera wartość b (waga miodu na 1dm²) z Harvest.g jeśli istnieje dla danej daty,
+  // w przeciwnym razie zwraca domyślne b z Dodatki1
+  int _getBForDate(String infoDate, int defaultB, List<Harvest> zbioryMiod) {
+    if (zbioryMiod.isEmpty) return defaultB;
+    DateTime infoDateTime = DateTime.parse(infoDate.substring(0, 10));
+    for (var harvest in zbioryMiod) {
+      if (harvest.g.isEmpty) continue;
+      DateTime harvestDateTime = DateTime.parse(harvest.data.substring(0, 10));
+      int daysDiff = harvestDateTime.difference(infoDateTime).inDays.abs();
+      if (daysDiff <= 3) {
+        return int.tryParse(harvest.g) ?? defaultB;
+      }
+    }
+    return defaultB;
+  }
+
   // Pomocnicze funkcje do obliczania wartości miodu i pyłku
   double _obliczMiod(Info info, int b, String honeySmall, String honeyBig, String honeyKg) {
     if (info.parametr == honeySmall && info.wartosc.isNotEmpty) {
@@ -929,14 +945,21 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
         String pylekMl = loc.beePollen + " = ";
         String pylekL = " " + loc.beePollen + " =  ";
 
-        int b = dod1.isNotEmpty ? int.parse(dod1[0].b) : 250;
+        int defaultB = dod1.isNotEmpty ? int.parse(dod1[0].b) : 250;
         int g = dod1.isNotEmpty ? int.parse(dod1[0].g) : 100;
+
+        // Pobierz zbiory miodu dla pasieki (do sprawdzenia harvest.g)
+        final harvestsDataForB = Provider.of<Harvests>(context, listen: false);
+        List<Harvest> zbioryMiod = harvestsDataForB.items.where((h) =>
+          h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty
+        ).toList();
 
         // Zbierz wszystkie unikalne daty dla tego roku
         Set<String> uniqueDates = {};
         for (var info in infos) {
           if (info.data.substring(0, 4) == rok) {
             String date = info.data.substring(0, 10);
+            int b = typ == 'miod' ? _getBForDate(info.data, defaultB, zbioryMiod) : defaultB;
             double val = typ == 'miod'
                 ? _obliczMiod(info, b, honeySmall, honeyBig, honeyKg)
                 : _obliczPylek(info, g, pylekPorcja, pylekMiarka, pylekMl, pylekL);
@@ -962,6 +985,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
           for (var info in infos) {
             if (info.data.substring(0, 4) == rok && info.ulNr == nrUla) {
               String date = info.data.substring(0, 10);
+              int b = typ == 'miod' ? _getBForDate(info.data, defaultB, zbioryMiod) : defaultB;
               double val = typ == 'miod'
                   ? _obliczMiod(info, b, honeySmall, honeyBig, honeyKg)
                   : _obliczPylek(info, g, pylekPorcja, pylekMiarka, pylekMl, pylekL);
@@ -1624,6 +1648,11 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
    
    
     //TWORZENIE DANYCH DO WYKRESóW
+    // Pobierz zbiory miodu z niepustym g (do sprawdzenia harvest.g per miodobranie)
+    final harvestsDataForB = Provider.of<Harvests>(context, listen: false);
+    List<Harvest> zbioryMiodG = harvestsDataForB.items.where((h) =>
+      h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty
+    ).toList();
    //print('infos = ${infos.length}');
 
     // Pomocnicza funkcja do obliczania wartości miodu
@@ -1692,11 +1721,13 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
       Set<String> uniqueDatesMiod = {};
       Set<String> uniqueDatesPylek = {};
 
+      int defaultB = int.parse(dod1[0].b);
       // Zbierz wszystkie unikalne daty miodobrań dla tego roku (przed grupowaniem)
       for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == rok) {
           String date = infos[i].data.substring(0, 10); // YYYY-MM-DD
-          double miodVal = obliczMiod(infos[i], dm, int.parse(dod1[0].b));
+          int bVal = _getBForDate(infos[i].data, defaultB, zbioryMiodG);
+          double miodVal = obliczMiod(infos[i], dm, bVal);
           double pylekVal = obliczPylek(infos[i], int.parse(dod1[0].g));
           if (miodVal > 0) uniqueDatesMiod.add(date);
           if (pylekVal > 0) uniqueDatesPylek.add(date);
@@ -1720,7 +1751,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
         for (var i = 0; i < infos.length; i++) {
           if (infos[i].data.substring(0, 4) == rok) {
             if (infos[i].ulNr == allHivesNumbers[j - 1]) {
-              double miodVal = obliczMiod(infos[i], dm, int.parse(dod1[0].b));
+              int bVal = _getBForDate(infos[i].data, defaultB, zbioryMiodG);
+              double miodVal = obliczMiod(infos[i], dm, bVal);
               double pylekVal = obliczPylek(infos[i], int.parse(dod1[0].g));
               addAllMiod(miodVal);
               addAllPylek(pylekVal.toInt());
@@ -1753,7 +1785,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
           if (infos[i].data.substring(0, 4) == rok) {
             if (infos[i].ulNr == hivesNumbers[j - 1]) {
               String date = infos[i].data.substring(0, 10);
-              double miodVal = obliczMiod(infos[i], dm, int.parse(dod1[0].b));
+              int bVal = _getBForDate(infos[i].data, defaultB, zbioryMiodG);
+              double miodVal = obliczMiod(infos[i], dm, bVal);
               double pylekVal = obliczPylek(infos[i], int.parse(dod1[0].g));
 
               if (miodVal > 0) {
