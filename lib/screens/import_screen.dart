@@ -907,30 +907,14 @@ class _ImportScreenState extends State<ImportScreen> {
               );
               _updateProgress('${loc.frames}: $ramkiCount');
               await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
-              final ramki = Provider.of<Frames>(context, listen: false).items;
 
-              // 9. Odbudowa uli z ramek
+              // 9. Odbudowa uli z ramek (SQL DISTINCT + batch)
               _updateProgress('${loc.rebuildingHives} (${loc.frames})...');
-              for (int i = 0; i < ramki.length; i++) {
-                await Hives.insertHive(
-                  '${ramki[i].pasiekaNr}.${ramki[i].ulNr}',
-                  ramki[i].pasiekaNr,
-                  ramki[i].ulNr,
-                  formattedDate,
-                  'green',
-                  10,
-                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                  '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-                  loc.hIve,
-                  '0',
-                  '0',
-                  0,
-                );
-                if (i % 500 == 0 || i == ramki.length - 1) {
-                  _setSubProgress((i + 1) / ramki.length, '${loc.rebuildingHives} (${loc.frames}): ${i + 1}/${ramki.length}');
-                  await Future.delayed(Duration.zero); //oddanie sterowania do UI
-                }
-              }
+              final odbudowaneUle = await DBHelper.rebuildHivesFromFrames(
+                formattedDate: formattedDate,
+                hiveLabel: loc.hIve,
+              );
+              _setSubProgress(1.0, '${loc.rebuildingHives} (${loc.frames}): $odbudowaneUle');
 
               // 10. Pobieranie info z serwera
               _updateProgress('${loc.downloading} Info...');
@@ -946,56 +930,21 @@ class _ImportScreenState extends State<ImportScreen> {
               );
               _updateProgress('Info: $infoCount');
               await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
-              final info = Provider.of<Infos>(context, listen: false).items;
 
-              // 12. Aktualizacja uli z info
+              // 12. Aktualizacja uli z info (SELECT filtrowany + batch, najnowszy wpis wygrywa)
               _updateProgress('${loc.rebuildingHives} (Info)...');
               const liquidationValues = {
                 'likwidacja ula', 'hive liquidation', 'liquidation der Beute',
                 'liquidation de la ruche', 'liquidacion de colmena',
                 'liquidação da colmeia', 'liquidazione arnia',
               };
-              final infoSorted = [...info]..sort((a, b) {
-                final c = a.data.compareTo(b.data);
-                return c != 0 ? c : a.czas.compareTo(b.czas);
-              });
-              for (int i = 0; i < infoSorted.length; i++) {
-                if (infoSorted[i].parametr == loc.numberOfFrame + ' = ') {
-                  await Hives.insertHive(
-                    '${infoSorted[i].pasiekaNr}.${infoSorted[i].ulNr}',
-                    infoSorted[i].pasiekaNr,
-                    infoSorted[i].ulNr,
-                    formattedDate,
-                    'green',
-                    int.parse(infoSorted[i].wartosc),
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-                    infoSorted[i].pogoda,
-                    infoSorted[i].miara,
-                    '0',
-                    0,
-                  );
-                } else if (liquidationValues.contains(infoSorted[i].parametr)) {
-                  await Hives.insertHive(
-                    '${infoSorted[i].pasiekaNr}.${infoSorted[i].ulNr}',
-                    infoSorted[i].pasiekaNr,
-                    infoSorted[i].ulNr,
-                    formattedDate,
-                    'black',
-                    10,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-                    loc.hIve,
-                    '0',
-                    '0',
-                    0,
-                  );
-                }
-                if (i % 200 == 0 || i == infoSorted.length - 1) {
-                  _setSubProgress((i + 1) / infoSorted.length, '${loc.rebuildingHives} (Info): ${i + 1}/${infoSorted.length}');
-                  await Future.delayed(Duration.zero); //oddanie sterowania do UI
-                }
-              }
+              await DBHelper.applyInfoStateToHives(
+                liquidationValues: liquidationValues,
+                frameCountParam: loc.numberOfFrame + ' = ',
+                formattedDate: formattedDate,
+                hiveLabel: loc.hIve,
+              );
+              _setSubProgress(1.0, '${loc.rebuildingHives} (Info)');
 
               // 13. Ładowanie uli
               _updateProgress(loc.rebuildingHives + '...');
@@ -1004,20 +953,13 @@ class _ImportScreenState extends State<ImportScreen> {
               _progressLabelNotifier.value = '${loc.rebuildingHives}: ${hives.length}';
               await Future.delayed(const Duration(milliseconds: 500));
 
-              // 14. Odbudowa pasiek
+              // 14. Odbudowa pasiek (SQL DISTINCT + batch)
               _updateProgress(loc.rebuildingApiaries + '...');
-              for (int i = 0; i < hives.length; i++) {
-                await Apiarys.insertApiary(
-                  '${hives[i].pasiekaNr}',
-                  hives[i].pasiekaNr,
-                  0,
-                  formattedDate,
-                  'green',
-                  '??',
-                );
-              }
+              final odbudowanePasieki = await DBHelper.rebuildApiariesFromHives(
+                formattedDate: formattedDate,
+              );
               globals.odswiezBelkiUli = true;
-              _progressLabelNotifier.value = '${loc.rebuildingApiaries}: ${hives.length}';
+              _progressLabelNotifier.value = '${loc.rebuildingApiaries}: $odbudowanePasieki';
               await Future.delayed(const Duration(milliseconds: 500));
 
               // 15. Przywrócenie tagów NFC
@@ -1182,30 +1124,14 @@ class _ImportScreenState extends State<ImportScreen> {
                     );
                     _updateProgress('${loc.frames}: $ramkiCount');
                     await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
-                    final ramki = Provider.of<Frames>(context, listen: false).items;
 
-                    // 9. Odbudowa uli z ramek
+                    // 9. Odbudowa uli z ramek (SQL DISTINCT + batch)
                     _updateProgress('${loc.rebuildingHives} (${loc.frames})...');
-                    for (int i = 0; i < ramki.length; i++) {
-                      await Hives.insertHive(
-                        '${ramki[i].pasiekaNr}.${ramki[i].ulNr}',
-                        ramki[i].pasiekaNr,
-                        ramki[i].ulNr,
-                        formattedDate,
-                        'green',
-                        10,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-                        loc.hIve,
-                        '0',
-                        '0',
-                        0,
-                      );
-                      if (i % 500 == 0 || i == ramki.length - 1) {
-                        _setSubProgress((i + 1) / ramki.length, '${loc.rebuildingHives} (${loc.frames}): ${i + 1}/${ramki.length}');
-                        await Future.delayed(Duration.zero);
-                      }
-                    }
+                    final odbudowaneUle = await DBHelper.rebuildHivesFromFrames(
+                      formattedDate: formattedDate,
+                      hiveLabel: loc.hIve,
+                    );
+                    _setSubProgress(1.0, '${loc.rebuildingHives} (${loc.frames}): $odbudowaneUle');
 
                     // 10. Pobieranie info z serwera
                     _updateProgress('${loc.downloading} Info...');
@@ -1221,56 +1147,21 @@ class _ImportScreenState extends State<ImportScreen> {
                     );
                     _updateProgress('Info: $infoCount');
                     await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
-                    final info = Provider.of<Infos>(context, listen: false).items;
 
-                    // 12. Aktualizacja uli z info
+                    // 12. Aktualizacja uli z info (SELECT filtrowany + batch, najnowszy wpis wygrywa)
                     _updateProgress('${loc.rebuildingHives} (Info)...');
                     const liquidationValues = {
                       'likwidacja ula', 'hive liquidation', 'liquidation der Beute',
                       'liquidation de la ruche', 'liquidacion de colmena',
                       'liquidação da colmeia', 'liquidazione arnia',
                     };
-                    final infoSorted = [...info]..sort((a, b) {
-                      final c = a.data.compareTo(b.data);
-                      return c != 0 ? c : a.czas.compareTo(b.czas);
-                    });
-                    for (int i = 0; i < infoSorted.length; i++) {
-                      if (infoSorted[i].parametr == loc.numberOfFrame + ' = ') {
-                        await Hives.insertHive(
-                          '${infoSorted[i].pasiekaNr}.${infoSorted[i].ulNr}',
-                          infoSorted[i].pasiekaNr,
-                          infoSorted[i].ulNr,
-                          formattedDate,
-                          'green',
-                          int.parse(infoSorted[i].wartosc),
-                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                          '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-                          infoSorted[i].pogoda,
-                          infoSorted[i].miara,
-                          '0',
-                          0,
-                        );
-                      } else if (liquidationValues.contains(infoSorted[i].parametr)) {
-                        await Hives.insertHive(
-                          '${infoSorted[i].pasiekaNr}.${infoSorted[i].ulNr}',
-                          infoSorted[i].pasiekaNr,
-                          infoSorted[i].ulNr,
-                          formattedDate,
-                          'black',
-                          10,
-                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                          '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-                          loc.hIve,
-                          '0',
-                          '0',
-                          0,
-                        );
-                      }
-                      if (i % 200 == 0 || i == infoSorted.length - 1) {
-                        _setSubProgress((i + 1) / infoSorted.length, '${loc.rebuildingHives} (Info): ${i + 1}/${infoSorted.length}');
-                        await Future.delayed(Duration.zero);
-                      }
-                    }
+                    await DBHelper.applyInfoStateToHives(
+                      liquidationValues: liquidationValues,
+                      frameCountParam: loc.numberOfFrame + ' = ',
+                      formattedDate: formattedDate,
+                      hiveLabel: loc.hIve,
+                    );
+                    _setSubProgress(1.0, '${loc.rebuildingHives} (Info)');
 
                     // 13. Ładowanie uli
                     _updateProgress(loc.rebuildingHives + '...');
@@ -1279,20 +1170,13 @@ class _ImportScreenState extends State<ImportScreen> {
                     _progressLabelNotifier.value = '${loc.rebuildingHives}: ${hives.length}';
                     await Future.delayed(const Duration(milliseconds: 500));
 
-                    // 14. Odbudowa pasiek
+                    // 14. Odbudowa pasiek (SQL DISTINCT + batch)
                     _updateProgress(loc.rebuildingApiaries + '...');
-                    for (int i = 0; i < hives.length; i++) {
-                      await Apiarys.insertApiary(
-                        '${hives[i].pasiekaNr}',
-                        hives[i].pasiekaNr,
-                        0,
-                        formattedDate,
-                        'green',
-                        '??',
-                      );
-                    }
+                    final odbudowanePasieki = await DBHelper.rebuildApiariesFromHives(
+                      formattedDate: formattedDate,
+                    );
                     globals.odswiezBelkiUli = true;
-                    _progressLabelNotifier.value = '${loc.rebuildingApiaries}: ${hives.length}';
+                    _progressLabelNotifier.value = '${loc.rebuildingApiaries}: $odbudowanePasieki';
                     await Future.delayed(const Duration(milliseconds: 500));
 
                     // 15. Przywrócenie tagów NFC

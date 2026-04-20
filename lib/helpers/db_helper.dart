@@ -1075,4 +1075,148 @@ class DBHelper {
     }
   }
 
+  // === Optymalizacja odbudowy uli i pasiek (import_screen) ===
+  // Zastępuje pętle po ramkach/info/ulach jednym zapytaniem SQL + batchem.
+
+  //odbudowa tabeli `ule` z unikalnych uli znalezionych w tabeli `ramka`
+  static Future<int> rebuildHivesFromFrames({
+    required String formattedDate,
+    required String hiveLabel,
+  }) async {
+    final db = await DBHelper.database();
+    final rows = await db.rawQuery('SELECT DISTINCT pasiekaNr, ulNr FROM ramka');
+    if (rows.isEmpty) return 0;
+    final batch = db.batch();
+    for (final row in rows) {
+      final p = row['pasiekaNr'] as int;
+      final u = row['ulNr'] as int;
+      batch.insert('ule', {
+        'id': '$p.$u',
+        'pasiekaNr': p,
+        'ulNr': u,
+        'przeglad': formattedDate,
+        'ikona': 'green',
+        'ramek': 10,
+        'korpusNr': 0,
+        'trut': 0, 'czerw': 0, 'larwy': 0, 'jaja': 0, 'pierzga': 0,
+        'miod': 0, 'dojrzaly': 0, 'weza': 0, 'susz': 0,
+        'matka': 0, 'mateczniki': 0, 'usunmat': 0,
+        'todo': '0', 'kategoria': '0', 'parametr': '0', 'wartosc': '0', 'miara': '0',
+        'matka1': '0', 'matka2': '0', 'matka3': '0', 'matka4': '0', 'matka5': '0',
+        'h1': hiveLabel, 'h2': '0', 'h3': '0',
+        'aktual': 0,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+    return rows.length;
+  }
+
+  //aktualizacja stanu uli na podstawie najnowszego chronologicznie wpisu info
+  //parametr == frameCountParam -> ikona 'green', ramek = wartosc, h1 = pogoda, h2 = miara
+  //parametr ∈ liquidationValues -> ikona 'black', ramek = 10, h1 = hiveLabel
+  static Future<void> applyInfoStateToHives({
+    required Set<String> liquidationValues,
+    required String frameCountParam,
+    required String formattedDate,
+    required String hiveLabel,
+  }) async {
+    if (liquidationValues.isEmpty) return;
+    final db = await DBHelper.database();
+    final placeholders = List.filled(liquidationValues.length, '?').join(',');
+    final args = <Object?>[frameCountParam, ...liquidationValues];
+    final rows = await db.rawQuery(
+      'SELECT pasiekaNr, ulNr, parametr, wartosc, pogoda, miara, data, czas '
+      'FROM info WHERE parametr = ? OR parametr IN ($placeholders)',
+      args,
+    );
+    if (rows.isEmpty) return;
+
+    //dla każdego ula wybieramy wpis z najwyższym (data, czas)
+    final Map<String, Map<String, Object?>> latest = {};
+    for (final row in rows) {
+      final key = '${row['pasiekaNr']}.${row['ulNr']}';
+      final cur = latest[key];
+      if (cur == null) {
+        latest[key] = row;
+      } else {
+        final cmpD = (row['data'] as String? ?? '').compareTo(cur['data'] as String? ?? '');
+        final isNewer = cmpD > 0 ||
+            (cmpD == 0 && (row['czas'] as String? ?? '').compareTo(cur['czas'] as String? ?? '') > 0);
+        if (isNewer) latest[key] = row;
+      }
+    }
+
+    final batch = db.batch();
+    for (final entry in latest.entries) {
+      final r = entry.value;
+      final p = r['pasiekaNr'] as int;
+      final u = r['ulNr'] as int;
+      final parametr = r['parametr'] as String? ?? '';
+
+      final Map<String, Object?> record;
+      if (parametr == frameCountParam) {
+        record = {
+          'id': entry.key,
+          'pasiekaNr': p, 'ulNr': u,
+          'przeglad': formattedDate,
+          'ikona': 'green',
+          'ramek': int.tryParse((r['wartosc'] as String?) ?? '') ?? 10,
+          'korpusNr': 0,
+          'trut': 0, 'czerw': 0, 'larwy': 0, 'jaja': 0, 'pierzga': 0,
+          'miod': 0, 'dojrzaly': 0, 'weza': 0, 'susz': 0,
+          'matka': 0, 'mateczniki': 0, 'usunmat': 0,
+          'todo': '0', 'kategoria': '0', 'parametr': '0', 'wartosc': '0', 'miara': '0',
+          'matka1': '0', 'matka2': '0', 'matka3': '0', 'matka4': '0', 'matka5': '0',
+          'h1': (r['pogoda'] as String?) ?? '0',
+          'h2': (r['miara'] as String?) ?? '0',
+          'h3': '0',
+          'aktual': 0,
+        };
+      } else if (liquidationValues.contains(parametr)) {
+        record = {
+          'id': entry.key,
+          'pasiekaNr': p, 'ulNr': u,
+          'przeglad': formattedDate,
+          'ikona': 'black',
+          'ramek': 10,
+          'korpusNr': 0,
+          'trut': 0, 'czerw': 0, 'larwy': 0, 'jaja': 0, 'pierzga': 0,
+          'miod': 0, 'dojrzaly': 0, 'weza': 0, 'susz': 0,
+          'matka': 0, 'mateczniki': 0, 'usunmat': 0,
+          'todo': '0', 'kategoria': '0', 'parametr': '0', 'wartosc': '0', 'miara': '0',
+          'matka1': '0', 'matka2': '0', 'matka3': '0', 'matka4': '0', 'matka5': '0',
+          'h1': hiveLabel, 'h2': '0', 'h3': '0',
+          'aktual': 0,
+        };
+      } else {
+        continue;
+      }
+      batch.insert('ule', record, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  //odbudowa tabeli `pasieki` z unikalnych numerów pasiek w tabeli `ule`
+  static Future<int> rebuildApiariesFromHives({
+    required String formattedDate,
+  }) async {
+    final db = await DBHelper.database();
+    final rows = await db.rawQuery('SELECT DISTINCT pasiekaNr FROM ule');
+    if (rows.isEmpty) return 0;
+    final batch = db.batch();
+    for (final row in rows) {
+      final p = row['pasiekaNr'] as int;
+      batch.insert('pasieki', {
+        'id': '$p',
+        'pasiekaNr': p,
+        'ileUli': 0,
+        'przeglad': formattedDate,
+        'ikona': 'green',
+        'opis': '??',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+    return rows.length;
+  }
+
 }
