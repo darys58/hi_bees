@@ -72,7 +72,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
         nowyG = zbior[0].g;
       } else {
         final dod1 = Provider.of<Dodatki1>(context, listen: false).items;
-        nowyG = dod1.isNotEmpty ? dod1[0].b : '250';
+        nowyG = dod1.isNotEmpty ? dod1[0].b : '260';
       }
       tytulEkranu = AppLocalizations.of(context)!.editingHarvest;
     } else {
@@ -89,7 +89,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
       nowyUwagi = '';
       // Domyślna waga dm² z Dodatki1.b
       final dod1 = Provider.of<Dodatki1>(context, listen: false).items;
-      nowyG = dod1.isNotEmpty ? dod1[0].b : '250';
+      nowyG = dod1.isNotEmpty ? dod1[0].b : '260';
       tytulEkranu = AppLocalizations.of(context)!.addHarvest;
    }
    //print('zbior = ${zbior[0].data}');
@@ -349,7 +349,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                 SizedBox(height: 20),
                                 TextFormField(
                                   key: ValueKey('waga_dm2'),
-                                  initialValue: nowyG ?? '250',
+                                  initialValue: nowyG ?? '260',
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                   decoration: InputDecoration(
@@ -360,9 +360,10 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                     //hintText: '250',
                                   ),
                                   validator: (value) {
-                                    if (value != null && value.isNotEmpty) {
-                                      nowyG = value;
+                                    if (value == null || value.isEmpty) {
+                                      return AppLocalizations.of(context)!.enterValue;
                                     }
+                                    nowyG = value;
                                     return null;
                                   },
                                 ),
@@ -418,7 +419,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                           nowyIlosc!,
                                           nowyMiara!,
                                           nowyUwagi!,
-                                          nowyZasobId == 1 ? (nowyG ?? '') : '',
+                                          nowyG ?? '',
                                           '',
                                           0)
                                         .then((_) {
@@ -440,7 +441,7 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                         nowyIlosc!,
                                         nowyMiara!,
                                         nowyUwagi!,
-                                        nowyZasobId == 1 ? (nowyG ?? '') : '',
+                                        nowyG ?? '',
                                         '',
                                         0); //arch
                                     Provider.of<Harvests>(context,

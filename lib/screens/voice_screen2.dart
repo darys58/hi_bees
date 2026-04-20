@@ -12,6 +12,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:hi_bees/helpers/db_helper.dart';
 import 'package:provider/provider.dart';
@@ -245,6 +246,12 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
   void initState() {
     super.initState();
     _sound.init(); //preload dźwięków
+    // Odblokowanie orientacji poziomej tylko dla tego ekranu
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     setState(() {
       isButtonDisabled = true;
       rhinoText = "";
@@ -283,6 +290,10 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
     _picovoiceManager?.delete(); //zwolnienie zasobów natywnych Picovoice
     _sound.dispose(); //zwolnienie odtwarzaczy dźwięku
     WakelockPlus.disable(); //usunięcie blokady wygaszania ekranu
+    // Powrót do wymuszonej orientacji pionowej
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
     super.dispose();
   }
 
@@ -442,6 +453,28 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
       rhinoText = prettyPrintInference(inference);
       wakeWordDetected = false;
     });
+
+    //live podgląd korpusu - odświeżenie gdy intencja zmienia zawartość korpusu
+    //lub zmienia wybór pasieki/ula/korpusu
+    const _liveRefreshIntents = {
+      'setStore',     //zasoby na ramkach (w tym matka, mateczniki, toDo, isDone)
+      'setChange',    //zmiana numeru "po" ramki
+      'setMoveBody',  //przeniesienie ramki do innego korpusu
+      'setFrames',    //zasoby dla zakresu ramek
+      'setFrame',     //wstawienie nowej ramki (zapisuje zasob 14 "wstaw ramka")
+      'setEquipment', //krata odgrodowa, zmiana ilości ramek
+      'setApiary',    //zmiana pasieki
+      'setHive',      //wybór ula - załadowanie widoku z ostatniego przeglądu
+      'setBody',      //wybór korpusu
+      'setHalfBody',  //wybór półkorpusu
+    };
+    if (globals.voice2LivePodglad &&
+        inference.isUnderstood == true &&
+        _liveRefreshIntents.contains(inference.intent) &&
+        readyApiary && readyHive &&
+        nrXXOfApiary != 0 && nrXXOfHive != 0) {
+      _refreshLiveView();
+    }
 
     //anulowalny timer zastępujący Future.delayed - przy nowej komendzie stary timer jest anulowany
     _inferenceTimer = Timer(Duration(milliseconds: zwloka), () {
@@ -5416,7 +5449,7 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
         //print('beep - "open"');
         break;
       case 'error':
-        _sound.play('error');
+        _sound.play('nie_rozumiem');
         break;
     }
   }
@@ -7794,63 +7827,69 @@ print('openDialog = $openDialog');
           ),
           actions: <Widget>[
             IconButton(
+              icon: Icon(
+                isProcessing ? Icons.stop_circle : Icons.play_circle_fill,
+                color: (isButtonDisabled || isError)
+                    ? Colors.grey
+                    : (isProcessing
+                        ? Color.fromARGB(255, 200, 0, 0)
+                        : Color.fromARGB(255, 0, 150, 0)),
+                size: 30,
+              ),
+              tooltip: isProcessing ? "STOP2" : "START2",
+              onPressed: (isButtonDisabled || isError)
+                  ? null
+                  : isProcessing
+                      ? _stopProcessing
+                      : _startProcessing,
+            ),
+            IconButton(
               icon:
                   Icon(Icons.help_center, color: Color.fromARGB(255, 0, 0, 0)),
               onPressed: () => _dialogBuilder(context),
             )
           ],
         ),
-        body: Column(
-          children: [
-            buildAnswerArea(context),
-            //buildStartButton(context),
-            buildRhinoTextArea(context),
-            buildErrorMessage(context),
-            //footer,
-            const SizedBox(
-              height: 50,
-            ),
-          ],
-        ),
-
-        //=== stopka
-        bottomSheet: Container(
-          //margin:  EdgeInsets.only(bottom:15),
-          height: 100,
-          color: Colors.white,
-          //width: MediaQuery.of(context).size.width,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  const SizedBox(
-                    width: 9,
+        body: ((MediaQuery.of(context).orientation == Orientation.landscape || globals.voice2LiveLandscape) && globals.voice2LivePodglad)
+            //układ poziomy: lewa = dane/stan, prawa = live korpus
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          buildAnswerArea(context, flex: false),
+                          buildRhinoTextArea(context, flex: false),
+                          buildErrorMessage(context, flex: false),
+                        ],
+                      ),
+                    ),
                   ),
-                  SizedBox(
-                      width: 200,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: buttonStyle,
-                        onPressed: (isButtonDisabled || isError)
-                            ? null
-                            : isProcessing
-                                ? _stopProcessing
-                                : _startProcessing,
-                        child: Text(isProcessing ? "STOP2" : "START2",
-                            style: const TextStyle(
-                                fontSize: 16,
-                                color: Color.fromARGB(255, 0, 0,
-                                    0))), // fontWeight: FontWeight.bold
-                      )),
-                  const SizedBox(
-                    width: 15,
-                  ), //interpolacja ciągu znaków
+                  Expanded(
+                    child: Column(
+                      children: [
+                        buildLivePanel(context),
+                        //const SizedBox(height: 50),
+                      ],
+                    ),
+                  ),
                 ],
               )
-            ],
-          ),
-        ),
+            //układ pionowy (dotychczasowy)
+            : Column(
+                children: [
+                  buildAnswerArea(context),
+                  //buildStartButton(context),
+                  if (globals.voice2LivePodglad)
+                    buildLivePanel(context)
+                  else ...[
+                    buildRhinoTextArea(context),
+                    buildErrorMessage(context),
+                  ],
+                ],
+              ),
       ),
     );
    
@@ -7858,11 +7897,9 @@ print('openDialog = $openDialog');
 
   
   
-  buildAnswerArea(BuildContext context) {
-    
-    return Expanded(
-      flex: 4,
-      child: Container(
+  buildAnswerArea(BuildContext context, {bool flex = true}) {
+
+    final content = Container(
           color: Color.fromARGB(255, 255, 255, 255),
           alignment: Alignment.center,
           padding: EdgeInsets.all(15),
@@ -7870,7 +7907,7 @@ print('openDialog = $openDialog');
             children: [
             
 //wiersz pasieka
-              heightScreen < 590
+              heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -7928,7 +7965,8 @@ print('openDialog = $openDialog');
                           ),
                       ],
                     )
-                  : Row(
+                 : 
+                  Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         if (readyApiary)
@@ -8042,7 +8080,7 @@ print('openDialog = $openDialog');
               Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
 //ul numer
                 if (readyHive)
-                  heightScreen < 590
+                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
                       ? Container(
                           width: 80,
                           height: 60,
@@ -8084,7 +8122,8 @@ print('openDialog = $openDialog');
                             ],
                           ),
                         )
-                      : Container(
+                      : 
+                        Container(
                           width: 100,
                           height: 92,
                           margin: EdgeInsets.only(
@@ -8140,7 +8179,7 @@ print('openDialog = $openDialog');
                         ),
 //korpus numer
                 if (readyBody)
-                  heightScreen < 590
+                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
                       ? Container(
                           width: 100,
                           height: 60,
@@ -8182,7 +8221,8 @@ print('openDialog = $openDialog');
                             ],
                           ),
                         )
-                      : Container(
+                     : 
+                      Container(
                           width: 100,
                           height: 92,
                           padding: const EdgeInsets.all(4),
@@ -8223,7 +8263,7 @@ print('openDialog = $openDialog');
                         ),
 //półkorpus numer
                 if (readyHalfBody)
-                  heightScreen < 590
+                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
                       ? Container(
                           width: 100,
                           height: 60,
@@ -8265,7 +8305,8 @@ print('openDialog = $openDialog');
                             ],
                           ),
                         )
-                      : Container(
+                     : 
+                      Container(
                           width: 100,
                           height: 92,
                           padding: const EdgeInsets.all(4),
@@ -8309,7 +8350,7 @@ print('openDialog = $openDialog');
                 
 //ramka numer
                 if (readyFrame)
-                  heightScreen < 590
+                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
                       ? Container(
                           width: 80,
                           height: 60,
@@ -8352,7 +8393,8 @@ print('openDialog = $openDialog');
                             ],
                           ),
                         )
-                      : Container(
+                     : 
+                      Container(
                           width: 100,
                           height: 92,
                           padding: const EdgeInsets.all(4),
@@ -8397,7 +8439,7 @@ print('openDialog = $openDialog');
 
 //ramki od do
                 if (readyFrames)
-                  heightScreen < 590
+                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
                       ? Container(
                           width: 80,
                           height: 60,
@@ -8440,7 +8482,8 @@ print('openDialog = $openDialog');
                             ],
                           ),
                         )
-                      : Container(
+                     : 
+                      Container(
                           width: 100,
                           height: 92,
                           padding: const EdgeInsets.all(4),
@@ -8554,7 +8597,7 @@ print('openDialog = $openDialog');
 //wiersz opis ramki
               if (readyFrame || readyFrames)
                 if (nrXXOfFrame != 0 || nrXXOfFramePo != 0 || nrXXOdFrame != 0)
-                  heightScreen < 590
+                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -8595,7 +8638,8 @@ print('openDialog = $openDialog');
                             ),
                           ],
                         )
-                      : Row(
+                     : 
+                      Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Expanded(
@@ -8638,7 +8682,7 @@ print('openDialog = $openDialog');
 
 //zapis zasobu
               if (readyStory && !readyInfo)
-                heightScreen < 590
+                heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -8694,7 +8738,8 @@ print('openDialog = $openDialog');
                           ),
                         ],
                       )
-                    : Row(
+                   : 
+                    Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Expanded(
@@ -8754,7 +8799,7 @@ print('openDialog = $openDialog');
                       ),
 //zapis info
               if (readyInfo)
-                heightScreen < 590
+                heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape 
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -8808,7 +8853,8 @@ print('openDialog = $openDialog');
                           ),
                         ],
                       )
-                    : Row(
+                   : 
+                    Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Expanded(
@@ -8867,14 +8913,12 @@ print('openDialog = $openDialog');
 
              
             ],
-          )),
-    );
+          ));
+    return flex ? Expanded(flex: 4, child: content) : content;
   }
 
-  buildRhinoTextArea(BuildContext context) {
-    return Expanded(
-        flex: 2,
-        child: Container(
+  buildRhinoTextArea(BuildContext context, {bool flex = true}) {
+    final content = Container(
             alignment: Alignment.center,
             color: Color.fromARGB(255, 255, 255, 255),
             //margin: EdgeInsets.all(15),
@@ -8887,13 +8931,99 @@ print('openDialog = $openDialog');
                     rhinoText,
                     style: TextStyle(
                         color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
-                  )));
+                  ));
+    return flex ? Expanded(flex: 2, child: content) : content;
   }
 
-  buildErrorMessage(BuildContext context) {
+  //odświeżenie danych dla live podglądu korpusu - wywoływane po komendzie głosowej
+  //która zmienia zawartość korpusu lub wybór pasieki/ula/korpusu.
+  //Gdy rozpoczęto nowy przegląd dzisiaj - pokazuje dzisiejszy przegląd.
+  //W przeciwnym razie - ostatni istniejący przegląd "po".
+  Future<void> _refreshLiveView() async {
+    try {
+      //pobranie wszystkich dat przeglądów dla wybranego ula (posortowane DESC)
+      await getDaty(nrXXOfApiary, nrXXOfHive);
+
+      final bool todayHasReview =
+          _daty.any((d) => d.data == formattedDate);
+      if (todayHasReview) {
+        wybranaData = formattedDate; //nowy przegląd - pokaż aktualny
+      } else if (_daty.isNotEmpty) {
+        wybranaData = _daty[0].data; //najnowsza istniejąca data (ORDER BY data DESC)
+      } else {
+        wybranaData = formattedDate; //brak przeglądów - pusty widok
+      }
+
+      await getKorpusy(nrXXOfApiary, nrXXOfHive, wybranaData);
+      await Provider.of<Frames>(context, listen: false)
+          .fetchAndSetFramesForHive(nrXXOfApiary, nrXXOfHive);
+      await Provider.of<Infos>(context, listen: false)
+          .fetchAndSetInfosForHive(nrXXOfApiary, nrXXOfHive);
+      await Provider.of<Hives>(context, listen: false)
+          .fetchAndSetHives(nrXXOfApiary);
+
+      //przeliczenie rozmiarów płótna (jak w _dialogBuilderHive)
+      widthCanvas = 0;
+      highCanvas = 0;
+      for (var i = 0; i < _korpusy.length; i++) {
+        highCanvas += _korpusy[i].typ * 75 + 30;
+      }
+      final hivesData = Provider.of<Hives>(context, listen: false);
+      final hv = hivesData.items.where((h) => h.ulNr == nrXXOfHive).toList();
+      if (hv.isNotEmpty) {
+        widthCanvas = hv[0].ramek * 20 + 20;
+      }
+      if (mounted) setState(() {});
+    } catch (e) {
+      //print('_refreshLiveView error: $e');
+    }
+  }
+
+  //panel live podglądu korpusu - zamiast podpowiedzi poleceń
+  Widget buildLivePanel(BuildContext context) {
+    final framesData = Provider.of<Frames>(context, listen: false);
+    //widok "po" - pomijamy ramki usunięte (ramkaNrPo == 0), zgodnie z _dialogBuilderHive
+    final frames = framesData.items.where((fr) {
+      return fr.data == wybranaData && fr.ramkaNrPo > 0;
+    }).toList();
+    final infos = Provider.of<Infos>(context, listen: false)
+        .items.where((inf) => inf.data == wybranaData).toList();
+
+    if (_korpusy.isEmpty || frames.isEmpty || widthCanvas == 0 || highCanvas == 0) {
+      return Expanded(
+        flex: 4,
+        child: Center(
+          child: Text(AppLocalizations.of(context)!.hive,
+              style: TextStyle(color: Colors.grey, fontSize: 14)),
+        ),
+      );
+    }
     return Expanded(
-        flex: isError ? 4 : 0,
+      flex: 4,
+      child: SingleChildScrollView(
         child: Container(
+          color: Color.fromARGB(173, 173, 173, 173),
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: MyHive(
+                ulPo: true,
+                ramki: frames,
+                korpusy: _korpusy,
+                width: widthCanvas,
+                high: highCanvas,
+                informacje: infos,
+              ),
+              size: Size(widthCanvas, highCanvas),
+            ),
+          ),
+          margin: EdgeInsets.all(10),
+        ),
+      ),
+    );
+  }
+
+  buildErrorMessage(BuildContext context, {bool flex = true}) {
+    final content = Container(
             alignment: Alignment.center,
             margin: EdgeInsets.only(left: 20, right: 20, bottom: 10),
             padding: EdgeInsets.all(5),
@@ -8906,9 +9036,10 @@ print('openDialog = $openDialog');
                 : Text(
                     errorMessage,
                     style: TextStyle(color: Colors.white, fontSize: 18),
-                  )));
+                  ));
+    return flex ? Expanded(flex: isError ? 4 : 0, child: content) : content;
   }
-  
+
 }
 
 class MyHive extends CustomPainter {

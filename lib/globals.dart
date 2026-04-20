@@ -76,6 +76,8 @@ int raportIleUliNaStronie = 20; //ilość uli na stronie w raporcie zbiorów lub
 String rokRaportow = 'wszystkie'; //DateTime.now().toString().substring(0, 4); //rok wybrany w Info do raportów
 
 bool voice2 = false; //czy ma być uruchomiony voice_screen2
+bool voice2LivePodglad = false; //czy w voice_screen2 pokazywać na żywo podgląd korpusu zamiast podpowiedzi
+bool voice2LiveLandscape = false; //wymuszenie układu poziomego dla live podglądu korpusu (niezależnie od orientacji urządzenia)
 
 // Aktualności ula - widoczność kategorii (0=ukryta, 1=widoczna)
 // Pozycje: 0-ramki, 1-rodzina, 2-matka, 3-zbiory, 4-dokarmianie, 5-leczenie, 6-zdjęcia

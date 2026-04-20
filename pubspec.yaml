@@ -5,7 +5,7 @@ description: A new Flutter project.
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.9.16+86
+version: 1.9.18+88
 
 environment:
   sdk: '>=2.18.5 <3.0.0'
@@ -109,14 +109,14 @@ flutter:
     - assets/image/rain.png
     - assets/image/EN.png
     - assets/image/PL.png
-    - assets/audio/wake_word.wav
-    - assets/audio/start.wav
-    - assets/audio/listening.wav
-    - assets/audio/success.wav
-    - assets/audio/open.wav
-    - assets/audio/close.wav
-    - assets/audio/error.wav
-   # - assets/audio/sound7.mp3
+    - assets/audio/slucham.mp3
+    - assets/audio/czekam.mp3
+    - assets/audio/czekam_na_polecenia.mp3
+    - assets/audio/zapisalam.mp3
+    - assets/audio/okej.mp3
+    - assets/audio/zamkniete.mp3
+    - assets/audio/blad.mp3
+    - assets/audio/nie_rozumiem.mp3
   
   
   uses-material-design: true

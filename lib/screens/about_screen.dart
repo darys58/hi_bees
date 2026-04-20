@@ -170,6 +170,7 @@ class AboutScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 0.0),
                   child: Column(                    
                     children: [
+     //www                
                       GestureDetector(
                         onTap: () async {
                           final uri = Uri.parse('https://www.heymaya.eu');
@@ -196,7 +197,7 @@ class AboutScreen extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 22),
-                      
+     //email                 
                       GestureDetector(
                         onTap: () async {
                           final uri = Uri.parse('mailto:maya@heymaya.eu');
@@ -222,6 +223,66 @@ class AboutScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+                    
+                    SizedBox(height: 42),
+                    Text(AppLocalizations.of(context)!.sUpport),
+                    SizedBox(height: 22),
+ //patronite                     
+                      GestureDetector(
+                        onTap: () async {
+                          final uri = Uri.parse('https://patronite.pl/heymaya');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri);
+                          }
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(Icons.handshake, color: Colors.orange[700]),
+                            SizedBox(width: 12),
+                            Text(
+                              'patronite.pl/heymaya',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue[700],
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                            SizedBox(width: 18),
+                          ],
+                        ),
+                      ),
+                    
+                    SizedBox(height: 22),
+   //suppi                   
+                      GestureDetector(
+                        onTap: () async {
+                          final uri = Uri.parse('https://suppi.pl/heymaya');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri);
+                          }
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(Icons.coffee, color: Colors.orange[700]),
+                            SizedBox(width: 12),
+                            Text(
+                              'suppi.pl/heymaya',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue[700],
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                            SizedBox(width: 18),
+                          ],
+                        ),
+                      ),
+                    
+                    
                     ],
                   ),
               

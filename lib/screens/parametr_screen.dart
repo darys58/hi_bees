@@ -643,6 +643,7 @@ class _ParametrScreenState extends State<ParametrScreen> {
       case 'open': return l.soundOpen;
       case 'close': return l.soundClose;
       case 'error': return l.soundError;
+      case 'nie_rozumiem': return l.soundNieRozumiem;
       default: return name;
     }
   }
@@ -674,6 +675,36 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 ),
               ),
             ),
+            // Voice screen 2 - podgląd korpusu na żywo (zamiast podpowiedzi poleceń)
+            Card(
+              child: ListTile(
+                title: Text('Voice 2 - live korpus'),
+                subtitle: Text('Podgląd aktualizowanego korpusu w trakcie poleceń (zamiast podpowiedzi)'),
+                trailing: Switch.adaptive(
+                  value: globals.voice2LivePodglad,
+                  onChanged: (value) {
+                    setState(() {
+                      globals.voice2LivePodglad = value;
+                    });
+                  },
+                ),
+              ),
+            ),
+            // Voice screen 2 - wymuszenie układu poziomego (niezależnie od orientacji urządzenia)
+            // Card(
+            //   child: ListTile(
+            //     title: Text('Voice 2 - układ poziomy'),
+            //     subtitle: Text('Wymuś układ poziomy dla live podglądu korpusu (niezależnie od orientacji urządzenia)'),
+            //     trailing: Switch.adaptive(
+            //       value: globals.voice2LiveLandscape,
+            //       onChanged: (value) {
+            //         setState(() {
+            //           globals.voice2LiveLandscape = value;
+            //         });
+            //       },
+            //     ),
+            //   ),
+            // ),
             
             // nagłówek sekcji
             ListTile(

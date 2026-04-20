@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hi_bees/models/harvest.dart';
 import 'package:hi_bees/screens/harvest_edit_screen.dart';
 import 'package:provider/provider.dart'; //zarejestrowanie dostawcy
@@ -84,6 +85,10 @@ void main() async {
   HttpOverrides.global =
       MyHttpOverrides(); //obejście certyfikatu na stronie www
   WidgetsFlutterBinding.ensureInitialized();
+  // Globalna blokada orientacji - tylko pion (wyjątek: voice_screen2)
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   initializeDateFormatting;
   // Initializes the translation module
 //    await allTranslations.init();

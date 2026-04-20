@@ -950,25 +950,49 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // 12. Aktualizacja uli z info
               _updateProgress('${loc.rebuildingHives} (Info)...');
-              for (int i = 0; i < info.length; i++) {
-                if (info[i].parametr == loc.numberOfFrame + ' = ') {
+              const liquidationValues = {
+                'likwidacja ula', 'hive liquidation', 'liquidation der Beute',
+                'liquidation de la ruche', 'liquidacion de colmena',
+                'liquidação da colmeia', 'liquidazione arnia',
+              };
+              final infoSorted = [...info]..sort((a, b) {
+                final c = a.data.compareTo(b.data);
+                return c != 0 ? c : a.czas.compareTo(b.czas);
+              });
+              for (int i = 0; i < infoSorted.length; i++) {
+                if (infoSorted[i].parametr == loc.numberOfFrame + ' = ') {
                   await Hives.insertHive(
-                    '${info[i].pasiekaNr}.${info[i].ulNr}',
-                    info[i].pasiekaNr,
-                    info[i].ulNr,
+                    '${infoSorted[i].pasiekaNr}.${infoSorted[i].ulNr}',
+                    infoSorted[i].pasiekaNr,
+                    infoSorted[i].ulNr,
                     formattedDate,
                     'green',
-                    int.parse(info[i].wartosc),
+                    int.parse(infoSorted[i].wartosc),
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-                    info[i].pogoda,
-                    info[i].miara,
+                    infoSorted[i].pogoda,
+                    infoSorted[i].miara,
+                    '0',
+                    0,
+                  );
+                } else if (liquidationValues.contains(infoSorted[i].parametr)) {
+                  await Hives.insertHive(
+                    '${infoSorted[i].pasiekaNr}.${infoSorted[i].ulNr}',
+                    infoSorted[i].pasiekaNr,
+                    infoSorted[i].ulNr,
+                    formattedDate,
+                    'black',
+                    10,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+                    loc.hIve,
+                    '0',
                     '0',
                     0,
                   );
                 }
-                if (i % 200 == 0 || i == info.length - 1) {
-                  _setSubProgress((i + 1) / info.length, '${loc.rebuildingHives} (Info): ${i + 1}/${info.length}');
+                if (i % 200 == 0 || i == infoSorted.length - 1) {
+                  _setSubProgress((i + 1) / infoSorted.length, '${loc.rebuildingHives} (Info): ${i + 1}/${infoSorted.length}');
                   await Future.delayed(Duration.zero); //oddanie sterowania do UI
                 }
               }
@@ -1037,8 +1061,285 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
+  // Import danych za wybrany rok - serwer filtruje po parametrze &rok=YYYY
+  void _showAlertImportYear(BuildContext context) {
+    formattedDate = formatter.format(now);
+    final currentYear = DateTime.now().year;
+    int selectedYear = currentYear;
+    final years = List.generate(currentYear - 2022, (i) => currentYear - i);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(AppLocalizations.of(context)!.importYear),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(AppLocalizations.of(context)!.importYearDesc),
+                  SizedBox(height: 16),
+                  DropdownButton<int>(
+                    value: selectedYear,
+                    isExpanded: true,
+                    items: years.map((year) => DropdownMenuItem(
+                      value: year,
+                      child: Text('$year', style: TextStyle(fontSize: 18)),
+                    )).toList(),
+                    onChanged: (value) {
+                      setDialogState(() {
+                        selectedYear = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () async {
+                    if (!await _isInternet()) {
+                      Navigator.of(context).pop();
+                      _showAlertAnuluj(
+                          context,
+                          (AppLocalizations.of(context)!.brakInternetu),
+                          (AppLocalizations.of(context)!.uruchomPonownie));
+                      return;
+                    }
+
+                    final rok = '$selectedYear';
+                    final rokParam = '&rok=$rok';
+                    showProgressDialog(context, '${AppLocalizations.of(context)!.dataImport} $rok', 16);
+                    final loc = AppLocalizations.of(context)!;
+
+                    // Zapisanie tagow NFC przed importem
+                    final hivesRaw = await DBHelper.getData('ule');
+                    _nfcTags.clear();
+                    for (var hive in hivesRaw) {
+                      if (hive['h3'] != null && hive['h3'] != '0' && hive['h3'] != '') {
+                        _nfcTags[hive['id']] = hive['h3'];
+                      }
+                    }
+
+                    // 1. Import notatek
+                    _updateProgress(loc.nOtes + '...');
+                    await Notes.fetchNotatkiFromSerwer(
+                        'https://darys.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_notatki$rokParam');
+                    await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
+                    final notatki = Provider.of<Notes>(context, listen: false).items;
+                    _progressLabelNotifier.value = '${loc.nOtes}: ${notatki.length}';
+
+                    // 2. Import zakupów
+                    _updateProgress(loc.pUrchase + '...');
+                    await Purchases.fetchZakupyFromSerwer(
+                        'https://darys.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zakupy$rokParam');
+                    await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupy();
+                    final zakupy = Provider.of<Purchases>(context, listen: false).items;
+                    _progressLabelNotifier.value = '${loc.pUrchase}: ${zakupy.length}';
+
+                    // 3. Import sprzedaży
+                    _updateProgress(loc.sAle + '...');
+                    await Sales.fetchSprzedazFromSerwer(
+                        'https://darys.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_sprzedaz$rokParam');
+                    await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedaz();
+                    final sprzedaz = Provider.of<Sales>(context, listen: false).items;
+                    _progressLabelNotifier.value = '${loc.sAle}: ${sprzedaz.length}';
+
+                    // 4. Import matek
+                    _updateProgress(loc.queens + '...');
+                    await Queens.fetchQueensFromSerwer(
+                        'https://darys.pl/cbt.php?d=f_matki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_matki$rokParam');
+                    await Provider.of<Queens>(context, listen: false).fetchAndSetQueens();
+                    final matki = Provider.of<Queens>(context, listen: false).items;
+                    _progressLabelNotifier.value = '${loc.queens}: ${matki.length}';
+
+                    // 5. Import zbiorów
+                    _updateProgress(loc.harvest + '...');
+                    await Harvests.fetchZbioryFromSerwer(
+                        'https://darys.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zbiory$rokParam');
+                    await Provider.of<Harvests>(context, listen: false).fetchAndSetZbiory();
+                    final zbiory = Provider.of<Harvests>(context, listen: false).items;
+                    _progressLabelNotifier.value = '${loc.harvest}: ${zbiory.length}';
+
+                    // 6. Import zdjęć
+                    _updateProgress(loc.pHotos + '...');
+                    await Photos.fetchZdjeciaFromSerwer(
+                        'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia$rokParam');
+                    await Provider.of<Photos>(context, listen: false).fetchAndSetPhotosForHive(0, 0);
+                    _progressLabelNotifier.value = loc.pHotos;
+
+                    // 7. Pobieranie ramek z serwera
+                    _updateProgress('${loc.downloading} ${loc.frames}...');
+                    final ramkiEntries = await Frames.downloadFramesFromSerwer(
+                        'https://darys.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_ramka$rokParam');
+                    _progressLabelNotifier.value = '${loc.downloading} ${loc.frames}: ${ramkiEntries.length}';
+
+                    // 8. Zapis ramek do bazy z sub-progressem
+                    final ramkiCount = await Frames.saveFramesToDb(ramkiEntries,
+                        onProgress: (current, total) {
+                          _setSubProgress(current / total, '${loc.savingToDb} ${loc.frames}: $current/$total');
+                        },
+                    );
+                    _updateProgress('${loc.frames}: $ramkiCount');
+                    await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
+                    final ramki = Provider.of<Frames>(context, listen: false).items;
+
+                    // 9. Odbudowa uli z ramek
+                    _updateProgress('${loc.rebuildingHives} (${loc.frames})...');
+                    for (int i = 0; i < ramki.length; i++) {
+                      await Hives.insertHive(
+                        '${ramki[i].pasiekaNr}.${ramki[i].ulNr}',
+                        ramki[i].pasiekaNr,
+                        ramki[i].ulNr,
+                        formattedDate,
+                        'green',
+                        10,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+                        loc.hIve,
+                        '0',
+                        '0',
+                        0,
+                      );
+                      if (i % 500 == 0 || i == ramki.length - 1) {
+                        _setSubProgress((i + 1) / ramki.length, '${loc.rebuildingHives} (${loc.frames}): ${i + 1}/${ramki.length}');
+                        await Future.delayed(Duration.zero);
+                      }
+                    }
+
+                    // 10. Pobieranie info z serwera
+                    _updateProgress('${loc.downloading} Info...');
+                    final infoEntries = await Infos.downloadInfosFromSerwer(
+                        'https://darys.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_info$rokParam');
+                    _progressLabelNotifier.value = '${loc.downloading} Info: ${infoEntries.length}';
+
+                    // 11. Zapis info do bazy z sub-progressem
+                    final infoCount = await Infos.saveInfosToDb(infoEntries,
+                        onProgress: (current, total) {
+                          _setSubProgress(current / total, '${loc.savingToDb} Info: $current/$total');
+                        },
+                    );
+                    _updateProgress('Info: $infoCount');
+                    await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
+                    final info = Provider.of<Infos>(context, listen: false).items;
+
+                    // 12. Aktualizacja uli z info
+                    _updateProgress('${loc.rebuildingHives} (Info)...');
+                    const liquidationValues = {
+                      'likwidacja ula', 'hive liquidation', 'liquidation der Beute',
+                      'liquidation de la ruche', 'liquidacion de colmena',
+                      'liquidação da colmeia', 'liquidazione arnia',
+                    };
+                    final infoSorted = [...info]..sort((a, b) {
+                      final c = a.data.compareTo(b.data);
+                      return c != 0 ? c : a.czas.compareTo(b.czas);
+                    });
+                    for (int i = 0; i < infoSorted.length; i++) {
+                      if (infoSorted[i].parametr == loc.numberOfFrame + ' = ') {
+                        await Hives.insertHive(
+                          '${infoSorted[i].pasiekaNr}.${infoSorted[i].ulNr}',
+                          infoSorted[i].pasiekaNr,
+                          infoSorted[i].ulNr,
+                          formattedDate,
+                          'green',
+                          int.parse(infoSorted[i].wartosc),
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+                          infoSorted[i].pogoda,
+                          infoSorted[i].miara,
+                          '0',
+                          0,
+                        );
+                      } else if (liquidationValues.contains(infoSorted[i].parametr)) {
+                        await Hives.insertHive(
+                          '${infoSorted[i].pasiekaNr}.${infoSorted[i].ulNr}',
+                          infoSorted[i].pasiekaNr,
+                          infoSorted[i].ulNr,
+                          formattedDate,
+                          'black',
+                          10,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+                          loc.hIve,
+                          '0',
+                          '0',
+                          0,
+                        );
+                      }
+                      if (i % 200 == 0 || i == infoSorted.length - 1) {
+                        _setSubProgress((i + 1) / infoSorted.length, '${loc.rebuildingHives} (Info): ${i + 1}/${infoSorted.length}');
+                        await Future.delayed(Duration.zero);
+                      }
+                    }
+
+                    // 13. Ładowanie uli
+                    _updateProgress(loc.rebuildingHives + '...');
+                    await Provider.of<Hives>(context, listen: false).fetchAndSetHivesAll();
+                    final hives = Provider.of<Hives>(context, listen: false).items;
+                    _progressLabelNotifier.value = '${loc.rebuildingHives}: ${hives.length}';
+                    await Future.delayed(const Duration(milliseconds: 500));
+
+                    // 14. Odbudowa pasiek
+                    _updateProgress(loc.rebuildingApiaries + '...');
+                    for (int i = 0; i < hives.length; i++) {
+                      await Apiarys.insertApiary(
+                        '${hives[i].pasiekaNr}',
+                        hives[i].pasiekaNr,
+                        0,
+                        formattedDate,
+                        'green',
+                        '??',
+                      );
+                    }
+                    globals.odswiezBelkiUli = true;
+                    _progressLabelNotifier.value = '${loc.rebuildingApiaries}: ${hives.length}';
+                    await Future.delayed(const Duration(milliseconds: 500));
+
+                    // 15. Przywrócenie tagów NFC
+                    _updateProgress('NFC...');
+                    for (var entry in _nfcTags.entries) {
+                      await DBHelper.updateUle(entry.key, 'h3', entry.value);
+                    }
+                    _progressLabelNotifier.value = 'NFC: ${_nfcTags.length}';
+                    await Future.delayed(const Duration(milliseconds: 500));
+
+                    // 16. Finalizacja
+                    _updateProgress(loc.finalization + '...');
+                    await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
+                    await Future.delayed(const Duration(milliseconds: 500));
+
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                        ApiarysScreen.routeName,
+                        ModalRoute.withName(ApiarysScreen.routeName));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${AppLocalizations.of(context)!.importEnd} ($rok)'),
+                      ),
+                    );
+                  },
+                  child: Text(AppLocalizations.of(context)!.importuj),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+              ],
+              elevation: 24.0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+            );
+          },
+        );
+      },
+      barrierDismissible: false,
+    );
+  }
+
   //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async { 
+  Future<bool> _isInternet() async {
     final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult.contains(ConnectivityResult.mobile)) {
       // Mobile network available.
@@ -3317,6 +3618,19 @@ class _ImportScreenState extends State<ImportScreen> {
                   title: Text(AppLocalizations.of(context)!.import, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(AppLocalizations.of(context)!.dopisanieDoBazy),//Text(komunikat),
                   //trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
+
+//import danych za wybrany rok
+            GestureDetector(
+              onTap: () {
+                _showAlertImportYear(context);
+              },
+              child: Card(
+                child: ListTile(
+                  title: Text(AppLocalizations.of(context)!.importYear, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(AppLocalizations.of(context)!.importYearSubtitle),
                 ),
               ),
             ),

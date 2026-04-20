@@ -21,7 +21,20 @@ class SoundHelper {
     'open',
     'close',
     'error',
+    'nie_rozumiem',
   ];
+
+  /// Mapowanie nazw dźwięków na pliki MP3.
+  static const Map<String, String> _soundFiles = {
+    'wake_word': 'slucham.mp3',
+    'start': 'czekam_na_polecenia.mp3',
+    'listening': 'czekam.mp3',
+    'success': 'zapisalam.mp3',
+    'open': 'okej.mp3',
+    'close': 'zamkniete.mp3',
+    'error': 'blad.mp3',
+    'nie_rozumiem': 'nie_rozumiem.mp3',
+  };
 
   /// Głośności poszczególnych dźwięków (0.0 - 1.0).
   /// Można zmieniać w runtime.
@@ -33,6 +46,7 @@ class SoundHelper {
     'open': 0.8,
     'close': 0.8,
     'error': 1.0,
+    'nie_rozumiem': 0.9,
   };
 
   /// Główna głośność (mnożnik dla wszystkich dźwięków).
@@ -44,7 +58,7 @@ class SoundHelper {
     if (_initialized) return;
     for (final name in soundNames) {
       final player = AudioPlayer();
-      await player.setSource(AssetSource('audio/$name.wav'));
+      await player.setSource(AssetSource('audio/${_soundFiles[name]}'));
       await player.setReleaseMode(ReleaseMode.stop);
       _players[name] = player;
     }
