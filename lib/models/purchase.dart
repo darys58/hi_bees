@@ -40,9 +40,8 @@ class Purchases with ChangeNotifier {
     return [..._items];
   }
 
-   //pobranie zakupy z serwera www
+   //pobranie zakupy z serwera www - batch SQLite
   static Future<void> fetchZakupyFromSerwer(String url) async {
-    //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
       //wycinamy sam JSON z odpowiedzi (serwer moze dodać tekst po JSON)
@@ -52,14 +51,11 @@ class Purchases with ChangeNotifier {
         body = body.substring(0, jsonEnd + 1);
       }
       final extractedData = json.decode(body) as Map<String, dynamic>;
-      // if (extractedData == null) {
-      //   return;
-      // }
-      
+
+      final rows = <Map<String, Object?>>[];
       extractedData.forEach((zakupyId, zakupyData) {
         if (zakupyId != 'brak') {//jezeli są wpisy a tabeli zakupy_xxxx
-          //zapis do bazy
-          DBHelper.insert('zakupy', {
+          rows.add({
             'id': zakupyId,
             'data': zakupyData['za_data'],
             'pasiekaNr': zakupyData['za_pasiekaNr'],
@@ -75,6 +71,7 @@ class Purchases with ChangeNotifier {
           });
         }
       });
+      await DBHelper.batchInsert('zakupy', rows);
     } catch (error) {
       throw (error);
     }

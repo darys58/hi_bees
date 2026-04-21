@@ -40,9 +40,8 @@ class Sales with ChangeNotifier {
     return [..._items];
   }
 
-   //pobranie sprzedazy z serwera www
+   //pobranie sprzedazy z serwera www - batch SQLite
   static Future<void> fetchSprzedazFromSerwer(String url) async {
-    //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
       //wycinamy sam JSON z odpowiedzi (serwer moze dodać tekst po JSON)
@@ -52,14 +51,11 @@ class Sales with ChangeNotifier {
         body = body.substring(0, jsonEnd + 1);
       }
       final extractedData = json.decode(body) as Map<String, dynamic>;
-      // if (extractedData == null) {
-      //   return;
-      // }
-      
+
+      final rows = <Map<String, Object?>>[];
       extractedData.forEach((sprzedazId, sprzedazData) {
         if (sprzedazId != 'brak') {//jezeli są wpisy a tabeli sprzedaz_xxxx
-          //zapis do bazy
-          DBHelper.insert('sprzedaz', {
+          rows.add({
             'id': sprzedazId,
             'data': sprzedazData['sp_data'],
             'pasiekaNr': sprzedazData['sp_pasiekaNr'],
@@ -75,6 +71,7 @@ class Sales with ChangeNotifier {
           });
         }
       });
+      await DBHelper.batchInsert('sprzedaz', rows);
     } catch (error) {
       throw (error);
     }

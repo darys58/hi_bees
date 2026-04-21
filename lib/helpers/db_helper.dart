@@ -89,6 +89,32 @@ class DBHelper {
     );
   }
 
+  //batch insert z konfliktem REPLACE, commit w chunkach - używane przy imporcie
+  //chunkSize 500 = jeden commit = jeden fsync na 500 rekordów zamiast 1:1
+  static Future<int> batchInsert(
+    String table,
+    List<Map<String, Object?>> rows, {
+    int chunkSize = 500,
+    void Function(int current, int total)? onProgress,
+  }) async {
+    final total = rows.length;
+    if (total == 0) return 0;
+    final db = await DBHelper.database();
+    for (int i = 0; i < total; i += chunkSize) {
+      final end = (i + chunkSize < total) ? i + chunkSize : total;
+      final batch = db.batch();
+      for (int j = i; j < end; j++) {
+        batch.insert(table, rows[j], conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      await batch.commit(noResult: true);
+      if (onProgress != null) {
+        onProgress(end, total);
+        await Future.delayed(Duration.zero);
+      }
+    }
+    return total;
+  }
+
   //odczyt z bazy całej tabeli
   static Future<List<Map<dynamic, dynamic>>> getData(String table) async {
     final db = await DBHelper.database();
@@ -262,6 +288,17 @@ class DBHelper {
     final db = await DBHelper.database();
     //print('db_helpers: update ule $id: pole = $pole , wartość = $wartosc ');
     db.update('ule', {'$pole': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  //batch update pojedynczego pola w tabeli ule - używane przy przywracaniu tagów NFC po imporcie
+  static Future<void> batchUpdateUleField(String field, Map<String, String> entries) async {
+    if (entries.isEmpty) return;
+    final db = await DBHelper.database();
+    final batch = db.batch();
+    for (final entry in entries.entries) {
+      batch.update('ule', {field: entry.value}, where: 'id = ?', whereArgs: [entry.key]);
+    }
+    await batch.commit(noResult: true);
   }
   
   //update ula w tabeli ule - info o matce1 - dla hives_screen

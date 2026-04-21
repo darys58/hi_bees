@@ -37,9 +37,8 @@ class Harvests with ChangeNotifier {
     return [..._items];
   }
 
-  //pobranie zbiorów z serwera www
+  //pobranie zbiorów z serwera www - batch SQLite
   static Future<void> fetchZbioryFromSerwer(String url) async {
-    //const url = 'https://cobytu.com/cbt.php?d=f_dania&uz_id=&woj_id=14&mia_id=1&rest=&lang=pl';
     try {
       final response = await http.get(Uri.parse(url));
       //wycinamy sam JSON z odpowiedzi (serwer moze dodać tekst po JSON)
@@ -49,14 +48,11 @@ class Harvests with ChangeNotifier {
         body = body.substring(0, jsonEnd + 1);
       }
       final extractedData = json.decode(body) as Map<String, dynamic>;
-      // if (extractedData == null) {
-      //   return;
-      // }
 
+      final rows = <Map<String, Object?>>[];
       extractedData.forEach((zbioryId, zbioryData) {
         if (zbioryId != 'brak') {//jezeli są wpisy a tabeli zbiory_xxxx
-          //zapis do bazy
-          DBHelper.insert('zbiory', {
+          rows.add({
             'id': zbioryId,
             'data': zbioryData['zb_data'],
             'pasiekaNr': zbioryData['zb_pasiekaNr'],
@@ -70,6 +66,7 @@ class Harvests with ChangeNotifier {
           });
         }
       });
+      await DBHelper.batchInsert('zbiory', rows);
     } catch (error) {
       throw (error);
     }

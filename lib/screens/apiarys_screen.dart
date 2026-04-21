@@ -137,9 +137,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.16.86 26.03.2026 - odejmownie zlikwidowanych uli od ogólnej ilości uli w pasiece (Pasieka - ilość uli), notatki bez wymuszania numeru pasieki, wiele kalendarzy wychowu matek, personalizacja ekranu Aktualności ula (summary), korekty wagi 1 dm2 dla kazdego Zbioru miodu, tłumaczenia Legendy w frames_scren.dart
   //1.9.17.87 12.04.2026 - poprawki przy wprowadzaniu wagi 1dm2 w zbiorach miodu, import danych z wybranego roku, sprawdzanie po imporcie danych czy ul nie jest zlikwidowany, podgląd korpusu na zywo w voice_screen2,
   //1.9.18.88 17.04.2026 - układ poziomy dla voice_screen, pliki głosowe mp3, wsparcie na patronite i suppi
-
-  final wersja = '1.9.18.88'; //wersja aplikacji na iOS
-  final dataWersji = '2026-04-17';
+  //1.9.19.89 21.04.2026 - poprawka przy rysowaniu podglądu korpusu online w voice_scren2, Optymalizacja importu i odbudowy uli przy imporcie (SQL DISTINCT + batch SQLite), batch SQLite dla zapisu ramek i info (saveFramesToDb, saveInfosToDb), batch SQLite dla NFC, usunięcie martwych sub-progressów i sztucznych delayów, batch SQLite dla notatek, zakupów, sprzedaży, matek i zbiorów
+ 
+  final wersja = '1.9.19.89'; //wersja aplikacji na iOS
+  final dataWersji = '2026-04-21';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;

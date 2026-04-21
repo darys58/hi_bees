@@ -914,7 +914,7 @@ class _ImportScreenState extends State<ImportScreen> {
                 formattedDate: formattedDate,
                 hiveLabel: loc.hIve,
               );
-              _setSubProgress(1.0, '${loc.rebuildingHives} (${loc.frames}): $odbudowaneUle');
+              _progressLabelNotifier.value = '${loc.rebuildingHives} (${loc.frames}): $odbudowaneUle';
 
               // 10. Pobieranie info z serwera
               _updateProgress('${loc.downloading} Info...');
@@ -944,14 +944,12 @@ class _ImportScreenState extends State<ImportScreen> {
                 formattedDate: formattedDate,
                 hiveLabel: loc.hIve,
               );
-              _setSubProgress(1.0, '${loc.rebuildingHives} (Info)');
 
               // 13. Ładowanie uli
               _updateProgress(loc.rebuildingHives + '...');
               await Provider.of<Hives>(context, listen: false).fetchAndSetHivesAll();
               final hives = Provider.of<Hives>(context, listen: false).items;
               _progressLabelNotifier.value = '${loc.rebuildingHives}: ${hives.length}';
-              await Future.delayed(const Duration(milliseconds: 500));
 
               // 14. Odbudowa pasiek (SQL DISTINCT + batch)
               _updateProgress(loc.rebuildingApiaries + '...');
@@ -960,20 +958,15 @@ class _ImportScreenState extends State<ImportScreen> {
               );
               globals.odswiezBelkiUli = true;
               _progressLabelNotifier.value = '${loc.rebuildingApiaries}: $odbudowanePasieki';
-              await Future.delayed(const Duration(milliseconds: 500));
 
-              // 15. Przywrócenie tagów NFC
+              // 15. Przywrócenie tagów NFC (batch)
               _updateProgress('NFC...');
-              for (var entry in _nfcTags.entries) {
-                await DBHelper.updateUle(entry.key, 'h3', entry.value);
-              }
+              await DBHelper.batchUpdateUleField('h3', _nfcTags);
               _progressLabelNotifier.value = 'NFC: ${_nfcTags.length}';
-              await Future.delayed(const Duration(milliseconds: 500));
 
               // 16. Finalizacja - pobranie pasiek
               _updateProgress(loc.finalization + '...');
               await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
-              await Future.delayed(const Duration(milliseconds: 500));
 
               // Nawigacja do ekranu głównego
               Navigator.of(context).pushNamedAndRemoveUntil(
@@ -1131,7 +1124,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       formattedDate: formattedDate,
                       hiveLabel: loc.hIve,
                     );
-                    _setSubProgress(1.0, '${loc.rebuildingHives} (${loc.frames}): $odbudowaneUle');
+                    _progressLabelNotifier.value = '${loc.rebuildingHives} (${loc.frames}): $odbudowaneUle';
 
                     // 10. Pobieranie info z serwera
                     _updateProgress('${loc.downloading} Info...');
@@ -1161,14 +1154,12 @@ class _ImportScreenState extends State<ImportScreen> {
                       formattedDate: formattedDate,
                       hiveLabel: loc.hIve,
                     );
-                    _setSubProgress(1.0, '${loc.rebuildingHives} (Info)');
 
                     // 13. Ładowanie uli
                     _updateProgress(loc.rebuildingHives + '...');
                     await Provider.of<Hives>(context, listen: false).fetchAndSetHivesAll();
                     final hives = Provider.of<Hives>(context, listen: false).items;
                     _progressLabelNotifier.value = '${loc.rebuildingHives}: ${hives.length}';
-                    await Future.delayed(const Duration(milliseconds: 500));
 
                     // 14. Odbudowa pasiek (SQL DISTINCT + batch)
                     _updateProgress(loc.rebuildingApiaries + '...');
@@ -1177,20 +1168,15 @@ class _ImportScreenState extends State<ImportScreen> {
                     );
                     globals.odswiezBelkiUli = true;
                     _progressLabelNotifier.value = '${loc.rebuildingApiaries}: $odbudowanePasieki';
-                    await Future.delayed(const Duration(milliseconds: 500));
 
-                    // 15. Przywrócenie tagów NFC
+                    // 15. Przywrócenie tagów NFC (batch)
                     _updateProgress('NFC...');
-                    for (var entry in _nfcTags.entries) {
-                      await DBHelper.updateUle(entry.key, 'h3', entry.value);
-                    }
+                    await DBHelper.batchUpdateUleField('h3', _nfcTags);
                     _progressLabelNotifier.value = 'NFC: ${_nfcTags.length}';
-                    await Future.delayed(const Duration(milliseconds: 500));
 
                     // 16. Finalizacja
                     _updateProgress(loc.finalization + '...');
                     await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
-                    await Future.delayed(const Duration(milliseconds: 500));
 
                     Navigator.of(context).pushNamedAndRemoveUntil(
                         ApiarysScreen.routeName,

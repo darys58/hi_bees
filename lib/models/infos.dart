@@ -27,33 +27,24 @@ class Infos with ChangeNotifier {
     return extractedData.entries.where((e) => e.key != 'brak').toList();
   }
 
-  //zapis pobranych info do bazy lokalnej z progressem
+  //zapis pobranych info do bazy lokalnej - batch SQLite (chunki po 500) z progressem
   static Future<int> saveInfosToDb(List<MapEntry<String, dynamic>> entries, {Function(int current, int total)? onProgress}) async {
-    final total = entries.length;
-    int current = 0;
-    for (var entry in entries) {
-      DBHelper.insert('info', {
-        'id': entry.key,
-        'data': entry.value['in_data'],
-        'pasiekaNr': entry.value['in_pasiekaNr'],
-        'ulNr': entry.value['in_ulNr'],
-        'kategoria': entry.value['in_kategoria'],
-        'parametr': entry.value['in_parametr'],
-        'wartosc': entry.value['in_wartosc'],
-        'miara': entry.value['in_miara'],
-        'pogoda': entry.value['in_pogoda'],
-        'temp': entry.value['in_temp'],
-        'czas': entry.value['in_czas'],
-        'uwagi': entry.value['in_uwagi'],
-        'arch': 2,
-      });
-      current++;
-      if (onProgress != null && (current % 100 == 0 || current == total)) {
-        onProgress(current, total);
-        await Future.delayed(Duration.zero); //oddanie sterowania do UI
-      }
-    }
-    return total;
+    final rows = entries.map((entry) => <String, Object?>{
+      'id': entry.key,
+      'data': entry.value['in_data'],
+      'pasiekaNr': entry.value['in_pasiekaNr'],
+      'ulNr': entry.value['in_ulNr'],
+      'kategoria': entry.value['in_kategoria'],
+      'parametr': entry.value['in_parametr'],
+      'wartosc': entry.value['in_wartosc'],
+      'miara': entry.value['in_miara'],
+      'pogoda': entry.value['in_pogoda'],
+      'temp': entry.value['in_temp'],
+      'czas': entry.value['in_czas'],
+      'uwagi': entry.value['in_uwagi'],
+      'arch': 2,
+    }).toList();
+    return DBHelper.batchInsert('info', rows, onProgress: onProgress);
   }
 
 

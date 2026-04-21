@@ -34,33 +34,24 @@ class Frames with ChangeNotifier {
     return extractedData.entries.where((e) => e.key != 'brak').toList();
   }
 
-  //zapis pobranych ramek do bazy lokalnej z progressem
+  //zapis pobranych ramek do bazy lokalnej - batch SQLite (chunki po 500) z progressem
   static Future<int> saveFramesToDb(List<MapEntry<String, dynamic>> entries, {Function(int current, int total)? onProgress}) async {
-    final total = entries.length;
-    int current = 0;
-    for (var entry in entries) {
-      DBHelper.insert('ramka', {
-        'id': entry.key,
-        'data': entry.value['ra_data'],
-        'pasiekaNr': entry.value['ra_pasiekaNr'],
-        'ulNr': entry.value['ra_ulNr'],
-        'korpusNr': entry.value['ra_korpusNr'],
-        'typ': entry.value['ra_typ'],
-        'ramkaNr': entry.value['ra_ramkaNr'],
-        'ramkaNrPo': entry.value['ra_ramkaNrPo'],
-        'rozmiar': entry.value['ra_rozmiar'],
-        'strona': entry.value['ra_strona'],
-        'zasob': entry.value['ra_zasob'],
-        'wartosc': entry.value['ra_wartosc'],
-        'arch': 2,
-      });
-      current++;
-      if (onProgress != null && (current % 100 == 0 || current == total)) {
-        onProgress(current, total);
-        await Future.delayed(Duration.zero); //oddanie sterowania do UI
-      }
-    }
-    return total;
+    final rows = entries.map((entry) => <String, Object?>{
+      'id': entry.key,
+      'data': entry.value['ra_data'],
+      'pasiekaNr': entry.value['ra_pasiekaNr'],
+      'ulNr': entry.value['ra_ulNr'],
+      'korpusNr': entry.value['ra_korpusNr'],
+      'typ': entry.value['ra_typ'],
+      'ramkaNr': entry.value['ra_ramkaNr'],
+      'ramkaNrPo': entry.value['ra_ramkaNrPo'],
+      'rozmiar': entry.value['ra_rozmiar'],
+      'strona': entry.value['ra_strona'],
+      'zasob': entry.value['ra_zasob'],
+      'wartosc': entry.value['ra_wartosc'],
+      'arch': 2,
+    }).toList();
+    return DBHelper.batchInsert('ramka', rows, onProgress: onProgress);
   }
 
 //pobranie wszystkich wpisów o ramce z bazy lokalnej
