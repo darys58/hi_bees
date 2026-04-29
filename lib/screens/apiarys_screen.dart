@@ -139,9 +139,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.18.88 17.04.2026 - układ poziomy dla voice_screen, pliki głosowe mp3, wsparcie na patronite i suppi
   //1.9.19.89 22.04.2026 - poprawki przy rysowaniu podglądu korpusu online w voice_scren2, Optymalizacja importu i odbudowy uli przy imporcie (SQL DISTINCT + batch SQLite), batch SQLite dla zapisu ramek i info (saveFramesToDb, saveInfosToDb), batch SQLite dla NFC, usunięcie martwych sub-progressów i sztucznych delayów, batch SQLite dla notatek, zakupów, sprzedaży, matek i zbiorów
   //1.10.20.90 24.04.2026 - konfiguracja języków w XCode zeby poprawnie wyswietlały sie w AppStore, poprawki wyswietlania korpusu online w voice_screen2
-  
-  final wersja = '1.10.20.90'; //wersja aplikacji na iOS
-  final dataWersji = '2026-04-24';
+  //1.10.21.91 29.04.2026 - przygotowanie do upgrade Xcode 26: deployment target iOS 15, PrivacyInfo.xcprivacy, Dart 3 SDK constraint, Flutter 3.32+, checklist UPGRADE_XCODE_26.md
+
+  final wersja = '1.10.21.91'; //wersja aplikacji na iOS
+  final dataWersji = '2026-04-29';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;
