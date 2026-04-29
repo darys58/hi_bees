@@ -1,0 +1,5 @@
+"CFBundleDisplayName" = "Hey Maya";
+"NFCReaderUsageDescription" = "La aplicación usa NFC para leer etiquetas";
+"NSCameraUsageDescription" = "La aplicación necesita acceso a la cámara para tomar fotos de las colmenas";
+"NSMicrophoneUsageDescription" = "Para el reconocimiento de voz";
+"NSPhotoLibraryUsageDescription" = "La aplicación necesita acceso a las fotos para seleccionar una foto de la colmena";
