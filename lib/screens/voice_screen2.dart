@@ -17,8 +17,9 @@ import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:hi_bees/helpers/db_helper.dart';
 import 'package:provider/provider.dart';
 import '../helpers/sound_helper.dart';
+import 'package:flutter_beep/flutter_beep.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:rhino_flutter/rhino.dart';
 import 'package:picovoice_flutter/picovoice_error.dart';
 import 'package:picovoice_flutter/picovoice_manager.dart';
@@ -70,6 +71,8 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
   PicovoiceManager? _picovoiceManager;
   Timer? _inferenceTimer; //timer zastępujący Future.delayed - anulowalny przy nowej komendzie
   bool _isInferenceProcessing = false; //flaga blokująca przetwarzanie nowej komendy dopóki stara się nie skończy
+  //flaga odroczonego dźwięku 'okej' - gra się dopiero po pętli slotów, jezeli 'zapisałam' (success) nie wyparł go
+  bool _pendingOpenBeep = false;
   double heightScreen = 601;
   bool czyJesWidget = false;
   // String rhinoModelPath = 'assets/models/rhino_params_pl.pv';
@@ -270,7 +273,7 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
     // readyFrames = false; //ustalony zakres kilku ramek
     
     // nrXXOfApiary = 1; //numer pasieki
-    // nrXXOfHive = 666;
+    // nrXXOfHive = 1;
     // nrXOfBody = 1;
     // nrXXOdFrame = 0;
     // nrXXDoFrame = 0;
@@ -436,7 +439,11 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
     setState(() {
       wakeWordDetected = true;
       rhinoText = AppLocalizations.of(context)!.hiBeesDetected;
-      _sound.play('wake_word');
+      //krótki sygnał systemowy zamiast słucham.mp3 - Rhino nasłuchuje komendy
+      //i odtworzenie mowy z głośnika byłoby błędnie interpretowane jako intencja
+      Platform.isAndroid
+          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
+          : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
     });
   }
 
@@ -483,7 +490,10 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
         if (wakeWordDetected) {
           //jest wybudzenie - usłyszano hej Maja w trakcie oczekiwania
           rhinoText = AppLocalizations.of(context)!.hiBeesDetected;
-          _sound.play('wake_word');
+          //krótki sygnał systemowy - Rhino właśnie zaczął nasłuch nowej komendy
+          Platform.isAndroid
+              ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
+              : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
         } else {
           //powrót do oczekiwania na wybudzenie
           setState(() {
@@ -511,6 +521,7 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
   }
 
   String prettyPrintInference(RhinoInference inference) {
+    _pendingOpenBeep = false; //reset przed każdą nową inferencją - zabezpieczenie przed stanem z poprzedniej komendy
     if (siteOfFrame == '0') siteOfFrame = AppLocalizations.of(context)!.both;
     if (sizeOfFrame == '0') sizeOfFrame = AppLocalizations.of(context)!.big;
     String printText = ""; //ogólny - intent
@@ -4139,8 +4150,12 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
           break;
       } //od switch intent
     } //od if (inference.isUnderstood!)
- 
-    print('wynik = $printText');  
+
+    //koniec przetwarzania inferencji - odtwórz odroczone 'okej' jezeli nic go nie wyparło
+    //(zapisałam/zamknięte/błąd kasują odroczone 'okej', dzięki czemu nie słychać podwójnych dźwięków)
+    _flushPendingOpenBeep();
+
+    print('wynik = $printText');
     return printText;
   }
 
@@ -4884,12 +4899,12 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
     //     '', //uwagi
     //     0); //niezarchiwizowane
 
-    _sound.play('success');
+    _playSuccess();
     //print('beep - success - insertInfo - zapis info do bazy');
 
   }
 
-  
+
   /** ZAPIS INFO DO BAZY */
 
   //info(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ileUli INTEGER, data TEXT, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, uwagi TEXT)');
@@ -5009,9 +5024,9 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
           }
         }
       });
-      _sound.play('success');
+      _playSuccess();
       //print('beep - success - zapis ula do bazy');
-     
+
     } else {
       //** WAPIS DLA JEDNEGO ula */
 
@@ -5281,11 +5296,11 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
           });
         });
       });
-      _sound.play('success');
+      _playSuccess();
          // print('beep - success - zapis Info do bazy');
 
       }else{
-        _sound.play('success');
+        _playSuccess();
           // print('beep - success - zapis Info do bazy');
       }
     }
@@ -5442,15 +5457,33 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
   beep(m) {
     switch (m) {
       case 'close':
+        _pendingOpenBeep = false; //zamknięcie kasuje odroczone 'okej'
         _sound.play('close');
         break;
       case 'open':
-        _sound.play('open');
-        //print('beep - "open"');
+        //nie gramy od razu - odraczamy do końca przetwarzania inferencji
+        //dzięki temu gdy po pętli slotów pojawi się 'zapisałam' (success),
+        //nie usłyszymy 'okej' + 'zapisałam' tylko samo 'zapisałam'
+        _pendingOpenBeep = true;
         break;
       case 'error':
+        _pendingOpenBeep = false; //błąd kasuje odroczone 'okej'
         _sound.play('nie_rozumiem');
         break;
+    }
+  }
+
+  //odtwórz 'zapisałam' i skasuj ewentualne odroczone 'okej' (zapisałam je wypiera)
+  void _playSuccess() {
+    _pendingOpenBeep = false;
+    _sound.play('success');
+  }
+
+  //odtwórz odroczone 'okej' jezeli nic innego go nie wyparło
+  void _flushPendingOpenBeep() {
+    if (_pendingOpenBeep) {
+      _pendingOpenBeep = false;
+      _sound.play('open');
     }
   }
 
@@ -7882,8 +7915,10 @@ print('openDialog = $openDialog');
                 children: [
                   buildAnswerArea(context),
                   //buildStartButton(context),
-                  if (globals.voice2LivePodglad)
-                    buildLivePanel(context)
+                  if (globals.voice2LivePodglad) ...[
+                    const SizedBox(height: 35), //odstęp od sekcji informacyjnej, by tła się nie nakładały
+                    buildLivePanel(context),
+                  ]
                   else ...[
                     buildRhinoTextArea(context),
                     buildErrorMessage(context),
@@ -8989,7 +9024,7 @@ print('openDialog = $openDialog');
     final infos = Provider.of<Infos>(context, listen: false)
         .items.where((inf) => inf.data == wybranaData).toList();
 
-    if (_korpusy.isEmpty || frames.isEmpty || widthCanvas == 0 || highCanvas == 0) {
+    if (_korpusy.isEmpty || frames.isEmpty || widthCanvas == 0) {
       return Expanded(
         flex: 4,
         child: Center(
@@ -8998,25 +9033,55 @@ print('openDialog = $openDialog');
         ),
       );
     }
+
+    //tylko aktualnie modyfikowany korpus - przy orientacji poziomej dwa się nie mieszczą
+    int activeKorpusNr = nrXOfBody != 0 ? nrXOfBody : nrXOfHalfBody;
+    //jezeli brak wyboru albo wybrany numer nie istnieje - pokaż najwyższy (ostatnio dodany)
+    if (activeKorpusNr == 0 ||
+        !_korpusy.any((k) => k.korpusNr == activeKorpusNr)) {
+      activeKorpusNr = _korpusy
+          .map((k) => k.korpusNr)
+          .reduce((a, b) => a > b ? a : b);
+    }
+    final activeKorpus =
+        _korpusy.where((k) => k.korpusNr == activeKorpusNr).toList();
+    final activeFrames =
+        frames.where((f) => f.korpusNr == activeKorpusNr).toList();
+
+    if (activeKorpus.isEmpty || activeFrames.isEmpty) {
+      return Expanded(
+        flex: 4,
+        child: Center(
+          child: Text(AppLocalizations.of(context)!.hive,
+              style: TextStyle(color: Colors.grey, fontSize: 14)),
+        ),
+      );
+    }
+
+    final activeHigh = activeKorpus[0].typ * 75 + 30; //wysokość pojedynczego korpusu
+
     return Expanded(
       flex: 4,
       child: SingleChildScrollView(
         child: Container(
-          color: Color.fromARGB(173, 173, 173, 173),
-          child: RepaintBoundary(
-            child: CustomPaint(
-              painter: MyHive(
-                ulPo: true,
-                ramki: frames,
-                korpusy: _korpusy,
-                width: widthCanvas,
-                high: highCanvas,
-                informacje: infos,
+          margin: EdgeInsets.all(10),
+          padding: EdgeInsets.only(top: 10), //odstęp na numery ramek rysowane nad obrysem korpusu
+          child: Container(
+            color: Color.fromARGB(173, 173, 173, 173),
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: MyHive(
+                  ulPo: true,
+                  ramki: activeFrames,
+                  korpusy: activeKorpus,
+                  width: widthCanvas,
+                  high: activeHigh.toDouble(),
+                  informacje: infos,
+                ),
+                size: Size(widthCanvas, activeHigh.toDouble()),
               ),
-              size: Size(widthCanvas, highCanvas),
             ),
           ),
-          margin: EdgeInsets.all(10),
         ),
       ),
     );
