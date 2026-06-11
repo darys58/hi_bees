@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:share_plus/share_plus.dart';
 //import '../models/hive.dart';
 import '../models/hives.dart';
@@ -33,7 +33,9 @@ class _SummaryScreenState extends State<SummaryScreen> {
   Info? _lastFeeding;
   Info? _lastTreatment;
   double _lastHarvestHoneyKg = 0;
-  String _lastHarvestDate = '';
+  String _lastHarvestHoneyDate = '';
+  double _lastHarvestPollenL = 0;
+  String _lastHarvestPollenDate = '';
   List<Note> _hiveNotes = [];
   List<Photo> _photos = [];
 
@@ -116,26 +118,39 @@ class _SummaryScreenState extends State<SummaryScreen> {
           }
         }
 
-        // Last honey harvest from info records (same formula as chart in infos_screen)
+        // Last honey/pollen harvest from info records (same formula as chart in infos_screen)
         final loc = AppLocalizations.of(context)!;
         final dod1Data = Provider.of<Dodatki1>(context, listen: false);
         final dod1 = dod1Data.items;
         if (dod1.isNotEmpty) {
-          final paramSmall = '${loc.honey} = ${loc.small} ${loc.frame} x';
-          final paramBig = '${loc.honey} = ${loc.big} ${loc.frame} x';
-          final paramKg = '${loc.honey} = ';
-          // Find the latest harvest date for honey
-          String latestDate = '';
+          final paramHoneySmall = '${loc.honey} = ${loc.small} ${loc.frame} x';
+          final paramHoneyBig = '${loc.honey} = ${loc.big} ${loc.frame} x';
+          final paramHoneyKg = '${loc.honey} = ';
+          final paramPollenPortion = '${loc.beePollen}  = ${loc.portion} x';
+          final paramPollenMiarka = '${loc.beePollen}  = ${loc.miarka} x';
+          final paramPollenMl = '${loc.beePollen} = ';
+          final paramPollenL = ' ${loc.beePollen} =  ';
+
+          // Find the latest harvest date for honey and for pollen
+          String latestHoneyDate = '';
+          String latestPollenDate = '';
           for (final info in infosData.items) {
-            if (info.kategoria == 'harvest' && info.wartosc.isNotEmpty &&
-                (info.parametr == paramSmall || info.parametr == paramBig || info.parametr == paramKg)) {
-              if (latestDate.isEmpty || info.data.compareTo(latestDate) > 0) {
-                latestDate = info.data;
+            if (info.kategoria == 'harvest' && info.wartosc.isNotEmpty) {
+              if (info.parametr == paramHoneySmall || info.parametr == paramHoneyBig || info.parametr == paramHoneyKg) {
+                if (latestHoneyDate.isEmpty || info.data.compareTo(latestHoneyDate) > 0) {
+                  latestHoneyDate = info.data;
+                }
+              } else if (info.parametr == paramPollenPortion || info.parametr == paramPollenMiarka ||
+                         info.parametr == paramPollenMl || info.parametr == paramPollenL) {
+                if (latestPollenDate.isEmpty || info.data.compareTo(latestPollenDate) > 0) {
+                  latestPollenDate = info.data;
+                }
               }
             }
           }
-          // Sum all honey from the latest date (small frames + big frames + kg)
-          if (latestDate.isNotEmpty) {
+
+          // Sum all honey from the latest honey date (small frames + big frames + kg)
+          if (latestHoneyDate.isNotEmpty) {
             double totalGrams = 0;
             final defaultWagaDm2 = int.parse(dod1[0].b);
             // Sprawdź czy istnieje harvest.g dla tej daty miodobrania
@@ -144,7 +159,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
             for (var h in harvestsData.items) {
               if (h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty) {
                 DateTime hDt = DateTime.parse(h.data.substring(0, 10));
-                DateTime lDt = DateTime.parse(latestDate.substring(0, 10));
+                DateTime lDt = DateTime.parse(latestHoneyDate.substring(0, 10));
                 if (hDt.difference(lDt).inDays.abs() <= 3) {
                   wagaDm2 = int.tryParse(h.g) ?? defaultWagaDm2;
                   break;
@@ -152,20 +167,39 @@ class _SummaryScreenState extends State<SummaryScreen> {
               }
             }
             for (final info in infosData.items) {
-              if (info.kategoria == 'harvest' && info.data == latestDate && info.wartosc.isNotEmpty) {
-                if (info.parametr == paramSmall) {
+              if (info.kategoria == 'harvest' && info.data == latestHoneyDate && info.wartosc.isNotEmpty) {
+                if (info.parametr == paramHoneySmall) {
                   double dm = info.miara.isEmpty ? 35175 : double.parse(info.miara);
                   totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
-                } else if (info.parametr == paramBig) {
+                } else if (info.parametr == paramHoneyBig) {
                   double dm = info.miara.isEmpty ? 78725 : double.parse(info.miara);
                   totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
-                } else if (info.parametr == paramKg) {
+                } else if (info.parametr == paramHoneyKg) {
                   totalGrams += double.parse(info.wartosc) * 1000;
                 }
               }
             }
             _lastHarvestHoneyKg = totalGrams / 1000;
-            _lastHarvestDate = latestDate;
+            _lastHarvestHoneyDate = latestHoneyDate;
+          }
+
+          // Sum all pollen from the latest pollen date (miarka/portion + ml + l)
+          if (latestPollenDate.isNotEmpty) {
+            double totalMl = 0;
+            final mlPerMiarka = int.tryParse(dod1[0].g) ?? 0;
+            for (final info in infosData.items) {
+              if (info.kategoria == 'harvest' && info.data == latestPollenDate && info.wartosc.isNotEmpty) {
+                if (info.parametr == paramPollenPortion || info.parametr == paramPollenMiarka) {
+                  totalMl += (double.tryParse(info.wartosc) ?? 0) * mlPerMiarka;
+                } else if (info.parametr == paramPollenMl) {
+                  totalMl += double.tryParse(info.wartosc) ?? 0;
+                } else if (info.parametr == paramPollenL) {
+                  totalMl += (double.tryParse(info.wartosc) ?? 0) * 1000;
+                }
+              }
+            }
+            _lastHarvestPollenL = totalMl / 1000;
+            _lastHarvestPollenDate = latestPollenDate;
           }
         }
 
@@ -744,7 +778,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
             ),
 
           // --- Segment: Zbiory ---
-          if (_lastHarvestHoneyKg > 0 && globals.showSummaryHarvest)
+          if ((_lastHarvestHoneyKg > 0 || _lastHarvestPollenL > 0) && globals.showSummaryHarvest)
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -754,29 +788,40 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Text(
-                    //   AppLocalizations.of(context)!.hArvests,
-                    //   style: const TextStyle(
-                    //     fontWeight: FontWeight.bold,
-                    //     fontSize: 16,
-                    //   ),
-                    // ),
-                    // const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Image.asset('assets/image/zbiory.png', width: 22, height: 22, fit: BoxFit.fill),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${AppLocalizations.of(context)!.honey} '
-                            '${globals.isEuropeanFormat() ? _lastHarvestHoneyKg.toStringAsFixed(1).replaceAll('.', ',') : _lastHarvestHoneyKg.toStringAsFixed(1)} '
-                            'kg '
-                            '(${_zmienDateCala(_lastHarvestDate)})',
-                            style: const TextStyle(fontSize: 14),
+                    if (_lastHarvestHoneyKg > 0)
+                      Row(
+                        children: [
+                          Image.asset('assets/image/zbiory.png', width: 22, height: 22, fit: BoxFit.fill),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${AppLocalizations.of(context)!.honey} '
+                              '${globals.isEuropeanFormat() ? _lastHarvestHoneyKg.toStringAsFixed(1).replaceAll('.', ',') : _lastHarvestHoneyKg.toStringAsFixed(1)} '
+                              'kg '
+                              '(${_zmienDateCala(_lastHarvestHoneyDate)})',
+                              style: const TextStyle(fontSize: 14),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    if (_lastHarvestHoneyKg > 0 && _lastHarvestPollenL > 0)
+                      const SizedBox(height: 4),
+                    if (_lastHarvestPollenL > 0)
+                      Row(
+                        children: [
+                          Image.asset('assets/image/zbiory.png', width: 22, height: 22, fit: BoxFit.fill),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${AppLocalizations.of(context)!.beePollen} '
+                              '${globals.isEuropeanFormat() ? _lastHarvestPollenL.toStringAsFixed(2).replaceAll('.', ',') : _lastHarvestPollenL.toStringAsFixed(2)} '
+                              'l '
+                              '(${_zmienDateCala(_lastHarvestPollenDate)})',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -973,6 +1018,15 @@ class _SummaryScreenState extends State<SummaryScreen> {
                                 Text(
                                   note.notatka,
                                   style: const TextStyle(fontSize: 14),
+                                ),
+                              if (note.uwagi.isNotEmpty)
+                                Text(
+                                  note.uwagi,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                             ],
                           );

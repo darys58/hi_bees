@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 //import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
 import '../helpers/sound_helper.dart';

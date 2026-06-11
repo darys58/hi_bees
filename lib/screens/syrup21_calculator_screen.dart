@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 
 class Syrup21CalculatorScreen extends StatefulWidget {
   static const routeName = '/syrup-calculator-21';

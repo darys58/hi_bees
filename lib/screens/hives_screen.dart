@@ -5,7 +5,7 @@ import 'dart:convert'; //obsługa json'a
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';

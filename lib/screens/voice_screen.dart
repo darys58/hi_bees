@@ -17,7 +17,7 @@ import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:provider/provider.dart';
 import 'package:flutter_beep/flutter_beep.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:rhino_flutter/rhino.dart';
 import 'package:picovoice_flutter/picovoice_error.dart';
 import 'package:picovoice_flutter/picovoice_manager.dart';

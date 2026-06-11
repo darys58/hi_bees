@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 //import 'package:intl/date_symbol_data_local.dart'; //do formatowania daty - dzień tygodnia
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a

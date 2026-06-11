@@ -2,7 +2,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:in_app_purchase/in_app_purchase.dart'; //subskrypcja
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:hi_bees/screens/add_hive_screen.dart';
 import 'package:hi_bees/screens/add_queen_screen.dart';
 import 'package:intl/intl.dart';
@@ -139,10 +139,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.18.88 17.04.2026 - układ poziomy dla voice_screen, pliki głosowe mp3, wsparcie na patronite i suppi
   //1.9.19.89 22.04.2026 - poprawki przy rysowaniu podglądu korpusu online w voice_scren2, Optymalizacja importu i odbudowy uli przy imporcie (SQL DISTINCT + batch SQLite), batch SQLite dla zapisu ramek i info (saveFramesToDb, saveInfosToDb), batch SQLite dla NFC, usunięcie martwych sub-progressów i sztucznych delayów, batch SQLite dla notatek, zakupów, sprzedaży, matek i zbiorów
   //1.10.20.90 24.04.2026 - konfiguracja języków w XCode zeby poprawnie wyswietlały sie w AppStore, poprawki wyswietlania korpusu online w voice_screen2
-  //1.10.21.91 29.04.2026 - przygotowanie do upgrade Xcode 26: deployment target iOS 15, PrivacyInfo.xcprivacy, Dart 3 SDK constraint, Flutter 3.32+, checklist UPGRADE_XCODE_26.md
-
-  final wersja = '1.10.21.91'; //wersja aplikacji na iOS
-  final dataWersji = '2026-04-29';
+  //1.11.0.91 30.04.2026 - przygotowanie do upgrade Xcode 26: deployment target iOS 15, PrivacyInfo.xcprivacy, Dart 3 SDK constraint, Flutter 3.32+, checklist UPGRADE_XCODE_26.md
+  //1.11.1.92 10.06.2026 - fix wake-word - krótki beep zamiast słucham.mp3 (Rhino mylił mowę z głośnika z komendą)
+  
+  final wersja = '1.11.1.92'; //wersja aplikacji na iOS
+  final dataWersji = '2026-06-10';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;

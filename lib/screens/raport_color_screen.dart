@@ -5,7 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter/services.dart';
 //import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -3135,10 +3135,10 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           style: TextStyle(color: Colors.black),
                           children: [
                             TextSpan(
-                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2030: ${allPylek2030/1000} kg '),
+                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2030: ${allPylek2030/1000} l '),
                             style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, )),
                             TextSpan(
-                              text:('(${pylek2030/1000} kg)'),
+                              text:('(${pylek2030/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),  
                   if(daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
@@ -3234,10 +3234,10 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           style: TextStyle(color: Colors.black),
                           children: [
                             TextSpan(
-                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2029: ${allPylek2029/1000} kg '),
+                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2029: ${allPylek2029/1000} l '),
                             style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, )),
                             TextSpan(
-                              text:('(${pylek2029/1000} kg)'),
+                              text:('(${pylek2029/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),  
                   if(daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
@@ -3333,10 +3333,10 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           style: TextStyle(color: Colors.black),
                           children: [
                             TextSpan(
-                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2028: ${allPylek2028/1000} kg '),
+                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2028: ${allPylek2028/1000} l '),
                             style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, )),
                             TextSpan(
-                              text:('(${pylek2028/1000} kg)'),
+                              text:('(${pylek2028/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),
                   if(daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
@@ -3432,10 +3432,10 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           style: TextStyle(color: Colors.black),
                           children: [
                             TextSpan(
-                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2027: ${allPylek2027/1000} kg '),
+                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2027: ${allPylek2027/1000} l '),
                             style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, )),
                             TextSpan(
-                              text:('(${pylek2027/1000} kg)'),
+                              text:('(${pylek2027/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])), 
                   if(daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
@@ -3531,10 +3531,10 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           style: TextStyle(color: Colors.black),
                           children: [
                             TextSpan(
-                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2026: ${allPylek2026/1000} kg '),
+                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2026: ${allPylek2026/1000} l '),
                             style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, )),
                             TextSpan(
-                              text:('(${pylek2026/1000} kg)'),
+                              text:('(${pylek2026/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])), 
                   if(daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
@@ -3630,10 +3630,10 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           style: TextStyle(color: Colors.black),
                           children: [
                             TextSpan(
-                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2025: ${allPylek2025/1000} kg '),
+                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2025: ${allPylek2025/1000} l '),
                             style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, )),
                             TextSpan(
-                              text:('(${pylek2025/1000} kg)'),
+                              text:('(${pylek2025/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])), 
                   if(daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
@@ -3729,10 +3729,10 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           style: TextStyle(color: Colors.black),
                           children: [
                             TextSpan(
-                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2024: ${allPylek2024/1000} kg '),
+                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2024: ${allPylek2024/1000} l '),
                             style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, )),
                             TextSpan(
-                              text:('(${pylek2024/1000} kg)'),
+                              text:('(${pylek2024/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),  
                   if(daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
@@ -3828,10 +3828,10 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           style: TextStyle(color: Colors.black),
                           children: [
                             TextSpan(
-                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2023: ${allPylek2023/1000} kg '),
+                              text:(AppLocalizations.of(context)!.beePollenHarvest + ' 2023: ${allPylek2023/1000} l '),
                             style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold, )),
                             TextSpan(
-                              text:('(${pylek2023/1000} kg)'),
+                              text:('(${pylek2023/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),  
                   if(daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))

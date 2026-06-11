@@ -6,7 +6,7 @@ import 'package:hi_bees/screens/harvest_edit_screen.dart';
 import 'package:provider/provider.dart'; //zarejestrowanie dostawcy
 import 'package:flutter_localizations/flutter_localizations.dart';
 //import 'package:in_app_purchase/in_app_purchase.dart'; //subskrypcja
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart'; //do formatowania daty - dzień tygodnia
 import './globals.dart' as globals;
 import './screens/frames_screen.dart';

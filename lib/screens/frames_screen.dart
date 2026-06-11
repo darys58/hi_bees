@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 //import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hi_bees/l10n/app_localizations.dart';
 //import 'package:rhino_flutter/rhino.dart';
 //import 'package:picovoice_flutter/picovoice_manager.dart';
 //import 'package:picovoice_flutter/picovoice_error.dart';
