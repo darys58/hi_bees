@@ -54,6 +54,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
   List<Frame> ramka = [];
   List<Hive> hive = [];
   String tryb = '';
+  String kierunekRamki = 'plus'; //'plus' = kolejny WIĘKSZY numer ramki przy każdym uruchomieniu, 'minus' = kolejny MNIEJSZY
   String tytulEkranu = '';
   TextEditingController dateController = TextEditingController();
   int zakresRamek = 0; //"0" - jedna,ramki przed i po przeglądzie; "1" - wiele, zakres ramek od do
@@ -138,6 +139,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
       final idPasieki = routeArgs['idPasieki'];
       final idUla = routeArgs['idUla'];
       final idZasobu = routeArgs['idZasobu'];
+      kierunekRamki = (routeArgs['kierunek'] as String?) ?? 'plus'; //kierunek auto-zmiany numeru ramki przy uruchomieniu
     //  print('ramka = $idRamki, pasieka = $idPasieki , ul = $idUla');
 
       // if (idRamki != null) {
@@ -278,10 +280,19 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
         } 
       });
 
-      globals.nowyNrRamki < ramek ? nowyNrRamki = globals.nowyNrRamki + 1 : nowyNrRamki = globals.nowyNrRamki;
-      globals.nowyNrRamki  = nowyNrRamki!;
-      globals.nowyNrRamkiPo < ramek ? nowyNrRamkiPo = globals.nowyNrRamkiPo + 1 : nowyNrRamkiPo = globals.nowyNrRamkiPo;
-      globals.nowyNrRamkiPo  = nowyNrRamkiPo!;
+      if (kierunekRamki == 'minus') {
+        //kolejny MNIEJSZY numer ramki - dolna granica = 1
+        globals.nowyNrRamki > 1 ? nowyNrRamki = globals.nowyNrRamki - 1 : nowyNrRamki = globals.nowyNrRamki;
+        globals.nowyNrRamki  = nowyNrRamki!;
+        globals.nowyNrRamkiPo > 1 ? nowyNrRamkiPo = globals.nowyNrRamkiPo - 1 : nowyNrRamkiPo = globals.nowyNrRamkiPo;
+        globals.nowyNrRamkiPo  = nowyNrRamkiPo!;
+      } else {
+        //kolejny WIĘKSZY numer ramki - górna granica = liczba ramek w korpusie
+        globals.nowyNrRamki < ramek ? nowyNrRamki = globals.nowyNrRamki + 1 : nowyNrRamki = globals.nowyNrRamki;
+        globals.nowyNrRamki  = nowyNrRamki!;
+        globals.nowyNrRamkiPo < ramek ? nowyNrRamkiPo = globals.nowyNrRamkiPo + 1 : nowyNrRamkiPo = globals.nowyNrRamkiPo;
+        globals.nowyNrRamkiPo  = nowyNrRamkiPo!;
+      }
 
       //ustawienie numerów wielu ramek
       if(globals.numeryWieluRamek == 1) _selectedNumeryWieluRamek=<bool>[false, true, false];

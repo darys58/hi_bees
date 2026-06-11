@@ -377,11 +377,20 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pop();
               Navigator.of(context).pushNamed(
                   FrameEditScreen2.routeName,
-                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'kierunek': 'plus'},
                 );
             }, child: Text((AppLocalizations.of(context)!.resourceOnFramePlus),style: TextStyle(fontSize: 18))// dodawanie zasobów +
-            ),  
-            
+            ),
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameEditScreen2.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'kierunek': 'minus'},
+                );
+            }, child: Text((AppLocalizations.of(context)!.resourceOnFrameMinus),style: TextStyle(fontSize: 18))// dodawanie zasobów -
+            ),
+
             TextButton(onPressed: (){
               Navigator.of(context).pop();
               Navigator.of(context).pushNamed(

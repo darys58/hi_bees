@@ -872,6 +872,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get resourceOnFramePlus => 'Recursos en el cuadro +';
+  String get resourceOnFrameMinus => 'Recursos en el cuadro -';
 
   @override
   String get toDO => 'Por hacer';

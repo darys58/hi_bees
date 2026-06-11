@@ -558,6 +558,8 @@
     "@resourceOnFrame": {},
     "resourceOnFramePlus": "Resources on frame +",
     "@resourceOnFramePlus": {},
+    "resourceOnFrameMinus": "Resources on frame -",
+    "@resourceOnFrameMinus": {},
     "toDO": "To do",
     "@toDO": {},
     "itWasDone": "It was done",

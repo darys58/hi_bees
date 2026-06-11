@@ -279,6 +279,7 @@
     "selectEntryType": "Wybierz rodzaj wpisu",
     "resourceOnFrame": "Zasoby na ramce",
     "resourceOnFramePlus": "Zasoby na ramce +",
+    "resourceOnFrameMinus": "Zasoby na ramce -",
     "toDO": "Do zrobienia",
     "itWasDone": "Zostało zrobione",
     "edited": "edytowany",

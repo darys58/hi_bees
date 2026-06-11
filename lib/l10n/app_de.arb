@@ -279,6 +279,7 @@
     "selectEntryType": "Art des Eintrags wählen",
     "resourceOnFrame": "Vorräte auf dem Rahmen",
     "resourceOnFramePlus": "Vorräte auf dem Rahmen +",
+    "resourceOnFrameMinus": "Vorräte auf dem Rahmen -",
     "toDO": "Zu erledigen",
     "itWasDone": "Wurde erledigt",
     "edited": "bearbeitet",

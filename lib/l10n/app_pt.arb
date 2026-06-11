@@ -279,6 +279,7 @@
     "selectEntryType": "Selecione o tipo de registo",
     "resourceOnFrame": "Recursos no quadro",
     "resourceOnFramePlus": "Recursos no quadro +",
+    "resourceOnFrameMinus": "Recursos no quadro -",
     "toDO": "A fazer",
     "itWasDone": "Foi feito",
     "edited": "editado",

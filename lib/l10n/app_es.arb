@@ -279,6 +279,7 @@
     "selectEntryType": "Selecciona el tipo de entrada",
     "resourceOnFrame": "Recursos en el cuadro",
     "resourceOnFramePlus": "Recursos en el cuadro +",
+    "resourceOnFrameMinus": "Recursos en el cuadro -",
     "toDO": "Por hacer",
     "itWasDone": "Ha sido hecho",
     "edited": "editado",

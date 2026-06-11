@@ -1782,6 +1782,12 @@ abstract class AppLocalizations {
   /// **'Resources on frame +'**
   String get resourceOnFramePlus;
 
+  /// No description provided for @resourceOnFrameMinus.
+  ///
+  /// In en, this message translates to:
+  /// **'Resources on frame -'**
+  String get resourceOnFrameMinus;
+
   /// No description provided for @toDO.
   ///
   /// In en, this message translates to:
