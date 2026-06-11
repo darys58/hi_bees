@@ -1194,6 +1194,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
             zas,
             wart,
             0); //arch
+        //auto-marker wstawienia/usunięcia dla każdej z wielu ramek
+        _autoMarkerWstawUsun(zrobic, zas, nrWieluRamekPrzed, nrWieluRamekPo, korpus, rozmiarRamki, formattedDate);
         // }else if (stronaRamki == 2) { //dla prawej strony
         //   Frames.insertFrame(
         //     '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nrWieluRamekPrzed.$nrWieluRamekPo.2.$zas',
@@ -1262,6 +1264,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
           zas,
           wart,
           0); //arch
+      //auto-marker wstawienia/usunięcia ramki
+      _autoMarkerWstawUsun(zrobic, zas, nowyNrRamki!, nowyNrRamkiPo!, korpus, rozmiarRamki, formattedDate);
       // } else if (stronaRamki == 2) { //dla prawej strony
       //   Frames.insertFrame(
       //     '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nowyNrRamki.$nowyNrRamkiPo.2.$zas',
@@ -1677,6 +1681,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
             zas,
             wart,
             0); //arch
+        //auto-marker wstawienia/usunięcia dla każdej z wielu ramek
+        _autoMarkerWstawUsun(zrobic, zas, nrWieluRamekPrzed, nrWieluRamekPo, korpus, rozmiarRamki, formattedDate);
         // }else if (stronaRamki == 2) { //dla prawej strony
         //   Frames.insertFrame(
         //     '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nrWieluRamekPrzed.$nrWieluRamekPo.2.$zas',
@@ -1745,6 +1751,8 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
           zas,
           wart,
           0); //arch
+      //auto-marker wstawienia/usunięcia ramki
+      _autoMarkerWstawUsun(zrobic, zas, nowyNrRamki!, nowyNrRamkiPo!, korpus, rozmiarRamki, formattedDate);
       // } else if (stronaRamki == 2) { //dla prawej strony
       //   Frames.insertFrame(
       //     '$formattedDate.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$nowyNrRamki.$nowyNrRamkiPo.2.$zas',
@@ -2085,9 +2093,34 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
 
   }
 
-
-
-  
+  //automatyczne dodanie znacznika "wstawiono"/"usunięto" (zasob=14, trójkąt) dla ramki
+  //wstawianej (przed=0, po=X) lub usuwanej (przed=X, po=0). Wywoływane przy zapisie realnego
+  //zasobu (zas<13) w trybie "dodaj". Idempotentne - to samo id => replace, więc jeden marker na ramkę.
+  void _autoMarkerWstawUsun(String zrobic, int zas, int przed, int po, int typ, int rozmiar, String data) {
+    if (zrobic != 'dodaj' || zas >= 13) return;
+    String? wartoscMarkera;
+    if (przed == 0 && po != 0) {
+      wartoscMarkera = AppLocalizations.of(context)!.inserted; //ramka wstawiona
+    } else if (po == 0 && przed != 0) {
+      wartoscMarkera = AppLocalizations.of(context)!.deleted; //ramka usunięta
+    }
+    if (wartoscMarkera == null) return;
+    Frames.insertFrame(
+      '$data.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$przed.$po.1.14',
+      data,
+      nowyNrPasieki!,
+      nowyNrUla!,
+      nowyNrKorpusu!,
+      typ,
+      przed,
+      po,
+      rozmiar,
+      1, //strona lewa - jak przy ręcznym dodawaniu znacznika
+      14, //zasob = isDone (znacznik akcji)
+      wartoscMarkera,
+      0, //arch
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

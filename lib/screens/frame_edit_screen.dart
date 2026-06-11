@@ -1090,6 +1090,8 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
             wart,
             0);
         }
+        //auto-marker wstawienia/usunięcia dla każdej z wielu ramek
+        _autoMarkerWstawUsun(zrobic, zas, nrWieluRamekPrzed, nrWieluRamekPo, korpus, rozmiarRamki, formattedDate);
       }
       //jezeli jedna ramka
     }else{
@@ -1158,9 +1160,11 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
           wart,
           0);
       }
+      //auto-marker wstawienia/usunięcia ramki
+      _autoMarkerWstawUsun(zrobic, zas, nowyNrRamki!, nowyNrRamkiPo!, korpus, rozmiarRamki, formattedDate);
 
     }
-    
+
     //========= Modyfikacja belki =========
     //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli (belka)
     final hiveData = Provider.of<Hives>(context, listen: false);
@@ -1452,11 +1456,38 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
     }//else{print('juz jest wpis = ${globals.dataAktualnegoPrzegladu}');}
   }
 
-  
+  //automatyczne dodanie znacznika "wstawiono"/"usunięto" (zasob=14, trójkąt) dla ramki
+  //wstawianej (przed=0, po=X) lub usuwanej (przed=X, po=0). Wywoływane przy zapisie realnego
+  //zasobu (zas<13) w trybie "dodaj". Idempotentne - to samo id => replace, więc jeden marker na ramkę.
+  void _autoMarkerWstawUsun(String zrobic, int zas, int przed, int po, int typ, int rozmiar, String data) {
+    if (zrobic != 'dodaj' || zas >= 13) return;
+    String? wartoscMarkera;
+    if (przed == 0 && po != 0) {
+      wartoscMarkera = AppLocalizations.of(context)!.inserted; //ramka wstawiona
+    } else if (po == 0 && przed != 0) {
+      wartoscMarkera = AppLocalizations.of(context)!.deleted; //ramka usunięta
+    }
+    if (wartoscMarkera == null) return;
+    Frames.insertFrame(
+      '$data.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$przed.$po.1.14',
+      data,
+      nowyNrPasieki!,
+      nowyNrUla!,
+      nowyNrKorpusu!,
+      typ,
+      przed,
+      po,
+      rozmiar,
+      1, //strona lewa - jak przy ręcznym dodawaniu znacznika
+      14, //zasob = isDone (znacznik akcji)
+      wartoscMarkera,
+      0, //arch
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    
+
     final ButtonStyle buttonStyle = OutlinedButton.styleFrom(
       padding: const EdgeInsets.all(2.0),
       backgroundColor: Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
@@ -2617,7 +2648,22 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                         //(' id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
                                         DBHelper.updateRamkaNrPo(frames[i].id, nowyNrRamkiPo!);
                                       }
-                                    } 
+                                    }
+                                    //ramka WSTAWIANA (przed=0): wszystkie wstawiane mają ramkaNr=0, więc rodzeństwa
+                                    //nie da się rozróżnić po ramkaNr - szukamy po STARYM ramkaNrPo z edytowanego rekordu
+                                    else if(nowyNrRamki == 0 && _selectedZakresRamek[0] && _selectedZakresZasobow[1]){
+                                      final int staryNrRamkiPo = ramka[0].ramkaNrPo;
+                                      if(staryNrRamkiPo != nowyNrRamkiPo){
+                                        final framesData1 = Provider.of<Frames>(context, listen: false);
+                                        //zasoby tej wstawianej ramki: ramkaNr=0 i ten sam stary ramkaNrPo (data + korpus)
+                                        List<Frame> frames = framesData1.items.where((fr) {
+                                          return fr.ramkaNr == 0 && fr.ramkaNrPo == staryNrRamkiPo && fr.data == dateController.text && fr.korpusNr == nowyNrKorpusu;
+                                        }).toList();
+                                        for (var i = 0; i < frames.length; i++) {
+                                          DBHelper.updateRamkaNrPo(frames[i].id, nowyNrRamkiPo!);
+                                        }
+                                      }
+                                    }
                                     Provider.of<Frames>(context, listen: false)
                                       .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
                                       .then((_) {
