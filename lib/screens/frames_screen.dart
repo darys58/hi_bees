@@ -219,6 +219,31 @@ class _FramesScreenState extends State<FramesScreen> {
     });
   }
 
+  //wybór przeglądu o danym indeksie z listy _daty (wspólne dla kliknięcia w datę i gestu swipe).
+  //_daty są posortowane DESC: index 0 = najnowsza, wyższy index = starsza.
+  void _selectDate(int index) {
+    if (index < 0 || index >= _daty.length) return; //poza zakresem
+    if (_daty[index].data == wybranaData) return; //ta sama data - nic nie rób
+    dt1 = DateTime.parse(wybranaData);
+    dt2 = DateTime.parse(_daty[index].data);
+    getKorpusy(globals.pasiekaID, globals.ulID, _daty[index].data).then((_) {
+      if (!mounted) return;
+      setState(() {
+        //przed/po w zależności czy nowa data jest wcześniejsza czy późniejsza od poprzedniej
+        if (dt1.compareTo(dt2) < 0) {
+          _selectedPrzedPo = [true, false];
+          przedpo = 1;
+        } else {
+          _selectedPrzedPo = [false, true];
+          przedpo = 2;
+        }
+        globals.dataInspekcji = _daty[index].data;
+        wybranaData = _daty[index].data; //dla filtrowania po dacie
+      });
+      _scrollToSelectedDate();
+    });
+  }
+
   //pobranie listy ramek z unikalnymi datami dla wybranego ula i pasieki z bazy lokalnej
   Future<List<Frame>> getDaty(pasieka, ul) async {
     final dataList = await DBHelper.getDate(pasieka, ul); //numer wybranego ula
@@ -667,27 +692,7 @@ class _FramesScreenState extends State<FramesScreen> {
                             return SizedBox(
                               width: _dateCardWidth,
                               child: GestureDetector(
-                                onTap: () {
-                                  dt1 = DateTime.parse(wybranaData);
-                                  dt2 = DateTime.parse(_daty[index].data);
-
-                                  getKorpusy(globals.pasiekaID, globals.ulID, _daty[index].data)
-                                        .then((_) {
-                                    setState(() {
-                                      //ustawianie widoku przd lub po w zaleznosci od tego czy wybrana data jest wczesniejsza czy późniejsza od poprzednio wybranej
-                                      if(dt1.compareTo(dt2) < 0){
-                                        _selectedPrzedPo = [true,false];
-                                        przedpo = 1; //print("DT1 jest przed DT2");
-                                      }else{_selectedPrzedPo = [false,true];
-                                        przedpo=2; //print("DT1 jest po DT2");
-                                      }
-                                      globals.dataInspekcji = _daty[index].data;
-                                      wybranaData = _daty[index].data; //dla filtrowania po dacie
-                                    });
-                                    // Wyśrodkuj klikniętą datę
-                                    _scrollToSelectedDate();
-                                  });
-                                },
+                                onTap: () => _selectDate(index),
                                 child: wybranaData == _daty[index].data
                                     ? Card(//data czarna - wybrana
                                         color: Colors.white,
@@ -719,7 +724,17 @@ class _FramesScreenState extends State<FramesScreen> {
                       child: Column(children: <Widget>[
                       //for (var i = 0; i < frames.length; i++) {}
                       //Text(frames[0].data),
-                      Container(
+                      GestureDetector(
+                        //przesunięcie palcem na rysunku ula = zmiana daty przeglądu (jak klik w datę)
+                        onHorizontalDragEnd: (details) {
+                          final v = details.primaryVelocity ?? 0;
+                          if (v == 0) return;
+                          final current = _daty.indexWhere((d) => d.data == wybranaData);
+                          if (current < 0) return;
+                          //swipe w PRAWO -> młodsza data (niższy index), w LEWO -> starsza (wyższy index)
+                          _selectDate(v > 0 ? current - 1 : current + 1);
+                        },
+                        child: Container(
                         //szare body
                         //alignment: Alignment.center,
                         color: Color.fromARGB(173, 173, 173, 173),
@@ -737,6 +752,7 @@ class _FramesScreenState extends State<FramesScreen> {
                         ),
                         margin: EdgeInsets.all(20),
                         //padding: EdgeInsets.all(10),
+                      ),
                       ),
                     ])),
 
