@@ -171,45 +171,7 @@ class _FramesScreenState extends State<FramesScreen> {
     siteOfFrame = AppLocalizations.of(context)!.both;
 
     if (_isInit) {
-      getDaty(globals.pasiekaID, globals.ulID).then((_) async {
-        //pobranie dat z bazy
-        //print('data inspekcji ${globals.dataInspekcji}');
-        if (globals.dataInspekcji != '') {
-          wybranaData = globals.dataInspekcji; //data z elementu listy info
-          //globals.dataInspekcji = '';
-        } else {
-          if (_daty.isNotEmpty) {
-            //print('wybrana = $wybranaData');
-            globals.dataInspekcji = _daty[0].data;
-            wybranaData = _daty[0].data;
-          } //najwcześniejsza data pobrana z bazy
-        }
-
-        getKorpusy(globals.pasiekaID, globals.ulID, wybranaData).then((_) {
-          //ilość rekordów oznacza ilość korpusów i informacje o ich typach(1-półkorpus, 2-korpus)
-          //print('ilość korpusów w wybranym ulu = ${_korpusy.length}');
-
-          Provider.of<Frames>(context, listen: false)
-              .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
-              .then((_) {
-            //wszystkie ramki z wszystkich dat dla wybranej pasieki i ula z bazy lokalnej
-            Provider.of<Infos>(context, listen: false)
-                .fetchAndSetInfosForHive(globals.pasiekaID, globals.ulID)
-                .then((_) {
-              //wszystkie informacje dla wybranego pasieki i ula - setState dopiero po załadowaniu infos
-              //żeby nie było race condition przy sprawdzaniu inspekcji w frame_edit_screen
-              setState(() {});
-
-              // Przewiń do wybranej daty po setState i zbudowaniu widoku
-              _scrollToSelectedDate();
-            });
-          });
-        });
-
-        setState(() {
-          // _isLoading = false; //zatrzymanie wskaznika ładowania dań
-        });
-      });
+      _loadView();
 
       // //ustawienie wielkosci widoku ula
       luPa == 1.0 ? _selectedLupa[0] = true : _selectedLupa[0] = false;
@@ -220,6 +182,41 @@ class _FramesScreenState extends State<FramesScreen> {
     _isInit = false;
     //Provider.of<Rests>(context, listen: false).fetchAndSetRests(); //dostawca restauracji
     super.didChangeDependencies();
+  }
+
+  //przeładowanie widoku: daty (_daty), korpusy (_korpusy), ramki i info z bazy.
+  //Wywoływane na starcie ORAZ po powrocie z ekranów dodawania/edycji, żeby od razu było
+  //widać nowy korpus z ramką i datę nowego przeglądu bez wychodzenia i wchodzenia do widoku.
+  void _loadView() {
+    getDaty(globals.pasiekaID, globals.ulID).then((_) async {
+      //pobranie dat z bazy
+      if (globals.dataInspekcji != '') {
+        wybranaData = globals.dataInspekcji; //data z elementu listy info
+      } else {
+        if (_daty.isNotEmpty) {
+          globals.dataInspekcji = _daty[0].data;
+          wybranaData = _daty[0].data;
+        } //najwcześniejsza data pobrana z bazy
+      }
+
+      getKorpusy(globals.pasiekaID, globals.ulID, wybranaData).then((_) {
+        Provider.of<Frames>(context, listen: false)
+            .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+            .then((_) {
+          Provider.of<Infos>(context, listen: false)
+              .fetchAndSetInfosForHive(globals.pasiekaID, globals.ulID)
+              .then((_) {
+            //setState dopiero po załadowaniu infos, żeby nie było race condition
+            if (mounted) {
+              setState(() {});
+              _scrollToSelectedDate();
+            }
+          });
+        });
+      });
+
+      if (mounted) setState(() {});
+    });
   }
 
   //pobranie listy ramek z unikalnymi datami dla wybranego ula i pasieki z bazy lokalnej
@@ -369,7 +366,7 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pushNamed(
                   FrameEditScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
-                );
+                ).then((_) { if (mounted) _loadView(); });
             }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18)) //dodawanie zasobów
             ),
 
@@ -378,7 +375,7 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pushNamed(
                   FrameEditScreen2.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'kierunek': 'plus'},
-                );
+                ).then((_) { if (mounted) _loadView(); });
             }, child: Text((AppLocalizations.of(context)!.resourceOnFramePlus),style: TextStyle(fontSize: 18))// dodawanie zasobów +
             ),
 
@@ -387,7 +384,7 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pushNamed(
                   FrameEditScreen2.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'kierunek': 'minus'},
-                );
+                ).then((_) { if (mounted) _loadView(); });
             }, child: Text((AppLocalizations.of(context)!.resourceOnFrameMinus),style: TextStyle(fontSize: 18))// dodawanie zasobów -
             ),
 
@@ -396,7 +393,7 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pushNamed(
                   FrameEditScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 13},
-                );
+                ).then((_) { if (mounted) _loadView(); });
             }, child: Text((AppLocalizations.of(context)!.toDO),style: TextStyle(fontSize: 18)), //do zrobienia
             ),
             
@@ -405,7 +402,7 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pushNamed(
                   FrameEditScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 14},
-                );
+                ).then((_) { if (mounted) _loadView(); });
             }, child: Text((AppLocalizations.of(context)!.itWasDone), //zostało zrobione
             style: TextStyle(fontSize: 18)),
             ),
@@ -415,7 +412,7 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pushNamed(
                   FrameMoveScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData, 'tryb': 'ramka'},
-                );
+                ).then((_) { if (mounted) _loadView(); });
             }, child: Text((AppLocalizations.of(context)!.mOvingFrame), //przenies ramkę
             style: TextStyle(fontSize: 18)),
             ),
@@ -425,7 +422,7 @@ class _FramesScreenState extends State<FramesScreen> {
               Navigator.of(context).pushNamed(
                   FrameMoveScreen.routeName,
                   arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData, 'tryb': 'korpus'},
-                );
+                ).then((_) { if (mounted) _loadView(); });
             }, child: Text((AppLocalizations.of(context)!.mOvingBody), //przenies korpus
             style: TextStyle(fontSize: 18)),
             ),
@@ -441,9 +438,9 @@ class _FramesScreenState extends State<FramesScreen> {
                               'kategoria': 'inspection', 
                               'parametr': AppLocalizations.of(context)!.inspection, //przegląd - parametr wystarczy zeby zapisać uwagę/notatkę do przeglądu
                               'wartosc': globals.ikonaInspekcji, //pobranie koloru ikony przeglądu zeby sie nie zmieniła przy dodawaniu notatki
-                              'idPasieki': pasieka, 
+                              'idPasieki': pasieka,
                               'idUla':ul,},
-                );         
+                ).then((_) { if (mounted) _loadView(); });
             }, child: Text((AppLocalizations.of(context)!.nOteForInspection), //notatka do przeglądu
             style: TextStyle(fontSize: 18)),
             ),
@@ -620,7 +617,7 @@ class _FramesScreenState extends State<FramesScreen> {
                 .pushNamed(FramesDetailScreen.routeName, arguments: {
               'ul': globals.ulID,
               'data': wybranaData,
-            }),
+            }).then((_) { if (mounted) _loadView(); }),
           )
         ],
         bottom: PreferredSize(
@@ -833,7 +830,7 @@ class _FramesScreenState extends State<FramesScreen> {
                                     Navigator.of(context).pushNamed(
                                     InfosEditScreen.routeName,
                                     arguments: {'idInfo': idNotatki},
-                                  );                                      
+                                  ).then((_) { if (mounted) _loadView(); });
                                 },
                               child: Text('${notatka}',
                                 style: const TextStyle(
