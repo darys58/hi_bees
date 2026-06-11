@@ -224,9 +224,11 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
       .fetchAndSetFramesForHive(nrPasieki, globals.nrUlaPrzeniesZ)
       .then((_) {
         final framesData = Provider.of<Frames>(context, listen: false);
-        // Ramki dostępne do przeniesienia: mają dane na tę datę, ramkaNr > 0, ramkaNrPo != 0
+        // Korpus jest dostępny, jeśli ma jakąkolwiek ramkę obecną PO przeglądzie (ramkaNrPo != 0),
+        // także ramki "wstawione" (ramkaNr == 0) - np. korpus przeniesiony w obrębie tego samego ula.
+        // Pomijamy markery (zasob == 14).
         List<Frame> availableFrames = framesData.items.where((fr) {
-          return fr.data == dateController.text && fr.ramkaNr > 0 && fr.ramkaNrPo != 0;
+          return fr.data == dateController.text && fr.ramkaNrPo != 0 && fr.zasob != 14;
         }).toList();
 
         // Unikalne numery korpusów
@@ -1169,8 +1171,10 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       final bool tenSamKorpus = (nrPasieki == nrPasiekiDo &&
                                           globals.nrUlaPrzeniesZ == globals.nrUlaPrzeniesDo &&
                                           globals.nrKorpusuPrzeniesZ == globals.nrKorpusuPrzeniesDo);
+                                      //przy przenoszeniu CAŁEGO korpusu (_isBodyMode) nie dodajemy markerów wstaw/usuń
+                                      //dla pojedynczych ramek - powodowały błędy w przeniesionym korpusie
                                       //poniewaz moze nie być "zasob == 14"  czyli "usun ramka", na wszelki wypadek zapis:
-                                      if (frames.isNotEmpty && !tenSamKorpus) {
+                                      if (frames.isNotEmpty && !tenSamKorpus && !_isBodyMode) {
                                       if (_isBodyMode) {
                                         // dla każdej unikalnej ramki w korpusie - wpisy "wstaw" i "usuń"
                                         Set<int> frameNumbers = {};

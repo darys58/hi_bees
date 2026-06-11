@@ -533,10 +533,27 @@ class _FramesScreenState extends State<FramesScreen> {
     }
     
     //*********** obliczane wielkości płótna dla wszystkich korpusów w ulu ******
+    //zadanie 3: nie rysuj korpusu, który nie ma ramek w bieżącym widoku przed/po.
+    //Korpus dodany "po" przeglądzie (ramki wstawiane, ramkaNr=0) byłby pusty w widoku "przed".
+    //Odcinamy puste korpusy OD GÓRY (najwyższe numery) - painter wymaga ciągłości korpusów liczonej od dołu.
+    int maxKorpusZZawartoscia = 0;
+    for (var fr in frames) {
+      if (fr.zasob == 14) continue; //markery nie liczą się jako "zawartość" korpusu
+      final bool obecna = przedpo == 1 ? fr.ramkaNr > 0 : fr.ramkaNrPo > 0; //przed: ramkaNr>0, po: ramkaNrPo>0
+      if (obecna && fr.korpusNr > maxKorpusZZawartoscia) maxKorpusZZawartoscia = fr.korpusNr;
+    }
+    //jeśli nic nie ma zawartości w tym widoku - zostaw bez zmian (unikamy pustego paintera / crasha na ramki[0])
+    final List<Frame> korpusyWidoczne = maxKorpusZZawartoscia > 0
+        ? _korpusy.where((k) => k.korpusNr <= maxKorpusZZawartoscia).toList()
+        : _korpusy;
+    final List<Frame> ramkiWidoczne = maxKorpusZZawartoscia > 0
+        ? frames.where((fr) => fr.korpusNr <= maxKorpusZZawartoscia).toList()
+        : frames;
+
     double widthCanvas = 0; //szerokość płótna
     double highCanvas = 0; //wysokość płótna
-    for (var i = 0; i < _korpusy.length; i++) {
-      highCanvas += _korpusy[i].typ * 75 + 30; //wysokość półkorpusa + 2 po 15 na padding
+    for (var i = 0; i < korpusyWidoczne.length; i++) {
+      highCanvas += korpusyWidoczne[i].typ * 75 + 30; //wysokość półkorpusa + 2 po 15 na padding
       // print('wysokość = $highCanvas');
     }
     final hivesData = Provider.of<Hives>(context);
@@ -703,8 +720,8 @@ class _FramesScreenState extends State<FramesScreen> {
                         // ignore: sort_child_properties_last
                         child: CustomPaint(
                           painter: MyHive(
-                              ramki: frames,
-                              korpusy: _korpusy,
+                              ramki: ramkiWidoczne,
+                              korpusy: korpusyWidoczne,
                               width: widthCanvas,
                               high: highCanvas,
                               informacje: infos,
