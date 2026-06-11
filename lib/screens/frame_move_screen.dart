@@ -1164,8 +1164,13 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                               DBHelper.updateRamkaNrPo(frames[i].id, 0);
                                         }
                                       }
+                                      //przy przenoszeniu w obrębie TEGO SAMEGO korpusu (ta sama pasieka, ul i korpus)
+                                      //nie dodajemy markerów wstaw/usuń - ramka nie opuszcza korpusu, zmienia tylko pozycję
+                                      final bool tenSamKorpus = (nrPasieki == nrPasiekiDo &&
+                                          globals.nrUlaPrzeniesZ == globals.nrUlaPrzeniesDo &&
+                                          globals.nrKorpusuPrzeniesZ == globals.nrKorpusuPrzeniesDo);
                                       //poniewaz moze nie być "zasob == 14"  czyli "usun ramka", na wszelki wypadek zapis:
-                                      if (frames.isNotEmpty) {
+                                      if (frames.isNotEmpty && !tenSamKorpus) {
                                       if (_isBodyMode) {
                                         // dla każdej unikalnej ramki w korpusie - wpisy "wstaw" i "usuń"
                                         Set<int> frameNumbers = {};
@@ -1190,7 +1195,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                               0);
                                           // "usuń ramka" dla ramki Z
                                           Frames.insertFrame(
-                                              '${dateController.text}.$nrPasieki.${globals.nrUlaPrzeniesZ}.${globals.nrKorpusuPrzeniesZ}.0.$frameNr.1.14',
+                                              '${dateController.text}.$nrPasieki.${globals.nrUlaPrzeniesZ}.${globals.nrKorpusuPrzeniesZ}.$frameNr.0.1.14',
                                               dateController.text,
                                               nrPasieki!,
                                               globals.nrUlaPrzeniesZ,
@@ -1222,7 +1227,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                               0);
                                       // i "usuń ramka" dla ramki Z (zostaje w źródłowej pasiece)
                                       Frames.insertFrame(
-                                              '${dateController.text}.$nrPasieki.${globals.nrUlaPrzeniesZ}.${globals.nrKorpusuPrzeniesZ}.0.${globals.nrRamkiPrzeniesZ}.1.14',
+                                              '${dateController.text}.$nrPasieki.${globals.nrUlaPrzeniesZ}.${globals.nrKorpusuPrzeniesZ}.${globals.nrRamkiPrzeniesZ}.0.1.14',
                                               dateController.text,
                                               nrPasieki!,
                                               globals.nrUlaPrzeniesZ,
