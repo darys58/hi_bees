@@ -494,6 +494,7 @@ class _FramesScreenState extends State<FramesScreen> {
     // }
     String notatka = '';
     String idNotatki = '';
+    int? ramekPrzegladu; //liczba ramek korpusu zapamiętana w tym przeglądzie (snapshot z pola "pogoda"); null = stary przegląd bez snapshotu
     final infosData = Provider.of<Infos>(context);
     List<Info> infos = infosData.items.where((inf) {
       return inf.data == (wybranaData);
@@ -504,6 +505,8 @@ class _FramesScreenState extends State<FramesScreen> {
       if ((infos[i].data == wybranaData) && (infos[i].parametr == AppLocalizations.of(context)!.inspection)){
         idNotatki = infos[i].id;
         notatka = infos[i].uwagi;
+        //odczyt zapamiętanej liczby ramek korpusu (rozmiar ula z momentu przeglądu)
+        ramekPrzegladu = int.tryParse(infos[i].pogoda);
       //   print(
       //       '${infos[i].id},${infos[i].data},${infos[i].pasiekaNr},${infos[i].ulNr},${infos[i].kategoria},${infos[i].parametr},${infos[i].wartosc},${infos[i].miara},${infos[i].uwagi}');
       //   print('======='); 
@@ -542,8 +545,11 @@ class _FramesScreenState extends State<FramesScreen> {
       return hv.ulNr == hiveNr; // jest ==  a było contain ale dla typu String
     }).toList();
 
-    globals.iloscRamek = hive[0].ramek; //ilość ramek w korpusie zapamiętana w bazie
-    widthCanvas = hive[0].ramek * 20 * luPa + 20; //pole "ramek" zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+    //liczba ramek korpusu: priorytet ma snapshot zapisany w przeglądzie (zachowuje rozmiar starego ula),
+    //fallback do aktualnego ula dla starych przeglądów bez snapshotu
+    final int iloscRamekKorpusu = ramekPrzegladu ?? hive[0].ramek;
+    globals.iloscRamek = iloscRamekKorpusu; //ilość ramek w korpusie
+    widthCanvas = iloscRamekKorpusu * 20 * luPa + 20; //po 20px na ramkę i 2 x 10px na padding
     //print('hive= ${hive[0].ramek}');
     // print('szerokość = $widthCanvas');
     //*********** */
