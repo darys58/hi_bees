@@ -1113,9 +1113,10 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       final framesData1 = Provider.of<Frames>(context, listen: false);
                                       List<Frame> frames;
                                       if (_isBodyMode) {
-                                        //wszystkie ramki w wybranym korpusie (z wybranej daty, ramkaNr > 0, ramkaNrPo != 0)
+                                        //wszystkie ramki obecne w wybranym korpusie w widoku "po" (ramkaNrPo != 0), z pominięciem markerów (zasob == 14).
+                                        //UWAGA: filtr po ramkaNrPo (nie ramkaNr) - inaczej gubione byłyby ramki wcześniej wstawione/przeniesione (mają ramkaNr == 0).
                                         frames = framesData1.items.where((fr) {
-                                          return fr.data == dateController.text && fr.korpusNr == globals.nrKorpusuPrzeniesZ && fr.ramkaNr > 0 && fr.ramkaNrPo != 0;
+                                          return fr.data == dateController.text && fr.korpusNr == globals.nrKorpusuPrzeniesZ && fr.ramkaNrPo != 0 && fr.zasob != 14;
                                         }).toList();
                                       } else {
                                         //wszystkie zasoby tej ramki (i z wybranej daty dla ula i tylko dla wybranego korpusu)
@@ -1125,8 +1126,8 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                       }
                                         //dla kazdego zasobu - zapis z innym id oraz modyfikacja ramkaNr, ramkaNrPo, korpusNr i ewentualnie ulNr
                                       for (var i = 0; i < frames.length; i++) {
-                                        // w trybie korpusu ramka zachowuje swój numer; w trybie ramki - numer docelowy
-                                        int targetFrameNr = _isBodyMode ? frames[i].ramkaNr : globals.nrRamkiPrzeniesDo;
+                                        // w trybie korpusu ramka zachowuje swój numer (z widoku "po" = ramkaNrPo, bo ramki wstawione/przeniesione mają ramkaNr == 0); w trybie ramki - numer docelowy
+                                        int targetFrameNr = _isBodyMode ? frames[i].ramkaNrPo : globals.nrRamkiPrzeniesDo;
                                         if(frames[i].zasob != 14){ //jezeli zasób jest rózny od "isDone" czyli prawdopodobnie nie jest = "usuń ramka"
                                           Frames.insertFrame(
                                             '${globals.dataPrzeniesRamke}.$nrPasiekiDo.${globals.nrUlaPrzeniesDo}.${globals.nrKorpusuPrzeniesDo}.0.$targetFrameNr.${frames[i].strona}.${frames[i].zasob}',

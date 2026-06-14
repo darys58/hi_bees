@@ -52,6 +52,7 @@ class _FramesScreenState extends State<FramesScreen> {
   List<Frame> _daty = []; //unikalne daty
   String wybranaData = '';
   List<Frame> _korpusy = []; //unikalne korpusy
+  double _dragDx = 0; //skumulowany dystans poziomego przeciągnięcia po rysunku ula (fallback gdy primaryVelocity==0, np. na symulatorze)
   int przedpo = 2; //wyświetlanie ramek przed (1) albo po (2) przeglądzie
   List<bool> _selectedPrzedPo = <bool>[false, true];
   double luPa = globals.lupaRamek; //powiększenie widoku ula
@@ -726,13 +727,17 @@ class _FramesScreenState extends State<FramesScreen> {
                       //Text(frames[0].data),
                       GestureDetector(
                         //przesunięcie palcem na rysunku ula = zmiana daty przeglądu (jak klik w datę)
+                        onHorizontalDragStart: (_) => _dragDx = 0,
+                        onHorizontalDragUpdate: (details) => _dragDx += details.delta.dx,
                         onHorizontalDragEnd: (details) {
                           final v = details.primaryVelocity ?? 0;
-                          if (v == 0) return;
+                          //szybki gest ma prędkość; powolny drag (np. mysz na symulatorze) kończy się prędkością 0 - wtedy decyduje dystans
+                          final double kierunek = v != 0 ? v : _dragDx;
+                          if (kierunek.abs() < 20) return; //za mały gest - ignoruj
                           final current = _daty.indexWhere((d) => d.data == wybranaData);
                           if (current < 0) return;
                           //swipe w PRAWO -> młodsza data (niższy index), w LEWO -> starsza (wyższy index)
-                          _selectDate(v > 0 ? current - 1 : current + 1);
+                          _selectDate(kierunek > 0 ? current - 1 : current + 1);
                         },
                         child: Container(
                         //szare body

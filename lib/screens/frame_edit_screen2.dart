@@ -2110,21 +2110,24 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
   void _autoMarkerWstawUsun(String zrobic, int zas, int przed, int po, int typ, int rozmiar, String data) {
     if (zrobic != 'dodaj' || zas >= 13) return;
     String? wartoscMarkera;
+    int markerPrzed = przed;
+    int markerPo = po;
     if (przed == 0 && po != 0) {
       wartoscMarkera = AppLocalizations.of(context)!.inserted; //ramka wstawiona
     } else if (po == 0 && przed != 0) {
       wartoscMarkera = AppLocalizations.of(context)!.deleted; //ramka usunięta
+      markerPo = przed; //marker usunięcia widoczny także w widoku "po" (na pozycji usuniętej ramki) - painter rysuje markery tylko gdy nrRamki>0
     }
     if (wartoscMarkera == null) return;
     Frames.insertFrame(
-      '$data.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$przed.$po.1.14',
+      '$data.$nowyNrPasieki.$nowyNrUla.$nowyNrKorpusu.$markerPrzed.$markerPo.1.14',
       data,
       nowyNrPasieki!,
       nowyNrUla!,
       nowyNrKorpusu!,
       typ,
-      przed,
-      po,
+      markerPrzed,
+      markerPo,
       rozmiar,
       1, //strona lewa - jak przy ręcznym dodawaniu znacznika
       14, //zasob = isDone (znacznik akcji)
