@@ -123,3 +123,29 @@ builder: (dialogContext) => AlertDialog(  // dialogContext = dialog
 - `lib/globals.dart` - zmienne globalne
 - `lib/models/frames.dart` - provider ramek
 - `lib/helpers/db_helper.dart` - operacje DB (updateRamkaNrPo)
+
+---
+
+## Naprawy 14.06.2026 (commit cd6b916, wersja 1.11.1.92)
+
+Cztery zgłoszone błędy:
+
+### 1. Marker usunięcia ramki nie pojawiał się automatycznie
+- Pliki: `frame_edit_screen.dart`, `frame_edit_screen2.dart` — metoda `_autoMarkerWstawUsun`
+- Przyczyna: marker usunięcia zapisywany z `po=0`. Painter (`frames_screen.dart`) rysuje markery **tylko gdy `nrRamki>0`**, a w domyślnym widoku „po" `nrRamki=ramkaNrPo=0` → marker pomijany. Marker wstawienia (`po=X>0`) działał poprawnie.
+- Fix: dla usunięcia `markerPo = przed` (= numer ramki) — trójkąt „usunięto" widoczny też w widoku „po" na pozycji usuniętej ramki (jak przy ręcznym markerze).
+
+### 2. Gubienie ramek przy przenoszeniu całego korpusu (_isBodyMode)
+- Plik: `frame_move_screen.dart` (~1118 zapytanie źródłowe, ~1129 targetFrameNr)
+- Przyczyna: filtr źródłowy `ramkaNr > 0` pomijał ramki **wcześniej wstawione/przeniesione** (mają `ramkaNr == 0`), a `targetFrameNr` brał `ramkaNr` (=0).
+- Fix: filtr `ramkaNrPo != 0 && zasob != 14` (ramki obecne w „po", bez markerów); `targetFrameNr = frames[i].ramkaNrPo`.
+- Uwaga: scenariusz z czystymi ramkami (ramkaNr=ramkaNrPo) renderuje się poprawnie (rekord-duch utrzymuje ciągłość korpusów w `getKorpus` DISTINCT). Bug dotyczy ramek z `ramkaNr==0`. Painter NIE wymagał zmian.
+
+### 3. Swipe na rysunku ula nie działał na symulatorze
+- Plik: `frames_screen.dart` (GestureDetector na rysunku ula)
+- Przyczyna: powolny drag myszą na symulatorze kończy się `primaryVelocity ≈ 0` → `if (v == 0) return;` ucinał gest.
+- Fix: pole `_dragDx`, `onHorizontalDragStart/Update` akumulują dystans; w `onHorizontalDragEnd` fallback `kierunek = v != 0 ? v : _dragDx`, próg `abs() < 20`.
+
+### 4. „Zasoby na ramce -" w widoku przeglądów (infos_screen)
+- Plik: `infos_screen.dart` — menu `_showAlert` kategorii `inspection`
+- Dodany przycisk „Zasoby na ramce -" (`FrameEditScreen2`, `kierunek: 'minus'`) po przycisku „+", tak jak w menu `frames_screen`. Dodano też jawne `kierunek: 'plus'` do istniejącego „+".
