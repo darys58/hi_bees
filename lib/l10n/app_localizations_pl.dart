@@ -869,6 +869,8 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get resourceOnFramePlus => 'Zasoby na ramce +';
+
+  @override
   String get resourceOnFrameMinus => 'Zasoby na ramce -';
 
   @override

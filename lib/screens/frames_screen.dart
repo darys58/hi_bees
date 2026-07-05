@@ -52,7 +52,8 @@ class _FramesScreenState extends State<FramesScreen> {
   List<Frame> _daty = []; //unikalne daty
   String wybranaData = '';
   List<Frame> _korpusy = []; //unikalne korpusy
-  double _dragDx = 0; //skumulowany dystans poziomego przeciągnięcia po rysunku ula (fallback gdy primaryVelocity==0, np. na symulatorze)
+  double _dragDx = 0; //skumulowany dystans poziomego przeciągnięcia po rysunku ula (Listener - działa też na symulatorze)
+  double _dragDy = 0; //skumulowany dystans pionowy - by odróżnić swipe poziomy od przewijania w pionie
   int przedpo = 2; //wyświetlanie ramek przed (1) albo po (2) przeglądzie
   List<bool> _selectedPrzedPo = <bool>[false, true];
   double luPa = globals.lupaRamek; //powiększenie widoku ula
@@ -512,6 +513,26 @@ class _FramesScreenState extends State<FramesScreen> {
       return fr.data == (wybranaData);
     }).toList();
 
+    // ===== DEBUG TYMCZASOWY - diagnoza znikającej ramki przy przenoszeniu korpusów (USUNĄĆ po teście) =====
+    // ignore: avoid_print
+    // print('===== DEBUG RAMKI ula ${globals.ulID} pasieka ${globals.pasiekaID} | wybranaData=$wybranaData =====');
+    // final _dbg = [...framesData.items]..sort((a, b) {
+    //   final c = a.data.compareTo(b.data);
+    //   if (c != 0) return c;
+    //   final k = a.korpusNr.compareTo(b.korpusNr);
+    //   if (k != 0) return k;
+    //   final r = a.ramkaNr.compareTo(b.ramkaNr);
+    //   if (r != 0) return r;
+    //   return a.zasob.compareTo(b.zasob);
+    // });
+    // for (final fr in _dbg) {
+    //   // ignore: avoid_print
+    //   print('id=${fr.id} | data=${fr.data} | korpus=${fr.korpusNr} | typ=${fr.typ} | ramkaNr=${fr.ramkaNr} | ramkaNrPo=${fr.ramkaNrPo} | strona=${fr.strona} | zasob=${fr.zasob} | wartosc=${fr.wartosc}');
+    // }
+    // // ignore: avoid_print
+    // print('===== KONIEC DEBUG (${_dbg.length} rekordów) =====');
+    // // ===== KONIEC DEBUG TYMCZASOWY =====
+
     // print(
     //     'frames_screen - ilość stron ramek w pasiece ${globals.pasiekaID} ulu ${globals.ulID}');
     // print(frames.length);
@@ -725,19 +746,25 @@ class _FramesScreenState extends State<FramesScreen> {
                       child: Column(children: <Widget>[
                       //for (var i = 0; i < frames.length; i++) {}
                       //Text(frames[0].data),
-                      GestureDetector(
-                        //przesunięcie palcem na rysunku ula = zmiana daty przeglądu (jak klik w datę)
-                        onHorizontalDragStart: (_) => _dragDx = 0,
-                        onHorizontalDragUpdate: (details) => _dragDx += details.delta.dx,
-                        onHorizontalDragEnd: (details) {
-                          final v = details.primaryVelocity ?? 0;
-                          //szybki gest ma prędkość; powolny drag (np. mysz na symulatorze) kończy się prędkością 0 - wtedy decyduje dystans
-                          final double kierunek = v != 0 ? v : _dragDx;
-                          if (kierunek.abs() < 20) return; //za mały gest - ignoruj
+                      Listener(
+                        //przesunięcie palcem na rysunku ula = zmiana daty przeglądu (jak klik w datę).
+                        //Listener (surowe zdarzenia wskaźnika) zamiast GestureDetector - nie bierze udziału
+                        //w "gesture arena", więc gest poziomy działa też przy przeciąganiu myszą na symulatorze.
+                        onPointerDown: (_) {
+                          _dragDx = 0;
+                          _dragDy = 0;
+                        },
+                        onPointerMove: (event) {
+                          _dragDx += event.delta.dx;
+                          _dragDy += event.delta.dy;
+                        },
+                        onPointerUp: (_) {
+                          //gest musi być przeważnie poziomy (żeby nie kolidować z pionowym przewijaniem)
+                          if (_dragDx.abs() < 20 || _dragDx.abs() < _dragDy.abs()) return;
                           final current = _daty.indexWhere((d) => d.data == wybranaData);
                           if (current < 0) return;
                           //swipe w PRAWO -> młodsza data (niższy index), w LEWO -> starsza (wyższy index)
-                          _selectDate(kierunek > 0 ? current - 1 : current + 1);
+                          _selectDate(_dragDx > 0 ? current - 1 : current + 1);
                         },
                         child: Container(
                         //szare body
@@ -1264,6 +1291,9 @@ class MyHive extends CustomPainter {
       startyZas = startyZasobowPo;
       startyMaxZas = startyMaxZasobowPo;
       nrRamki = ramki[i].ramkaNrPo;
+      //marker usunięcia (zasob 14) zapisany jest jako X/0 (przed=X, po=0) - widoczny TYLKO w widoku "przed",
+      //gdzie ramka jeszcze istnieje. W widoku "po" ramka jest usunięta, więc nrRamki=ramkaNrPo=0 i marker
+      //(jak i pusty obrys z case 14) nie jest rysowany - to miejsce ma być puste.
     }
 
     // print('startZas $startZas');

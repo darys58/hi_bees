@@ -871,6 +871,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get resourceOnFramePlus => 'Recursos no quadro +';
+
+  @override
   String get resourceOnFrameMinus => 'Recursos no quadro -';
 
   @override

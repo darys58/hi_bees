@@ -874,6 +874,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get resourceOnFramePlus => 'Ressources sur le cadre +';
+
+  @override
   String get resourceOnFrameMinus => 'Ressources sur le cadre -';
 
   @override

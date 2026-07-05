@@ -140,10 +140,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.9.19.89 22.04.2026 - poprawki przy rysowaniu podglądu korpusu online w voice_scren2, Optymalizacja importu i odbudowy uli przy imporcie (SQL DISTINCT + batch SQLite), batch SQLite dla zapisu ramek i info (saveFramesToDb, saveInfosToDb), batch SQLite dla NFC, usunięcie martwych sub-progressów i sztucznych delayów, batch SQLite dla notatek, zakupów, sprzedaży, matek i zbiorów
   //1.10.20.90 24.04.2026 - konfiguracja języków w XCode zeby poprawnie wyswietlały sie w AppStore, poprawki wyswietlania korpusu online w voice_screen2
   //1.11.0.91 30.04.2026 - przygotowanie do upgrade Xcode 26: deployment target iOS 15, PrivacyInfo.xcprivacy, Dart 3 SDK constraint, Flutter 3.32+, checklist UPGRADE_XCODE_26.md
-  //1.11.1.92 10.06.2026 - fix wake-word - krótki beep zamiast słucham.mp3 (Rhino mylił mowę z głośnika z komendą)
-  
-  final wersja = '1.11.1.92'; //wersja aplikacji na iOS
-  final dataWersji = '2026-06-10';
+  //1.11.1.92 15.06.2026 - fix wake-word - krótki beep zamiast słucham.mp3 (Rhino mylił mowę z głośnika z komendą), poprawki wprowadzania zasobów na ramkach i przenoszenia korpusów, swip przeglądów, odświezanie przy wprowadzaniu przeglądów
+  //1.11.2.93 04.07.2026 - zmiana dźwięku po "Hej Maja" (wake-word) z krótkiego beep na wyraźniejszy i głosniejszy, poprawka w voice_screen2 - odświezanie widoku korpusa po pierwszym zapisie zasobu do bazy
+
+  final wersja = '1.11.2.93'; //wersja aplikacji na iOS
+  final dataWersji = '2026-07-04';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;

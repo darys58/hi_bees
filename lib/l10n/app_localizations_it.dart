@@ -872,6 +872,8 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get resourceOnFramePlus => 'Risorse sul telaino +';
+
+  @override
   String get resourceOnFrameMinus => 'Risorse sul telaino -';
 
   @override

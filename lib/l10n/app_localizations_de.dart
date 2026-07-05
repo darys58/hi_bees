@@ -869,6 +869,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get resourceOnFramePlus => 'Vorräte auf dem Rahmen +';
+
+  @override
   String get resourceOnFrameMinus => 'Vorräte auf dem Rahmen -';
 
   @override

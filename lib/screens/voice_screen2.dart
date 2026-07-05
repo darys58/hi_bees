@@ -442,8 +442,10 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
       //krótki sygnał systemowy zamiast słucham.mp3 - Rhino nasłuchuje komendy
       //i odtworzenie mowy z głośnika byłoby błędnie interpretowane jako intencja
       Platform.isAndroid
-          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
-          : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
+        //  ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
+        //  : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
+          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
+          : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
     });
   }
 
@@ -492,8 +494,10 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
           rhinoText = AppLocalizations.of(context)!.hiBeesDetected;
           //krótki sygnał systemowy - Rhino właśnie zaczął nasłuch nowej komendy
           Platform.isAndroid
-              ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
-              : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
+             // ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_PROP_BEEP2)
+             // : FlutterBeep.playSysSound(iOSSoundIDs.BeginRecording);
+              ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
+              : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
         } else {
           //powrót do oczekiwania na wybudzenie
           setState(() {
@@ -4800,6 +4804,9 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
       tagNFC,
       1, //nieaktualne - zmiana zasobu
     ).then((_) {
+      //odświeżenie live podglądu korpusu DOPIERO po zapisaniu zasobów ramek i danych ula do bazy
+      //(wywołanie w inferenceCallback trafiało do bazy przed zapisem = pokazywało poprzedni przegląd)
+      if (globals.voice2LivePodglad) _refreshLiveView();
       //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
       Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrXXOfApiary)
       .then((_) {
@@ -5476,7 +5483,8 @@ class _VoiceScreen2State extends State<VoiceScreen2> {
   //odtwórz 'zapisałam' i skasuj ewentualne odroczone 'okej' (zapisałam je wypiera)
   void _playSuccess() {
     _pendingOpenBeep = false;
-    _sound.play('success');
+    //_sound.play('success'); //zmiana do testów bo jest za długie
+    _sound.play('open');
   }
 
   //odtwórz odroczone 'okej' jezeli nic innego go nie wyparło

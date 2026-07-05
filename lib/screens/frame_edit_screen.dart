@@ -1468,7 +1468,9 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       wartoscMarkera = AppLocalizations.of(context)!.inserted; //ramka wstawiona
     } else if (po == 0 && przed != 0) {
       wartoscMarkera = AppLocalizations.of(context)!.deleted; //ramka usunięta
-      markerPo = przed; //marker usunięcia widoczny także w widoku "po" (na pozycji usuniętej ramki) - painter rysuje markery tylko gdy nrRamki>0
+      //marker usunięcia zapisujemy z poprawnymi danymi X/0 (przed=X, po=0 = ramka usunięta).
+      //Widoczność w widoku "po" zapewnia painter: dla markera (zasob 14) z ramkaNrPo==0 rysuje
+      //trójkąt na pozycji ramkaNr (przed) - patrz frames_screen.dart.
     }
     if (wartoscMarkera == null) return;
     Frames.insertFrame(
@@ -2650,6 +2652,11 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                       for (var i = 0; i < frames.length; i++) {
                                         //(' id: ${frames[i].id}, ramkaPrzed: ${frames[i].ramkaNr}, ramkaPo: ${frames[i].ramkaNrPo}, zasób: ${frames[i].zasob}');
                                         DBHelper.updateRamkaNrPo(frames[i].id, nowyNrRamkiPo!);
+                                      }
+                                      //auto-marker usunięcia ramki gdy w trybie edycji ustawiono "po"=0 dla całej ramki
+                                      //(zas=0 wymusza utworzenie znacznika - parametr zas służy tylko do pominięcia toDo/markerów zas>=13)
+                                      if(nowyNrRamkiPo == 0){
+                                        _autoMarkerWstawUsun('dodaj', 0, nowyNrRamki!, 0, korpus, rozmiarRamki, dateController.text);
                                       }
                                     }
                                     //ramka WSTAWIANA (przed=0): wszystkie wstawiane mają ramkaNr=0, więc rodzeństwa
