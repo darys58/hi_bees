@@ -262,6 +262,12 @@ class DBHelper {
     db.update('memory', {'mem1': text}, where: 'dev = ?', whereArgs: [dev]);
   }
 
+  //update memory - mem2 (ostatnio zaproponowana użytkownikowi wersja apki - anty-spam dialogu o aktualizacji)
+  static Future<void> updateMem2(String dev, String text) async {
+    final db = await DBHelper.database();
+    db.update('memory', {'mem2': text}, where: 'dev = ?', whereArgs: [dev]);
+  }
+
   //update dodatki1 - dla import_screen
   static Future<void> updateDodatki1(String pole, String wartosc) async {
     final db = await DBHelper.database();

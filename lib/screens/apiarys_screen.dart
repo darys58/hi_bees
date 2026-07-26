@@ -142,9 +142,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.11.0.91 30.04.2026 - przygotowanie do upgrade Xcode 26: deployment target iOS 15, PrivacyInfo.xcprivacy, Dart 3 SDK constraint, Flutter 3.32+, checklist UPGRADE_XCODE_26.md
   //1.11.1.92 15.06.2026 - fix wake-word - krótki beep zamiast słucham.mp3 (Rhino mylił mowę z głośnika z komendą), poprawki wprowadzania zasobów na ramkach i przenoszenia korpusów, swip przeglądów, odświezanie przy wprowadzaniu przeglądów
   //1.11.2.93 04.07.2026 - zmiana dźwięku po "Hej Maja" (wake-word) z krótkiego beep na wyraźniejszy i głosniejszy, poprawka w voice_screen2 - odświezanie widoku korpusa po pierwszym zapisie zasobu do bazy
-
-  final wersja = '1.11.2.93'; //wersja aplikacji na iOS
-  final dataWersji = '2026-07-04';
+  //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji
+  
+  final wersja = '1.11.3.94'; //wersja aplikacji na iOS
+  final dataWersji = '2026-07-06';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;
@@ -212,6 +213,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             globals.key = mem[0].key; //pobranie klucza
             globals.keyMemory =  mem[0].key; //potrzebne gdyby była rezygnacja z aktywacji
             globals.kod = mem[0].kod; //kod do aktywacji, kod tworzy nazwę tabeli do archiwizacji
+
+            //sprawdzenie czy w sklepie jest nowsza wersja apki (cicho, raz przy starcie) - patrz sprawdzNowaWersje()
+            sprawdzNowaWersje(mem[0].kod, mem[0].mem2);
 
             //sprawdzenie daty do której apka jest aktywna - teraz bez znaczenia !!!!!
             final data = DateTime.parse(mem[0].ddo);
@@ -807,6 +811,117 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     } else {
       throw Exception('Failed to create OdpPost.');
     }
+  }
+
+  //cicha weryfikacja czy w sklepie jest nowsza wersja apki (wołane raz przy starcie).
+  //Osobna funkcja, a NIE wyslijKod - wyslijKod pokazuje alerty aktywacyjne i jest wołane tylko po zmianie wersji.
+  //Backend cbt_hi_kod_v2.php zwraca dodatkowo pola: wersja_last, url_ios, url_android.
+  //ostatniaProponowana = mem2 z bazy - żeby nie pokazywać dialogu przy każdym starcie dla tej samej wersji.
+  Future<void> sprawdzNowaWersje(String kod, String ostatniaProponowana) async {
+    try {
+      final http.Response response = await http
+          .post(
+            Uri.parse('https://darys.pl/cbt_hi_kod_v2.php'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String, String>{
+              "kod_mobile": kod,
+              "deviceId": globals.deviceId,
+              "wersja": wersja,
+              "jezyk": globals.jezyk,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode < 200 || response.statusCode > 400) return;
+      final Map<String, dynamic> odp = json.decode(response.body);
+      final String wersjaLast = (odp['wersja_last'] ?? '').toString();
+      if (wersjaLast.isEmpty) return; //backend nie zwrócił wersji - nic nie robimy
+      if (!_nowszaWersja(wersjaLast, wersja)) return; //brak nowszej wersji
+      if (wersjaLast == ostatniaProponowana) return; //tę wersję już proponowaliśmy - nie spamujemy
+      //URL ze sklepu: preferuj podany przez backend, w razie braku użyj stałych zapasowych
+      final String urlSerwer =
+          (Platform.isAndroid ? odp['url_android'] : odp['url_ios'])
+                  ?.toString() ??
+              '';
+      final String url =
+          urlSerwer.isNotEmpty ? urlSerwer : _domyslnyUrlSklepu();
+      if (!mounted) return;
+      _showUpdateDialog(wersjaLast, url);
+    } catch (_) {
+      //brak sieci / timeout / błędny JSON - sprawdzenie wersji nie może blokować startu apki
+    }
+  }
+
+  //zapasowy link do sklepu (gdy backend nie zwróci url_ios/url_android)
+  String _domyslnyUrlSklepu() {
+    return Platform.isAndroid
+        ? 'https://play.google.com/store/apps/details?id=eu.darys.heymaya'
+        : 'https:/apps.apple.com/pl/app/hey-maya/id6447341365';
+  }
+
+  //porównanie wersji w formacie "1.11.2.93" segment po segmencie; zwraca true gdy a > b
+  bool _nowszaWersja(String a, String b) {
+    final List<int> pa =
+        a.split('.').map((s) => int.tryParse(s.trim()) ?? 0).toList();
+    final List<int> pb =
+        b.split('.').map((s) => int.tryParse(s.trim()) ?? 0).toList();
+    final int len = pa.length > pb.length ? pa.length : pb.length;
+    for (int i = 0; i < len; i++) {
+      final int va = i < pa.length ? pa[i] : 0;
+      final int vb = i < pb.length ? pb[i] : 0;
+      if (va != vb) return va > vb;
+    }
+    return false; //równe
+  }
+
+  //dialog opcjonalny - informacja o nowej wersji w sklepie (Aktualizuj / Później)
+  void _showUpdateDialog(String nowaWersja, String url) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.updateAvailable),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(AppLocalizations.of(context)!.updateAvailableMsg),
+            const SizedBox(height: 8),
+            Text(
+              'v$nowaWersja',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              //zapamiętanie zaproponowanej wersji - nie pokazuj ponownie dopóki nie pojawi się kolejna
+              DBHelper.updateMem2(globals.deviceId, nowaWersja);
+              Navigator.of(dialogCtx).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.lAter),
+          ),
+          TextButton(
+            onPressed: () async {
+              DBHelper.updateMem2(globals.deviceId, nowaWersja);
+              Navigator.of(dialogCtx).pop();
+              if (url.isNotEmpty) {
+                final Uri uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              }
+            },
+            child: Text(AppLocalizations.of(context)!.updateNow),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+    );
   }
 
   //okno dialogowe - Aktywuj lub Anuluj

@@ -39,7 +39,7 @@ class _QueenItemState extends State<QueenItem> {
   @override
   Widget build(BuildContext context) {
     final matki = Provider.of<Queen>(context, listen: false);
-    dateController.text = globals.dataWpisu; //ostatnio wybrana data 
+    dateController.text = DateTime.now().toString().substring(0, 10); //globals.dataWpisu; //ostatnio wybrana data 
     // List<Color> color = [
     //   const Color.fromARGB(255, 252, 193, 104),
     //   const Color.fromARGB(255, 255, 114, 104),

@@ -877,6 +877,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get resourceOnFrameMinus => 'Recursos en el cuadro -';
 
   @override
+  String get updateAvailable => 'Actualización disponible';
+
+  @override
+  String get updateAvailableMsg =>
+      'Hay una nueva versión de la aplicación disponible en la tienda. Actualiza para obtener las últimas funciones y correcciones.';
+
+  @override
+  String get updateNow => 'Actualizar';
+
+  @override
   String get toDO => 'Por hacer';
 
   @override
@@ -977,6 +987,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get later => 'despues';
+
+  @override
+  String get lAter => 'Despues';
 
   @override
   String get celsius => 'Celsius';

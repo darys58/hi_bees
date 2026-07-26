@@ -1,0 +1,219 @@
+context:
+  expressions:
+    setApiary:
+      - $state:apiaryState apiary (number) $pv.TwoDigitInteger:nrXXOfApiary
+    setHive:
+      - $state:hiveState hive (number) ($hundred:nrXXOfHiveH) (and)
+        ($pv.TwoDigitInteger:nrXXOfHive)
+    setBody:
+      - $state:bodyState [box,body] (number) $pv.SingleDigitInteger:nrXOfBody
+    setFrame:
+      - ($state:frameState)($sizeOfFrame:sizeOfFrame) frame (number)
+        $pv.TwoDigitInteger:nrXXOfFrame (on) (the) ($siteOfFrame:siteOfFrame)
+        (site)
+    setStore:
+      - food $pv.Percent:food (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) honey $pv.Percent:honey (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) (honey) sealed $pv.Percent:honeySealed (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) pollen $pv.Percent:pollen (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) (indoor, covered) brood $pv.Percent:brood (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) larvae $pv.Percent:larvae (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) eggs $pv.Percent:eggs (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) wax (foundation) $pv.Percent:wax (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) (wax) comb $pv.Percent:waxComb (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) $pv.SingleDigitInteger:queenCells queen cells (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) $queen:queen queen (on) (the) $siteOfFrame:siteOfFrame
+      - (set) [delete, cancel] $pv.SingleDigitInteger:delQCells queen cells (on)
+        (the) ($siteOfFrame:siteOfFrame)
+      - (set) drone (brood) $pv.Percent:drone (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) $toDo:toDo
+      - (set) $isDone:isDone
+      - (set) $siteOfFrame:siteOfFrame site
+    setFeeding:
+      - syrup one to one $pv.SingleDigitInteger:syrup1to1I (point)
+        ($pv.TwoDigitInteger:syrup1to1D) [liter, liters]
+      - syrup three to two $pv.SingleDigitInteger:syrup3to2I (point)
+        ($pv.TwoDigitInteger:syrup3to2D) [liter, liters]
+      - (bee) candy $pv.SingleDigitInteger:candyI (point)
+        ($pv.TwoDigitInteger:candyD) [kilo, kilogram]
+      - invert $pv.TwoDigitInteger:invertI (point) ($pv.TwoDigitInteger:invertD)
+        [liter, liters]
+      - "@remove food $pv.Percent:removedFood"
+      - left food $pv.Percent:leftFood
+    setTreatment:
+      - acid ($hundred:acidH) (and) ($pv.TwoDigitInteger:acid) (milliliter,
+        milliliters)
+      - "[up e var all,chemistry] $pv.SingleDigitOrdinal:apivarol [dose,
+        portion, part]"
+      - "[up e var all,chemistry] $pv.SingleDigitInteger:apivarol [dose,
+        portion, part]"
+      - "[up e var all,chemistry] [dose, portion, part] number
+        $pv.SingleDigitInteger:apivarol"
+      - bee o var $state:biovar $pv.SingleDigitInteger:biovarBelts [belt, belts]
+      - varroa ($hundred:varroaH) (and) ($pv.TwoDigitInteger:varroa) (mites)
+    setEquipment:
+      - $deleted:excluderDel excluder
+      - bottom board (is) $quality:bottomBoard
+      - bee pollen trap (is) $state:beePolenTrap
+      - excluder (on) body (number) ($pv.SingleDigitInteger:excluder)
+      - (set) number of frame in body (is) $pv.TwoDigitInteger:numberOfFrame
+    setQueen:
+      - queen (was) born (in) $pv.TwoDigitInteger:queenBorn
+      - queen (is) $queenState:queenState
+      - queen (is) $queenStart:queenStart
+      - queen (is) $queenMark:queenMark (number)
+        ($pv.TwoDigitInteger:queenNumber)
+      - queen (is) $queenQuality:queenQuality
+    setHalfBody:
+      - $state:halfBodyState half [box,body] (number)
+        $pv.SingleDigitInteger:nrXOfHalfBody
+    setAllHives:
+      - $state:allHivesState all hives
+    setHelp:
+      - $help:help
+      - $helpMe:helpMe help me
+    setDate:
+      - set $date:currentDate date
+      - set other year $pv.TwoDigitInteger:dateYear
+      - set other mouth $pv.TwoDigitInteger:dateMonth
+      - set other day $pv.TwoDigitInteger:dateDay
+    setColony:
+      - dead (bees) ($hundred:deadBeeHML) (and) ($pv.TwoDigitInteger:deadBeeML)
+        (milliliter, milliliters)
+      - colony (is) $colonyState:colonyState
+      - colony (is) $colonyForce:colonyForce
+    setHarvest:
+      - bee pollen harvest ($hundred:beePollenHarvestHML) (and)
+        ($pv.TwoDigitInteger:beePollenHarvestML) (milliliter,milliliters)
+      - bee pollen harvest $pv.SingleDigitInteger:beePollenHarvestI (point)
+        ($pv.TwoDigitInteger:beePlllenHarvestD) [liter, liters]
+      - honey harvest $pv.TwoDigitInteger:honeyBigHarvest big frames
+      - honey harvest $pv.TwoDigitInteger:honeySmallHarvest small frames
+      - bee pollen harvest $pv.TwoDigitInteger:beePollenHarvest portion
+    setFrames:
+      - ($state:framesState) frames from $pv.TwoDigitInteger:nrXXOdFrame to
+        $pv.TwoDigitInteger:nrXXDoFrame
+  slots:
+    state:
+      - insert
+      - put on
+      - delete
+      - remove
+      - off
+      - on
+      - open
+      - close
+      - set
+    siteOfFrame:
+      - left
+      - right
+      - both
+      - whole
+    toDo:
+      - work frame
+      - to extraction
+      - to delete
+      - to insulate
+    isDone:
+      - deleted
+      - inserted
+      - insulated
+      - moved left
+      - moved right
+    sizeOfFrame:
+      - big
+      - small
+    queenState:
+      - virgin
+      - artificially inseminated
+      - naturally mated
+    queenStart:
+      - in a cage
+      - in the insulator
+      - freed
+    queenMark:
+      - gone
+      - marked blue
+      - marked green
+      - marked red
+      - marked yellow
+      - marked white
+      - missing
+      - unmarked
+    queenQuality:
+      - ok
+      - small
+      - big
+      - to exchange
+      - good
+      - very good
+      - canceled
+      - weak
+    quality:
+      - ok
+      - dirty
+      - clean
+    helpMe:
+      - location
+      - hive before
+      - hive later
+      - hive
+      - harvest
+      - colony
+      - date
+      - treatment
+      - feeding
+      - queen
+      - equipment
+      - inspection
+    date:
+      - current
+    colonyForce:
+      - normal
+      - very weak
+      - weak
+      - strong
+      - very strong
+    colonyState:
+      - dead
+      - ok
+      - swarming mood
+      - in a cluster
+      - gentle
+      - aggressive
+    queen:
+      - black
+      - blue
+      - green
+      - red
+      - yellow
+      - white
+    help:
+      - close help
+      - help me
+    hundred:
+      - nine hundred
+      - eight hundred
+      - seven hundred
+      - six hundred
+      - five hundred
+      - four hundred
+      - three hundred
+      - two hundred
+      - one hundred
+    deleted:
+      - deleted
+      - remove
+      - delete
+  macros:
+    remove:
+      - remove
+      - delete
+      - removed
+      - deleted

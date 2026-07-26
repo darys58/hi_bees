@@ -1788,6 +1788,24 @@ abstract class AppLocalizations {
   /// **'Resources on frame -'**
   String get resourceOnFrameMinus;
 
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailable;
+
+  /// No description provided for @updateAvailableMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of the app is available in the store. Update to get the latest features and fixes.'**
+  String get updateAvailableMsg;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateNow;
+
   /// No description provided for @toDO.
   ///
   /// In en, this message translates to:
@@ -1991,6 +2009,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'later'**
   String get later;
+
+  /// No description provided for @lAter.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get lAter;
 
   /// No description provided for @celsius.
   ///
