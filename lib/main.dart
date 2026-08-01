@@ -77,6 +77,7 @@ import './models/memory.dart';
 import './models/dodatki1.dart';
 import './models/dodatki2.dart';
 import './models/weathers.dart';
+import './screens/vosk_poc_screen.dart'; //POC Faza 0 - test Vosk-PL (tymczasowe)
 
 //import 'screens/languages.dart';
 //import 'all_translations.dart';
@@ -313,6 +314,7 @@ class _MyAppState extends State<MyApp> {
           //tabela tras (kurs 161)
           //rejestrowanie trasy/drogi do poszczególnych ekranów
           '/': (ctx) => ApiarysScreen(), //zastępuje home: (kurs 162)
+          VoskPocScreen.routeName: (ctx) => const VoskPocScreen(), //POC Faza 0 (tymczasowe)
           FramesScreen.routeName: (ctx) => FramesScreen(),
           HivesScreen.routeName: (ctx) => HivesScreen(),
           VoiceScreen.routeName: (ctx) => VoiceScreen(), //blokowanie działania Picovoce

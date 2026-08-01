@@ -44,3 +44,21 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Zwendorowana wtyczka vosk_flutter_service — binaria pobierane komendą
+# `dart run vosk_flutter_service install -t <os>` (setki MB, nie do gita).
+/packages/vosk_flutter_service/ios/Frameworks/
+/packages/vosk_flutter_service/macos/Frameworks/
+/packages/vosk_flutter_service/linux/libs/
+/packages/vosk_flutter_service/windows/libs/
+/packages/vosk_flutter_service/android/.gradle/
+/packages/vosk_flutter_service/android/build/
+
+# Materiał testowy i dane odtwarzalne z modelu (nie do gita):
+# nagrania kontrolne z POC oraz pełny słownik modelu (2,6 MB) — ten drugi
+# odtwarza `python3 pliki/vosk_slownik_dump.py <katalog_modelu> <plik_wy>`.
+/pliki/*.wav
+/pliki/vosk_slownik_pl.txt
+
+# Dowiązania wtyczek generowane przez `flutter pub get`
+/linux/flutter/ephemeral/

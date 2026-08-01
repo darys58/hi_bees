@@ -41,6 +41,7 @@ import '../models/queen.dart';
 import '../helpers/nfc_helper.dart';
 import '../models/hives.dart';
 import '../screens/move_hive_screen.dart';
+import '../screens/vosk_poc_screen.dart'; //POC Faza 0 - test Vosk-PL (tymczasowe)
 //import '../models/apiarys.dart';
 
 //ekran startowy
@@ -142,7 +143,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.11.0.91 30.04.2026 - przygotowanie do upgrade Xcode 26: deployment target iOS 15, PrivacyInfo.xcprivacy, Dart 3 SDK constraint, Flutter 3.32+, checklist UPGRADE_XCODE_26.md
   //1.11.1.92 15.06.2026 - fix wake-word - krótki beep zamiast słucham.mp3 (Rhino mylił mowę z głośnika z komendą), poprawki wprowadzania zasobów na ramkach i przenoszenia korpusów, swip przeglądów, odświezanie przy wprowadzaniu przeglądów
   //1.11.2.93 04.07.2026 - zmiana dźwięku po "Hej Maja" (wake-word) z krótkiego beep na wyraźniejszy i głosniejszy, poprawka w voice_screen2 - odświezanie widoku korpusa po pierwszym zapisie zasobu do bazy
-  //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji
+  //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji, poddawanie matki z aktualna datą a nie z ostatnio ustawioną,
   
   final wersja = '1.11.3.94'; //wersja aplikacji na iOS
   final dataWersji = '2026-07-06';
@@ -1325,8 +1326,16 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
         backgroundColor: Color.fromARGB(
             255, 255, 255, 255), //Color.fromARGB(255, 233, 140, 0),
         actions: <Widget>[
-          
-          //dodawanie ula (z pasieką) 
+
+          //POC Faza 0 - test Vosk-PL (TYMCZASOWE, do usunięcia po decyzji go/no-go)
+          IconButton(
+            icon: Icon(Icons.record_voice_over, color: Colors.deepPurple),
+            tooltip: 'POC Vosk-PL',
+            onPressed: () =>
+                Navigator.of(context).pushNamed(VoskPocScreen.routeName),
+          ),
+
+          //dodawanie ula (z pasieką)
           if(globals.key != '')
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),

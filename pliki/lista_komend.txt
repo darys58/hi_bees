@@ -1,0 +1,121 @@
+Przykładowe komendy wypowiadane:
+(zamień wszystkie liczby pisane cyfrą na pisane słownie)
+    setApiary:
+      	Otwórz pasiekę numer 51
+    setHive:
+      	Otwórz ul numer 5
+	Ul numer 16
+    setBody:
+      	Otwórz korpus numer 1
+	Korpus numer 2
+    setFrame:
+      	Otwórz ramkę numer 4
+	Ramka numer 10
+	ramka numer 1 z lewej strony
+	ramka numer 8 z prawej
+    setStore:
+	pokarm 20 procent z lewej
+	pokarm 53 procent z obu stron
+	nakrop 10 procent z prawej
+	larwy 15 procent 
+	larwy zero procent z obu
+      	miód dojrzały 10 procent
+	dojrzały 5 procent z obu stron
+      	jajka 50 procent z lewej
+	jajka 20 procent
+	ustaw z lewej strony
+	ustaw prawą stronę
+	lewa strona
+      	usuń ramkę
+	wstaw ramkę
+	izolacja
+	trzeba usunąć
+	trut 15 procent z prawej
+	usuń jeden matecznik z prawej
+	wytnij 5 mateczników
+	usuń 2 mateczniki z lewej
+	niebieska matka
+	biała matka z prawej
+	trzy mateczniki z lewej
+      	sześć mateczników po lewej stronie
+       	susz 100 procent z prawej
+	węza 100 procent z obu stron
+	kryty 80 procent
+	pierzga 10 procent
+	pyłek 40 procent z obu stron
+	miód 20 procent
+    setHalfBody:
+      	otwórz półkorpus numer dwa
+    setAllHives:
+      	otwórz wszystkie ule
+    setFeeding:
+	zostało zero procent pokarmu
+	usuń 50 procent pokarmu
+	syrop dwa litry
+	syrop jeden przecinek pięć litra
+	ciasto zero przecinek dwadzieścia pięć kiloktama
+	ciasto jeden kilo
+	syrop trzy do dwóch trzy litry
+	syrop jeden do jeden jeden litr
+      	strop jeden do jednego dwa litry
+    setTreatment:
+	kwas 2 miligramy
+	kwas 5 miligramów
+	roztocza sto trzydzieści sztuk
+	roztocza dwie sztuki
+	paski pięć sztuk
+	chemia dawka numer cztery
+    setEquipment:
+	usuń kratę
+	krata na korpusie numer jeden
+	podłoga wyczyszczona
+	załącz zbieracz pyłku
+	ustaw liczbę ramek w korpusie dziesięć 
+	ilość ramek w korpusie jest sześć
+    setQueen:
+	matka jest do wymiany
+	matka jest okej
+	matka ma zielony znak dziewięć
+	matka ma biały znak 78
+	natka jest wolna
+	matka jest dziewicza
+	matka jest z roku 25
+	matka rocznik 26
+    setHelp:
+	pomóż mi
+	zamknij pomoc
+	ul pomóż mi
+	ul po pomóż mi
+	ul później pomóż mi
+	przegląd pomóż mi
+	dokarmianie pomóż mi
+	zbiory pomóż mi
+	matka pomóż mi
+    setDate:
+	ustaw inny dzień 21
+	ustaw aktualna datę
+    setColony:
+	martwe pszczoły dwieście mililitrów
+	rodzina zawiązała kłąb
+	rodzina agresywna
+	rodzina normalna
+    setHarvest:
+	zbiór pyłku sto dwadzieścia mililitrów
+	zbiór pyłku zero przecinek dwadzieścia litra
+	zbiór pyłku jedna miarka
+	zbiór miodu 2 razy mała ramka
+	miodobranie 5 małych ramek
+	zbiór miodu jeden raz duża ramka
+	miodobranie 10 dużych ramek
+    setFrames:
+	ustaw ramkę od 2 do 9
+	ustaw ramki od 1 do 5
+    setChange:
+	ramka numer jeden po przeglądzie numer dziesięć
+	ramka 2 po przeglądzie 3
+    setMoveBody:
+	przenieś do ula numer 5 pół korpusu numer 3 ramka numer dziesięć
+	przenieś pół korpus 4 ramka 1
+	przenieś do korpusu 1 ramka 5
+	przenieś korpus 2 ramka 4
+

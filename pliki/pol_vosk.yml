@@ -1,0 +1,310 @@
+context:
+  expressions:
+    setApiary:
+      - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
+    setHive:
+      - $state:hiveState ul (numer) ($hundred:nrXXOfHiveH)
+        ($pv.TwoDigitInteger:nrXXOfHive)
+    setBody:
+      - $state:bodyState korpus (numer) $pv.SingleDigitInteger:nrXOfBody
+    setFrame:
+      - ($state:frameState)($sizeOfFrame:sizeOfFrame) [ramka,ramkę] (numer)
+        $pv.TwoDigitInteger:nrXXOfFrame (z) ($siteOfFrame:siteOfFrame)(strony,
+        stron)
+    setStore:
+      - "[pokarm,na grób] $pv.Percent:food [z,po] ($siteOfFrame:siteOfFrame)
+        (strony,stronie,stron)"
+      - larwy $pv.Percent:larvae [z,po] ($siteOfFrame:siteOfFrame)
+        (strony,stronie,stron)
+      - (miód) dojrzały $pv.Percent:honeySealed [z,po]
+        ($siteOfFrame:siteOfFrame) (strony,stronie,stron)
+      - "[jaja,jajka] $pv.Percent:eggs [z,po] ($siteOfFrame:siteOfFrame)
+        (strony,stronie,stron)"
+      - (ustaw) (z) $siteOfFrame:siteOfFrame [stron,strona,stronę,strony]
+      - $isDone:isDone
+      - $toDo:toDo
+      - (czerw) trud $pv.Percent:drone [z,po] ($siteOfFrame:siteOfFrame)
+        (strony,stronie,stron)
+      - "[usuń,wytnij] $pv.SingleDigitInteger:delQCells matecznik (i) (ów) [z,po]
+        ($siteOfFrame:siteOfFrame) (strony,stronie,stron)"
+      - $queen:queen [matka,królowa] [z,po] ($siteOfFrame:siteOfFrame)
+        (strony,stronie,stron)
+      - $pv.SingleDigitInteger:queenCells matecznik (i) (ów) [z,po]
+        ($siteOfFrame:siteOfFrame) (strony,stronie,stron)
+      - susz $pv.Percent:waxComb [z,po] ($siteOfFrame:siteOfFrame)
+        (strony,stronie,stron)
+      - "[węża,wosk] $pv.Percent:wax [z,po] ($siteOfFrame:siteOfFrame) (strony,stronie,stron)"
+      - (czerw) kryty $pv.Percent:brood [z,po] ($siteOfFrame:siteOfFrame)
+        (strony,stronie,stron)
+      - "[pierzcha,pyłek] $pv.Percent:pollen [z,po] ($siteOfFrame:siteOfFrame)
+        (strony,stronie,stron)"
+      - miód $pv.Percent:honey [z,po] ($siteOfFrame:siteOfFrame) (strony,stronie,stron)
+    setHalfBody:
+      - $state:halfBodyState pół korpus (numer)
+        $pv.SingleDigitInteger:nrXOfHalfBody
+    setAllHives:
+      - $state:allHivesState wszystkie ule
+    setFeeding:
+      - zostało $pv.Percent:leftFood pokarmu
+      - usuń $pv.Percent:removedFood pokarmu
+      - syrop $pv.TwoDigitInteger:invertI (przecinek,kropka)
+        ($pv.TwoDigitInteger:invertD) [litr,litra,litry,litrów]
+      - ciasto $pv.SingleDigitInteger:candyI (przecinek,kropka)
+        ($pv.TwoDigitInteger:candyD) [kilo,kilogram,kilograma,kilogramy,kilogramów]
+      - syrop trzy do dwóch $pv.SingleDigitInteger:syrup3to2I (przecinek,kropka)
+        ($pv.TwoDigitInteger:syrup3to2D) [litr,litra,litry,litrów]
+      - syrop jeden do [jeden,jednego] $pv.SingleDigitInteger:syrup1to1I
+        (przecinek,kropka) ($pv.TwoDigitInteger:syrup1to1D) [litr,litra,litry,litrów]
+    setTreatment:
+      - kwas ($hundred:acidH) ($pv.TwoDigitInteger:acid) [mililitrów,mili litr,mili litry,mili litra,miligramów,mili gram,mili gramy,mili grama]
+      - roztocza ($hundred:varroaH) ($pv.TwoDigitInteger:varroa) [sztuk,sztuka,sztuki]
+      - $state:biovar paski $pv.SingleDigitInteger:biovarBelts [sztuk,sztuka,sztuki]
+      - chemia [porcja,dawka] numer $pv.SingleDigitInteger:apivarol
+    setEquipment:
+      - $deleted:excluderDel kratę
+      - krata (na) [korpus,korpusie] (numer) $pv.SingleDigitInteger:excluder
+      - podłoga jest $quality:bottomBoard
+      - $state:beePolenTrap zbieracz pyłku
+      - (ustaw) [ilość,liczba,liczbę] ramek w korpusie ([jest,na]) $pv.TwoDigitInteger:numberOfFrame
+    setQueen:
+      - "[królowa,matka] jest $queenQuality:queenQuality"
+      - "[królowa,królowej,matka,matki] $queenMark:queenMark (numer)
+        ($pv.TwoDigitInteger:queenNumber)"
+      - "[królowa,matka] jest $queenStart:queenStart"
+      - "[królowa,matka] jest $queenState:queenState"
+      - "[królowa,matka] [jest z roku,rocznik] $pv.TwoDigitInteger:queenBorn"
+    setHelp:
+      - $help:help
+      - $helpMe:helpMe pomóż mi
+    setDate:
+      - ustaw inny dzień $pv.TwoDigitInteger:dateDay
+      - ustaw inny miesiąc $pv.TwoDigitInteger:dateMonth
+      - ustaw inny rok $pv.TwoDigitInteger:dateYear
+      - ustaw $date:currentDate datę
+    setColony:
+      - "[martwe pszczoły,martwych pszczół] ($hundred:deadBeeHML) ($pv.TwoDigitInteger:deadBeeML)
+        (mililitrów)"
+      - rodzina (jest) $colonyForce:colonyForce
+      - rodzina (jest) $colonyState:colonyState
+    setHarvest:
+      - zbiór pyłku ($hundred:beePollenHarvestHML)
+        ($pv.TwoDigitInteger:beePollenHarvestML) (mililitrów)
+      - zbiór pyłku $pv.SingleDigitInteger:beePollenHarvestI (przecinek,kropka)
+        ($pv.TwoDigitInteger:beePlllenHarvestD) [litr,litra,litry,litrów]
+      - zbiór pyłku $pv.TwoDigitInteger:beePollenHarvest (raz,razy)[miarka,porcja]
+      - "[zbiór miodu,miodu branie] $pv.TwoDigitInteger:honeySmallHarvest
+        (razy)[mała ramka,małych ramek]"
+      - "[zbiór miodu,miodu branie] $pv.TwoDigitInteger:honeyBigHarvest (razy)
+        [duża ramka,dużych ramek]"
+    setFrames:
+      - ($state:framesState) [ramkę,ramki] od $pv.TwoDigitInteger:nrXXOdFrame do
+        $pv.TwoDigitInteger:nrXXDoFrame
+    setChange:
+      - ramka (numer) $pv.TwoDigitInteger:nrXXOfFrame po przeglądzie
+        (numer) $pv.TwoDigitInteger:nrXXOfFramePo
+    setMoveBody:
+      - przenieś (do) ([ul,ula]) (numer) ($pv.TwoDigitInteger:nrTempHive) [pół korpus,pół korpusu]
+        (numer) $pv.SingleDigitInteger:nrTempHalfBody ramka (numer)
+        $pv.TwoDigitInteger:nrTempFrame
+      - przenieś (do) (ul) (numer) ($pv.TwoDigitInteger:nrTempHive) [korpus,korpusu] (numer)
+        $pv.SingleDigitInteger:nrTempBody ramka (numer)
+        $pv.TwoDigitInteger:nrTempFrame
+  slots:
+    state:
+      - wstaw
+      - załóż
+      - zabierz
+      - usuń
+      - załącz
+      - wyłącz
+      - otwórz
+      - zamknij
+      - ustaw
+    siteOfFrame:
+      - obu
+      - prawej
+      - lewej
+      - prawa
+      - lewa
+      - prawą
+      - lewą
+      - obie
+    toDo:
+      - można izolować
+      - trzeba usunąć
+      - trzeba wirować
+      - ramka pracy
+    isDone:
+      - izolacja
+      - wstaw ramkę
+      - usuń ramkę
+      - przesuń w prawo
+      - przesuń w lewo
+    sizeOfFrame:
+      - mała
+      - duża
+      - małą
+      - dużą
+    queen:
+      - biała
+      - niebieska
+      - zielona
+      - czerwona
+      - żółta
+      - czarna
+    quality:
+      - ok
+      - okej
+      - brudna
+      - czysta
+      - wyczyszczona
+    queenState:
+      - dziewicza
+      - sztuczna
+      - naturalna
+    queenStart:
+      - wolna
+      - zamknięta
+      - w klatce
+    queenMark:
+      - ma niebieski znak
+      - ma zielony znak
+      - ma czerwony znak
+      - ma żółty znak
+      - ma biały znak
+      - brak
+      - nie ma
+      - nie ma znaku
+    queenQuality:
+      - do wymiany
+      - stara
+      - ok
+      - okej
+      - zła
+      - duża
+      - mała
+      - słaba
+      - bardzo dobra
+      - dobra
+    helpMe:
+      - ul po
+      - ul przed
+      - lokacja
+      - ul wcześniej
+      - ul później
+      - ul
+      - zbiory
+      - rodzina
+      - data
+      - leczenie
+      - dokarmianie
+      - matka
+      - wyposażenie
+      - przegląd
+    date:
+      - aktualną
+      - aktualna
+    colonyForce:
+      - normalna
+      - bardzo słaba
+      - słaba
+      - bardzo silna
+      - silna
+    colonyState:
+      - w nastroju do ucieczki
+      - ok
+      - okej
+      - zawiązała kłąb
+      - agresywna
+      - łagodna
+      - nie żyje
+    help:
+      - zamknij pomoc
+      - pomóż mi
+    hundred:
+      - dziewięćset
+      - osiemset
+      - siedemset
+      - sześćset
+      - pięćset
+      - czterysta
+      - trzysta
+      - dwieście
+      - sto
+    deleted:
+      - zabierz
+      - usuń
+  macros: {}
+
+
+# Zmiany 31.07.2026:
+# setApiary: słowo pasieka zamieniłem na pasiekę - poprawniej gramatycznie i jest w słowniku
+# setFrame: słowo ramka zamieniłem na ramkę - poprawniej gramatycznie i jest w słowniku
+# setStore: słowo larwa zamieniłem na larwy - poprawniej gramatycznie i jest w słowniku, dodałem słowo" stron" bo brakowało
+# przy ustawianiu strony ramki dopisałem "stron" dla komendy: ustaw z obu stron
+# isDone: zmieniłem ramka na ramkę dla "wstaw ramkę" i "usuń ramkę"
+# dopisałem trud jako alternatywę dla trut - nie wiem czy potrzebnie
+# do "matecznik" dodałem liczbę mnogą: matecznik (i) (ów) - bo nie ma "mateczników"
+# ponieważ nie ma w słowniku "węza" spróbujmy dopuscic zbliżone słowo "węża" - może to załatwi sprawę... jeżeli nie zostaje "wosk"
+# zammiast "pierzga" spróbujmy "pierzcha"  - jak nie da rady zostaje "pyłek"
+# w zostało / usuń X procent pokarm zmieniłem pokarm na pokarmu - bardziej poprawnie
+# dla komend "syrop" i "ciasto" - wszystkie odmiany słowa litr i kilogram
+# dla komendy "kwas" X mililitr zmieniłem na [mililitrów,mili gram,mili gramy,mili grama]
+# dla komendy "roztocza dodałem sztuka,sztuki
+# zamiast "o war $state:biovar $pv.SingleDigitInteger:biovarBelts [pasek,paski]" zmiana na "paski $state:biovar $pv.SingleDigitInteger:biovarBelts [sztuk,sztuka,sztuki]"
+# dla komendy "krata" dołożyłem "korpusie"
+# dla komendy "podłoga" dołożyłem do "quality" wyczyszczona
+# zamiast zbieracz pyłek jest zbieracz pyłku - poprawnie gramatycznie
+# zamiast "ramka na korpus" jest teraz "ramek w korpusie" z dodatkowymi słowami poprawiającymi gramatyke - nie wiem czy przesadziłem
+# $queenQuality dopisałem "do wymiany" bo to typowy zwrot
+# queenMark: było "nie ma znak" jest "nie ma znaku"
+# queenState: zamiast "dziewica" jest "dziewicza" - chyba lepiej brzmi
+# oprócz "matka jest z roku" dodałem "matka rocznik" XX
+# date: było "prawdziwą data" zmieniłem na "aktualną datę"
+# zamiast "osyp (pszczół)" jest [martwe pszczoły,martwych pszczół]
+# colonyForce: było "norma" jest "normalna"
+# colonyState: było "zła" jest "agresywna",
+# colonyState: było "w kłębie" jest "zawiązała kłąb"
+# "zbiór pyłek" zamieniłem na "zbiór pyłku" w trzech wariantach z poprawionymi miarami
+# przy zbiorach miodu nie wiem czy zostawić "miód o branie", dodałem na sztywno dwie formy [mała ramka, małych ramek] i analogicznie dla dużych
+# setFrames: było "ramka" jest "ramkę" i dodałem alternatywę "ramki"
+# setChange: było "(prze) (g) (lądzie)" jest "przeglądzie"
+# w  helpMe: było "zbiór" jest "zbiory", było "pokarm" jest "dokarmianie"
+# setMoveBody: (chyba poprawniej powinno się to nazywać setMoveFrame:) było "przenieś" teraz dopuszczam również "przenieś do" - precyzyjniej określa do działanie, poza tym dopuszczalna jest forma "ula" i "korpusu"
+
+# Zmiany 01.08.2026 (Claude) - po teście offline na nagraniach "nakrop" z pliki/*.wav
+# oraz sprawdzeniu CAŁEJ gramatyki wobec słownika modelu vosk-model-small-pl-0.22.
+# Narzędzie do powtórzenia testów: pliki/vosk_gramatyka_test.py
+#
+# SKŁADNIA: wyrażenia zaczynające się od "[" MUSZĄ być w cudzysłowie - inaczej YAML
+#   czyta je jako listę i plik nie parsuje się w ogóle (tak było w oryginale pol1 (4).yml).
+#   Zacytowane: setStore x5, setQueen x5, setColony, setHarvest x2.
+# "na kro (p)" -> "na grób". Model na 17 wypowiedziach "nakrop X procent" słyszy
+#   "na grób" (13x) albo "na krok" (3x). Wynik z gramatyką: "na grób" 17/17 przy
+#   pewności 1,00; "na kro p" łapie się w dwóch różnych formach przy 0,58-1,00
+#   (końcówka "p" wypada w połowie przypadków - Twoja obserwacja się potwierdziła).
+#   NIE dokładać "na krok" obok "na grób" - konkurują ze sobą i pewność spada do 0,54.
+# "trut" USUNIĘTY - jedyne słowo gramatyki spoza słownika modelu (Vosk pomija je po
+#   cichu). Zostaje samo "trud": przez ubezdźwięcznienie wygłosowe wymawia się
+#   dokładnie [trut], czyli jest homofonem - nic nie tracimy.
+# paski: $state przesunięty PRZED "paski" (był wymagany w środku, więc "paski pięć
+#   sztuk" z listy komend nie miałoby prawa zadziałać) -> "wstaw paski pięć sztuk".
+# kwas: dołożone "miligramów" (jest w słowniku jako jedno słowo) i rozbicia
+#   "mili litr/litry/litra" (samego "mililitr"/"mililitry" w słowniku NIE MA).
+#   UWAGA: apka i tak zapisuje jednostkę "ml" na sztywno (voice_screen2 case 'acid'),
+#   formy z "gram" są tylko dopuszczeniem tego, jak człowiek może powiedzieć.
+# "miód o branie" -> "miodu branie": "miód" ubezdźwięcznia się do [mjut], więc stary
+#   wariant brzmiał [mjut o braɲe] wobec wypowiadanego [mjodobraɲe]. "miodobranie"
+#   jako jedno słowo w słowniku NIE występuje. Wariant do sprawdzenia na nagraniu.
+# "okej" dopisane obok "ok" (quality, queenQuality, colonyState) - jest w słowniku,
+#   a "ok" model może traktować jako nazwy liter.
+# date: dopisana forma "aktualna" obok "aktualną" (obie są w słowniku).
+# usunięte zbłąkane spacje po przecinkach w alternatywach ([... , x] dawało token " x").
+#
+# ZOSTAWIONE BEZ ZMIAN DO CZASU NAGRAŃ: "węża" (zamiast węza) i "pierzcha" (zamiast
+# pierzga). Oba SĄ w słowniku, więc gramatyka się zbuduje, ale kontrast z/ż i g/ch
+# jest w polszczyźnie pełnoprawny (nie neutralizuje się jak trud/trut) - czy model
+# dopasuje je do faktycznej wymowy, rozstrzygnie dopiero nagranie:
+#   nagraj 5x "węza sto procent" i 5x "pierzga dziesięć procent" -> pliki/*.wav
+#   python3 pliki/vosk_gramatyka_test.py --rec nagranie.wav      (tryb wolny pokaże,
+#   co model NAPRAWDĘ słyszy - tak wybraliśmy "na grób"). Zapas: "wosk" i "pyłek".

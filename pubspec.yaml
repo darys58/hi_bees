@@ -42,6 +42,16 @@ dependencies:
   url_launcher: ^6.1.10
   fl_chart: ^0.70.1
   picovoice_flutter: ^3.0.3
+  # POC offline STT (migracja z Picovoice) - do usunięcia jeśli rezygnujemy.
+  # KOPIA W REPO (nie pub.dev): oryginał 0.1.2 przestawiał sesję audio przy
+  # kazdym wywolaniu recognizer.* i dekodowal na glownym watku iOS, przez co
+  # rownolegle nagrywanie mialo 74 % cyfrowej ciszy. Poprawki w
+  # packages/vosk_flutter_service/ios/.../VoskFlutterPlugin.swift (opis w
+  # naglowku tego pliku). Binaria iOS dociaga:
+  #   dart run vosk_flutter_service install -t ios
+  vosk_flutter_service:
+    path: packages/vosk_flutter_service
+  record: ^6.2.1 #POC: własny strumień PCM 16 kHz do Vosk (obejście wadliwego SpeechService na iOS)
   nfc_manager: ^3.5.0
   pdf: ^3.10.8
   printing: ^5.12.0

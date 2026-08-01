@@ -1,0 +1,437 @@
+# Słownik modelu vosk-model-small-pl-0.22 — wypis tematyczny
+#
+# W całym słowniku jest 244431 słów (pełna lista: vosk_slownik_pl.txt).
+# Tu tylko to, co dotyczy pasieki i komend — z tego zbioru wolno budować
+# gramatykę. Zapis "rdzeń*" = wszystkie formy od tego rdzenia.
+# BRAK = tego słowa model NIE zna; użyte w gramatyce zostanie po cichu
+#        pominięte (libvosk: "Ignoring word missing in vocabulary"),
+#        więc komenda z nim nigdy nie zadziała.
+
+========================================================================
+== Ul, pasieka, konstrukcja
+========================================================================
+  ul             .
+  ula            .
+  ulu            .
+  ulem           BRAK
+  ule            .
+  uli            .
+  ulom           BRAK
+  ulami          BRAK
+  ulach          .
+  ulów           BRAK
+  pasiek*        pasiek  pasieka  pasiekę  pasieki
+  korpus*        korpus  korpusach  korpusem  korpusie  korpusów  korpusu  korpusy
+  nadstaw*       nadstaw  nadstawi  nadstawia  nadstawiać  nadstawiali  nadstawiał  nadstawiam  nadstawiano  nadstawić  nadstawił
+  podłog*        podłoga  podłogach  podłogami  podłogą  podłogę  podłogi  podłogowa  podłogową  podłogowe  podłogowego  podłogowej  podłogowy  podłogowych  podłogowym  podłogówki
+  daszek         .
+  daszk*         daszkami  daszki  daszkiem  daszku
+  dennic*        BRAK
+  powałk*        BRAK
+  zatwor*        BRAK
+  wylot*         wylot  wylotem  wylotowej  wylotowych  wylotów  wylotówki  wylotu  wyloty
+  wylotek        BRAK
+  ocieplen*      ocieplenia  ocieplenie  ociepleniem  ociepleniu
+  styropian*     styropian  styropianem  styropianowe  styropianowy  styropianowych  styropianowym  styropianowymi  styropianu
+  drewnian*      drewnian  drewniana  drewnianą  drewniane  drewnianego  drewnianej  drewniany  drewnianych  drewnianym  drewnianymi
+
+========================================================================
+== Ramka, plaster, węza, susz
+========================================================================
+  ramka          .
+  ramkę          .
+  ramką          .
+  ramki          .
+  ramek          .
+  ramkach        .
+  ramkami        .
+  ramkom         BRAK
+  plaster        .
+  plastr*        plastra  plastrem  plastrów  plastry
+  węza           BRAK
+  węzy           BRAK
+  węzę           BRAK
+  wosk           .
+  wosku          .
+  woskiem        .
+  woskow*        woskowane  woskowanemi  woskowanie  woskowanych  woskową  woskowe  woskowiny  woskowy  woskowych
+  susz           .
+  suszu          .
+  susze          .
+  komórk*        komórka  komórkach  komórkami  komórką  komórkę  komórki  komórkom  komórkowa  komórkową  komórkowe  komórkowego  komórkowej  komórkowi  komórkowy  komórkowych  komórkowym  komórkowymi
+  odbudow*       odbudowa  odbudować  odbudowali  odbudował  odbudowała  odbudowałem  odbudowałeś  odbudowały  odbudowana  odbudowane  odbudowania  odbudowanie  odbudowaniem  odbudowaniu  odbudowano  odbudowany  odbudową  odbudowę  odbudowie  odbudowują  odbudowując  odbudowuje  odbudowujemy  odbudowy  odbudowywać  odbudowywali  odbudowywał  odbudowywane  odbudowywany
+  poszerz*       poszerz  poszerza  poszerzać  poszerzaj  poszerzają  poszerzając  poszerzająca  poszerzającą  poszerzające  poszerzający  poszerzali  poszerzał  poszerzała  poszerzało  poszerzały  poszerzam  poszerzamy  poszerzana  poszerzane  poszerzania  poszerzanie  poszerzaniem  poszerzaniu  poszerzany  poszerzasz  poszerzą  poszerzenia  poszerzenie  poszerzeniem  poszerzeniu  poszerzona  poszerzoną  poszerzone  poszerzonego  poszerzonej  poszerzono  poszerzony  poszerzonych  poszerzonym  poszerzy  poszerzyć  poszerzyli  poszerzył  poszerzyła  poszerzyłam  poszerzyłem  poszerzyło  poszerzyły  poszerzymy  poszerzysz
+  zabudow*       zabudowa  zabudować  zabudowana  zabudowaną  zabudowane  zabudowanego  zabudowanej  zabudowania  zabudowanie  zabudowany  zabudowanych  zabudowanym  zabudowanymi  zabudowań  zabudową  zabudowę  zabudowie  zabudowy  zabudowywać
+
+========================================================================
+== Czerw, larwy, jaja, trutnie
+========================================================================
+  czerw          .
+  czerwiu        BRAK
+  czerwia        BRAK
+  larwa          .
+  larwy          .
+  larw           .
+  larwę          .
+  larwami        .
+  jaja           .
+  jajka          .
+  jajek          .
+  jaj            .
+  poczwar*       poczwara  poczwarę  poczwarki  poczwary
+  trut           BRAK
+  truta          .
+  trutki         .
+  trud           .
+  trutni*        BRAK
+  kryty          .
+  kryte          .
+  zasklep*       zasklepiać  zasklepiaj  zasklepić  zasklepiła  zasklepiony
+  otwarty        .
+  otwarte        .
+
+========================================================================
+== Matka, matecznik
+========================================================================
+  matka          .
+  matki          .
+  matkę          .
+  matką          .
+  matek          .
+  królowa        .
+  królowej       .
+  królową        .
+  matecznik      .
+  mateczniki     BRAK
+  mateczników    BRAK
+  matecznikach   .
+  dziewica       .
+  dziewicy       .
+  unasien*       BRAK
+  czerwiąca      BRAK
+  znakowan*      znakowane  znakowania  znakowanie  znakowaniem  znakowaniu  znakowanych
+  klatce         .
+  klatka         .
+  klatkę         .
+  izolat*        izolatce  izolatkach  izolatki  izolator  izolatorem  izolatorium
+  izolacj*       izolacja  izolacją  izolacje  izolację  izolacji  izolacjonizm
+  izolować       .
+  osiatkow*      BRAK
+
+========================================================================
+== Pokarm, miód, pyłek, pierzga
+========================================================================
+  miód           .
+  miodu          .
+  miodem         .
+  miodzie        .
+  miodowy        .
+  miodowa        .
+  pyłek          .
+  pyłku          .
+  pyłkiem        .
+  pyłki          .
+  pyłków         .
+  pierzga        BRAK
+  pierzgi        BRAK
+  perga          BRAK
+  pergi          BRAK
+  chlebek        .
+  pokarm         .
+  pokarmu        .
+  pokarmem       .
+  syrop          .
+  syropu         .
+  syropem        .
+  ciasto         .
+  ciasta         .
+  cukier         .
+  cukru          .
+  nektar*        nektar  nektaru
+  spadź          BRAK
+  spadzi         BRAK
+  inwert*        inwerter  inwertera  inwertery
+
+========================================================================
+== Zbiory, miodobranie
+========================================================================
+  zbiór          .
+  zbioru         .
+  zbiory         .
+  zbiorów        .
+  miodobran*     BRAK
+  wirować        .
+  wirowan*       wirowania  wirowanie
+  wirówk*        BRAK
+  odwirow*       BRAK
+  branie         .
+  miarka         .
+  miarki         .
+  miarkę         .
+  porcja         .
+  porcji         .
+  porcję         .
+  litr           .
+  litra          .
+  litry          .
+  litrów         .
+  kilo           .
+  kilogram*      kilogram  kilograma  kilogramach  kilogramami  kilogramie  kilogramów  kilogramy
+  gram           .
+  gramów         .
+  mililitr       BRAK
+  mililitrów     .
+  procent        .
+  procenta       .
+  procentów      .
+
+========================================================================
+== Leczenie, choroby, chemia
+========================================================================
+  warroz*        BRAK
+  warroa         BRAK
+  roztocz*       roztocza  roztocze  roztoczu  roztoczy  roztoczyć  roztoczył  roztoczyła  roztoczyłam  roztoczyły
+  kwas           .
+  kwasu          .
+  kwasem         .
+  szczawiow*     BRAK
+  mrówkow*       BRAK
+  amitraz*       BRAK
+  apiwar*        BRAK
+  biowar         BRAK
+  war            .
+  paski          .
+  pasek          .
+  paska          .
+  osyp           BRAK
+  osypu          BRAK
+  wysyp          .
+  wysypu         .
+  nosem*         nosem
+  zgnil*         zgnilec  zgnilizna  zgnilizną  zgniliznę  zgnilizny
+  leczen*        leczeni  leczenia  leczenie  leczeniem  leczeniu
+  leczyć         .
+  dawka          .
+  dawki          .
+  dawkę          .
+  chemia         .
+  chemii         .
+  chemię         .
+  kuracj*        kuracja  kuracjach  kuracją  kuracje  kurację  kuracji  kuracjusze  kuracjuszy
+  odymian*       BRAK
+
+========================================================================
+== Rodzina, nastrój, siła
+========================================================================
+  rodzina        .
+  rodziny        .
+  rodzinę        .
+  rodziną        .
+  rój            .
+  roju           .
+  roje           .
+  rojów          BRAK
+  rojenie        BRAK
+  ucieczk*       ucieczka  ucieczką  ucieczkę  ucieczki
+  kłąb           .
+  kłębie         BRAK
+  kłębi          .
+  silna          .
+  silną          .
+  słaba          .
+  słabą          .
+  norma          .
+  normy          .
+  łagodna        .
+  łagodną        .
+  agresyw*       agresywna  agresywną  agresywne  agresywnego  agresywnej  agresywni  agresywnie  agresywniej  agresywnoci  agresywności  agresywność  agresywny  agresywnych  agresywnym  agresywnymi
+  spokojn*       spokojn  spokojna  spokojną  spokojne  spokojnego  spokojnej  spokojnem  spokojnemu  spokojni  spokojnie  spokojniej  spokojniejsi  spokojności  spokojność  spokojny  spokojnych  spokojnym  spokojnymi
+  żyje           .
+  martwa         .
+
+========================================================================
+== Strony ramki, kierunki
+========================================================================
+  strona         .
+  stronę         .
+  strony         .
+  stronie        .
+  stroną         .
+  stron          .
+  lewa           .
+  lewą           .
+  lewej          .
+  lewo           .
+  prawa          .
+  prawą          .
+  prawej         .
+  prawo          .
+  obu            .
+  obie           .
+  górna          .
+  górnej         .
+  dolna          .
+  dolnej         .
+  środek         .
+  środka         .
+  brzeg          .
+  brzegu         .
+
+========================================================================
+== Daty i czas
+========================================================================
+  dzień          .
+  dnia           .
+  dni            .
+  miesiąc        .
+  miesiąca       .
+  miesiące       .
+  rok            .
+  roku           .
+  lat            .
+  lata           .
+  tydzień        .
+  tygodni*       tygodni  tygodnia  tygodniach  tygodniami  tygodnie  tygodniem  tygodnik  tygodnika  tygodnikach  tygodniki  tygodnikiem  tygodnikowi  tygodników  tygodniku  tygodniowa  tygodniową  tygodniowe  tygodniowego  tygodniowej  tygodniowo  tygodniowy  tygodniowych  tygodniowym  tygodniu
+  wczoraj        .
+  dzisiaj        .
+  dziś           .
+  jutro          .
+  przegląd       .
+  przeglądu      .
+  przeglądzie    .
+  przeglądy      .
+  data           .
+  daty           .
+  datę           .
+  prze           .
+  g              .
+  lądzie         .
+  wcześniej      .
+  później        .
+
+========================================================================
+== Wyposażenie, otoczenie
+========================================================================
+  krata          .
+  kratę          .
+  kraty          .
+  kratą          .
+  odgrodz*       odgrodzeni  odgrodzenia  odgrodzenie  odgrodzić  odgrodzona  odgrodzone  odgrodzony
+  zbieracz       .
+  zbieracza      .
+  poidł*         BRAK
+  waga           .
+  wagi           .
+  wagę           .
+  temperatur*    temperatur  temperatura  temperaturach  temperaturami  temperaturą  temperaturę  temperaturowe  temperaturowych  temperatury  temperaturze
+  pogod*         pogoda  pogodą  pogodę  pogodna  pogodną  pogodne  pogodnego  pogodnej  pogodnem  pogodni  pogodnie  pogodny  pogodnych  pogodnym  pogodowa  pogodową  pogodowe  pogodowego  pogodowej  pogodowo  pogodowy  pogodowych  pogodowym  pogodowymi  pogody  pogodynka  pogodzą  pogodzeni  pogodzenia  pogodzenie  pogodzeniu  pogodzę  pogodzi  pogodzić  pogodzie  pogodzili  pogodził  pogodziła  pogodziłam  pogodziłaś  pogodziłby  pogodziłem  pogodziło  pogodziły  pogodzimy  pogodzisz  pogodzona  pogodzone  pogodzony
+  notatk*        notatka  notatkach  notatkami  notatką  notatkę  notatki  notatkową  notatkowej
+  lokacja        .
+  lokacji        .
+  wyposażen*     wyposażeni  wyposażenia  wyposażenie  wyposażeniem  wyposażeniu
+  sprzedaż       .
+  sprzedaży      .
+  zakup          .
+  zakupy         .
+  cena           .
+  ceny           .
+  koszt          .
+
+========================================================================
+== Czasowniki komend i słowa sterujące
+========================================================================
+  wstaw          .
+  wstawić        .
+  załóż          .
+  zabierz        .
+  usuń           .
+  usunąć         .
+  załącz         .
+  wyłącz         .
+  otwórz         .
+  zamknij        .
+  ustaw          .
+  ustawić        .
+  przenieś       .
+  przesuń        .
+  wytnij         .
+  pomóż          .
+  pomoc          .
+  pomocy         .
+  anuluj         .
+  popraw         .
+  koniec         .
+  start          .
+  stop           .
+  zapisz         .
+  skasuj         BRAK
+  cofnij         .
+  powtórz        .
+  dalej          .
+  wstecz         .
+  numer          .
+  numeru         .
+  ilość          .
+  jest           .
+  ma             .
+  nie            .
+  brak           .
+  ok             .
+  można          .
+  trzeba         .
+  zostało        .
+  razy           .
+  pół            .
+
+========================================================================
+== Liczebniki (setki i wielokrotności)
+========================================================================
+  sto            .
+  dwieście       .
+  trzysta        .
+  czterysta      .
+  pięćset        .
+  sześćset       .
+  siedemset      .
+  osiemset       .
+  dziewięćset    .
+  tysiąc         .
+  tysiące        .
+  zero           .
+  pierwszy       .
+  drugi          .
+  trzeci         .
+  czwarty        .
+  piąty          .
+  szósty         .
+  siódmy         .
+  ósmy           .
+  dziewiąty      .
+  dziesiąty      .
+
+
+Słowa gramatyki:
+'bardzo', 'biała', 'biały', 'brak', 'branie', 'brudna', 'chemia', 'ciasto',
+  'czarna', 'czerw', 'czerwona', 'czerwony', 'czterysta', 'czysta', 'data',
+  'dawka', 'do', 'dobra', 'dojrzały', 'duża', 'dużych', 'dużą', 'dwieście',
+  'dwóch', 'dziewica', 'dziewięćset', 'dzień', 'ilość', 'inny', 'izolacja',
+  'izolować', 'jaja', 'jajka', 'jeden', 'jednego', 'jest', 'kilo', 'kilogram',
+  'klatce', 'korpus', 'krata', 'kratę', 'kropka', 'kryty', 'królowa',
+  'królowej', 'kwas', 'larwa', 'leczenie', 'lewa', 'lewej', 'lewo', 'lewą',
+  'litr', 'lokacja', 'lądzie', 'ma', 'matecznik', 'matka', 'matki', 'mała',
+  'małych', 'małą', 'mi', 'miarka', 'miesiąc', 'miodu', 'miód', 'można', 'na',
+  'nastroju', 'naturalna', 'nie', 'niebieska', 'niebieski', 'norma', 'numer',
+  'o', 'obie', 'obu', 'od', 'ok', 'osiemset', 'otwórz', 'pasek', 'pasieka',
+  'paski', 'pięćset', 'po', 'podłoga', 'pokarm', 'pomoc', 'pomóż', 'porcja',
+  'pracy', 'prawa', 'prawdziwą', 'prawej', 'prawo', 'prawą', 'przecinek',
+  'przed', 'przegląd', 'przenieś', 'przesuń', 'pszczół', 'pyłek', 'pół',
+  'później', 'ramka', 'razy', 'rodzina', 'rok', 'roku', 'roztocza',
+  'siedemset', 'silna', 'stara', 'sto', 'stron', 'strona', 'stronie', 'strony',
+  'stronę', 'susz', 'syrop', 'sześćset', 'sztuczna', 'sztuki', 'słaba',
+  'trzeba', 'trzy', 'trzysta', 'ucieczki', 'ul', 'ule', 'ustaw', 'usunąć',
+  'usuń', 'w', 'war', 'wcześniej', 'wirować', 'wolna', 'wstaw', 'wszystkie',
+  'wyposażenie', 'wytnij', 'wyłącz', 'z', 'zabierz', 'zamknij', 'zamknięta',
+  'załóż', 'załącz', 'zbieracz', 'zbiór', 'zielona', 'zielony', 'znak',
+  'zostało', 'zła', 'łagodna', 'żyje', 'żółta', 'żółty',
+  // zamienniki brakujących słów (obecne w słowniku modelu)
+  'wosk', 'wosku', 'trud', 'wysyp', 'kłąb', 'mililitrów',
