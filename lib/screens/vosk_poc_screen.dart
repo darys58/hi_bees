@@ -25,7 +25,7 @@
 //    iPhonie dał 0,38–0,46 % ciszy cyfrowej, ZERO dziur i tekst na żywo,
 //    przy koszcie 14 ms na porcję 0,2 s = 7 % czasu rzeczywistego.
 // 5. Gramatyka: model vosk-model-small-pl-0.22 jest typu LGRAPH, więc
-//    createRecognizer(grammar:) działa. 250 słów (209 z `pliki/pol_vosk.yml`
+//    createRecognizer(grammar:) działa. 250 słów (209 z `assets/grammar/pol_vosk.yml`
 //    + 41 liczebników) sprawdzono względem słownika modelu — zero OOV.
 //
 // ---------------------------------------------------------------------------
@@ -54,7 +54,7 @@
 //      1) brak [unk] — cokolwiek spoza gramatyki dyskwalifikuje frazę,
 //      2) pewność rozpoznania każdego słowa (setWords → conf) powyżej progu,
 //      3) fraza zaczyna się od słowa, które MOŻE otwierać komendę (zbiór
-//         pierwszych słów wszystkich wyrażeń z `pliki/pol_vosk.yml`).
+//         pierwszych słów wszystkich wyrażeń z `assets/grammar/pol_vosk.yml`).
 //    To jeszcze NIE jest parser gramatyki — pełna walidacja („czy fraza pasuje
 //    do jakiegoś wyrażenia od początku do końca") to dopiero silnik czytający
 //    .yml. Tu chodzi o zmierzenie, ile fałszywych trafień przechodzi bramkę
@@ -97,7 +97,7 @@ enum Zrodlo {
   plik,
 }
 
-// Słownik komend wyciągnięty z `pliki/pol_vosk.yml` (sekcje expressions i slots,
+// Słownik komend wyciągnięty z `assets/grammar/pol_vosk.yml` (sekcje expressions i slots,
 // bez znaczników składni Rhino). To NOWA, poprawiona gramatyka — nie stary
 // `assets/rhino/pol1 (4).yml`, który jeszcze obsługuje Picovoice.
 //
@@ -197,7 +197,7 @@ const List<String> _nakropTokeny = ['na', 'grób'];
 final String _nakropFraza = _nakropTokeny.join(' ');
 
 // Słowa, od których MOŻE zaczynać się komenda — zebrane z pierwszych pozycji
-// wszystkich wyrażeń `pliki/pol_vosk.yml`, z rozwinięciem slotów, grup
+// wszystkich wyrażeń `assets/grammar/pol_vosk.yml`, z rozwinięciem slotów, grup
 // opcjonalnych (nawiasy) i alternatyw. Przykład: „($state)($sizeOfFrame) ramkę
 // ..." otwiera się na $state, na $sizeOfFrame ALBO na słowo „ramkę".
 // To najsłabsze z trzech kryteriów bramki (ok. 1/3 słownika), ale wycina

@@ -100,3 +100,22 @@ a my karmimy `recognizer.acceptWaveform`.
   Do zrobienia przy testach na Androidzie.
 - `recognizer.setPartialWords` jest no-opem (brak odpowiednika w C API).
 - Ścieżka `floats` w `recognizer.acceptWaveform` nie jest zaimplementowana.
+- **`Recognizer.setGrammar` NIE DZIAŁA na iOS i nie da się tego naprawić tutaj**
+  (ustalone 01.08.2026 po `MissingPluginException(No implementation found for
+  method recognizer.setGrammar on channel vosk_flutter)` na iPhonie 15
+  i na symulatorze). Dwie warstwy problemu:
+  1. `VoskFlutterPlugin.swift` nie ma case'a `"recognizer.setGrammar"` —
+     to źródło wyjątku;
+  2. dopisanie go nic nie da, bo zwendorowane **libvosk 0.3.45 dla iOS w ogóle
+     nie eksportuje `vosk_recognizer_set_grm`**. Sprawdzone na obu archiwach
+     w `ios/Frameworks/vosk.xcframework` (`ios-arm64_armv7_armv7s`
+     i `ios-arm64_x86_64-simulator`) — z rodziny gramatyk jest wyłącznie
+     `vosk_recognizer_new_grm`. Nie ma go też w `Classes/vosk_api.h`.
+     Naprawa wymagałaby przebudowania libvosk dla iOS — poza zakresem.
+
+  Obejście po naszej stronie: gramatykę podaje się przy **tworzeniu**
+  recognizera (`createRecognizer(grammar:)` — ta ścieżka jest przetestowana
+  na urządzeniu). `lib/helpers/vosk_engine.dart` trzyma dlatego dwa gotowe
+  recognizery (czuwanie / komendy) i przełącza wskaźnik zamiast gramatyki.
+  Android ma `setGrammar` zaimplementowane, ale używamy tej samej drogi na
+  obu platformach — jedna ścieżka kodu, zero opóźnienia przy przełączaniu.

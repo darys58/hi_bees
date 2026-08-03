@@ -1,5 +1,48 @@
+# Gramatyka sterowania głosowego (polski) dla silnika na Vosku.
+#
+# UWAGA: to jest ASSET APLIKACJI (wpisany w pubspec.yaml), czytany w czasie
+# działania przez lib/helpers/vosk_grammar.dart. Nie jest to już notatka
+# robocza - zmiana tego pliku zmienia zachowanie aplikacji.
+# Jedno źródło prawdy: narzędzia w pliki/ też czytają WŁAŚNIE ten plik.
+#
+# Silnik robi z niego dwie rzeczy:
+#   1. gramatykę frazową dla recognizera Vosk (ogranicza słownik z 244 431
+#      słów do ~3000 fraz -> radykalnie wyższa trafność),
+#   2. parser tekst -> {intent, slots} w kształcie RhinoInference, żeby switch
+#      w voice_screen2.dart został bez zmian.
+#
+# Składnia (odziedziczona po Rhino):
+#   słowo          wymagane
+#   (słowo)        opcjonalne
+#   (a,b)          opcjonalna alternatywa
+#   [a,b]          alternatywa WYMAGANA
+#   $slot:klucz    slot ze sekcji slots; zwraca KANONICZNĄ wartość stąd
+#   $pv.Typ:klucz  liczebnik: Percent -> "NN%", TwoDigitInteger -> "NN",
+#                  SingleDigitInteger -> "N"
+#
+# UWAGA: słowa "procent" NIE MA i nie może być w wyrażeniach - należy do typu
+# $pv.Percent (tak samo jak w Rhino) i zjada je parser, nie wzorzec. Od
+# 02.08.2026 jest OPCJONALNE - patrz "SŁOWO »PROCENT« GINIE" na końcu pliku.
+#
+# Po każdej zmianie warto uruchomić (w kontenerze, bez telefonu):
+#   python3 pliki/vosk_gramatyka_test.py --oov     # słowa spoza słownika modelu
+#   python3 pliki/vosk_parser_ref.py --test        # 100 komend z lista_komend.txt
+# Historia decyzji i uzasadnienia - w komentarzach na końcu pliku.
+
 context:
   expressions:
+    # --- sterowanie sesją nasłuchu -----------------------------------------
+    # Przy Vosku "hej maja" NIE jest osobnym silnikiem wake-word (Porcupine),
+    # tylko zwykłą frazą tej gramatyki. voiceStart zastępuje przycisk START,
+    # voiceStop wraca do czuwania. Oba intenty obsługuje voice_vosk_screen.dart
+    # PRZED switchem w prettyPrintInference - do logiki pasiecznej nie trafiają.
+    # W czuwaniu recognizer dostaje TYLKO te dwie frazy (setGrammar), więc
+    # zwykła rozmowa nie ma jak otworzyć sesji.
+    # Wszystkie słowa sprawdzone w słowniku modelu (pliki/vosk_slownik_pl.txt).
+    voiceStart:
+      - hej maja [start,zaczynamy,startujemy]
+    voiceStop:
+      - hej maja [stop,kończymy,koniec]
     setApiary:
       - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:
@@ -12,33 +55,33 @@ context:
         $pv.TwoDigitInteger:nrXXOfFrame (z) ($siteOfFrame:siteOfFrame)(strony,
         stron)
     setStore:
-      - "[pokarm,na grób] $pv.Percent:food [z,po] ($siteOfFrame:siteOfFrame)
+      - "[pokarm,na grób] $pv.Percent:food (z,po) ($siteOfFrame:siteOfFrame)
         (strony,stronie,stron)"
-      - larwy $pv.Percent:larvae [z,po] ($siteOfFrame:siteOfFrame)
+      - larwy $pv.Percent:larvae (z,po) ($siteOfFrame:siteOfFrame)
         (strony,stronie,stron)
-      - (miód) dojrzały $pv.Percent:honeySealed [z,po]
+      - (miód) dojrzały $pv.Percent:honeySealed (z,po)
         ($siteOfFrame:siteOfFrame) (strony,stronie,stron)
-      - "[jaja,jajka] $pv.Percent:eggs [z,po] ($siteOfFrame:siteOfFrame)
+      - "[jaja,jajka] $pv.Percent:eggs (z,po) ($siteOfFrame:siteOfFrame)
         (strony,stronie,stron)"
       - (ustaw) (z) $siteOfFrame:siteOfFrame [stron,strona,stronę,strony]
       - $isDone:isDone
       - $toDo:toDo
-      - (czerw) trud $pv.Percent:drone [z,po] ($siteOfFrame:siteOfFrame)
+      - (czerw) trud $pv.Percent:drone (z,po) ($siteOfFrame:siteOfFrame)
         (strony,stronie,stron)
-      - "[usuń,wytnij] $pv.SingleDigitInteger:delQCells matecznik (i) (ów) [z,po]
+      - "[usuń,wytnij] $pv.SingleDigitInteger:delQCells matecznik (i) (ów) (z,po)
         ($siteOfFrame:siteOfFrame) (strony,stronie,stron)"
-      - $queen:queen [matka,królowa] [z,po] ($siteOfFrame:siteOfFrame)
+      - $queen:queen [matka,królowa] (z,po) ($siteOfFrame:siteOfFrame)
         (strony,stronie,stron)
-      - $pv.SingleDigitInteger:queenCells matecznik (i) (ów) [z,po]
+      - $pv.SingleDigitInteger:queenCells matecznik (i) (ów) (z,po)
         ($siteOfFrame:siteOfFrame) (strony,stronie,stron)
-      - susz $pv.Percent:waxComb [z,po] ($siteOfFrame:siteOfFrame)
+      - susz $pv.Percent:waxComb (z,po) ($siteOfFrame:siteOfFrame)
         (strony,stronie,stron)
-      - "[węża,wosk] $pv.Percent:wax [z,po] ($siteOfFrame:siteOfFrame) (strony,stronie,stron)"
-      - (czerw) kryty $pv.Percent:brood [z,po] ($siteOfFrame:siteOfFrame)
+      - "[węża,wosk] $pv.Percent:wax (z,po) ($siteOfFrame:siteOfFrame) (strony,stronie,stron)"
+      - (czerw) kryty $pv.Percent:brood (z,po) ($siteOfFrame:siteOfFrame)
         (strony,stronie,stron)
-      - "[pierzcha,pyłek] $pv.Percent:pollen [z,po] ($siteOfFrame:siteOfFrame)
+      - "[pierzcha,pyłek] $pv.Percent:pollen (z,po) ($siteOfFrame:siteOfFrame)
         (strony,stronie,stron)"
-      - miód $pv.Percent:honey [z,po] ($siteOfFrame:siteOfFrame) (strony,stronie,stron)
+      - miód $pv.Percent:honey (z,po) ($siteOfFrame:siteOfFrame) (strony,stronie,stron)
     setHalfBody:
       - $state:halfBodyState pół korpus (numer)
         $pv.SingleDigitInteger:nrXOfHalfBody
@@ -63,16 +106,16 @@ context:
     setEquipment:
       - $deleted:excluderDel kratę
       - krata (na) [korpus,korpusie] (numer) $pv.SingleDigitInteger:excluder
-      - podłoga jest $quality:bottomBoard
+      - podłoga (jest) $quality:bottomBoard
       - $state:beePolenTrap zbieracz pyłku
-      - (ustaw) [ilość,liczba,liczbę] ramek w korpusie ([jest,na]) $pv.TwoDigitInteger:numberOfFrame
+      - (ustaw) [ilość,liczba,liczbę] ramek (w) korpusie ([jest,na]) $pv.TwoDigitInteger:numberOfFrame
     setQueen:
       - "[królowa,matka] jest $queenQuality:queenQuality"
       - "[królowa,królowej,matka,matki] $queenMark:queenMark (numer)
         ($pv.TwoDigitInteger:queenNumber)"
       - "[królowa,matka] jest $queenStart:queenStart"
       - "[królowa,matka] jest $queenState:queenState"
-      - "[królowa,matka] [jest z roku,rocznik] $pv.TwoDigitInteger:queenBorn"
+      - "[królowa,matka] [jest z roku,jest roku,rocznik] $pv.TwoDigitInteger:queenBorn"
     setHelp:
       - $help:help
       - $helpMe:helpMe pomóż mi
@@ -93,8 +136,8 @@ context:
         ($pv.TwoDigitInteger:beePlllenHarvestD) [litr,litra,litry,litrów]
       - zbiór pyłku $pv.TwoDigitInteger:beePollenHarvest (raz,razy)[miarka,porcja]
       - "[zbiór miodu,miodu branie] $pv.TwoDigitInteger:honeySmallHarvest
-        (razy)[mała ramka,małych ramek]"
-      - "[zbiór miodu,miodu branie] $pv.TwoDigitInteger:honeyBigHarvest (razy)
+        (raz,razy)[mała ramka,małych ramek]"
+      - "[zbiór miodu,miodu branie] $pv.TwoDigitInteger:honeyBigHarvest (raz,razy)
         [duża ramka,dużych ramek]"
     setFrames:
       - ($state:framesState) [ramkę,ramki] od $pv.TwoDigitInteger:nrXXOdFrame do
@@ -301,10 +344,76 @@ context:
 # date: dopisana forma "aktualna" obok "aktualną" (obie są w słowniku).
 # usunięte zbłąkane spacje po przecinkach w alternatywach ([... , x] dawało token " x").
 #
-# ZOSTAWIONE BEZ ZMIAN DO CZASU NAGRAŃ: "węża" (zamiast węza) i "pierzcha" (zamiast
-# pierzga). Oba SĄ w słowniku, więc gramatyka się zbuduje, ale kontrast z/ż i g/ch
-# jest w polszczyźnie pełnoprawny (nie neutralizuje się jak trud/trut) - czy model
-# dopasuje je do faktycznej wymowy, rozstrzygnie dopiero nagranie:
-#   nagraj 5x "węza sto procent" i 5x "pierzga dziesięć procent" -> pliki/*.wav
-#   python3 pliki/vosk_gramatyka_test.py --rec nagranie.wav      (tryb wolny pokaże,
-#   co model NAPRAWDĘ słyszy - tak wybraliśmy "na grób"). Zapas: "wosk" i "pyłek".
+# POTWIERDZONE NAGRANIEM 01.08.2026: "węża" (zamiast węza) i "pierzcha" (zamiast
+# pierzga) DZIAŁAJĄ - zostają w gramatyce, zapas "wosk"/"pyłek" niepotrzebny.
+#   Nagranie: pliki/vosk_0801-124040_domyslne_surowy_16k_bufdom_1x_gram_STRUM.wav
+#   (60 s, 8x "węza X procent [z lewej / z obu stron]", 6x "pierzga X procent ...").
+#   Z gramatyką: 8/8 "węża" i 6/6 "pierzcha", pewność 1,00 (raz 0,87) - 14/14 trafień,
+#   liczebniki i strony też poprawne. Tryb wolny pokazuje, dlaczego alias jest
+#   konieczny: "węza" -> "węzeł"/"węża"/"za", "pierzga" -> "pies go", "pijesz go",
+#   "bierz go", "pięć gra", "pierwsze". Czyli kontrast z/ż i g/ch model gubi tak samo
+#   jak przy "nakrop" - alias ze słownika wygrywa z poprawną pisownią spoza słownika.
+#
+# Zmiany 01.08.2026 (Claude) - po zbudowaniu silnika-parsera i przejechaniu
+# przykładowych komend z pliki/lista_komend.txt (100 wypowiedzi):
+# - setEquipment: "podłoga jest $quality" -> "podłoga (jest) $quality", bo
+#   "podłoga wyczyszczona" (bez "jest") to naturalna forma i była odrzucana.
+# - setHarvest przy miodzie: "(razy)" -> "(raz,razy)" - "zbiór miodu jeden RAZ
+#   duża ramka" nie miało prawa zadziałać. Przy pyłku "(raz,razy)" już było.
+# - setHive/setBody: $state ZOSTAJE wymagany (decyzja usera - komendy typu
+#   "ul numer 16" bez czasownika nie istnieją; wykreślone z lista_komend.txt).
+# - setTreatment "paski": $state ZOSTAJE wymagany (decyzja usera); to przykład
+#   w lista_komend.txt był niepełny, poprawiony na "wstaw paski pięć sztuk".
+#
+# PRZYIMEK "z" GINIE — Vosk go NIE zwraca, choć jest i w słowniku, i w gramatyce.
+#   Wychodzi "pięćdziesiąt procent lewej" i "sto procent obu stron" - 14/14 razy, bez
+#   wyjątku. Powód: jedna niezgłoskotwórcza spółgłoska, nieakcentowana, zlewa się z
+#   następnym słowem ([zlevej] -> jedno słowo fonetyczne).
+#
+# SŁOWO "PROCENT" GINIE (zgłoszone z urządzenia 02.08.2026) — ta sama fonetyka
+#   co przy "z": nieakcentowane, stoi między liczebnikiem a "z prawej", a jego
+#   nagłosowe [p] wtapia się w wygłos liczebnika ("dziesięć procent" -> [dziesiećprocent],
+#   przy szybkiej mowie [dziesięć_rocent] albo nic). Efekt: cała komenda nie
+#   dopasowywała się do wzorca, bo $pv.Percent WYMAGAŁ tego słowa.
+#
+#   TEJ ZMIANY NIE DA SIĘ ZROBIĆ W TYM PLIKU: "procent" nie jest słowem wyrażenia,
+#   tylko częścią typu wbudowanego $pv.Percent (kontrakt odziedziczony po Rhino).
+#   Zapis "(procent)" w wyrażeniach byłby martwy - parser i tak szukałby go sam.
+#   Zrobione więc tam, gdzie to słowo żyje - w vosk_grammar.dart (+ referencja
+#   vosk_parser_ref.py), dokładnie jak dla przyimków z pomijalneSlowa:
+#     - brak "procent" -> slot i tak dostaje "NN%", z karą 1 (wypowiedź ZE słowem
+#       nadal wygrywa, więc nic się nie przestawia w rozstrzyganiu remisów);
+#     - w tej pozycji żadne wyrażenie nie oczekuje innego słowa, więc liczba
+#       pozostaje jednoznaczna: "larwy dziesięć z prawej" == "larwy dziesięć
+#       procent z prawej".
+#   Kontrola: 98 komend z lista_komend.txt daje ten sam wynik przed i po (83 OK,
+#   0 złych intentów) - tolerancja niczego nie przechwyciła po drodze.
+#
+#   DRUGA POŁOWA NAPRAWY — MOSTKI W GRAMATYCE RECOGNIZERA (vosk_grammar.dart,
+#   frazy()). Wyrażenia są rozcinane na typach wbudowanych, więc "procent"
+#   trafiało do Vosk WYŁĄCZNIE jako samotna, jednowyrazowa fraza - model języka
+#   nie miał ani bigramu "dziesięć procent", ani "procent z prawej", czyli
+#   pominięcie tego słowa nie kosztowało go prawie nic. Dołożone: kawałek po
+#   $pv.Percent zaczyna się od słowa "procent" oraz pary "<liczebnik> procent".
+#   Zmierzone na pliki/vosk_0801-124040_...wav (14 wypowiedzi): tekst bez zmian,
+#   pewność słowa "procent" 0,91 -> 1,00, gramatyka 3079 -> 3174 fraz (+3 %).
+#
+# POPRAWKI NANIESIONE 01.08.2026 (wyrażenia - przyimek jest tam zwykłym wypełnieniem):
+#   - "[z,po]" -> "(z,po)" w 13 wyrażeniach setStore. To był TWARDY BLOKER: nawias
+#     kwadratowy = alternatywa WYMAGANA, więc skoro "z" nie wraca z Vosk, żadna z 13
+#     najczęściej używanych komend (pokarm/miód/czerw/susz/matecznik/węża/pierzcha...)
+#     nie dopasowałaby się do wzorca. "po" zostawione w alternatywie - ma sylabę z
+#     samogłoską, więc wraca normalnie; opcjonalność obsługuje oba przypadki.
+#   - "ramek w korpusie" -> "ramek (w) korpusie" (setEquipment). "w" jest jeszcze
+#     słabsze od "z" (w wygłosie ubezdźwięcznia się do [f] i wtapia w następne słowo).
+#   - "[jest z roku,rocznik]" -> "[jest z roku,jest roku,rocznik]" (setQueen) - wariant
+#     bez "z" dla tej samej przyczyny.
+#
+# CELOWO NIE ZMIENIONE — SLOTY: "w klatce" (queenStart), "w nastroju do ucieczki"
+#   (colonyState), "przesuń w prawo"/"przesuń w lewo" (isDone). Wartość slotu jest
+#   PORÓWNYWANA JAKO DOKŁADNY STRING w voice_screen2.dart (m.in. case 'przesuń w
+#   prawo' w linii ~10300, 'przesuń w lewo' ~10320, warunki ~965/~998/~4616/~4641).
+#   Wycięcie/uopcjonalnienie "w" w wartości slotu urwałoby te komendy w apce.
+#   ZADANIE DLA PARSERA: dopasowując slot, traktuj jednoliterowe przyimki (z, w) jako
+#   OPCJONALNE w tekście z Vosk, ale zwracaj ZAWSZE kanoniczną wartość z tego pliku.
+#   Czyli tekst "przesuń prawo" musi dać slot isDone = "przesuń w prawo".

@@ -77,6 +77,28 @@ class SoundHelper {
     await player.resume();
   }
 
+  /// Odtwórz dźwięk i POCZEKAJ, aż ucichnie.
+  ///
+  /// Potrzebne przy sterowaniu na Vosku: mikrofon nasłuchuje bez przerwy, więc
+  /// na czas odzywki Mai trzeba go wyciszyć - a do tego trzeba wiedzieć, kiedy
+  /// dźwięk się kończy (patrz VoskEngine.wyciszNaOdzywke).
+  ///
+  /// [limit] to bezpiecznik: gdyby odtwarzacz nie zgłosił końca (błąd sesji
+  /// audio, przerwana wtyczka), i tak wracamy - inaczej mikrofon zostałby
+  /// wyciszony na zawsze, czyli sterowanie głosem przestałoby działać po cichu.
+  Future<void> playAndWait(
+    String name, {
+    Duration limit = const Duration(seconds: 6),
+  }) async {
+    final player = _players[name];
+    if (player == null) return;
+    // Nasłuch na koniec PRZED startem - inaczej krótki dźwięk zdąży się
+    // skończyć, zanim zdążymy się podpiąć, i czekalibyśmy do limitu.
+    final Future<void> koniec = player.onPlayerComplete.first;
+    await play(name);
+    await koniec.timeout(limit, onTimeout: () {});
+  }
+
   /// Zapisz głośności do SharedPreferences.
   Future<void> saveVolumes() async {
     final prefs = await SharedPreferences.getInstance();

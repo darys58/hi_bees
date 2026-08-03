@@ -27,7 +27,6 @@ class _ParametrScreenState extends State<ParametrScreen> {
   bool _showZakupySprzedaz = true;
   final _sound = SoundHelper();
   bool _soundReady = false;
-  bool isSwitched = false;
 
   @override
   void didChangeDependencies() {
@@ -64,15 +63,6 @@ class _ParametrScreenState extends State<ParametrScreen> {
       //   });
       // }
       // });
-      if (globals.voice2 == true) {
-        setState(() {
-          isSwitched = true;
-        });
-      } else {
-        setState(() {
-          isSwitched = false;
-        });
-      }
     }
     _isInit = false;
     //Provider.of<Rests>(context, listen: false).fetchAndSetRests(); //dostawca restauracji
@@ -657,29 +647,14 @@ class _ParametrScreenState extends State<ParametrScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             Card(
-              child: ListTile(
-                //leading: Icon(Icons.settings),
-                title: Text('Voice screen 2', style: const TextStyle(fontWeight: FontWeight.bold)),
-                //subtitle: Text(AppLocalizations.of(context)!.onlyInspection),
-                trailing: Switch.adaptive(
-                  value: isSwitched,
-                  onChanged: (value) {
-                    globals.voice2 = value;
-                    //DBHelper.updateDodatki1('a', '$value');
-                    setState(() {
-                      isSwitched = value;
-                      print(isSwitched);
-                    });
-                  },
-                ),
-              ),
-            ),
-            // Voice screen 2 - podgląd korpusu na żywo (zamiast podpowiedzi poleceń)
+             // Sterowanie głosem: podgląd korpusu na żywo zamiast podpowiedzi poleceń.
+            // WYŁĄCZONY  -> podpowiedzi komend, ekran pionowy.
+            // WŁĄCZONY   -> korpus aktualizowany na żywo, ekran poziomy.
+            // (Wybór ekranu głosowego zniknął - został wyłącznie Vosk.)
             Card(
               child: ListTile(
-                title: Text('Voice 2 - live korpus'),
-                subtitle: Text('Podgląd aktualizowanego korpusu w trakcie poleceń (zamiast podpowiedzi)'),
+                title: Text('Live korpus'),
+                subtitle: Text('Podgląd aktualizowanego korpusu w trakcie poleceń (zamiast podpowiedzi, układ poziomy)'),
                 trailing: Switch.adaptive(
                   value: globals.voice2LivePodglad,
                   onChanged: (value) {

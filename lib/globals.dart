@@ -75,8 +75,7 @@ int raportNrStrony = 1; //numer strony dla wykresu raportu zbiorów lub leczenia
 int raportIleUliNaStronie = 20; //ilość uli na stronie w raporcie zbiorów lub leczenia (od 1 do 20)
 String rokRaportow = 'wszystkie'; //DateTime.now().toString().substring(0, 4); //rok wybrany w Info do raportów
 
-bool voice2 = false; //czy ma być uruchomiony voice_screen2
-bool voice2LivePodglad = false; //czy w voice_screen2 pokazywać na żywo podgląd korpusu zamiast podpowiedzi
+bool voice2LivePodglad = false; //sterowanie głosem: podgląd korpusu na żywo (poziomo) zamiast podpowiedzi komend (pionowo)
 bool voice2LiveLandscape = false; //wymuszenie układu poziomego dla live podglądu korpusu (niezależnie od orientacji urządzenia)
 
 // Aktualności ula - widoczność kategorii (0=ukryta, 1=widoczna)

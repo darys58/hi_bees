@@ -4,10 +4,8 @@ Przykładowe komendy wypowiadane:
       	Otwórz pasiekę numer 51
     setHive:
       	Otwórz ul numer 5
-	Ul numer 16
     setBody:
       	Otwórz korpus numer 1
-	Korpus numer 2
     setFrame:
       	Otwórz ramkę numer 4
 	Ramka numer 10
@@ -63,7 +61,7 @@ Przykładowe komendy wypowiadane:
 	kwas 5 miligramów
 	roztocza sto trzydzieści sztuk
 	roztocza dwie sztuki
-	paski pięć sztuk
+	wstaw paski pięć sztuk
 	chemia dawka numer cztery
     setEquipment:
 	usuń kratę

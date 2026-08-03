@@ -1207,7 +1207,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get introB =>
-      '\n\nBeispiel:\n1. Wählen Sie \"SPRACHSTEUERUNG\" und dann \"START\".\n2. Sagen Sie \"Hey Maya\" (das ist das Aktivierungswort, das jedem Sprachbefehl vorangestellt werden muss).\n3. Sagen Sie \"Einstellen Bienenstand Nummer eins\".\n4. Sagen Sie \"Einstellen Beute Nummer eins\".\n5. Sagen Sie \"Einstellen Zarge Nummer eins\".\n6. Sagen Sie \"Einstellen Rahmen Nummer eins\".\n7. Sagen Sie \"Einstellen Stifte, zwanzig Prozent, von links\".';
+      '\n\nBeispiel:\n1. Wählen Sie \"SPRACHSTEUERUNG\" - die Erkennung startet von selbst.\n2. Sagen Sie \"hej maja start\" (ab jetzt sprechen Sie die Befehle ohne Vorwort; \"hej maja stop\" beendet die Erkennung).\n3. Sagen Sie \"Einstellen Bienenstand Nummer eins\".\n4. Sagen Sie \"Einstellen Beute Nummer eins\".\n5. Sagen Sie \"Einstellen Zarge Nummer eins\".\n6. Sagen Sie \"Einstellen Rahmen Nummer eins\".\n7. Sagen Sie \"Einstellen Stifte, zwanzig Prozent, von links\".';
 
   @override
   String get introC =>

@@ -1207,7 +1207,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get introB =>
-      '\n\nEsempio:\n1. Seleziona \"CONTROLLO VOCALE\" e poi seleziona \"START\".\n2. Dì \"Hey Maya\" (questa è la parola di attivazione che deve precedere ogni comando vocale).\n3. Dì \"Imposta apiario numero uno\".\n4. Dì \"Imposta arnia numero uno\".\n5. Dì \"Imposta melario numero uno\".\n6. Dì \"Imposta telaino numero uno\".\n7. Dì \"Imposta uova, venti per cento, sul lato sinistro\".';
+      '\n\nEsempio:\n1. Seleziona \"CONTROLLO VOCALE\": l\'ascolto parte da solo.\n2. Dì \"hej maja start\" (da questo momento pronuncia i comandi senza prefisso; \"hej maja stop\" termina l\'ascolto).\n3. Dì \"Imposta apiario numero uno\".\n4. Dì \"Imposta arnia numero uno\".\n5. Dì \"Imposta melario numero uno\".\n6. Dì \"Imposta telaino numero uno\".\n7. Dì \"Imposta uova, venti per cento, sul lato sinistro\".';
 
   @override
   String get introC =>

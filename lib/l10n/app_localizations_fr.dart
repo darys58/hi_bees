@@ -1210,7 +1210,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get introB =>
-      '\n\nExemple :\n1. Sélectionnez \"COMMANDE VOCALE\" puis sélectionnez \"START\".\n2. Dites \"Hey Maya\" (c\'est le mot de réveil qui doit précéder chaque commande vocale).\n3. Dites \"Définir rucher numéro un\".\n4. Dites \"Définir ruche numéro un\".\n5. Dites \"Définir hausse numéro un\".\n6. Dites \"Définir cadre numéro un\".\n7. Dites \"Définir œufs, vingt pour cent, côté gauche\".';
+      '\n\nExemple :\n1. Sélectionnez \"COMMANDE VOCALE\" - l\'écoute démarre toute seule.\n2. Dites \"hej maja start\" (à partir de là, dites les commandes sans préfixe ; \"hej maja stop\" arrête l\'écoute).\n3. Dites \"Définir rucher numéro un\".\n4. Dites \"Définir ruche numéro un\".\n5. Dites \"Définir hausse numéro un\".\n6. Dites \"Définir cadre numéro un\".\n7. Dites \"Définir œufs, vingt pour cent, côté gauche\".';
 
   @override
   String get introC =>

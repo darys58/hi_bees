@@ -387,7 +387,7 @@
     "editingFrame": "Rahmeninfo bearbeiten",
     "addFrame": "Rahmeninfo hinzufügen",
     "introA": "\n\nUm einen Bienenstand und einzelne Beuten anzulegen, verwenden Sie das \"+\"-Symbol oben. \n\nInformationen über die App auf heymaya.eu sind über das \"?\"-Symbol oben verfügbar.",
-    "introB": "\n\nBeispiel:\n1. Wählen Sie \"SPRACHSTEUERUNG\" und dann \"START\".\n2. Sagen Sie \"Hey Maya\" (das ist das Aktivierungswort, das jedem Sprachbefehl vorangestellt werden muss).\n3. Sagen Sie \"Einstellen Bienenstand Nummer eins\".\n4. Sagen Sie \"Einstellen Beute Nummer eins\".\n5. Sagen Sie \"Einstellen Zarge Nummer eins\".\n6. Sagen Sie \"Einstellen Rahmen Nummer eins\".\n7. Sagen Sie \"Einstellen Stifte, zwanzig Prozent, von links\".",
+    "introB": "\n\nBeispiel:\n1. Wählen Sie \"SPRACHSTEUERUNG\" - die Erkennung startet von selbst.\n2. Sagen Sie \"hej maja start\" (ab jetzt sprechen Sie die Befehle ohne Vorwort; \"hej maja stop\" beendet die Erkennung).\n3. Sagen Sie \"Einstellen Bienenstand Nummer eins\".\n4. Sagen Sie \"Einstellen Beute Nummer eins\".\n5. Sagen Sie \"Einstellen Zarge Nummer eins\".\n6. Sagen Sie \"Einstellen Rahmen Nummer eins\".\n7. Sagen Sie \"Einstellen Stifte, zwanzig Prozent, von links\".",
     "introC": "\n\nEs wird ein Bienenstand Nr. 1 mit einer Beute Nr. 1 erstellt, bestehend aus einer Zarge mit einem Rahmen mit Stiften, die 20% der Rahmenfläche auf der linken Seite einnehmen. Sie können die Durchsicht fortsetzen oder mit der Taste \"STOP\" beenden.",
     "milliliter": "Milliliter",
     "resourceLocationSay": "Ressourcenposition - sagen Sie z.B.:",

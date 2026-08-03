@@ -387,7 +387,7 @@
     "editingFrame": "Edicion de info de cuadros",
     "addFrame": "Agregar info de cuadros",
     "introA": "\n\nPara crear un colmenar y colmenas individuales, usa el icono \"+\" de arriba. \n\nLa informacion sobre la aplicacion en la pagina heymaya.eu esta disponible al seleccionar el icono \"?\" de arriba.",
-    "introB": "\n\nEjemplo:\n1. Selecciona \"CONTROL DE VOZ\" y luego selecciona \"INICIO\".\n2. Di \"Hey Maya\" (esta es la palabra de activacion que debe preceder cada comando de voz).\n3. Di \"Establecer colmenar numero uno\".\n4. Di \"Establecer colmena numero uno\".\n5. Di \"Establecer alza numero uno\".\n6. Di \"Establecer cuadro numero uno\".\n7. Di \"Establecer huevos, veinte por ciento, en el lado izquierdo\".",
+    "introB": "\n\nEjemplo:\n1. Selecciona \"CONTROL DE VOZ\": la escucha se inicia sola.\n2. Di \"hej maja start\" (a partir de ahora di los comandos sin prefijo; \"hej maja stop\" finaliza la escucha).\n3. Di \"Establecer colmenar numero uno\".\n4. Di \"Establecer colmena numero uno\".\n5. Di \"Establecer alza numero uno\".\n6. Di \"Establecer cuadro numero uno\".\n7. Di \"Establecer huevos, veinte por ciento, en el lado izquierdo\".",
     "introC": "\n\nSe creara el colmenar n.o 1 con la colmena n.o 1, compuesta por un alza en la que hay un cuadro con huevos que ocupan el 20% de la superficie del cuadro en el lado izquierdo. Puedes continuar la inspeccion o finalizarla seleccionando el boton \"PARAR\".",
     "milliliter": "mililitros",
     "resourceLocationSay": "Ubicacion del recurso - di p.ej.:",

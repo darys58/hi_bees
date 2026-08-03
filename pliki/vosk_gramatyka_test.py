@@ -27,7 +27,8 @@ import re
 import wave
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-YML = os.path.join(HERE, 'pol_vosk.yml')
+# Gramatyka jest assetem aplikacji (pubspec), nie kopią w pliki/ - jedno źródło.
+YML = os.path.join(os.path.dirname(HERE), 'assets', 'grammar', 'pol_vosk.yml')
 DICT = os.path.join(HERE, 'vosk_slownik_pl.txt')
 MODEL = os.environ.get('VOSK_MODEL', '/tmp/plm/vosk-model-small-pl-0.22')
 

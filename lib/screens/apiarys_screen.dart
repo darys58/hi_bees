@@ -27,8 +27,7 @@ import '../models/weather.dart';
 import '../models/infos.dart';
 import '../widgets/apiarys_item.dart';
 import '../widgets/note_priorytet_item.dart';
-import '../screens/voice_screen.dart';
-import '../screens/voice_screen2.dart';
+import '../screens/voice_vosk_screen.dart';
 //import '../screens/subscription_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/harvest_screen.dart';
@@ -1762,13 +1761,12 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                           child: ElevatedButton(
                             style: buttonStyle,
                             onPressed: () {
-                              globals.voice2 == false
-                                ? Navigator.of(context).pushNamed(
-                                    VoiceScreen.routeName,
-                                  )
-                                : Navigator.of(context).pushNamed(
-                                    VoiceScreen2.routeName,
-                                  );                                    
+                              //sterowanie głosem = Vosk. voice_screen i
+                              //voice_screen2 (Picovoice) zostają w repo tylko
+                              //do porównań i nie są już osiągalne z menu.
+                              Navigator.of(context).pushNamed(
+                                VoiceVoskScreen.routeName,
+                              );
                             },
                             child: Text(
                                 AppLocalizations.of(context)!.voiceControl,

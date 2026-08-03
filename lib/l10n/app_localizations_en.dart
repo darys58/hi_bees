@@ -1200,7 +1200,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get introB =>
-      '\n\nExample:\n1. Select \"VOICE CONTROL\" and then select \"START\".\n2. Say \"Hey Maya\" (this is the wake-up word that should precede each voice command).\n3. Say \"Set apiary number one.\"\n4. Say \"Set hive number one.\"\n5. Say \"Set body number one.\"\n6. Say \"Set frame number one.\"\n7. Say \"Set eggs, twenty percent, on the left side\".';
+      '\n\nExample:\n1. Select \"VOICE CONTROL\" - listening starts on its own.\n2. Say \"hej maja start\" (from now on say commands with no prefix; \"hej maja stop\" ends listening).\n3. Say \"Set apiary number one.\"\n4. Say \"Set hive number one.\"\n5. Say \"Set body number one.\"\n6. Say \"Set frame number one.\"\n7. Say \"Set eggs, twenty percent, on the left side\".';
 
   @override
   String get introC =>

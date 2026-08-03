@@ -109,7 +109,11 @@
       "Bash(echo \"\\(exit $?\\)\")",
       "Bash(pip3 install *)",
       "Bash(awk 'NR>=100 && NR<=245' lib/screens/vosk_poc_screen.dart)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(git check-ignore *)",
+      "Bash(sed -n '/^flutter:/,/^[a-z]/p' pubspec.yaml)",
+      "Bash(awk -F: '$1>500')",
+      "Bash(nm -g packages/vosk_flutter_service/ios/Frameworks/vosk.xcframework/ios-arm64_armv7_armv7s/libvosk.a)"
     ]
   }
 }
