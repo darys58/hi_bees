@@ -12,7 +12,7 @@ class MemoryItem with ChangeNotifier {
   final String dev; //be_dev: String  device
   final String wer; //wersja apki
   final String kod; //be_kod: String kod hi_bees
-  final String key; //be_key: String key picovoice
+  final String key; //be_key: String klucz aktywacyjny apki
   final String dod; //be_od: String  data od
   final String ddo; //be_do: String  data do
   final String memjezyk; //ustawienie jezyka w Ustawienia/Jezyk w apce

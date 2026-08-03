@@ -1,5 +1,12 @@
 # Voice Screen - Analiza i zmiany
 
+> **DOKUMENT HISTORYCZNY (nieaktualny od 03.08.2026).** Opisuje ekrany
+> `voice_screen.dart` i `voice_screen2.dart` oparte na Picovoice - oba zostały
+> USUNIĘTE wraz z migracją na Vosk. Kod jest dostępny w historii gita
+> (`git show 37ae5e2:lib/screens/voice_screen2.dart`). Aktualne sterowanie
+> głosowe: `lib/screens/voice_vosk_screen.dart` + `lib/helpers/vosk_engine.dart`
+> + `lib/helpers/vosk_grammar.dart`.
+
 ## Plik roboczy: `lib/screens/voice_screen2.dart`
 ## Plik produkcyjny: `lib/screens/voice_screen.dart`
 

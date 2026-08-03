@@ -62,7 +62,7 @@ lib/
 │   ├── note_screen.dart         # Notatki
 │   ├── purchase_screen.dart     # Zakupy
 │   ├── sale_screen.dart         # Sprzedaż
-│   ├── voice_screen.dart        # Sterowanie głosowe
+│   ├── voice_vosk_screen.dart   # Sterowanie głosowe (Vosk)
 │   ├── raport_screen.dart       # Raporty
 │   └── ...
 ├── widgets/               # Komponenty UI (10+ plików)
@@ -130,7 +130,7 @@ Każdy provider dziedziczy `ChangeNotifier` i zarządza listą `_items`.
 6. **Zbiory miodu/pyłku** - rejestracja i statystyki
 7. **Notatki z priorytetami** - zadania do wykonania
 8. **Zakupy i sprzedaż** - historia transakcji
-9. **Sterowanie głosowe** - Picovoice (wake-word "Hey Maya!")
+9. **Sterowanie głosowe** - Vosk, offline STT (sesję otwiera "hej maja start")
 10. **Pogoda** - prognoza na 5 dni
 11. **Raporty** - zbiory i leczenie per ul/rok
 12. **Import/Export** - synchronizacja z chmurą (darys.pl)
@@ -190,7 +190,7 @@ Główne:
 - `provider` - state management
 - `sqflite` - SQLite
 - `http` - requesty HTTP
-- `picovoice_flutter` - sterowanie głosowe
+- `vosk_flutter_service` (kopia w `packages/`) + `record` - sterowanie głosowe
 - `fl_chart` - wykresy
 - `flutter_localizations` - l10n
 

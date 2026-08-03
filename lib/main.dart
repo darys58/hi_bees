@@ -12,8 +12,6 @@ import './globals.dart' as globals;
 import './screens/frames_screen.dart';
 import './screens/hives_screen.dart';
 import './screens/apiarys_screen.dart';
-import './screens/voice_screen.dart'; //blokowanie działania Picovoce  - usunięto: picovoice_flutter: ^3.0.1
-import './screens/voice_screen2.dart';
 import './screens/voice_vosk_screen.dart';
 import './screens/infos_screen.dart';
 import './screens/frames_detail_screen.dart';
@@ -87,7 +85,7 @@ void main() async {
   HttpOverrides.global =
       MyHttpOverrides(); //obejście certyfikatu na stronie www
   WidgetsFlutterBinding.ensureInitialized();
-  // Globalna blokada orientacji - tylko pion (wyjątek: voice_screen2)
+  // Globalna blokada orientacji - tylko pion (wyjątek: voice_vosk_screen)
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
@@ -318,10 +316,7 @@ class _MyAppState extends State<MyApp> {
           VoskPocScreen.routeName: (ctx) => const VoskPocScreen(), //POC Faza 0 (tymczasowe)
           FramesScreen.routeName: (ctx) => FramesScreen(),
           HivesScreen.routeName: (ctx) => HivesScreen(),
-          VoiceScreen.routeName: (ctx) => VoiceScreen(), //blokowanie działania Picovoce
-          VoiceScreen2.routeName: (ctx) => VoiceScreen2(),
-          //sterowanie głosem na Vosku - jedyny produkcyjny ekran głosowy;
-          //voice_screen i voice_screen2 zostają wyłącznie do porównań
+          //sterowanie głosem na Vosku - jedyny ekran głosowy w aplikacji
           VoiceVoskScreen.routeName: (ctx) => const VoiceVoskScreen(),
           InfoScreen.routeName: (ctx) => InfoScreen(),
           // SubsScreen.routeName: (ctx) => SubsScreen(), //blokowanie subskrypcji bo błedy kompilacji androida

@@ -113,7 +113,10 @@
       "Bash(git check-ignore *)",
       "Bash(sed -n '/^flutter:/,/^[a-z]/p' pubspec.yaml)",
       "Bash(awk -F: '$1>500')",
-      "Bash(nm -g packages/vosk_flutter_service/ios/Frameworks/vosk.xcframework/ios-arm64_armv7_armv7s/libvosk.a)"
+      "Bash(nm -g packages/vosk_flutter_service/ios/Frameworks/vosk.xcframework/ios-arm64_armv7_armv7s/libvosk.a)",
+      "Bash(git mv *)",
+      "Bash(git ls-tree *)",
+      "Bash(git cat-file *)"
     ]
   }
 }

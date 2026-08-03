@@ -41,8 +41,8 @@ dependencies:
   flutter_slidable: ^3.1.1
   url_launcher: ^6.1.10
   fl_chart: ^0.70.1
-  picovoice_flutter: ^3.0.3
-  # POC offline STT (migracja z Picovoice) - do usunięcia jeśli rezygnujemy.
+  # Sterowanie głosowe: Vosk (offline STT). Picovoice (picovoice_flutter,
+  # porcupine, rhino) usunięte 03.08.2026 - zastąpione w całości przez Vosk.
   # KOPIA W REPO (nie pub.dev): oryginał 0.1.2 przestawiał sesję audio przy
   # kazdym wywolaniu recognizer.* i dekodowal na glownym watku iOS, przez co
   # rownolegle nagrywanie mialo 74 % cyfrowej ciszy. Poprawki w
@@ -51,7 +51,7 @@ dependencies:
   #   dart run vosk_flutter_service install -t ios
   vosk_flutter_service:
     path: packages/vosk_flutter_service
-  record: ^6.2.1 #POC: własny strumień PCM 16 kHz do Vosk (obejście wadliwego SpeechService na iOS)
+  record: ^6.2.1 #własny strumień PCM 16 kHz do Vosk (obejście wadliwego SpeechService na iOS)
   nfc_manager: ^3.5.0
   pdf: ^3.10.8
   printing: ^5.12.0
@@ -93,18 +93,6 @@ flutter_icons:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/contexts/android/apiary_android_en_US.rhn
-    - assets/contexts/android/apiary_android_pl_PL.rhn
-    - assets/contexts/ios/apiary_ios_pl_PL.rhn
-    - assets/contexts/ios/apiary_ios_en_US.rhn
-    - assets/keyword_files/android/Hi-Maya_android_en_US.ppn
-    - assets/keyword_files/android/Hi-Maya_android_pl_PL.ppn
-    - assets/keyword_files/ios/Hi-Maya_ios_pl_PL.ppn
-    - assets/keyword_files/ios/Hi-Maya_ios_en_US.ppn
-    - assets/porcupine/porcupine_params_pl_PL.pv
-    - assets/porcupine/porcupine_params_en_US.pv
-    - assets/rhino/rhino_params_pl_PL.pv
-    - assets/rhino/rhino_params_en_US.pv
     # gramatyka dla silnika-parsera Vosk (lib/helpers/vosk_grammar.dart)
     - assets/grammar/pol_vosk.yml
     - assets/image/matka1.png

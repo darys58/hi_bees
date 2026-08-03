@@ -15,9 +15,12 @@ String rokMatek = '20'; //rok wybrany w ZARZADZANIE MATKAMI
 double aktualTemp = 0.0; //aktualna temperatura
 String stopnie = '\u2103'; //nazwa jednostki temperatury
 
-String kod = ''; //kod do pobrania klucza picovoice z bazy www
-String key = ''; //kaccessKey picovoice
-String keyMemory = ''; //kaccessKey picovoice - gdyby wycofanie sie z aktywacji i powrót do tego co było
+//Klucz aktywacyjny apki. Historycznie był to accessKey Picovoice; po przejściu
+//na Vosk (03.08.2026) silnik głosowy go NIE potrzebuje, ale klucz został jako
+//bramka licencyjna - pusty key ('bez_klucza') = brak sterowania głosem.
+String kod = ''; //kod do pobrania klucza aktywacyjnego z bazy www
+String key = ''; //klucz aktywacyjny
+String keyMemory = ''; //klucz aktywacyjny - gdyby wycofanie sie z aktywacji i powrót do tego co było
 String deviceId = ''; //Id telefonu - identyfikator apki/uzytkownika
 String wersja = ''; //wersja apki
 String jezyk = ''; //język obsługiwany przez aplikację

@@ -1761,9 +1761,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                           child: ElevatedButton(
                             style: buttonStyle,
                             onPressed: () {
-                              //sterowanie głosem = Vosk. voice_screen i
-                              //voice_screen2 (Picovoice) zostają w repo tylko
-                              //do porównań i nie są już osiągalne z menu.
+                              //sterowanie głosem = Vosk (jedyny silnik od
+                              //03.08.2026; ekrany Picovoice usunięte)
                               Navigator.of(context).pushNamed(
                                 VoiceVoskScreen.routeName,
                               );

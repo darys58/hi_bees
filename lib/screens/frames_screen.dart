@@ -7,9 +7,6 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 //import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:hi_bees/l10n/app_localizations.dart';
-//import 'package:rhino_flutter/rhino.dart';
-//import 'package:picovoice_flutter/picovoice_manager.dart';
-//import 'package:picovoice_flutter/picovoice_error.dart';
 import 'package:intl/intl.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
@@ -32,18 +29,7 @@ class FramesScreen extends StatefulWidget {
 }
 
 class _FramesScreenState extends State<FramesScreen> {
-  // final String accessKey =
-  //    'xPj3ezZa5Y9gQj+v6xQ5YvESy7eLtUcC3NPRFj8E5yDt5MvQWj3b1w=='; // AccessKey obtained from Picovoice Console (https://console.picovoice.ai/)
   bool _isInit = true;
-  //bool isError = false;
-  // String errorMessage = "";
-
-  // bool isButtonDisabled = false; //czy klawisz nieaktywny?
-  // bool isProcessing =
-  //    false; //czy uruchomiono proces rozpoznawania mowy przyciskiem START
-  // bool wakeWordDetected = false;
-  //String rhinoText = "";
-  // PicovoiceManager? _picovoiceManager;
   var now = new DateTime.now();
   DateTime dt1 = DateTime.now(); //data do porównania dla ustawiania przełącznika przed i po pod widokiem ula
   DateTime dt2 = DateTime.now(); //jw.
@@ -970,16 +956,6 @@ class _FramesScreenState extends State<FramesScreen> {
             ),
     ));
   }
-
-/*
-  Widget footer = Container(
-          alignment: Alignment.bottomCenter,
-          padding: EdgeInsets.only(bottom: 20),
-          child: const Text(
-            "Made in Vancouver, Canada by Picovoice",
-            style: TextStyle(color: Color(0xff666666)),
-          ));
-*/
 
 }
 
