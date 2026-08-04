@@ -226,11 +226,45 @@ class DBHelper {
     db.update('info', {'wartosc': wart}, where: 'id = ?', whereArgs: [id]);
   }
 
+  //uwagi z rekordu info - dla dyktowanej notatki (voice_vosk_screen)
+  //null = NIE MA takiego rekordu (a '' = rekord jest, tylko bez uwag). Ta
+  //różnica decyduje, czy notatkę dopisać, czy najpierw utworzyć przegląd.
+  static Future<String?> getInfoUwagi(String id) async {
+    final db = await DBHelper.database();
+    final result = await db.query('info',
+      columns: ['uwagi'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (result.isEmpty) return null;
+    return (result[0]['uwagi'] ?? '').toString();
+  }
+
+  //update tabeli info - same uwagi - dla dyktowanej notatki (voice_vosk_screen)
+  //UWAGA: notatki NIE WOLNO zapisywać przez Infos.insertInfo. Rekord przeglądu
+  //ma składane id, a DBHelper.insert to ConflictAlgorithm.replace - wstawienie
+  //"tylko uwag" wyzerowałoby w nim czas, wartość i temperaturę.
+  static Future<void> updateInfoUwagi(String id, String uwagi) async {
+    final db = await DBHelper.database();
+    await db.update('info', {'uwagi': uwagi}, where: 'id = ?', whereArgs: [id]);
+  }
+
   //update pasieki- ilość uli w pasiece - dla voice_screen
   static Future<void> updateIleUli(int pasieka, int ile) async {
     final db = await DBHelper.database();
     //print('db_helpers: update pasieki - ile uli w pasiece $pasieka ile=$ile');
     db.update('pasieki', {'ileUli': ile},
+        where: 'pasiekaNr = ?', whereArgs: [pasieka]);
+  }
+
+  //update pasieki - data ostatniego przeglądu - dla notatki dyktowanej głosem.
+  //Osobna metoda zamiast Apiarys.insertApiary: insert to ConflictAlgorithm.replace
+  //po id, więc przepisałby przy okazji ileUli, ikonę i opis - notatka nie ma o nich
+  //pojęcia i wstawiłaby tam wartości zastępcze.
+  static Future<void> updatePrzegladPasieki(int pasieka, String data) async {
+    final db = await DBHelper.database();
+    await db.update('pasieki', {'przeglad': data},
         where: 'pasiekaNr = ?', whereArgs: [pasieka]);
   }
 
@@ -290,10 +324,13 @@ class DBHelper {
   }
 
 //update ule, pola np. ikona - dla import_screen
+  //await przy db.update: wołający, który CZEKA na tę metodę i zaraz potem czyta
+  //ule z bazy (notatka głosowa przestawiająca datę przeglądu), bez tego czytałby
+  //stan sprzed zapisu. Wołającym "wystrzel i zapomnij" nic to nie zmienia.
   static Future<void> updateUle(String id, String pole, String wartosc) async {
     final db = await DBHelper.database();
     //print('db_helpers: update ule $id: pole = $pole , wartość = $wartosc ');
-    db.update('ule', {'$pole': wartosc}, where: 'id = ?', whereArgs: [id]);
+    await db.update('ule', {'$pole': wartosc}, where: 'id = ?', whereArgs: [id]);
   }
 
   //batch update pojedynczego pola w tabeli ule - używane przy przywracaniu tagów NFC po imporcie

@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Helper do odtwarzania dźwięków w sterowania głosowym.
@@ -67,14 +68,26 @@ class SoundHelper {
   }
 
   /// Odtwórz dźwięk po nazwie.
+  ///
+  /// TA METODA NIE RZUCA WYJĄTKÓW. Na iOS sesja audio jest wspólna z
+  /// nagrywaniem mikrofonu (sterowanie głosem nasłuchuje bez przerwy), więc
+  /// odtwarzacz potrafi odmówić posłuszeństwa w środku pracy ekranu. Odzywka
+  /// jest ozdobą, a nie funkcją - jej awaria nie może przerwać tego, co ekran
+  /// właśnie robi. Zgłoszenie z 03.08.2026: wyjątek z odzywki „słucham"
+  /// wylatywał z _zacznijNotatke i całe wejście w dyktowanie notatki znikało
+  /// bez śladu - bez ikony, bez komunikatu, z powrotem w tryb komend.
   Future<void> play(String name) async {
     final player = _players[name];
     if (player == null) return;
     final vol = (volumes[name] ?? 1.0) * masterVolume;
-    await player.setVolume(0.0); // wycisz przed seek, żeby nie było trzasku
-    await player.seek(Duration.zero);
-    await player.setVolume(vol.clamp(0.0, 1.0));
-    await player.resume();
+    try {
+      await player.setVolume(0.0); // wycisz przed seek, żeby nie było trzasku
+      await player.seek(Duration.zero);
+      await player.setVolume(vol.clamp(0.0, 1.0));
+      await player.resume();
+    } catch (e) {
+      debugPrint('SoundHelper: dźwięk „$name" nie zagrał - $e');
+    }
   }
 
   /// Odtwórz dźwięk i POCZEKAJ, aż ucichnie.
@@ -86,6 +99,9 @@ class SoundHelper {
   /// [limit] to bezpiecznik: gdyby odtwarzacz nie zgłosił końca (błąd sesji
   /// audio, przerwana wtyczka), i tak wracamy - inaczej mikrofon zostałby
   /// wyciszony na zawsze, czyli sterowanie głosem przestałoby działać po cichu.
+  ///
+  /// Tak samo jak [play]: NIE RZUCA. Ani błąd odtwarzania, ani zamknięty
+  /// strumień zdarzeń odtwarzacza nie mają prawa przerwać pracy ekranu.
   Future<void> playAndWait(
     String name, {
     Duration limit = const Duration(seconds: 6),
@@ -94,9 +110,21 @@ class SoundHelper {
     if (player == null) return;
     // Nasłuch na koniec PRZED startem - inaczej krótki dźwięk zdąży się
     // skończyć, zanim zdążymy się podpiąć, i czekalibyśmy do limitu.
-    final Future<void> koniec = player.onPlayerComplete.first;
+    //
+    // catchError PRZY ŹRÓDLE, nie dopiero przy await: gdy błąd przyjdzie już po
+    // upływie [limit], nie ma go kto odebrać i leci jako nieobsłużony wyjątek
+    // asynchroniczny (w release nie widać go nawet w konsoli).
+    final Future<void> koniec = player.onPlayerComplete.first.catchError(
+      (Object e) {
+        debugPrint('SoundHelper: koniec „$name" nie przyszedł - $e');
+      },
+    );
     await play(name);
-    await koniec.timeout(limit, onTimeout: () {});
+    try {
+      await koniec.timeout(limit, onTimeout: () {});
+    } catch (e) {
+      debugPrint('SoundHelper: czekanie na koniec „$name" - $e');
+    }
   }
 
   /// Zapisz głośności do SharedPreferences.

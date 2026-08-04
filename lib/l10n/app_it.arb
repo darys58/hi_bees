@@ -125,6 +125,7 @@
     "disable": "Chiudi",
     "inspectionHive": "Ispezione arnia",
     "noInspectionYet": "Non ci sono ancora ispezioni.",
+    "noFramesInInspection": "Questa ispezione non ha ancora telaini registrati.",
     "left": "sinistra",
     "right": "destra",
     "inspectionSay": "Ispezione:",

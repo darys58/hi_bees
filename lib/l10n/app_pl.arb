@@ -125,6 +125,7 @@
     "disable": "Zamknij",
     "inspectionHive": "Przegląd ula",
     "noInspectionYet": "Nie ma jeszcze żadnych przeglądów.",
+    "noFramesInInspection": "Ten przegląd nie ma jeszcze informacji o ramkach.",
     "left": "lewa",
     "right": "prawa",
     "inspectionSay": "Przegląd:",

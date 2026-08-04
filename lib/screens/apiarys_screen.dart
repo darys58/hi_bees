@@ -143,9 +143,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.11.1.92 15.06.2026 - fix wake-word - krótki beep zamiast słucham.mp3 (Rhino mylił mowę z głośnika z komendą), poprawki wprowadzania zasobów na ramkach i przenoszenia korpusów, swip przeglądów, odświezanie przy wprowadzaniu przeglądów
   //1.11.2.93 04.07.2026 - zmiana dźwięku po "Hej Maja" (wake-word) z krótkiego beep na wyraźniejszy i głosniejszy, poprawka w voice_screen2 - odświezanie widoku korpusa po pierwszym zapisie zasobu do bazy
   //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji, poddawanie matki z aktualna datą a nie z ostatnio ustawioną,
-  
-  final wersja = '1.11.3.94'; //wersja aplikacji na iOS
-  final dataWersji = '2026-07-06';
+  //1.12.0 95 03.08.2026 - nowe sterowanie głosem z modelem Vosk-PL, Picovoice usunięty
+
+  final wersja = '1.12.0.95'; //wersja aplikacji na iOS
+  final dataWersji = '2026-08-03';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;
@@ -1731,7 +1732,12 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       //=== stopka
       bottomSheet: globals.key == '' // bo wtedy jest ekran Aktywacji || globals.key == "bez_klucza"
           ? null
-          : globals.key != '' && globals.nfcMode == 'off' && globals.key == "bez_klucza" //NFC wyłaczony i bez_klucza
+          //Pasek ma tylko dwa przyciski: sterowanie głosem i NFC. Gdy żaden się
+          //nie pokaże, chowamy cały pasek - inaczej zostaje pusty biały pas 100px.
+          //Sterowanie głosem odpada przy "bez_klucza" ALBO przy języku innym niż
+          //polski (Vosk ma u nas wyłącznie model polski - patrz vosk_engine.dart).
+          : globals.nfcMode == 'off' &&
+                  (globals.key == "bez_klucza" || globals.jezyk != 'pl_PL')
             ? null
             : Container(
                 //margin:  EdgeInsets.only(bottom:15),
@@ -1754,15 +1760,23 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       const SizedBox(
                         width: 9,
                       ),
-                      if(globals.key != '' && globals.key != "bez_klucza")//jezeli jest accessKey lub testowanie
+                      //Sterowanie głosem = Vosk (jedyny silnik od 03.08.2026,
+                      //ekrany Picovoice usunięte). Dwie bramki:
+                      //1. klucz aktywacyjny ("bez_klucza" = apka bez sterowania),
+                      //2. JĘZYK - vosk_engine.dart pobiera wyłącznie model polski
+                      //   (vosk-model-small-pl-0.22), a gramatyka
+                      //   assets/grammar/pol_vosk.yml jest polska. Dla pozostałych
+                      //   języków przycisk nie ma czego uruchomić - Picovoice miał
+                      //   assety en_US, Vosk ich nie ma.
+                      if (globals.key != '' &&
+                          globals.key != "bez_klucza" &&
+                          globals.jezyk == 'pl_PL')
                         SizedBox(
                           width: 220,
                           height: 50,
                           child: ElevatedButton(
                             style: buttonStyle,
                             onPressed: () {
-                              //sterowanie głosem = Vosk (jedyny silnik od
-                              //03.08.2026; ekrany Picovoice usunięte)
                               Navigator.of(context).pushNamed(
                                 VoiceVoskScreen.routeName,
                               );

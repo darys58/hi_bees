@@ -81,6 +81,15 @@ String rokRaportow = 'wszystkie'; //DateTime.now().toString().substring(0, 4); /
 bool voice2LivePodglad = false; //sterowanie głosem: podgląd korpusu na żywo (poziomo) zamiast podpowiedzi komend (pionowo)
 bool voice2LiveLandscape = false; //wymuszenie układu poziomego dla live podglądu korpusu (niezależnie od orientacji urządzenia)
 
+//Diagnostyka sterowania głosem: pokazuje na ekranie SUROWY tekst z Vosk wraz
+//z pewnością rozpoznania. Domyślnie WYŁĄCZONA i tak ma zostać na produkcji -
+//gramatyka celowo zawiera aliasy fonetyczne („pierzcha" = pierzga, „węża" =
+//węza, „miodu branie" = miodobranie, „na grób" = nakrop), bo tylko takie formy
+//istnieją w słowniku modelu. Pszczelarz wziąłby je za błąd aplikacji.
+//Włączana ręcznie w Parametryzacji na czas strojenia progów pewności.
+//Ustawienie sesyjne (jak voice2LivePodglad) - po restarcie apki wraca na false.
+bool voiceDiagnostyka = false;
+
 // Aktualności ula - widoczność kategorii (0=ukryta, 1=widoczna)
 // Pozycje: 0-ramki, 1-rodzina, 2-matka, 3-zbiory, 4-dokarmianie, 5-leczenie, 6-zdjęcia
 String summaryVisibility = '1111111'; // domyślnie wszystko widoczne

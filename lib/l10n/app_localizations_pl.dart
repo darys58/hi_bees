@@ -391,6 +391,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get noInspectionYet => 'Nie ma jeszcze żadnych przeglądów.';
 
   @override
+  String get noFramesInInspection =>
+      'Ten przegląd nie ma jeszcze informacji o ramkach.';
+
+  @override
   String get left => 'lewa';
 
   @override

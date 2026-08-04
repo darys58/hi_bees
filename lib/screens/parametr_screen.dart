@@ -665,6 +665,28 @@ class _ParametrScreenState extends State<ParametrScreen> {
                 ),
               ),
             ),
+            // Diagnostyka głosu - tryb serwisowy do strojenia progów pewności.
+            // WYŁĄCZONA (produkcja) -> na ekranie nie pojawia się surowy tekst
+            //   z Vosk. Powód w globals.voiceDiagnostyka: gramatyka stoi na
+            //   aliasach fonetycznych ("pierzcha", "węża", "miodu branie",
+            //   "na grób") i pokazanie ich wygląda na błąd aplikacji.
+            // WŁĄCZONA -> pełny podgląd: co Vosk usłyszał, czy fraza przeszła
+            //   bramkę i z jaką pewnością (śr./min).
+            Card(
+              child: ListTile(
+                title: Text('Diagnostyka głosu'),
+                subtitle: Text(
+                    'Pokazuje rozpoznany tekst i pewność rozpoznania. Tekst bywa zapisany inaczej niż wypowiedziane słowo - to dopasowanie fonetyczne, nie błąd'),
+                trailing: Switch.adaptive(
+                  value: globals.voiceDiagnostyka,
+                  onChanged: (value) {
+                    setState(() {
+                      globals.voiceDiagnostyka = value;
+                    });
+                  },
+                ),
+              ),
+            ),
             // Voice screen 2 - wymuszenie układu poziomego (niezależnie od orientacji urządzenia)
             // Card(
             //   child: ListTile(

@@ -125,6 +125,7 @@
     "disable": "Schließen",
     "inspectionHive": "Durchsicht der Beute",
     "noInspectionYet": "Es gibt noch keine Durchsichten.",
+    "noFramesInInspection": "Diese Durchsicht hat noch keine erfassten Waben.",
     "left": "links",
     "right": "rechts",
     "inspectionSay": "Durchsicht:",

@@ -390,6 +390,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noInspectionYet => 'There are no inspection yet.';
 
   @override
+  String get noFramesInInspection =>
+      'This inspection has no frames recorded yet.';
+
+  @override
   String get left => 'left';
 
   @override

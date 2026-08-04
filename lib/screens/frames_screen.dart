@@ -176,7 +176,10 @@ class _FramesScreenState extends State<FramesScreen> {
   //Wywoływane na starcie ORAZ po powrocie z ekranów dodawania/edycji, żeby od razu było
   //widać nowy korpus z ramką i datę nowego przeglądu bez wychodzenia i wchodzenia do widoku.
   void _loadView() {
-    getDaty(globals.pasiekaID, globals.ulID).then((_) async {
+    //parametr przeglądu bierzemy z lokalizacji TU, bo getDaty jest asynchroniczne
+    //i nie ma jak sięgnąć po context po zakończeniu zapytania do bazy
+    final String parametrPrzegladu = AppLocalizations.of(context)!.inspection;
+    getDaty(globals.pasiekaID, globals.ulID, parametrPrzegladu).then((_) async {
       //pobranie dat z bazy
       if (globals.dataInspekcji != '') {
         wybranaData = globals.dataInspekcji; //data z elementu listy info
@@ -232,15 +235,34 @@ class _FramesScreenState extends State<FramesScreen> {
     });
   }
 
-  //pobranie listy ramek z unikalnymi datami dla wybranego ula i pasieki z bazy lokalnej
-  Future<List<Frame>> getDaty(pasieka, ul) async {
-    final dataList = await DBHelper.getDate(pasieka, ul); //numer wybranego ula
+  //pobranie listy dat przeglądów dla wybranego ula i pasieki z bazy lokalnej.
+  //
+  //Daty biorą się z DWÓCH źródeł: z tabeli "ramka" (zwykły przegląd z zasobami)
+  //ORAZ z rekordów "info" kategorii "inspection" (przegląd założony samą notatką -
+  //podyktowaną głosem albo dopisaną z okna "notatka do przeglądu"). Bez drugiego
+  //źródła taka notatka zapisywała się do bazy, ale nie było jak jej otworzyć:
+  //ekran mówił "Nie ma jeszcze żadnych przeglądów" (zgłoszone 04.08.2026).
+  //
+  //Filtrujemy po parametrze "przegląd", bo kategoria "inspection" obejmuje też
+  //likwidację i przeniesienie ula - te mają własne wpisy na liście info i nie są
+  //przeglądami z ramkami.
+  Future<List<Frame>> getDaty(pasieka, ul, String parametrPrzegladu) async {
+    final dataList = await DBHelper.getDate(pasieka, ul); //daty z ramek
+    final infoList = await DBHelper.getDateInfo(
+        pasieka, ul, 'inspection', parametrPrzegladu); //daty samych przeglądów
+    final Set<String> unikalneDaty = <String>{
+      for (final item in dataList) '${item['data']}',
+      for (final item in infoList) '${item['data']}',
+    };
+    //sortowanie DESC (najnowsza pierwsza) - tak samo jak dotąd robił to SQL
+    final List<String> posortowane = unikalneDaty.toList()
+      ..sort((a, b) => b.compareTo(a));
     //print('getDaty: pasieka $pasieka ul $ul');
-    _daty = dataList
+    _daty = posortowane
         .map(
-          (item) => Frame(
+          (data) => Frame(
             id: '0', //data bo jak id to problem !!!
-            data: item['data'],
+            data: data,
             pasiekaNr: 0,
             ulNr: 0,
             korpusNr: 0,
@@ -341,6 +363,79 @@ class _FramesScreenState extends State<FramesScreen> {
           ],
         );
       },
+    );
+  }
+
+  //poziomy pasek z datami przeglądów. Wydzielony, bo pokazujemy go w DWÓCH
+  //układach: przy przeglądzie z ramkami i przy przeglądzie z samą notatką -
+  //w obu trzeba móc przeskoczyć na inną datę.
+  Widget _paskDat() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 0.0, vertical: 1.0),
+      height: 46, //MediaQuery.of(context).size.height * 0.35,
+      child: ListView.builder(
+          controller: _dateScrollController,
+          scrollDirection: Axis.horizontal,
+          itemCount: _daty.length,
+          itemExtent: _dateCardWidth, // stała szerokość każdej karty
+          itemBuilder: (context, index) {
+            return SizedBox(
+              width: _dateCardWidth,
+              child: GestureDetector(
+                onTap: () => _selectDate(index),
+                child: wybranaData == _daty[index].data
+                    ? Card(//data czarna - wybrana
+                        color: Colors.white,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
+                          child: Center(
+                            child:
+                              Text('${zmienDate(_daty[index].data)}',
+                                    style: const TextStyle(color: Colors.black,fontSize: 17.0),
+                                  )),
+                        ),
+                      )
+                    : Card( //data szara
+                        color: Colors.white,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
+                          child: Center(
+                              child: Text('${zmienDate(_daty[index].data)}',
+                                    style: TextStyle(color: Colors.grey,fontSize: 17.0),
+                                  )),
+                        ),
+                      ),
+              ),
+            );
+          }),
+    );
+  }
+
+  //notatka przeglądu (pole "uwagi" rekordu info) jako przycisk otwierający edycję.
+  //Też wydzielona - pokazujemy ją i pod rysunkiem ula, i przy przeglądzie bez ramek.
+  Widget _notatkaPrzegladu(String notatka, String idNotatki, ButtonStyle styl) {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(AppLocalizations.of(context)!.nOte),
+          SizedBox(height: 5),
+          OutlinedButton(
+            style: styl,
+            onPressed: () {
+              Navigator.of(context).pushNamed(
+                InfosEditScreen.routeName,
+                arguments: {'idInfo': idNotatki},
+              ).then((_) { if (mounted) _loadView(); });
+            },
+            child: Text('$notatka',
+                style: const TextStyle(
+                    fontSize: 18, color: Color.fromARGB(255, 0, 0, 0))),
+          )
+        ],
+      ),
     );
   }
 
@@ -636,10 +731,12 @@ class _FramesScreenState extends State<FramesScreen> {
         actions: <Widget>[
           IconButton(//dodawanie zasobów ramek
             icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => 
-                _showAlert(context, frames[0].pasiekaNr, frames[0].ulNr)
-               
-          ), 
+            //numery bierzemy z globals, a NIE z frames[0]: przegląd założony samą
+            //notatką nie ma ani jednej ramki i lista byłaby pusta (wyjątek zamiast okna)
+            onPressed: () =>
+                _showAlert(context, globals.pasiekaID, globals.ulID)
+
+          ),
           IconButton(
             icon: Icon(Icons.help_center, color: Color.fromARGB(255, 0, 0, 0)),
             onPressed: () => _dialogBuilderHelp(context),
@@ -662,23 +759,47 @@ class _FramesScreenState extends State<FramesScreen> {
         ),
       ),
       body: frames.length == 0
-          ? Center(
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    color:Colors.white,
-                    padding: const EdgeInsets.only(top: 50),
-                    child: Text(
-                      AppLocalizations.of(context)!.noInspectionYet,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.grey,
+          //BRAK RAMEK to nie to samo co BRAK PRZEGLĄDÓW. Przegląd założony samą
+          //notatką (dyktowaną głosem albo dopisaną z okna "notatka do przeglądu")
+          //nie ma ani jednej ramki - do 04.08.2026 ekran zbywał go komunikatem
+          //"nie ma przeglądów" i notatki nie dało się w ogóle otworzyć.
+          ? _daty.isEmpty
+              ? Center(
+                  child: Column(
+                    children: <Widget>[
+                      Container(
+                        color:Colors.white,
+                        padding: const EdgeInsets.only(top: 50),
+                        child: Text(
+                          AppLocalizations.of(context)!.noInspectionYet,
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            )
+                )
+              : SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      _paskDat(), //inne daty tego ula są nadal w zasięgu ręki
+                      Container(
+                        padding: const EdgeInsets.only(top: 30, bottom: 10),
+                        child: Text(
+                          AppLocalizations.of(context)!.noFramesInInspection,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      ),
+                      if (notatka != '')
+                        _notatkaPrzegladu(notatka, idNotatki, buttonStyle),
+                    ],
+                  ),
+                )
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(0.0),
@@ -687,46 +808,7 @@ class _FramesScreenState extends State<FramesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
 //daty przeglądów
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 0.0, vertical: 1.0),
-                      height: 46, //MediaQuery.of(context).size.height * 0.35,
-                      child: ListView.builder(
-                          controller: _dateScrollController,
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _daty.length,
-                          itemExtent: _dateCardWidth, // stała szerokość każdej karty
-                          itemBuilder: (context, index) {
-                            return SizedBox(
-                              width: _dateCardWidth,
-                              child: GestureDetector(
-                                onTap: () => _selectDate(index),
-                                child: wybranaData == _daty[index].data
-                                    ? Card(//data czarna - wybrana
-                                        color: Colors.white,
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
-                                          child: Center(
-                                            child:
-                                              Text('${zmienDate(_daty[index].data)}',
-                                                    style: const TextStyle(color: Colors.black,fontSize: 17.0),
-                                                  )),
-                                        ),
-                                      )
-                                    : Card( //data szara
-                                        color: Colors.white,
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
-                                          child: Center(
-                                              child: Text('${zmienDate(_daty[index].data)}',
-                                                    style: TextStyle(color: Colors.grey,fontSize: 17.0),
-                                                  )),
-                                        ),
-                                      ),
-                              ),
-                            );
-                          }),
-                    ),
+                    _paskDat(),
 //rysunki uli
                     SingleChildScrollView(
                       child: Column(children: <Widget>[
@@ -850,28 +932,7 @@ class _FramesScreenState extends State<FramesScreen> {
                       
   //wyświetlenie notatki z pola uwagi
                   if(notatka  != '')
-                       Container(
-                          margin: EdgeInsets.all(20),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(AppLocalizations.of(context)!.nOte),
-                              SizedBox(height: 5),
-                              OutlinedButton(
-                                style: buttonStyle,
-                                onPressed: () {
-                                    Navigator.of(context).pushNamed(
-                                    InfosEditScreen.routeName,
-                                    arguments: {'idInfo': idNotatki},
-                                  ).then((_) { if (mounted) _loadView(); });
-                                },
-                              child: Text('${notatka}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Color.fromARGB(255, 0, 0,0))),
-                            )]),
-                       ),
+                       _notatkaPrzegladu(notatka, idNotatki, buttonStyle),
                       
                       
                       // Container(

@@ -116,7 +116,8 @@
       "Bash(nm -g packages/vosk_flutter_service/ios/Frameworks/vosk.xcframework/ios-arm64_armv7_armv7s/libvosk.a)",
       "Bash(git mv *)",
       "Bash(git ls-tree *)",
-      "Bash(git cat-file *)"
+      "Bash(git cat-file *)",
+      "Bash(git stash *)"
     ]
   }
 }

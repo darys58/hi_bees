@@ -392,14 +392,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
-  flutter_voice_processor:
-    dependency: transitive
-    description:
-      name: flutter_voice_processor
-      sha256: "8ae3fc196d6060a13392e4ca557f7a2f4a6b87898ae519787f6929f986538572"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.2"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -837,14 +829,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.2"
-  picovoice_flutter:
-    dependency: "direct main"
-    description:
-      name: picovoice_flutter
-      sha256: "1a4f242fe63ffdf37b14a2700c8ae006da5866b4904e2ea61b3bd7e45e975380"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.4"
   platform:
     dependency: transitive
     description:
@@ -869,14 +853,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
-  porcupine_flutter:
-    dependency: transitive
-    description:
-      name: porcupine_flutter
-      sha256: e0fbca497a4a81ee6c8c24955296b7ed040ed575f053ff53706eeec94de1629b
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.6"
   posix:
     dependency: transitive
     description:
@@ -1005,14 +981,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.7"
-  rhino_flutter:
-    dependency: transitive
-    description:
-      name: rhino_flutter
-      sha256: "0bfe80a2748acfa47625d5c6ca51dfc5d1dda0eb2b09475d7da263f4864e368a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.6"
   share_plus:
     dependency: "direct main"
     description:

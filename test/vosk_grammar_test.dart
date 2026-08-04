@@ -32,18 +32,18 @@ void main() {
       // Liczby celowo dokładne - wychwytują sytuację, w której edycja .yml
       // cicho wywala wyrażenie (np. przez zły cudzysłów). Po ŚWIADOMEJ zmianie
       // gramatyki trzeba je tu podbić.
-      expect(silnik.liczbaWyrazen, 62,
+      expect(silnik.liczbaWyrazen, 68,
           reason: 'zmieniła się liczba wyrażeń w assets/grammar/pol_vosk.yml');
-      expect(silnik.intencje.length, 20);
+      expect(silnik.intencje.length, 22);
       expect(silnik.intencje, contains('setStore'));
       expect(silnik.intencje, contains('setMoveBody'));
     });
 
     test('brak słów spoza gramatyki i komplet liczebników', () {
-      // 218 słów literalnych - ta liczba jest zweryfikowana wobec słownika
+      // 224 słowa literalne - ta liczba jest zweryfikowana wobec słownika
       // modelu (pliki/vosk_gramatyka_test.py --oov: zero OOV). Po zmianie .yml
       // uruchom --oov i podbij tę liczbę, jeśli zmiana była zamierzona.
-      expect(silnik.slowa().length, 218,
+      expect(silnik.slowa().length, 224,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec słownika modelu');
       expect(silnik.liczebniki(), contains('pięćdziesiąt'));
       expect(silnik.liczebniki(), contains('procent'));
@@ -204,7 +204,48 @@ void main() {
       expect(czuwanie.every((f) => f.startsWith('hej maja')), isTrue,
           reason: 'do czuwania wciekła fraza spoza sesji: $czuwanie');
       // Zawężenie nie może uszkodzić pełnej gramatyki.
-      expect(silnik.frazy().length, 3079); //+1: "hej maja startujemy"
+      //
+      // 3121 = 3079 (stan z commita 0cada23) + 42 z niezacommitowanych zmian
+      // .yml: 40 wartości slotu matki/królowej i 2 komendy notatki
+      // ("hej maja notatka do przeglądu", "hej maja notatka do notesu").
+      // Delta policzona referencją (pliki/vosk_parser_ref.py --frazy), która
+      // liczy o kilkadziesiąt fraz więcej niż port - jeśli test poda inną
+      // liczbę, prawdą jest liczba z testu, byle różnica wynosiła dokładnie
+      // tyle, ile fraz świadomie dołożono.
+      expect(silnik.frazy().length, 3121);
+    });
+  });
+
+  group('dyktowanie notatki: dwa ujścia', () {
+    // Komenda mówi WPROST, gdzie tekst wyląduje - notatka przeglądu dokleja się
+    // do rekordu przeglądu wybranego ula, notatka do notesu to samodzielny wpis
+    // w tabeli "notatki". voice_vosk_screen.dart rozdziela je po intencji.
+    test('komendy notatki do przeglądu', () {
+      for (final t in [
+        'zanotuj',
+        'hej maja zanotuj',
+        'zapisz notatkę',
+        'hej maja zapisz notatkę',
+        'hej maja notatka do przeglądu',
+      ]) {
+        expect(silnik.rozpoznaj(t).intent, 'voiceNote', reason: t);
+      }
+    });
+
+    test('notes ma JEDNĄ dokładną komendę', () {
+      expect(silnik.rozpoznaj('hej maja notatka do notesu').intent,
+          'voiceNotepad');
+      // Bez zawołania to zwykłe słowa - w pasiece pada ich za dużo, żeby
+      // otwierać nimi dyktowanie na 90 sekund.
+      expect(silnik.rozpoznaj('notatka do notesu').isUnderstood, isFalse);
+      expect(silnik.rozpoznaj('notatka').isUnderstood, isFalse);
+    });
+
+    test('ujścia się nie mylą', () {
+      expect(silnik.rozpoznaj('hej maja notatka do notesu').intent,
+          isNot('voiceNote'));
+      expect(silnik.rozpoznaj('hej maja notatka do przeglądu').intent,
+          isNot('voiceNotepad'));
     });
   });
 

@@ -29,6 +29,14 @@
 //   3. WATCHDOG BRAKU AUDIO. Telefon, Siri, budzik albo przejście w tło
 //      zabierają mikrofon i strumień NIE wznawia się sam. Bez tego ekran
 //      wyglądałby na żywy przy martwym mikrofonie - najgorszy możliwy wariant.
+//
+// DYKTOWANIE NOTATKI (03.08.2026) dokłada trzeci tryb: recognizer BEZ gramatyki
+// (cały słownik modelu) plus drugi, jednofrazowy, karmiony tą samą porcją i
+// pilnujący wyłącznie "hej maja". Osobny detektor, bo w modelu swobodnym nic tej
+// frazy nie faworyzuje - wychodzi z niej "hej mają" albo "ej maja" i notatka
+// nigdy by się nie domknęła. Limit twardy i cisza są drugim wyjściem, a KAŻDE
+// zakończenie (także utrata mikrofonu) oddaje tekst ekranowi: utrata
+// podyktowanej notatki jest gorsza niż notatka ucięta.
 
 import 'dart:async';
 import 'dart:convert';
@@ -36,14 +44,16 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:vosk_flutter_service/vosk_flutter_service.dart';
 
 import 'vosk_grammar.dart';
 
-/// Stan nasłuchu. Przejścia robi wyłącznie ekran (przez [VoskEngine.ustawTryb]),
-/// silnik sam z siebie nigdy nie wchodzi w [komendy].
+/// Stan nasłuchu. Przejścia robi ekran (przez [VoskEngine.ustawTryb]) z JEDNYM
+/// wyjątkiem: z [dyktowanie] silnik wraca do [komendy] sam, bo koniec notatki
+/// wykrywa on, a nie ekran.
 enum TrybNasluchu {
   /// Mikrofon wyłączony - ekran zamknięty, aplikacja w tle albo błąd.
   wylaczony,
@@ -53,6 +63,28 @@ enum TrybNasluchu {
 
   /// Pełna gramatyka - komendy pasieczne trafiają do apki.
   komendy,
+
+  /// Dyktowanie notatki: recognizer BEZ gramatyki (cały słownik modelu), a
+  /// koniec wypowiedzi wykrywa osobny recognizer-detektor. Patrz
+  /// [VoskEngine.zacznijDyktowanie].
+  dyktowanie,
+}
+
+/// Dlaczego dyktowanie się skończyło. Ekran zapisuje notatkę w KAŻDYM z tych
+/// przypadków - utrata podyktowanego tekstu jest gorsza niż notatka za długa
+/// albo ucięta.
+enum PowodKoncaDyktowania {
+  /// Użytkownik powiedział "hej maja" - przewidziane zakończenie.
+  fraza,
+
+  /// Cisza dłuższa niż [VoskEngine._ciszaKonczacaDyktowanie].
+  cisza,
+
+  /// Twardy limit długości notatki.
+  limitCzasu,
+
+  /// Mikrofon przepadł (telefon, Siri, tło) albo ekran się zamyka.
+  przerwane,
 }
 
 /// Fraza domknięta przez Vosk, z werdyktem bramki i wynikiem parsera.
@@ -103,6 +135,8 @@ class VoskEngine {
     this.onPartial,
     this.onStan,
     this.onBlad,
+    this.onDyktowanieTekst,
+    this.onKoniecDyktowania,
     this.progPewnosci = 0.5,
     this.podlogaPewnosci = 0.2,
     this.oknoSklejania = const Duration(milliseconds: 1500),
@@ -123,6 +157,17 @@ class VoskEngine {
 
   /// Awaria, po której nasłuch nie działa (brak zgody, utrata mikrofonu).
   final void Function(String opis)? onBlad;
+
+  /// Notatka w trakcie dyktowania - tekst domknięty do tej pory plus to, co
+  /// Vosk słyszy w tej chwili. Osobno od [onPartial], bo tutaj surowy tekst
+  /// JEST produktem i ekran ma go pokazywać zawsze, niezależnie od przełącznika
+  /// diagnostyki (który ukrywa aliasy fonetyczne gramatyki komend).
+  final void Function(String tekst)? onDyktowanieTekst;
+
+  /// Koniec dyktowania. Tekst bywa pusty (nikt nic nie powiedział) - decyzję,
+  /// czy zapisywać, podejmuje ekran.
+  final void Function(String tekst, PowodKoncaDyktowania powod)?
+      onKoniecDyktowania;
 
   /// Próg ŚREDNIEJ pewności słów we frazie. 0 = kryterium wyłączone.
   /// Średnia, a nie minimum: jedno przymulone słówko („z", „w", końcówka
@@ -172,6 +217,38 @@ class VoskEngine {
   // więc odblokowanie dokładnie w chwili końca mp3 wpuściłoby jego końcówkę.
   static const Duration _ogonWyciszenia = Duration(milliseconds: 300);
 
+  // -- dyktowanie notatki ---------------------------------------------------
+
+  // Fraza kończąca notatkę. To samo "hej maja", które otwiera sesję - użytkownik
+  // ma pamiętać JEDNO zawołanie, nie dwa. W dyktowaniu wyłapuje ją osobny
+  // recognizer, dla którego jest ona CAŁĄ gramatyką (patrz _karmDyktowanie):
+  // w wolnym modelu nic jej nie faworyzuje i wychodzi jako "hej mają" albo
+  // "ej maja", więc szukanie jej w podyktowanym tekście jest tylko zapasem.
+  static const String _frazaKonca = 'hej maja';
+
+  // Twardy limit długości notatki. Dyktowanie zdejmuje barierę, dzięki której
+  // rozmowa przy ulu nie wchodzi do aplikacji - nie może więc trwać bez końca,
+  // gdyby fraza kończąca przepadła.
+  static const Duration _limitDyktowania = Duration(seconds: 90);
+
+  // Cisza kończąca notatkę - drugie wyjście, gdy "hej maja" nie zostanie
+  // usłyszane. Liczona od ostatniego USŁYSZANEGO słowa.
+  static const Duration _ciszaKonczacaDyktowanie = Duration(seconds: 5);
+
+  // Cisza PRZED pierwszym słowem notatki. Dłuższa (jest czas na zebranie myśli),
+  // ale skończona: bez niej użytkownik, który nic nie powiedział, czekał na
+  // jakąkolwiek reakcję do twardego limitu, czyli 90 sekund. Tak właśnie
+  // wyglądało zgłoszenie z 03.08.2026 - „Słucham i nic więcej się nie dzieje".
+  static const Duration _ciszaPrzedPierwszymSlowem = Duration(seconds: 12);
+
+  // Karencja na frazę kończącą. Bufor wejściowy iOS oddaje dźwięk z OPÓŹNIENIEM
+  // (zmierzone 02.08.2026 na odzywce "okej", która wracała z Vosk jako fraza),
+  // więc końcówka wypowiedzianego przed chwilą "hej maja zanotuj" potrafi wpaść
+  // już do dyktowania. Detektor zna WYŁĄCZNIE "hej maja", więc dopasowałby ją
+  // z pewnością 1,00 i zamknął notatkę, zanim użytkownik zdąży cokolwiek
+  // powiedzieć - z zewnątrz nie do odróżnienia od "dyktowanie nie działa".
+  static const Duration _karencjaTerminatora = Duration(milliseconds: 1500);
+
   final VoskFlutterPlugin _vosk = VoskFlutterPlugin.instance();
   final AudioRecorder _recorder = AudioRecorder();
 
@@ -181,6 +258,21 @@ class VoskEngine {
   // tym samym modelu, karmiony jest zawsze dokładnie jeden - ten w _recognizer.
   Recognizer? _recCzuwanie;
   Recognizer? _recKomendy;
+
+  // Dyktowanie: recognizer BEZ gramatyki (goły tekst) + detektor frazy
+  // kończącej. Oba budowane z góry razem z pozostałymi - recognizer bez
+  // gramatyki powstaje natychmiast (nie ma grafu do zbudowania), a detektor ma
+  // jedną frazę, więc wejście w dyktowanie nie zacina ekranu.
+  Recognizer? _recDyktowanie;
+  Recognizer? _recDetektor;
+
+  // Ślad po nieudanej budowie recognizerów notatki i po odmowie wejścia w
+  // dyktowanie. Bez tego ekran umie powiedzieć tylko „niedostępne", a to za
+  // mało, żeby cokolwiek naprawić po teście na urządzeniu.
+  String? _bladBudowyDyktowania;
+  String? _bladBudowyDetektora;
+  String? _powodOdmowyDyktowania;
+
   Recognizer? _recognizer;
 
   StreamSubscription<Uint8List>? _audioSub;
@@ -208,6 +300,21 @@ class VoskEngine {
   String _ogon = '';
   DateTime? _ogonOCzasie;
 
+  // Dyktowanie: tekst domknięty do tej pory + znaczniki czasu do limitów.
+  final StringBuffer _notatka = StringBuffer();
+  DateTime? _dyktowanieOd;
+  DateTime? _ostatniaMowa;
+
+  // Koniec dyktowania wykryty w środku pętli karmienia. Samego zakończenia NIE
+  // wykonujemy w pętli: przełączenie recognizera czeka na koniec karmienia, a
+  // my siedzielibyśmy w tej chwili właśnie w nim.
+  PowodKoncaDyktowania? _zadanieKonca;
+
+  // Trwa domykanie notatki. Karmienie musi na ten czas stanąć: _zakonczDyktowanie
+  // woła getFinalResult, a jednoczesne acceptWaveform na tym samym recognizerze
+  // to dwa nakładające się wywołania kanału (patrz _poczekajNaKarmienie).
+  bool _konczeDyktowanie = false;
+
   DateTime? _ostatniaPorcja;
   bool _wznawianie = false;
   int _proboWznowienia = 0;
@@ -223,6 +330,16 @@ class VoskEngine {
   bool get wyciszony => _wyciszenia > 0 || _ogonTrwa;
   double get poziom => _poziom;
   String get partial => _partial;
+  bool get dyktuje => _tryb == TrybNasluchu.dyktowanie;
+
+  /// Czy dyktowanie w ogóle jest możliwe. Detektor frazy kończącej NIE jest do
+  /// tego potrzebny - bez niego "hej maja" wyłapujemy z podyktowanego tekstu.
+  bool get dyktowanieGotowe => _recDyktowanie != null;
+
+  /// Dlaczego ostatnie [zacznijDyktowanie] się nie udało. Ekran ma to pokazać:
+  /// „notatka nie działa" bez powodu nie daje się zdiagnozować na urządzeniu,
+  /// a do konsoli Xcode użytkownik zagląda rzadko.
+  String? get powodOdmowyDyktowania => _powodOdmowyDyktowania;
 
   // -- cykl życia -----------------------------------------------------------
 
@@ -329,6 +446,15 @@ class VoskEngine {
     await _poczekajNaKarmienie();
     _bufor.clear();
     _porzucOgon();
+    // Mikrofon przepadł albo ekran się zamyka w środku dyktowania - to, co
+    // użytkownik zdążył podyktować, oddajemy ekranowi do zapisania. Utrata
+    // notatki jest gorsza niż notatka ucięta w pół zdania.
+    if (_tryb == TrybNasluchu.dyktowanie) {
+      await _zakonczDyktowanie(
+        PowodKoncaDyktowania.przerwane,
+        wrocDoKomend: false,
+      );
+    }
     try {
       await _recognizer?.reset();
     } catch (_) {}
@@ -355,12 +481,241 @@ class VoskEngine {
   /// od tego jest [wstrzymaj].
   Future<void> ustawTryb(TrybNasluchu nowy) async {
     if (nowy == _tryb || nowy == TrybNasluchu.wylaczony || !_nagrywa) return;
+    // Wyjście z dyktowania inną drogą niż koniec notatki (ręczne zamknięcie
+    // sesji) - podyktowany tekst i tak oddajemy ekranowi, żeby nie przepadł.
+    if (_tryb == TrybNasluchu.dyktowanie) {
+      await _zakonczDyktowanie(
+        PowodKoncaDyktowania.przerwane,
+        wrocDoKomend: false,
+      );
+    }
     await _przelaczGramatyke(nowy);
     _tryb = nowy;
     _porzucOgon();
-    _stan(nowy == TrybNasluchu.komendy
-        ? 'Słucham komend.'
-        : 'Czuwam. Powiedz „hej maja start", żeby zacząć.');
+    _stan(_opisTrybu(nowy));
+  }
+
+  String _opisTrybu(TrybNasluchu t) {
+    switch (t) {
+      case TrybNasluchu.komendy:
+        return 'Słucham komend.';
+      case TrybNasluchu.dyktowanie:
+        return 'Dyktuj notatkę. Zakończ słowami „hej maja".';
+      case TrybNasluchu.czuwanie:
+      case TrybNasluchu.wylaczony:
+        return 'Czuwam. Powiedz „hej maja start", żeby zacząć.';
+    }
+  }
+
+  // -- dyktowanie notatki ---------------------------------------------------
+
+  /// Wchodzi w dyktowanie. Zwraca false, gdy się nie da - nie ma otwartej sesji
+  /// komend albo recognizery dyktowania nie powstały przy starcie. Ekran ma to
+  /// wtedy zakomunikować użytkownikowi, bo cisza wyglądałaby jak zignorowana
+  /// komenda.
+  Future<bool> zacznijDyktowanie() async {
+    _powodOdmowyDyktowania = null;
+    if (!_nagrywa) {
+      _powodOdmowyDyktowania = 'mikrofon nie nagrywa';
+      return false;
+    }
+    if (_tryb != TrybNasluchu.komendy) {
+      _powodOdmowyDyktowania = 'tryb ${_tryb.name}, nie komendy';
+      return false;
+    }
+    // Druga szansa: recognizer bez gramatyki powstaje natychmiast (nie ma grafu
+    // do zbudowania), więc gdy przy starcie ekranu coś mu przeszkodziło, próba
+    // tutaj nic nie kosztuje - a bywa różnicą między działającą a martwą
+    // notatką. Detektor dobudowujemy przy okazji, ale jego brak nie blokuje.
+    if (_recDyktowanie == null && _model != null) {
+      try {
+        _recDyktowanie = await _nowyRecognizer(TrybNasluchu.dyktowanie);
+        _bladBudowyDyktowania = null;
+        debugPrint('VoskEngine: recognizer notatki dobudowany w locie.');
+      } catch (e) {
+        _bladBudowyDyktowania = '$e';
+        debugPrint('VoskEngine: dobudowa recognizera notatki nie wyszła: $e');
+      }
+    }
+    if (_recDetektor == null && _recDyktowanie != null && _model != null) {
+      try {
+        _recDetektor = await _nowyRecognizerZGramatyka(
+          const <String>[_frazaKonca, '[unk]'],
+        );
+        _bladBudowyDetektora = null;
+      } catch (e) {
+        _bladBudowyDetektora = '$e';
+        debugPrint('VoskEngine: dobudowa detektora nie wyszła: $e');
+      }
+    }
+    // Detektor NIE jest wymagany - bez niego frazę kończącą wyłapuje
+    // _karmDyktowanie z samego tekstu. Wymagany jest sam recognizer notatki.
+    if (_recDyktowanie == null) {
+      _powodOdmowyDyktowania =
+          'brak recognizera notatki (${_bladBudowyDyktowania ?? "nie powstał"})';
+      return false;
+    }
+    _notatka.clear();
+    _partial = '';
+    _dyktowanieOd = DateTime.now();
+    _ostatniaMowa = null;
+    _zadanieKonca = null;
+    try {
+      // Detektor mógł zostać z resztkami poprzedniej notatki - inaczej pierwsza
+      // porcja domknęłaby starą frazę i notatka skończyłaby się natychmiast.
+      await _recDetektor?.reset();
+      await _recDyktowanie?.reset();
+    } catch (_) {}
+    await _przelaczGramatyke(TrybNasluchu.dyktowanie);
+    if (_recognizer != _recDyktowanie) {
+      _powodOdmowyDyktowania = 'nie udało się podmienić recognizera';
+      return false; // podmiana się nie udała
+    }
+    _tryb = TrybNasluchu.dyktowanie;
+    _porzucOgon();
+    if (_recDetektor == null) {
+      debugPrint('VoskEngine: notatka bez detektora '
+          '(${_bladBudowyDetektora ?? "nie powstał"}) - „$_frazaKonca" '
+          'wyłapywane z tekstu.');
+    }
+    debugPrint('VoskEngine: dyktowanie START '
+        '(detektor: ${_recDetektor != null ? "jest" : "brak"}).');
+    _stan(_opisTrybu(TrybNasluchu.dyktowanie));
+    _emitujNotatke();
+    return true;
+  }
+
+  /// Ręczne przerwanie dyktowania - ekran podpina je pod ikonę nasłuchu, żeby
+  /// niewysłuchane "hej maja" nie skazywało użytkownika na czekanie do limitu.
+  /// Tekst NIE przepada: leci do [onKoniecDyktowania] jak przy zwykłym końcu.
+  Future<void> przerwijDyktowanie() =>
+      _zakonczDyktowanie(PowodKoncaDyktowania.przerwane);
+
+  Future<void> _zakonczDyktowanie(
+    PowodKoncaDyktowania powod, {
+    bool wrocDoKomend = true,
+  }) async {
+    if (_tryb != TrybNasluchu.dyktowanie) return;
+    try {
+      // Ostatnia, jeszcze niedomknięta wypowiedź. Bez tego ginie końcówka
+      // zdania - czyli dokładnie to, na czym użytkownik przestał mówić.
+      _dopiszDoNotatki(
+        _wyjmij(await _recDyktowanie?.getFinalResult(), 'text'),
+      );
+    } catch (_) {}
+    _partial = '';
+    final String tekst = _oczyscNotatke(_notatka.toString());
+    _notatka.clear();
+    _dyktowanieOd = null;
+    _ostatniaMowa = null;
+    _zadanieKonca = null;
+    try {
+      await _recDetektor?.reset();
+    } catch (_) {}
+    if (wrocDoKomend && _nagrywa) {
+      await _przelaczGramatyke(TrybNasluchu.komendy);
+      _tryb = TrybNasluchu.komendy;
+      _porzucOgon();
+      _stan(_opisTrybu(TrybNasluchu.komendy));
+    }
+    debugPrint('VoskEngine: koniec dyktowania (${powod.name}), '
+        '${tekst.length} znaków.');
+    onDyktowanieTekst?.call('');
+    onKoniecDyktowania?.call(tekst, powod);
+  }
+
+  void _dopiszDoNotatki(String tekst) {
+    final String t = tekst.trim();
+    if (t.isEmpty) return;
+    if (_notatka.isNotEmpty) _notatka.write(' ');
+    _notatka.write(t);
+    // Tekst z karencji to najczęściej echo komendy otwierającej (patrz
+    // [_karencjaTerminatora]) - zapisujemy go, ale zegara ciszy nim nie ruszamy.
+    if (!_wKarencji) _ostatniaMowa = DateTime.now();
+  }
+
+  void _emitujNotatke() {
+    final String wLocie = _partial.trim();
+    final String calosc =
+        wLocie.isEmpty ? _notatka.toString() : '$_notatka $wLocie';
+    //podgląd na ekranie czyścimy z tych samych ech co zapisywaną treść - inaczej
+    //„słucham" wisi przez całe dyktowanie i wygląda jak część notatki. Ogona
+    //(frazy kończącej) tu NIE tniemy: w locie „hej" bywa początkiem zwykłego
+    //słowa i podgląd urywałby się w połowie zdania.
+    onDyktowanieTekst?.call(_bezEchaZPrzodu(calosc).trim());
+  }
+
+  // Fraza kończąca bywa przepisana także przez recognizer notatki - i to w
+  // formie przekręconej, bo w wolnym modelu nic jej nie faworyzuje. Ucinamy ją
+  // z treści razem z ogonem, żeby "hej maja" nie zostało w zapisanej notatce.
+  static final RegExp _ogonKonca = RegExp(
+    r'\s*\b(hej|ej)\s+(maja|mają|maj|majo|maju)\b[\s\S]*$',
+    caseSensitive: false,
+  );
+
+  // Echo komendy otwierającej na POCZĄTKU notatki. Ta sama przyczyna co
+  // [_karencjaTerminatora] - opóźniony bufor wejściowy iOS. Bez wycięcia z
+  // przodu notatka ginęłaby w całości: _ogonKonca tnie od pierwszego "hej maja"
+  // do końca, a tutaj to "hej maja" stoi na samym początku.
+  static final RegExp _echoOtwarcia = RegExp(
+    r'^\s*((hej|ej)\s+(maja|mają|maj|majo|maju)\s+)?'
+    r'(zanotuj|zapisz\s+notatk[ęe])\b',
+    caseSensitive: false,
+  );
+
+  // Samo zawołanie na początku (bez czasownika) - też echo, nie treść.
+  static final RegExp _echoZawolania = RegExp(
+    r'^\s*(hej|ej)\s+(maja|mają|maj|majo|maju)\b',
+    caseSensitive: false,
+  );
+
+  // Odzywka „słucham", którą Maja gra PRZED wejściem w dyktowanie. Mikrofon jest
+  // na ten czas wyciszony, ale bufor wejściowy iOS oddaje dźwięk z opóźnieniem
+  // większym niż ogon wyciszenia (ta sama przyczyna co [_karencjaTerminatora]),
+  // więc słowo i tak wpada do notatki - zawsze na jej początku. Zgłoszone z
+  // urządzenia 04.08.2026: KAŻDA notatka zaczynała się od „słucham".
+  static final RegExp _echoOdzywki = RegExp(
+    r'^\s*s[łl]ucham\b',
+    caseSensitive: false,
+  );
+
+  // Echa z POCZĄTKU notatki: komenda otwierająca, zawołanie i odzywka Mai.
+  // W PĘTLI, bo wpadają w różnych kombinacjach („zanotuj słucham", „słucham",
+  // „hej maja zanotuj słucham") - pojedyncze przejście zdejmowałoby tylko część,
+  // a reszta zostawałaby w treści notatki.
+  String _bezEchaZPrzodu(String tekst) {
+    String t = tekst;
+    for (int i = 0; i < 6; i++) {
+      final String przed = t;
+      t = t
+          .replaceFirst(_echoOtwarcia, '')
+          .replaceFirst(_echoZawolania, '')
+          .replaceFirst(_echoOdzywki, '');
+      if (t == przed) break; //nic już nie schodzi - dalej jest treść
+    }
+    return t;
+  }
+
+  String _oczyscNotatke(String tekst) =>
+      _bezEchaZPrzodu(tekst.replaceAll(RegExp(r'\[unk\]|<unk>'), ' '))
+          .replaceFirst(_ogonKonca, '')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+
+  // Czy detektor usłyszał frazę kończącą. Zna WYŁĄCZNIE ją i [unk], więc
+  // wystarczyłby sam tekst - ale pewność sprawdzamy i tak, bo przy
+  // jednofrazowej gramatyce Vosk chętnie dopasowuje do niej przypadkowy dźwięk.
+  bool _toTerminator(dynamic wynik) {
+    final Map<String, dynamic> m = _json(wynik);
+    if (!(m['text'] ?? '').toString().contains(_frazaKonca)) return false;
+    double min = -1;
+    for (final dynamic w in (m['result'] as List<dynamic>?) ?? const []) {
+      if (w is Map && w['conf'] != null) {
+        final double c = (w['conf'] as num).toDouble();
+        if (min < 0 || c < min) min = c;
+      }
+    }
+    return min < 0 || min >= podlogaPewnosci;
   }
 
   // -- wyciszenie na czas odzywek Mai ---------------------------------------
@@ -424,13 +779,49 @@ class VoskEngine {
     _stan('Buduję gramatykę komend...');
     _recKomendy = await _nowyRecognizer(TrybNasluchu.komendy);
     _recognizer = _recCzuwanie;
+    // Para do dyktowania. Osobno i BEZ przerywania startu przy niepowodzeniu:
+    // brak dyktowania ma wyłączyć jedną komendę, a nie całe sterowanie głosem.
+    //
+    // KAŻDY Z DWÓCH OSOBNO: to nie jest komplet "wszystko albo nic". Bez
+    // recognizera notatki dyktowania nie ma w ogóle, ale bez detektora frazy
+    // kończącej notatka nadal działa - "hej maja" wyłapujemy wtedy z tekstu
+    // (patrz _karmDyktowanie). Wspólny catch wyłączał notatkę także wtedy, gdy
+    // padał wyłącznie detektor.
+    _bladBudowyDyktowania = null;
+    _bladBudowyDetektora = null;
+    try {
+      _recDyktowanie = await _nowyRecognizer(TrybNasluchu.dyktowanie);
+    } catch (e) {
+      _recDyktowanie = null;
+      _bladBudowyDyktowania = '$e';
+      debugPrint('VoskEngine: recognizer dyktowania nie powstał: $e');
+    }
+    try {
+      _recDetektor = await _nowyRecognizerZGramatyka(
+        const <String>[_frazaKonca, '[unk]'],
+      );
+    } catch (e) {
+      _recDetektor = null;
+      _bladBudowyDetektora = '$e';
+      debugPrint('VoskEngine: detektor „$_frazaKonca" nie powstał: $e');
+    }
   }
 
-  Future<Recognizer> _nowyRecognizer(TrybNasluchu t) async {
+  Future<Recognizer> _nowyRecognizer(TrybNasluchu t) =>
+      _nowyRecognizerZGramatyka(_gramatykaDla(t));
+
+  // grammar == null schodzi we wtyczce do vosk_recognizer_new zamiast
+  // vosk_recognizer_new_grm - czyli model bez ograniczeń (dyktowanie).
+  // Sprawdzone na iOS 03.08.2026, na obu poziomach naraz, bo sama metoda w
+  // Darcie niczego nie dowodzi (lekcja z setGrammar, 01.08.2026):
+  //   - VoskFlutterPlugin.swift, case "recognizer.create" - jawnie obsługuje
+  //     brak klucza "grammar",
+  //   - symbol _vosk_recognizer_new JEST w libvosk.a (oba plastry xcframework).
+  Future<Recognizer> _nowyRecognizerZGramatyka(List<String>? gram) async {
     final Recognizer r = await _vosk.createRecognizer(
       model: _model!,
       sampleRate: _rate,
-      grammar: _gramatykaDla(t),
+      grammar: gram,
     );
     try {
       // Pewność per słowo - bez tego bramka traci jedno z trzech kryteriów.
@@ -443,7 +834,12 @@ class VoskEngine {
 
   Future<void> _zwolnijRecognizery() async {
     _recognizer = null;
-    for (final Recognizer? r in <Recognizer?>[_recCzuwanie, _recKomendy]) {
+    for (final Recognizer? r in <Recognizer?>[
+      _recCzuwanie,
+      _recKomendy,
+      _recDyktowanie,
+      _recDetektor,
+    ]) {
       try {
         await r?.dispose();
       } catch (_) {
@@ -452,20 +848,41 @@ class VoskEngine {
     }
     _recCzuwanie = null;
     _recKomendy = null;
+    _recDyktowanie = null;
+    _recDetektor = null;
   }
 
-  List<String> _gramatykaDla(TrybNasluchu t) => [
-        ...(t == TrybNasluchu.komendy
-            ? gramatyka.frazy()
-            : gramatyka.frazy(intencje: intencjeSesji)),
-        // Pozwala Voskowi powiedzieć „to nie jest komenda" zamiast dopasowywać
-        // każdy dźwięk do najbliższej frazy.
-        '[unk]',
-      ];
+  List<String>? _gramatykaDla(TrybNasluchu t) {
+    // Dyktowanie to jedyny tryb bez gramatyki - notatki nie da się z góry
+    // opisać listą fraz. Cena jest znana i przyjęta: model small-pl w trybie
+    // swobodnym myli słowa pszczelarskie (patrz komentarze w pol_vosk.yml),
+    // więc tekst ma przypominać, co użytkownik miał na myśli, a nie być
+    // protokołem. Poprawia się go w ekranie notatek.
+    if (t == TrybNasluchu.dyktowanie) return null;
+    return <String>[
+      ...(t == TrybNasluchu.komendy
+          ? gramatyka.frazy()
+          : gramatyka.frazy(intencje: intencjeSesji)),
+      // Pozwala Voskowi powiedzieć „to nie jest komenda" zamiast dopasowywać
+      // każdy dźwięk do najbliższej frazy.
+      '[unk]',
+    ];
+  }
+
+  Recognizer? _recognizerDla(TrybNasluchu t) {
+    switch (t) {
+      case TrybNasluchu.komendy:
+        return _recKomendy;
+      case TrybNasluchu.dyktowanie:
+        return _recDyktowanie;
+      case TrybNasluchu.czuwanie:
+      case TrybNasluchu.wylaczony:
+        return _recCzuwanie;
+    }
+  }
 
   Future<void> _przelaczGramatyke(TrybNasluchu t) async {
-    final Recognizer? cel =
-        t == TrybNasluchu.komendy ? _recKomendy : _recCzuwanie;
+    final Recognizer? cel = _recognizerDla(t);
     if (cel == null) return;
     // Podmiana jest natychmiastowa, ale i tak wstrzymujemy karmienie: porcja
     // w locie nie może się rozjechać między dwa recognizery.
@@ -531,7 +948,7 @@ class VoskEngine {
   }
 
   Future<void> _karm() async {
-    if (_karmienie || _recognizer == null) return;
+    if (_karmienie || _konczeDyktowanie || _recognizer == null) return;
     _karmienie = true;
     try {
       while (_nagrywa && _bufor.length >= _chunkBytes) {
@@ -544,6 +961,12 @@ class VoskEngine {
         if (all.length > _chunkBytes) {
           _bufor.add(Uint8List.sublistView(all, _chunkBytes));
         }
+        if (_tryb == TrybNasluchu.dyktowanie) {
+          await _karmDyktowanie(r, chunk);
+          if (_zadanieKonca != null) break;
+          continue;
+        }
+
         final bool koniecFrazy = await r.acceptWaveformBytes(chunk);
         if (koniecFrazy) {
           _przyjmijFraze(await r.getResult());
@@ -560,7 +983,91 @@ class VoskEngine {
     } finally {
       _karmienie = false;
     }
+
+    // Koniec dyktowania domykamy DOPIERO TUTAJ, poza pętlą karmienia:
+    // _przelaczGramatyke czeka na jej zakończenie, więc wywołany w środku
+    // czekałby sam na siebie przez cały timeout.
+    // Między wyzerowaniem _karmienie a ustawieniem _konczeDyktowanie nie ma
+    // ani jednego await, więc żadna porcja nie zdąży się tu wcisnąć.
+    final PowodKoncaDyktowania? powod = _zadanieKonca;
+    if (powod != null) {
+      _zadanieKonca = null;
+      _konczeDyktowanie = true;
+      try {
+        await _zakonczDyktowanie(powod);
+      } finally {
+        _konczeDyktowanie = false;
+      }
+    }
   }
+
+  // Ta sama porcja idzie do DWÓCH recognizerów: jeden pisze notatkę (bez
+  // gramatyki), drugi pilnuje wyłącznie frazy kończącej. Dekodowanie po stronie
+  // natywnej jest seryjne, więc koszt porcji rośnie mniej więcej dwukrotnie -
+  // to jest ta liczba, którą trzeba zmierzyć na urządzeniu.
+  Future<void> _karmDyktowanie(Recognizer r, Uint8List chunk) async {
+    final Recognizer? det = _recDetektor;
+    // W karencji frazy kończącej NIE SŁUCHAMY, ale porcje i tak podajemy -
+    // detektor ma iść w takt notatki, a nie odtwarzać potem zaległe audio.
+    final bool wolnoKonczyc = !_wKarencji;
+    if (det != null && await det.acceptWaveformBytes(chunk)) {
+      if (wolnoKonczyc && _toTerminator(await det.getResult())) {
+        _zadanieKonca = PowodKoncaDyktowania.fraza;
+        return;
+      }
+    }
+
+    if (await r.acceptWaveformBytes(chunk)) {
+      final String tekst = _wyjmij(await r.getResult(), 'text');
+      _dopiszDoNotatki(tekst);
+      _partial = '';
+      _emitujNotatke();
+      // Zapas na brak detektora: frazy szukamy w tym, co zapisał recognizer
+      // notatki. Z treści i tak wypada - wycina ją _oczyscNotatke.
+      if (det == null && wolnoKonczyc && _ogonKonca.hasMatch(tekst)) {
+        _zadanieKonca = PowodKoncaDyktowania.fraza;
+        return;
+      }
+    } else {
+      final String p = _wyjmij(await r.getPartialResult(), 'partial');
+      if (p != _partial) {
+        _partial = p;
+        // Echo komendy otwierającej z bufora iOS nie jest mową użytkownika -
+        // gdyby ruszało zegar ciszy, notatka zamykałaby się 5 s po wejściu,
+        // nawet jeśli użytkownik jeszcze zbiera myśli.
+        if (p.trim().isNotEmpty && wolnoKonczyc) _ostatniaMowa = DateTime.now();
+        _emitujNotatke();
+        if (det == null && wolnoKonczyc && _ogonKonca.hasMatch(p)) {
+          _zadanieKonca = PowodKoncaDyktowania.fraza;
+          return;
+        }
+      }
+    }
+
+    final DateTime teraz = DateTime.now();
+    if (_dyktowanieOd != null &&
+        teraz.difference(_dyktowanieOd!) >= _limitDyktowania) {
+      _zadanieKonca = PowodKoncaDyktowania.limitCzasu;
+      return;
+    }
+    // Cisza liczona od ostatniego USŁYSZANEGO słowa, a przed pierwszym słowem -
+    // od wejścia w dyktowanie, tylko z dłuższym oknem. Notatka MUSI się domknąć
+    // sama w rozsądnym czasie także wtedy, gdy nikt nic nie powiedział: to
+    // jedyny sygnał, że tryb notatki w ogóle się skończył.
+    final DateTime? odkad = _ostatniaMowa ?? _dyktowanieOd;
+    final Duration okno = _ostatniaMowa != null
+        ? _ciszaKonczacaDyktowanie
+        : _ciszaPrzedPierwszymSlowem;
+    if (odkad != null && teraz.difference(odkad) >= okno) {
+      _zadanieKonca = PowodKoncaDyktowania.cisza;
+    }
+  }
+
+  // Czy jesteśmy jeszcze w karencji frazy kończącej (patrz
+  // [_karencjaTerminatora]).
+  bool get _wKarencji =>
+      _dyktowanieOd != null &&
+      DateTime.now().difference(_dyktowanieOd!) < _karencjaTerminatora;
 
   Future<void> _poczekajNaKarmienie() async {
     // Wywołania przez MethodChannel nie mogą się nakładać.

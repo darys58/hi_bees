@@ -250,6 +250,8 @@
     "@inspectionHive": {},
     "noInspectionYet": "There are no inspection yet.",
     "@noInspectionYet": {},
+    "noFramesInInspection": "This inspection has no frames recorded yet.",
+    "@noFramesInInspection": {},
     "left": "left",
     "@left": {},
     "right": "right",

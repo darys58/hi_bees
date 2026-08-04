@@ -43,6 +43,30 @@ context:
       - hej maja [start,zaczynamy,startujemy]
     voiceStop:
       - hej maja [stop,kończymy,koniec]
+    # --- dyktowanie notatki -------------------------------------------------
+    # Otwiera nasłuch SWOBODNY (recognizer bez gramatyki) - patrz
+    # VoskEngine.zacznijDyktowanie. Notatkę kończy "hej maja", czyli to samo
+    # zawołanie, które otwiera sesję: użytkownik ma pamiętać jedno, nie dwa.
+    # Intent przechwytuje voice_vosk_screen.dart PO bramce pewności (inaczej niż
+    # voiceStart/voiceStop, które ją omijają): pomyłkowe wejście w dyktowanie
+    # zabiera mikrofon na kilkadziesiąt sekund i kończy się wpisem w bazie.
+    # Wszystkie słowa sprawdzone w słowniku modelu (pliki/vosk_slownik_pl.txt).
+    #
+    # DWA UJŚCIA, DWA INTENTY. Nazwa komendy mówi wprost, gdzie tekst wyląduje -
+    # tak samo jak przy wybieraniu ręcznym ("notatka do przeglądu" w oknie ramek
+    # i Notes jako osobny ekran). Pomyłka jest tu droga: notatka przeglądu wymaga
+    # wybranej pasieki i ula i dokleja się do rekordu przeglądu, a notatka do
+    # notesu to samodzielny wpis w tabeli "notatki".
+    #   voiceNote    -> uwagi dzisiejszego przeglądu wybranego ula
+    #   voiceNotepad -> nowy wpis w Notesie (tabela "notatki")
+    voiceNote:
+      - zanotuj
+      - hej maja zanotuj
+      - zapisz notatkę
+      - hej maja zapisz notatkę
+      - hej maja notatka do przeglądu
+    voiceNotepad:
+      - hej maja notatka do notesu
     setApiary:
       - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:
@@ -110,12 +134,12 @@ context:
       - $state:beePolenTrap zbieracz pyłku
       - (ustaw) [ilość,liczba,liczbę] ramek (w) korpusie ([jest,na]) $pv.TwoDigitInteger:numberOfFrame
     setQueen:
-      - "[królowa,matka] jest $queenQuality:queenQuality"
+      - "[królowa,matka] (jest) $queenQuality:queenQuality"
       - "[królowa,królowej,matka,matki] $queenMark:queenMark (numer)
         ($pv.TwoDigitInteger:queenNumber)"
-      - "[królowa,matka] jest $queenStart:queenStart"
-      - "[królowa,matka] jest $queenState:queenState"
-      - "[królowa,matka] [jest z roku,jest roku,rocznik] $pv.TwoDigitInteger:queenBorn"
+      - "[królowa,matka] (jest) $queenStart:queenStart"
+      - "[królowa,matka] (jest) $queenState:queenState"
+      - "[królowa,matka] [(jest) z roku,(jest) roku,rocznik] $pv.TwoDigitInteger:queenBorn"
     setHelp:
       - $help:help
       - $helpMe:helpMe pomóż mi

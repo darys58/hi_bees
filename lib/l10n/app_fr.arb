@@ -125,6 +125,7 @@
     "disable": "Fermer",
     "inspectionHive": "Inspection de la ruche",
     "noInspectionYet": "Il n'y a pas encore d'inspections.",
+    "noFramesInInspection": "Cette inspection n'a pas encore de cadres enregistrés.",
     "left": "gauche",
     "right": "droite",
     "inspectionSay": "Inspection :",

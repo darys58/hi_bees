@@ -392,6 +392,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noInspectionYet => 'Es gibt noch keine Durchsichten.';
 
   @override
+  String get noFramesInInspection =>
+      'Diese Durchsicht hat noch keine erfassten Waben.';
+
+  @override
   String get left => 'links';
 
   @override

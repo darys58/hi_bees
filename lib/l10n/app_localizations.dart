@@ -858,6 +858,12 @@ abstract class AppLocalizations {
   /// **'There are no inspection yet.'**
   String get noInspectionYet;
 
+  /// No description provided for @noFramesInInspection.
+  ///
+  /// In en, this message translates to:
+  /// **'This inspection has no frames recorded yet.'**
+  String get noFramesInInspection;
+
   /// No description provided for @left.
   ///
   /// In en, this message translates to:

@@ -30,6 +30,13 @@
 //      VoskEngine._ogonWyciszenia (dziś 300 ms).
 //   4. Każde przerwanie (telefon, Siri, tło, utrata mikrofonu) kończy się
 //      POWROTEM DO CZUWANIA, nigdy cichym zawieszeniem. Decyzja z 01.08.2026.
+//   5. Dyktowanie notatki (nasłuch swobodny, recognizer bez gramatyki) ma DWA
+//      UJŚCIA - patrz [UjscieNotatki]:
+//        "zanotuj" / "zapisz notatkę" / "hej maja notatka do przeglądu"
+//              -> uwagi dzisiejszego przeglądu wybranego ula (tabela "info"),
+//        "hej maja notatka do notesu"
+//              -> nowy wpis w Notesie (tabela "notatki").
+//      Jedno i drugie kończy "hej maja".
 //
 // Warstwa audio siedzi w lib/helpers/vosk_engine.dart - tu jej nie ma.
 import 'dart:async';
@@ -59,12 +66,26 @@ import '../models/hives.dart';
 import '../models/apiarys.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
+import '../models/note.dart'; //Notes - notatka dyktowana do Notesu
 import '../models/weather.dart';
 import '../models/weathers.dart';
 //import '../models/dodatki1.dart';
 //void main() {
 //  runApp(MyApp());
 //}
+
+//Gdzie ma trafić dyktowana notatka. Komenda otwierająca mówi to wprost
+//("hej maja notatka do przeglądu" / "hej maja notatka do notesu"), bo pomyłka
+//jest droga: to dwie różne tabele i dwa różne miejsca w aplikacji.
+enum UjscieNotatki {
+  /// Uwagi dzisiejszego przeglądu wybranego ula (tabela "info", kategoria
+  /// "inspection"). Wymaga wybranej pasieki i ula.
+  przeglad,
+
+  /// Samodzielny wpis w Notesie (tabela "notatki"). Pasieka i ul są opcjonalne -
+  /// jeśli są wybrane, zapisujemy je jako kontekst notatki.
+  notes,
+}
 
 class VoiceVoskScreen extends StatefulWidget {
   static const routeName = '/screen-voice-vosk'; //nazwa trasy do tego ekranu
@@ -91,11 +112,47 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   VoskEngine? _engine;
   VoskGrammar? _gramatyka;
   String _stanNasluchu = ''; //opis stanu silnika - pokazywany na ekranie
+  //ostatni komunikat SILNIKA (czuwam / słucham komend / odzyskuję mikrofon).
+  //Komunikaty o pojedynczych frazach nadpisują pasek stanu, więc bez tej kopii
+  //nie da się po komendzie wrócić do informacji, w jakim trybie jest nasłuch.
+  String _stanBazowy = '';
   //mikrofon milczy, choć silnik jest gotowy (rozmowa telefoniczna, Siri, inna
   //aplikacja). To NIE jest awaria - silnik ponawia sam - ale ikona musi to
   //pokazać, bo zielone ucho przy martwym mikrofonie wprowadza w błąd
   bool _mikrofonMilczy = false;
   String _partial = ''; //tekst "w locie", w trakcie mówienia
+  //dyktowanie notatki (do przeglądu albo do notesu): trwa / tekst zebrany do tej pory.
+  //Tekst pokazujemy ZAWSZE, także bez diagnostyki - inaczej niż surowy partial
+  //komend (patrz [_opisFrazy]): tutaj tekst z Vosk jest produktem, a nie
+  //podglądem wnętrza silnika, i użytkownik musi widzieć, co zostanie zapisane.
+  bool _dyktuje = false;
+  String _tekstNotatki = '';
+  //Ujście BIEŻĄCEGO dyktowania - ustawiane przez komendę otwierającą i czytane
+  //dopiero przy zapisie (silnik oddaje tekst osobnym callbackiem, więc nie ma
+  //jak przekazać tego parametrem). Domyślnie przegląd: tak działały jedyne
+  //komendy notatki do 04.08.2026 ("zanotuj", "zapisz notatkę").
+  UjscieNotatki _ujscieNotatki = UjscieNotatki.przeglad;
+  //KOMUNIKAT NOTATKI MA WŁASNĄ LINIJKĘ, a nie pasek stanu.
+  //Powód (03.08.2026): pasek stanu przepisuje KAŻDA domknięta fraza z Vosk
+  //(_opisFrazy), a każdemu niepowodzeniu notatki towarzyszy odzywka Mai, która
+  //przecieka z głośnika do mikrofonu (znane od 02.08.2026 - opóźniony bufor
+  //wejścia iOS jest dłuższy niż ogon wyciszenia). Efekt: komunikat typu
+  //„Notatka niedostępna: ..." albo „Najpierw wybierz pasiekę i ul." znikał po
+  //ułamku sekundy, przepisany echem własnej odzywki - z zewnątrz nie do
+  //odróżnienia od „aplikacja w ogóle nic nie powiedziała".
+  String _komunikatNotatki = '';
+  Timer? _timerKomunikatuNotatki;
+  //ŚLAD WEJŚCIA W DYKTOWANIE - tylko przy włączonej diagnostyce.
+  //Wejście w notatkę to łańcuszek kroków, z których każdy potrafi się urwać po
+  //cichu (odzywka, wyciszenie mikrofonu, budowa recognizera). Bez tego jedyną
+  //informacją zwrotną z urządzenia jest „nic się nie dzieje", a konsola Xcode
+  //przy `flutter run --release` bywa poza zasięgiem. Ostatni krok zostaje na
+  //ekranie, więc od razu widać, gdzie łańcuszek się zatrzymał.
+  String _sladNotatki = '';
+  //wczytana gramatyka nie zna intencji voiceNote - czyli w pakiecie apki siedzi
+  //stary assets/grammar/pol_vosk.yml. Komunikat zostaje na ekranie do końca
+  //sesji, bo bez niego objaw wygląda jak zepsuta notatka, a nie jak stary plik.
+  bool _gramatykaBezNotatki = false;
   bool _silnikGotowy = false;
   Timer? _inferenceTimer; //timer zastępujący Future.delayed - anulowalny przy nowej komendzie
   //flaga odroczonego dźwięku 'okej' - gra się dopiero po pętli slotów, jezeli 'zapisałam' (success) nie wyparł go
@@ -319,6 +376,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   @override
   void dispose() {
     _inferenceTimer?.cancel(); //anulowanie timera
+    _timerKomunikatuNotatki?.cancel(); //kasowanie komunikatu notatki
     WidgetsBinding.instance.removeObserver(this);
     //nasłuch jest ciągły, więc wyjście z ekranu MUSI zwolnić mikrofon
     _engine?.zamknij();
@@ -396,6 +454,23 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
 
+    //KONTROLA WCZYTANEGO ASSETU. Gramatyka jest assetem, a assety NIE odświeżają
+    //się przy hot reloadzie - w zbudowanej apce potrafi siedzieć starsza wersja
+    //pliku niż ta w repo. Objaw jest mylący: komenda notatki brzmi wtedy dla
+    //Vosk jak najbliższa znana fraza, więc ekran melduje „przyjęte: ..." i
+    //wykonuje CUDZĄ komendę, zamiast powiedzieć, że notatki nie zna (zgłoszenie
+    //z 03.08.2026). Sprawdzenie jest darmowe i od razu wskazuje winnego.
+    if (!_gramatyka!.intencje.contains('voiceNote') ||
+        !_gramatyka!.intencje.contains('voiceNotepad')) {
+      debugPrint('VOSK: wczytana gramatyka NIE ZNA intencji notatki '
+          '(voiceNote/voiceNotepad) - w pakiecie jest stary '
+          'assets/grammar/pol_vosk.yml');
+      //FLAGA, nie komunikat na pasku: pasek stanu zaraz i tak nadpisze silnik
+      //('Przygotowuję rozpoznawanie mowy...'), a to jest informacja, która ma
+      //zostać na ekranie do końca sesji.
+      if (mounted) setState(() => _gramatykaBezNotatki = true);
+    }
+
     _engine = VoskEngine(
       gramatyka: _gramatyka!,
       //okno na sklejenie komendy rozciętej przez Vosk = ta sama zwłoka,
@@ -405,6 +480,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         if (!mounted) return;
         setState(() {
           _stanNasluchu = opis;
+          _stanBazowy = opis;
           isProcessing = tryb == TrybNasluchu.komendy;
           _mikrofonMilczy = tryb == TrybNasluchu.wylaczony;
           //nasłuch znów działa - kasujemy błąd, inaczej po odzyskaniu
@@ -420,6 +496,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         if (!mounted) return;
         setState(() => _partial = tekst);
       },
+      onDyktowanieTekst: (tekst) {
+        if (!mounted) return;
+        setState(() => _tekstNotatki = tekst);
+      },
+      onKoniecDyktowania: _zapiszNotatke,
       onFraza: _naFraze,
       onBlad: _bladSilnika,
     );
@@ -455,21 +536,69 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
     //3. bramka. Odrzucone IGNORUJEMY PO CICHU: przy nasłuchu ciągłym mikrofon
     //łapie rozmowę przy ulu, a sygnał błędu po każdym zdaniu byłby nie do
-    //zniesienia. Powód trafia tylko na pasek stanu, do podglądu.
-    if (!f.przyjeta) {
-      setState(() => _stanNasluchu = 'pominięte: „${f.tekst}" (${f.powod})');
+    //zniesienia. Ślad zostaje najwyżej na pasku stanu - ile go widać, o tym
+    //decyduje [_opisFrazy] i przełącznik diagnostyki.
+    setState(() => _stanNasluchu = _opisFrazy(f));
+    if (!f.przyjeta) return;
+    //ślad w konsoli Xcode - jedyne miejsce, gdzie widać ZARAZEM tekst z Vosk i
+    //intent, na który został sparsowany. Na ekranie to samo pokazuje wyłącznie
+    //diagnostyka; tutaj jest zawsze, bo bez tego zdalna diagnoza „komenda nic
+    //nie robi" sprowadza się do zgadywania.
+    debugPrint('VOSK fraza: „${f.tekst}" → ${f.inference.intent} '
+        '${f.inference.slots}');
+
+    //4. dyktowanie notatki - przechwytywane przed switchem pasiecznym, ale
+    //DOPIERO PO bramce (inaczej niż voiceStart/voiceStop, które ją omijają):
+    //pomyłkowe wejście w dyktowanie zabiera mikrofon na kilkadziesiąt sekund
+    //i kończy się wpisem w bazie, więc niepewne rozpoznanie ma je odrzucić.
+    if (f.inference.intent == 'voiceNote') {
+      _zacznijNotatke(UjscieNotatki.przeglad);
+      return;
+    }
+    if (f.inference.intent == 'voiceNotepad') {
+      _zacznijNotatke(UjscieNotatki.notes);
       return;
     }
 
-    //pewność pokazujemy też przy komendach PRZYJĘTYCH - inaczej nie da się na
-    //urządzeniu ocenić, jak blisko progu chodzą normalnie wypowiadane komendy
-    if (f.sredniaConf >= 0) {
-      setState(() => _stanNasluchu =
-          'przyjęte: „${f.tekst}" (śr. ${f.sredniaConf.toStringAsFixed(2)}, '
-          'min ${f.minConf.toStringAsFixed(2)})');
+    _obsluzKomende(f.inference);
+  }
+
+  //Opis frazy na pasku stanu.
+  //
+  //SUROWY TEKST Z VOSK TRAFIA NA EKRAN WYŁĄCZNIE W DIAGNOSTYCE. Gramatyka stoi
+  //na aliasach fonetycznych - „pierzcha" zamiast pierzga, „węża" zamiast węza,
+  //„miodu branie" zamiast miodobranie, „na grób" zamiast nakrop - bo poprawnych
+  //form NIE MA w słowniku modelu (patrz komentarze w assets/grammar/pol_vosk.yml).
+  //Komenda działa prawidłowo, ale pszczelarz, który zobaczy „przyjęte: pierzcha
+  //50 procent", uzna to za błąd aplikacji. Dlatego na produkcji pokazujemy
+  //wyłącznie sam fakt nieudanego rozpoznania, bez cytatu i bez liczb.
+  String _opisFrazy(VoskFraza f) {
+    if (globals.voiceDiagnostyka) {
+      if (!f.przyjeta) return 'pominięte: „${f.tekst}" (${f.powod})';
+      //INTENT, nie sam tekst. Bez niego „przyjęte: ..." nie odróżnia komendy
+      //zrozumianej ZGODNIE Z ZAMIAREM od zrozumianej jako CO INNEGO - a to była
+      //cała zagadka nieruszającej notatki (03.08.2026): pasek meldował
+      //„przyjęte", ekran wykonywał obcą komendę i nikt nie widział, którą.
+      final String intent = f.inference.intent ?? '?';
+      //pewność przy komendach PRZYJĘTYCH - inaczej nie da się na urządzeniu
+      //ocenić, jak blisko progu chodzą normalnie wypowiadane komendy
+      if (f.sredniaConf < 0) return 'przyjęte: „${f.tekst}" → $intent';
+      return 'przyjęte: „${f.tekst}" → $intent '
+          '(śr. ${f.sredniaConf.toStringAsFixed(2)}, '
+          'min ${f.minConf.toStringAsFixed(2)})';
     }
 
-    _obsluzKomende(f.inference);
+    //przyjęta komenda mówi sama za siebie: Maja się odzywa i odświeża się
+    //podgląd korpusu. Wracamy do komunikatu o trybie nasłuchu
+    if (f.przyjeta) return _stanBazowy;
+
+    //fraza z [unk] to mowa spoza gramatyki, czyli w praktyce rozmowa przy ulu,
+    //a nie nieudana komenda - meldunek po każdym zdaniu byłby czystym szumem
+    if (f.unk > 0) return _stanBazowy;
+
+    //tu użytkownik naprawdę mówił do aplikacji: albo komenda nie pasowała do
+    //żadnego wzorca, albo przepadła na progu pewności
+    return 'Nie zrozumiałam polecenia.';
   }
 
   //otwarcie sesji: "hej maja start" zastąpiło przycisk START
@@ -507,15 +636,387 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _zagraj('listening'); //"czekam"
   }
 
+  //Komunikat o notatce - patrz [_komunikatNotatki]. Sam się kasuje po 25 s,
+  //żeby „Zapisałam notatkę." nie wisiało na ekranie przez cały przegląd.
+  void _powiedzONotatce(String tekst) {
+    _timerKomunikatuNotatki?.cancel();
+    if (!mounted) return;
+    setState(() => _komunikatNotatki = tekst);
+    if (tekst.isEmpty) return;
+    _timerKomunikatuNotatki = Timer(const Duration(seconds: 25), () {
+      if (!mounted) return;
+      setState(() => _komunikatNotatki = '');
+    });
+  }
+
+  //DYKTOWANIE NOTATKI
+  //
+  //"zanotuj" / "zapisz notatkę" / "hej maja notatka do przeglądu" -> uwagi
+  //dzisiejszego przeglądu tego ula. "hej maja notatka do notesu" -> nowy wpis
+  //w Notesie. Jedno i drugie otwiera ten sam nasłuch swobodny (recognizer bez
+  //gramatyki); różni je wyłącznie [ujscie], czyli miejsce zapisu.
+  //
+  //Notatka przeglądu trafia do rekordu KONKRETNEGO ula, więc bez wybranej
+  //pasieki i ula nie ma jej gdzie zapisać - i trzeba to powiedzieć, bo sama
+  //cisza w odpowiedzi na komendę wygląda jak awaria aplikacji. Notatka do
+  //notesu takiego warunku nie ma: to samodzielny wpis, można ją podyktować
+  //zaraz po otwarciu sesji.
+  Future<void> _zacznijNotatke(UjscieNotatki ujscie) async {
+    final VoskEngine? e = _engine;
+    if (e == null) return;
+    _ujscieNotatki = ujscie;
+    //CAŁA METODA POD JEDNYM try. Leci bez await z [_naFraze], więc wyjątek z
+    //dowolnego jej miejsca nie ma dokąd wypłynąć - przepada w pustce, a ekran
+    //zostaje w trybie komend, bez ikony i bez słowa wyjaśnienia. Dokładnie tak
+    //wyglądało zgłoszenie z 03.08.2026 (winna była odzywka „słucham", patrz
+    //[_zagraj]), więc pojedyncze łatanie znanego winowajcy nie wystarczy:
+    //łańcuszek jest długi i każdy jego krok sięga do wtyczek audio.
+    try {
+      if (ujscie == UjscieNotatki.przeglad &&
+          (nrXXOfApiary == 0 || nrXXOfHive == 0)) {
+        _slad('brak pasieki albo ula');
+        _powiedzONotatce('Notatka do przeglądu: najpierw powiedz, która pasieka '
+            'i który ul (np. „pasieka jeden", „ul siedem"). Notatkę do notesu '
+            'możesz dyktować od razu.');
+        await _zagraj('nie_rozumiem');
+        return;
+      }
+      _powiedzONotatce(''); //nowa notatka - stary komunikat traci ważność
+      _inferenceTimer?.cancel();
+      _slad('komenda przyjęta');
+      //"słucham" PRZED wejściem w dyktowanie, nigdy po: w dyktowaniu mikrofon
+      //przyjmuje wszystko, więc odzywka Mai wpisałaby się w treść notatki.
+      //Odzywka jest jednak DODATKIEM, nie warunkiem - gdy odtwarzacz padnie,
+      //wchodzimy w dyktowanie bez niej. Cicha notatka jest do przeżycia,
+      //milcząco pominięta komenda nie jest.
+      await _zagraj('wake_word');
+      _slad('po odzywce');
+      //po odzywce silnik trzyma jeszcze ogon wyciszenia, na którego końcu
+      //RESETUJE recognizer. Wejście w dyktowanie przed tym resetem kosztowałoby
+      //pierwsze słowa notatki, więc czekamy, aż mikrofon naprawdę wróci
+      for (int i = 0; i < 20 && (_engine?.wyciszony ?? false); i++) {
+        await Future.delayed(const Duration(milliseconds: 25));
+      }
+      if (!mounted) return;
+      setState(() {
+        _dyktuje = true;
+        _tekstNotatki = '';
+      });
+      _slad('włączam dyktowanie');
+      //Zawieszone wywołanie kanału też musi mieć wyjście - stąd twardy limit
+      //czasu zamiast czekania w nieskończoność.
+      bool ok = false;
+      String? awaria;
+      try {
+        ok = await e.zacznijDyktowanie().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            awaria = 'silnik nie odpowiedział w 5 s';
+            return false;
+          },
+        );
+      } catch (err) {
+        awaria = '$err';
+      }
+      if (ok) {
+        _slad('dyktowanie działa');
+        return;
+      }
+      //Po limicie czasu silnik mógł mimo wszystko wejść w dyktowanie - wtedy
+      //mikrofon nagrywałby notatkę, o której ekran już nie wie. Domykamy ją.
+      if (awaria != null && e.dyktuje) {
+        try {
+          await e.przerwijDyktowanie();
+        } catch (_) {}
+      }
+      //silnik nie wszedł w dyktowanie - recognizery dyktowania nie powstały
+      //przy starcie. Reszta sterowania głosem działa dalej, ale notatki nie
+      //będzie. POWÓD POKAZUJEMY WPROST: samo "niedostępne" nie daje się
+      //zdiagnozować po teście na urządzeniu, a to jedyna informacja, jaka do
+      //nas wraca
+      if (!mounted) return;
+      final String powod = awaria ?? e.powodOdmowyDyktowania ?? 'nieznany powód';
+      debugPrint('Notatka: dyktowanie nie ruszyło - $powod');
+      setState(() => _dyktuje = false);
+      _slad('odmowa: $powod');
+      _powiedzONotatce('Notatka niedostępna: $powod');
+      await _zagraj('nie_rozumiem');
+    } catch (err, stos) {
+      //Ostatnia deska ratunku. Bez niej awaria dowolnego kroku wygląda z
+      //zewnątrz identycznie jak zignorowana komenda.
+      debugPrint('Notatka: awaria wejścia w dyktowanie - $err\n$stos');
+      if (!mounted) return;
+      setState(() => _dyktuje = false);
+      _slad('awaria: $err');
+      _powiedzONotatce('Notatka: awaria ($err)');
+    }
+  }
+
+  //Ostatni krok wejścia w dyktowanie - patrz [_sladNotatki]. Do konsoli leci
+  //zawsze, na ekran tylko przy włączonej diagnostyce.
+  void _slad(String krok) {
+    debugPrint('Notatka [krok]: $krok');
+    if (!mounted || !globals.voiceDiagnostyka) return;
+    setState(() => _sladNotatki = krok);
+  }
+
+  //Koniec dyktowania. Notatka przeglądu idzie do pola "uwagi" rekordu przeglądu
+  //(kategoria "inspection") dla dzisiejszej daty i wybranego ula; notatka do
+  //notesu - do tabeli "notatki" przez [_zapiszDoNotesu].
+  //
+  //DOPISUJEMY, nigdy nie nadpisujemy: rekord przeglądu jest jeden na dzień i
+  //ul, więc druga notatka tego samego dnia bez doklejenia skasowałaby pierwszą.
+  //
+  //Zapis idzie przez DBHelper.updateInfoUwagi, a NIE przez Infos.insertInfo:
+  //insert to ConflictAlgorithm.replace po składanym id, więc wstawienie samych
+  //uwag wyzerowałoby w istniejącym rekordzie czas, wartość i temperaturę.
+  //
+  //Zapisujemy przy KAŻDYM powodzie zakończenia - także po limicie czasu i po
+  //utracie mikrofonu. Notatka ucięta w pół zdania jest do poprawienia w ekranie
+  //notatek, notatka utracona nie jest.
+  Future<void> _zapiszNotatke(String tekst, PowodKoncaDyktowania powod) async {
+    if (!mounted) return;
+    _slad('koniec dyktowania (${powod.name}), ${tekst.trim().length} znaków');
+    setState(() {
+      _dyktuje = false;
+      _tekstNotatki = '';
+    });
+
+    final String tresc = tekst.trim();
+    if (tresc.isEmpty) {
+      _powiedzONotatce('Nie usłyszałam notatki - nic nie zapisałam.');
+      await _zagraj('nie_rozumiem');
+      return;
+    }
+
+    if (ustawianaData != '')
+      formattedDate = ustawianaData;
+    else
+      formattedDate = formatter.format(now);
+    final String godzina = formatterHm.format(DateTime.now());
+
+    //notes ma własną tabelę i własne pola - dalej idzie osobną drogą
+    if (_ujscieNotatki == UjscieNotatki.notes) {
+      await _zapiszDoNotesu(tresc, powod);
+      return;
+    }
+
+    final String wpis = '$godzina - $tresc';
+    final String idInfo = '$formattedDate.$nrXXOfApiary.$nrXXOfHive.inspection.'
+        '${AppLocalizations.of(context)!.inspection}';
+
+    //ZAPIS POD KONTROLĄ: ta metoda jest wołana z callbacka silnika, więc
+    //wyjątek z bazy nie miałby gdzie wypłynąć - użytkownik zobaczyłby ciszę
+    //i uznał, że notatka się zapisała. Treść pokazujemy przy błędzie na ekranie,
+    //żeby dało się ją przepisać ręcznie, zanim zniknie.
+    try {
+      //null = rekordu przeglądu jeszcze nie ma ('' = jest, tylko bez uwag)
+      final String? uwagi = await DBHelper.getInfoUwagi(idInfo);
+      if (!mounted) return; //dalej sięgamy po context (lokalizacja, provider)
+      if (uwagi == null) {
+        //notatka padła przed pierwszą komendą zapisującą zasób - przegląd
+        //zakładamy tak samo jak zapisDoBazy, tylko od razu z uwagami
+        await Infos.insertInfo(
+          idInfo, //id
+          formattedDate, //data
+          nrXXOfApiary, //pasiekaNr
+          nrXXOfHive, //ulNr
+          'inspection', //kategoria
+          AppLocalizations.of(context)!.inspection, //parametr
+          _ikonaUla(), //wartosc
+          '', //miara
+          '', //ikona pogody
+          '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //temp
+          godzina, //czas
+          wpis, //uwagi
+          0, //arch
+        );
+        globals.dataAktualnegoPrzegladu = formattedDate;
+      } else {
+        await DBHelper.updateInfoUwagi(
+          idInfo,
+          uwagi.trim().isEmpty ? wpis : '$uwagi\n$wpis',
+        );
+      }
+
+      if (!mounted) return;
+      await Provider.of<Infos>(context, listen: false)
+          .fetchAndSetInfosForHive(nrXXOfApiary, nrXXOfHive);
+    } catch (err) {
+      debugPrint('Notatka: zapis nie powiódł się - $err');
+      if (!mounted) return;
+      _powiedzONotatce('Notatki NIE udało się zapisać ($err). Treść: „$tresc"');
+      await _zagraj('error');
+      return;
+    }
+    if (!mounted) return;
+    //Belka ula POZA głównym try: notatka jest już w bazie, więc potknięcie na
+    //dacie przeglądu nie ma prawa zamienić się w komunikat "nie udało się zapisać".
+    await _przestawDatePrzegladu();
+    if (!mounted) return;
+    _powiedzONotatce(powod == PowodKoncaDyktowania.limitCzasu
+        ? 'Zapisałam notatkę (osiągnięty limit długości).'
+        : 'Zapisałam notatkę.');
+    //odzywka MOWĄ, nie sygnałem: notatka to rzadka, świadoma czynność i
+    //użytkownik musi wiedzieć, że tekst wylądował w bazie. Przy komendach
+    //"zapisałam" było za długie i zastąpił je beep - patrz [_playSuccess]
+    await _zagraj('success');
+  }
+
+  //NOTATKA DO NOTESU - drugie ujście dyktowania ("hej maja notatka do notesu").
+  //
+  //Wpis idzie do tabeli "notatki", czyli tam, gdzie lądują notatki zakładane
+  //ręcznie w Notesie - i tak samo jak one jest osobnym rekordem, a nie doklejką
+  //do przeglądu. Nie wymaga wybranej pasieki ani ula; jeśli są znane, zapisujemy
+  //je jako kontekst (lista notatek pokazuje wtedy „pasieka/ul" przy wpisie).
+  //
+  //Daty zadania (pole1) dyktując nie ma jak podać, więc zostaje pusta - i
+  //dlatego NIE wołamy NotificationHelper.scheduleAllNotifications(): planowanie
+  //powiadomień dotyczy wyłącznie notatek z datą zadania.
+  Future<void> _zapiszDoNotesu(
+      String tresc, PowodKoncaDyktowania powod) async {
+    //ZAPIS POD KONTROLĄ - tak samo jak przy notatce przeglądu: metoda leci
+    //z callbacka silnika, więc wyjątek z bazy nie miałby gdzie wypłynąć, a
+    //użytkownik uznałby ciszę za udany zapis.
+    try {
+      await Notes.insertNotatki(
+        formattedDate, //data
+        _tytulZTresci(tresc), //tytul
+        nrXXOfApiary, //pasiekaNr - 0, gdy nie wybrano
+        nrXXOfHive, //ulNr - 0, gdy nie wybrano
+        tresc, //notatka
+        0, //status - nowa, tak jak przy ręcznym dodawaniu
+        'false', //priorytet - dyktując nie ma jak go ustawić
+        '', //pole1 - data zadania
+        '', //pole2
+        '', //pole3
+        '', //uwagi
+        0, //arch
+      );
+      if (!mounted) return;
+      await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
+    } catch (err) {
+      debugPrint('Notatka do notesu: zapis nie powiódł się - $err');
+      if (!mounted) return;
+      _powiedzONotatce('Notatki NIE udało się zapisać ($err). Treść: „$tresc"');
+      await _zagraj('error');
+      return;
+    }
+    if (!mounted) return;
+    _powiedzONotatce(powod == PowodKoncaDyktowania.limitCzasu
+        ? 'Zapisałam notatkę w notesie (osiągnięty limit długości).'
+        : 'Zapisałam notatkę w notesie.');
+    await _zagraj('success');
+  }
+
+  //Tytuł notatki z jej treści. Lista notatek pokazuje w belce datę i TYTUŁ, a
+  //edytor notatki wymaga tytułu niepustego (walidator w note_edit_screen) -
+  //dyktujący nie ma jak podać go osobno, więc bierzemy początek treści.
+  //Ucinamy na granicy słowa: „trzeba dokupić węzy na wios..." czyta się gorzej
+  //niż krótszy, ale całościowy początek zdania.
+  String _tytulZTresci(String tresc) {
+    const int limit = 30;
+    if (tresc.length <= limit) return tresc;
+    final String kawalek = tresc.substring(0, limit);
+    final int spacja = kawalek.lastIndexOf(' ');
+    //za krótki pierwszy wyraz - lepiej uciąć w połowie niż zostawić dwie litery
+    return '${spacja >= 10 ? kawalek.substring(0, spacja) : kawalek}...';
+  }
+
+  //Data ostatniego przeglądu na belce ULA (pole "przeglad" tabeli "ule") oraz na
+  //belce PASIEKI (to samo pole w tabeli "pasieki") - z nich liczy się "ile dni od
+  //przeglądu" w widoku uli i pasiek. Notatka JEST przeglądem, więc przestawia obie
+  //daty tak samo jak zapis zasobu.
+  //
+  //Aktualizujemy WYŁĄCZNIE to jedno pole (updateUle / updatePrzegladPasieki), a nie
+  //cały rekord przez insertHive / insertApiary: insert nadpisałby licznikami zasobów
+  //i ilością uli to, co zebrał przegląd - notatka nie ma o nich pojęcia.
+  //
+  //Data idzie tylko DO PRZODU. Notatka dopisana do starszego przeglądu (praca na
+  //ustawionej dacie) nie ma prawa cofnąć belki i udawać, że ul nie był oglądany
+  //od tamtej pory. Ul i pasieka są sprawdzane OSOBNO: pasieka trzyma datę
+  //najświeższego przeglądu ze wszystkich uli, więc bywa nowsza niż ten jeden ul.
+  Future<void> _przestawDatePrzegladu() async {
+    final DateTime? nowa = DateTime.tryParse(formattedDate);
+    if (nowa == null) return;
+    try {
+      //belka ula
+      final String idUla = '$nrXXOfApiary.$nrXXOfHive';
+      final List<Hive> ule = Provider.of<Hives>(context, listen: false)
+          .items
+          .where((h) => h.id == idUla)
+          .toList();
+      if (ule.isNotEmpty) {
+        final DateTime? stara = DateTime.tryParse(ule[0].przeglad);
+        if (stara == null || nowa.isAfter(stara)) {
+          await DBHelper.updateUle(idUla, 'przeglad', formattedDate);
+          if (!mounted) return;
+          //odświeżenie providera, żeby belka pokazała nową datę bez wychodzenia z ekranu
+          await Provider.of<Hives>(context, listen: false)
+              .fetchAndSetHives(nrXXOfApiary);
+        }
+      }
+
+      //belka pasieki
+      if (!mounted) return;
+      //typ wnioskowany - model Apiary nie jest w tym pliku importowany
+      final pasieki = Provider.of<Apiarys>(context, listen: false)
+          .items
+          .where((p) => p.pasiekaNr == nrXXOfApiary)
+          .toList();
+      if (pasieki.isEmpty) {
+        //nie porównujemy w ciemno z bazą - bez znanej daty nie ma jak sprawdzić,
+        //czy nasza jest nowsza, a cofnięcie belki pasieki byłoby gorsze niż jej
+        //nieprzestawienie
+        debugPrint('Notatka: pasieki $nrXXOfApiary nie ma w providerze - '
+            'data przeglądu pasieki bez zmian.');
+        return;
+      }
+      final DateTime? staraPasieki = DateTime.tryParse(pasieki[0].przeglad);
+      if (staraPasieki != null && !nowa.isAfter(staraPasieki)) return;
+      await DBHelper.updatePrzegladPasieki(nrXXOfApiary, formattedDate);
+      if (!mounted) return;
+      await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
+    } catch (err) {
+      //notatka jest ważniejsza niż data na belce - o błędzie tylko do konsoli
+      debugPrint('Notatka: nie udało się przestawić daty przeglądu - $err');
+    }
+  }
+
+  //ikona wybranego ula - do rekordu przeglądu zakładanego przez notatkę.
+  //Pole "wartosc" przeglądu trzyma właśnie ikonę; notatka nie zmienia stanu
+  //ula, więc bierzemy bieżącą, a przy jej braku zieloną.
+  String _ikonaUla() {
+    final List<Hive> ule = Provider.of<Hives>(context, listen: false)
+        .items
+        .where((h) => h.id == '$nrXXOfApiary.$nrXXOfHive')
+        .toList();
+    return ule.isEmpty ? 'green' : ule[0].ikona;
+  }
+
   //ręczny odpowiednik komend sesji - gdy w pasiece jest zbyt głośno
   void _przelaczSesjeRecznie() {
     if (_engine == null || !_silnikGotowy) return;
+    //w dyktowaniu ten sam gest KOŃCZY NOTATKĘ: użytkownik, którego "hej maja"
+    //nie zostało usłyszane, musiałby inaczej czekać na ciszę albo na limit
+    //czasu. Tekst zebrany do tej pory i tak zostanie zapisany.
+    if (_engine!.dyktuje) {
+      _engine!.przerwijDyktowanie();
+      return;
+    }
     _engine!.tryb == TrybNasluchu.komendy ? _stopSesji() : _startSesji();
   }
 
   //każdy dźwięk gramy z WYCISZONYM mikrofonem - inaczej Vosk usłyszy Maję
   //i jej słowa trafią do rozpoznawania jako komenda (patrz historia wake-worda
   //z 10.06.2026: to dokładnie ten błąd, tylko wtedy nie dało się go obejść)
+  //
+  //ODZYWKA NIGDY NIE PRZERYWA TEGO, CO ROBI EKRAN. Większość wywołań leci bez
+  //await, więc wyjątek z odtwarzacza przepadał tam po cichu - ale tam, gdzie na
+  //odzywkę CZEKAMY (wejście w dyktowanie notatki), zabierał ze sobą resztę
+  //metody. Tak wyglądało zgłoszenie z 03.08.2026: po „zanotuj" Maja mówiła
+  //„słucham" i na tym się kończyło - żadnej ikony, żadnego komunikatu, a
+  //następne zdanie wracało jako „pominięte: ...", bo silnik został w komendach.
   Future<void> _zagraj(String nazwa) async {
     final VoskEngine? e = _engine;
     if (e == null) {
@@ -525,7 +1026,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     e.wyciszNaOdzywke();
     try {
       await _sound.playAndWait(nazwa);
+    } catch (err) {
+      debugPrint('Głos: odzywka „$nazwa" nie zagrała - $err');
     } finally {
+      //wyciszenie MUSI zostać zdjęte także po awarii - inaczej mikrofon
+      //zostaje głuchy na zawsze i sterowanie głosem umiera bez komunikatu
       e.wznowPoOdzywce();
     }
   }
@@ -7941,25 +8446,37 @@ print('openDialog = $openDialog');
             //W stanie awarii (przekreślony mikrofon) dotknięcie PONAWIA próbę
             //odzyskania mikrofonu - wcześniej ikona była tu martwa i jedynym
             //wyjściem po rozmowie telefonicznej było opuszczenie ekranu.
+            //DYKTOWANIE MA WŁASNĄ IKONĘ, i to właśnie tutaj, w pasku tytułu:
+            //jest widoczna w KAŻDYM układzie ekranu. Podgląd notatki i pasek
+            //stanu potrafią zniknąć razem z sekcją tekstową (live podgląd
+            //korpusu), a użytkownik musi wiedzieć, że mikrofon nagrywa notatkę,
+            //a nie czeka na komendę. Zgłoszenie z 03.08.2026: po „hej maja
+            //zanotuj" ekran wyglądał identycznie jak przed nią.
             IconButton(
               icon: Icon(
-                (isError || _mikrofonMilczy)
-                    ? Icons.mic_off
-                    : (isProcessing ? Icons.mic : Icons.hearing),
-                color: (isError || _mikrofonMilczy)
-                    ? Color.fromARGB(255, 200, 0, 0)
-                    : (isButtonDisabled
-                        ? Colors.grey
-                        : (isProcessing
-                            ? Color.fromARGB(255, 200, 0, 0)
-                            : Color.fromARGB(255, 0, 150, 0))),
+                _dyktuje
+                    ? Icons.edit_note
+                    : ((isError || _mikrofonMilczy)
+                        ? Icons.mic_off
+                        : (isProcessing ? Icons.mic : Icons.hearing)),
+                color: _dyktuje
+                    ? Color.fromARGB(255, 0, 90, 200)
+                    : ((isError || _mikrofonMilczy)
+                        ? Color.fromARGB(255, 200, 0, 0)
+                        : (isButtonDisabled
+                            ? Colors.grey
+                            : (isProcessing
+                                ? Color.fromARGB(255, 200, 0, 0)
+                                : Color.fromARGB(255, 0, 150, 0)))),
                 size: 30,
               ),
-              tooltip: (isError || _mikrofonMilczy)
-                  ? 'Mikrofon niedostępny — dotknij, by spróbować ponownie'
-                  : (isProcessing
-                      ? 'Słucham komend — „hej maja stop"'
-                      : 'Czuwam — „hej maja start"'),
+              tooltip: _dyktuje
+                  ? 'Dyktuję notatkę — dotknij, by zakończyć'
+                  : ((isError || _mikrofonMilczy)
+                      ? 'Mikrofon niedostępny — dotknij, by spróbować ponownie'
+                      : (isProcessing
+                          ? 'Słucham komend — „hej maja stop"'
+                          : 'Czuwam — „hej maja start"')),
               //lambda, nie referencja: obie gałęzie muszą mieć ten sam typ
               //void Function(), inaczej wnioskowanie nie da VoidCallback?
               onPressed: (isError || _mikrofonMilczy)
@@ -8010,6 +8527,15 @@ print('openDialog = $openDialog');
                   if (globals.voice2LivePodglad) ...[
                     const SizedBox(height: 35), //odstęp od sekcji informacyjnej, by tła się nie nakładały
                     buildLivePanel(context),
+                    //PASEK STANU DLA UKŁADU Z LIVE PODGLĄDEM. Ten układ nie
+                    //buduje ani [buildRhinoTextArea], ani [buildErrorMessage] -
+                    //miejsce zajmuje korpus. Do 03.08.2026 znaczyło to, że
+                    //dyktowanie notatki było w nim CAŁKOWICIE nieme: żadnego
+                    //podglądu tekstu, żadnego „Notatka niedostępna: ...",
+                    //żadnego błędu silnika. Stąd zgłoszenie „Słucham i nic
+                    //więcej się nie dzieje" - komunikaty POWSTAWAŁY, tylko nie
+                    //miały gdzie się pokazać.
+                    buildPasekStanu(context),
                   ]
                   else ...[
                     buildRhinoTextArea(context),
@@ -9045,6 +9571,11 @@ print('openDialog = $openDialog');
   }
 
   buildRhinoTextArea(BuildContext context, {bool flex = true}) {
+    //podgląd dyktowanej notatki pokazujemy OD KOŃCA: liczy się to, co użytkownik
+    //mówi teraz, a 90 sekund tekstu i tak nie zmieści się w tym miejscu ekranu
+    final String podgladNotatki = _tekstNotatki.length > 160
+        ? '…${_tekstNotatki.substring(_tekstNotatki.length - 160)}'
+        : _tekstNotatki;
     final content = Container(
             alignment: Alignment.center,
             color: Color.fromARGB(255, 255, 255, 255),
@@ -9061,13 +9592,56 @@ print('openDialog = $openDialog');
                       color: Color.fromARGB(255, 0, 0, 0),
                       fontSize: heightScreen < 600 ? 15 : 18),
                 ),
+                //DYKTOWANIE: surowy tekst z Vosk pokazujemy ZAWSZE, także bez
+                //przełącznika diagnostyki. To jedyne takie miejsce w aplikacji -
+                //tutaj tekst nie jest podglądem wnętrza silnika, tylko treścią,
+                //która za chwilę trafi do bazy, więc użytkownik MUSI ją widzieć.
+                if (_dyktuje)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          //ujście w nagłówku, nie tylko w komendzie: między
+                          //„notatka do przeglądu" a „notatka do notesu" ekran
+                          //wygląda identycznie, a tekst ląduje gdzie indziej
+                          _ujscieNotatki == UjscieNotatki.notes
+                              ? 'Notatka do notesu - zakończ słowami „hej maja"'
+                              : 'Notatka do przeglądu - zakończ słowami „hej maja"',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 120, 120, 120),
+                              fontSize: 12),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            podgladNotatki.isEmpty
+                                ? 'słucham...'
+                                : podgladNotatki,
+                            textAlign: TextAlign.center,
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                color: Color.fromARGB(255, 0, 0, 0),
+                                fontSize: heightScreen < 600 ? 14 : 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 //tekst "w locie" - widać, że mikrofon pracuje, zanim Vosk
                 //domknie frazę. Szary, bo to podgląd, a nie wynik.
+                //Bez diagnostyki pokazujemy samo wielokropkowe "słucham...":
+                //partial to surowy strumień z Vosk, więc migałyby w nim aliasy
+                //fonetyczne z gramatyki (patrz [_opisFrazy]) - i to jeszcze
+                //bardziej surowe niż w domkniętej frazie.
                 if (_partial.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      _partial,
+                      globals.voiceDiagnostyka ? _partial : 'słucham...',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: Color.fromARGB(255, 130, 130, 130),
@@ -9075,9 +9649,10 @@ print('openDialog = $openDialog');
                           fontStyle: FontStyle.italic),
                     ),
                   ),
-                //stan nasłuchu: czuwanie / komendy / przerwanie / pominięta
-                //fraza. Bez tego użytkownik nie ma jak odróżnić "nie usłyszało"
-                //od "usłyszało i odrzuciło".
+                //stan nasłuchu: czuwanie / komendy / przerwanie / nieudane
+                //rozpoznanie. Bez tego użytkownik nie ma jak odróżnić "nie
+                //usłyszało" od "usłyszało i odrzuciło". Treść buduje
+                //[_opisFrazy] - surowy tekst z Vosk tylko przy diagnostyce.
                 if (_stanNasluchu.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
@@ -9091,10 +9666,61 @@ print('openDialog = $openDialog');
                           fontSize: 12),
                     ),
                   ),
+                //osobna, TRWAŁA linijka notatki - patrz [_komunikatNotatki].
+                //Nie może dzielić miejsca ze stanem nasłuchu, bo ten jest
+                //przepisywany przez każdą kolejną frazę z Vosk.
+                if (_komunikatNotatki.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      _komunikatNotatki,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Color.fromARGB(255, 0, 90, 200),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                //ślad kroków wejścia w dyktowanie - patrz [_sladNotatki]
+                if (globals.voiceDiagnostyka && _sladNotatki.isNotEmpty)
+                  _sladNotatkiWidget(),
+                //stary asset gramatyki w pakiecie - patrz [_gramatykaBezNotatki]
+                if (_gramatykaBezNotatki) _ostrzezenieOGramatyce(),
               ],
             ));
     return flex ? Expanded(flex: 2, child: content) : content;
   }
+
+  //Jedno ostrzeżenie dla obu układów ekranu: wczytana gramatyka nie zna komendy
+  //notatki. Bez niego objaw jest nie do rozszyfrowania - Vosk mapuje "zanotuj"
+  //na najbliższą ZNANĄ frazę, więc ekran melduje "przyjęte: ..." i wykonuje
+  //cudzą komendę, zamiast przyznać, że komendy notatki nie ma w gramatyce.
+  //Ostatni krok wejścia w dyktowanie notatki - patrz [_sladNotatki]. Widoczny
+  //tylko przy włączonej diagnostyce (poza nią jest bezużyteczny dla pszczelarza
+  //i tylko myli), za to w OBU układach ekranu.
+  Widget _sladNotatkiWidget() => Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          'notatka: $_sladNotatki',
+          textAlign: TextAlign.center,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+              color: Color.fromARGB(255, 140, 100, 0), fontSize: 11),
+        ),
+      );
+
+  Widget _ostrzezenieOGramatyce() => Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Text(
+          'UWAGA: wczytana gramatyka nie zna komendy notatki - w pakiecie apki '
+          'jest stary plik assets/grammar/pol_vosk.yml. Zbuduj apkę od nowa '
+          '(pełny restart, nie hot reload).',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: Color.fromARGB(255, 200, 0, 0), fontSize: 12),
+        ),
+      );
 
   //odświeżenie danych dla live podglądu korpusu - wywoływane po komendzie głosowej
   //która zmienia zawartość korpusu lub wybór pasieki/ula/korpusu.
@@ -9209,6 +9835,92 @@ print('openDialog = $openDialog');
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  //Kompaktowy pasek stanu do układu z live podglądem korpusu. Pokazuje TO SAMO,
+  //co sekcja tekstowa w układzie klasycznym, tylko w jednej linijce na element:
+  //dyktowaną notatkę, komunikat stanu i błąd silnika. Bez niego live podgląd
+  //ukrywał wszystko, co silnik ma do powiedzenia - łącznie z powodem, dla
+  //którego notatka nie ruszyła.
+  Widget buildPasekStanu(BuildContext context) {
+    final String podglad = _tekstNotatki.length > 90
+        ? '…${_tekstNotatki.substring(_tekstNotatki.length - 90)}'
+        : _tekstNotatki;
+    final bool cokolwiek = _dyktuje ||
+        isError ||
+        _stanNasluchu.isNotEmpty ||
+        _komunikatNotatki.isNotEmpty ||
+        (globals.voiceDiagnostyka && _sladNotatki.isNotEmpty) ||
+        _gramatykaBezNotatki;
+    if (!cokolwiek) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      color: Color.fromARGB(255, 255, 255, 255),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (_dyktuje)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.edit_note,
+                    size: 18, color: Color.fromARGB(255, 0, 90, 200)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    podglad.isEmpty
+                        ? 'Notatka - mów, zakończ słowami „hej maja"'
+                        : podglad,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: Color.fromARGB(255, 0, 0, 0), fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          if (isError && errorMessage.isNotEmpty)
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: Color.fromARGB(255, 200, 0, 0), fontSize: 12),
+            )
+          else if (_stanNasluchu.isNotEmpty)
+            Text(
+              _stanNasluchu,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: Color.fromARGB(255, 90, 90, 90), fontSize: 12),
+            ),
+          //osobna, TRWAŁA linijka notatki - patrz [_komunikatNotatki]
+          if (_komunikatNotatki.isNotEmpty)
+            Text(
+              _komunikatNotatki,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: Color.fromARGB(255, 0, 90, 200),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500),
+            ),
+          //ślad kroków wejścia w dyktowanie - patrz [_sladNotatki]
+          if (globals.voiceDiagnostyka && _sladNotatki.isNotEmpty)
+            _sladNotatkiWidget(),
+          //stary asset gramatyki w pakiecie - patrz [_gramatykaBezNotatki]
+          if (_gramatykaBezNotatki) _ostrzezenieOGramatyce(),
+        ],
       ),
     );
   }

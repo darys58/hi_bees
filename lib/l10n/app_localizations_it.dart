@@ -393,6 +393,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get noInspectionYet => 'Non ci sono ancora ispezioni.';
 
   @override
+  String get noFramesInInspection =>
+      'Questa ispezione non ha ancora telaini registrati.';
+
+  @override
   String get left => 'sinistra';
 
   @override

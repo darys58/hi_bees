@@ -125,6 +125,7 @@
     "disable": "Fechar",
     "inspectionHive": "Inspeção da colmeia",
     "noInspectionYet": "Ainda não existem inspeções.",
+    "noFramesInInspection": "Esta inspeção ainda não tem quadros registados.",
     "left": "esquerda",
     "right": "direita",
     "inspectionSay": "Inspeção:",
