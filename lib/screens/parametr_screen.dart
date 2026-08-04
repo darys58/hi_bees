@@ -5,6 +5,7 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
 import '../helpers/sound_helper.dart';
+import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
 import '../screens/parametry_ula_screen.dart';
 import '../screens/parametr_edit_screen.dart';
 import '../screens/hive_news_settings_screen.dart';
@@ -682,6 +683,26 @@ class _ParametrScreenState extends State<ParametrScreen> {
                   onChanged: (value) {
                     setState(() {
                       globals.voiceDiagnostyka = value;
+                    });
+                  },
+                ),
+              ),
+            ),
+            // Nagrywanie dyktowanych notatek. Obok tekstu zapisujemy ścieżkę
+            // dźwiękową (WAV 16 kHz mono) i przypinamy ją do notatki - po to,
+            // żeby dało się sprawdzić, co pszczelarz naprawdę powiedział, gdy
+            // transkrypcja wyszła przekręcona. Nagrania NIE idą do chmury i
+            // znikają po tygodniu albo razem z notatką (patrz RecordingHelper).
+            Card(
+              child: ListTile(
+                title: Text('Nagrywanie notatek'),
+                subtitle: Text(
+                    'Do dyktowanej notatki zapisywany jest też dźwięk - do odsłuchania, gdy tekst wyszedł przekręcony. Nagrania zostają na telefonie i kasują się po ${RecordingHelper.dniPrzechowywania} dniach'),
+                trailing: Switch.adaptive(
+                  value: globals.nagrywajNotatki,
+                  onChanged: (value) {
+                    setState(() {
+                      globals.nagrywajNotatki = value;
                     });
                   },
                 ),

@@ -143,7 +143,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.11.1.92 15.06.2026 - fix wake-word - krótki beep zamiast słucham.mp3 (Rhino mylił mowę z głośnika z komendą), poprawki wprowadzania zasobów na ramkach i przenoszenia korpusów, swip przeglądów, odświezanie przy wprowadzaniu przeglądów
   //1.11.2.93 04.07.2026 - zmiana dźwięku po "Hej Maja" (wake-word) z krótkiego beep na wyraźniejszy i głosniejszy, poprawka w voice_screen2 - odświezanie widoku korpusa po pierwszym zapisie zasobu do bazy
   //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji, poddawanie matki z aktualna datą a nie z ostatnio ustawioną,
-  //1.12.0 95 03.08.2026 - nowe sterowanie głosem z modelem Vosk-PL, Picovoice usunięty
+  //1.12.0 95 03.08.2026 - nowe sterowanie głosem z modelem Vosk-PL, Picovoice usunięty, notatki do przeglądów i do Notatnika wprowadzane głosem + nagrywany dźwięk,
 
   final wersja = '1.12.0.95'; //wersja aplikacji na iOS
   final dataWersji = '2026-08-03';

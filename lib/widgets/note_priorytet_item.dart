@@ -6,6 +6,9 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 // import '../models/apiarys.dart';
 // import '../models/info.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/recording_helper.dart';
+import '../models/recording.dart';
+import 'recording_player.dart';
 // import '../screens/note_edit_screen.dart';
 import '../globals.dart' as globals;
 //import '../models/frames.dart';
@@ -130,6 +133,9 @@ class _NotePriorytetItemState extends State<NotePriorytetItem> {
                 ),
                 TextButton(
                   onPressed: () => {
+                    //nagranie podyktowanej notatki ginie razem z notatką
+                    Provider.of<Recordings>(context, listen: false)
+                        .usunDla(RecordingHelper.zrodloNotes, '${notatki.id}'),
                     DBHelper.deleteNotatki(notatki.id).then((_) {
                       //print('3... kasowanie elementu notatki');
 
@@ -206,7 +212,12 @@ class _NotePriorytetItemState extends State<NotePriorytetItem> {
                 : Text("${notatki.data.substring(5, 7)}-${notatki.data.substring(8)}  ${notatki.tytul}", 
                   style: const TextStyle(fontSize: 16,
                   fontWeight: FontWeight.bold)),
-              subtitle: RichText(
+              //nagranie podyktowanej notatki - patrz RecordingHelper
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RichText(
                   text: TextSpan(
                       style: TextStyle(color: Colors.black),
                       children: [
@@ -240,6 +251,13 @@ class _NotePriorytetItemState extends State<NotePriorytetItem> {
                           fontSize: 14, color: Color.fromARGB(255, 0, 0, 0)),
                     )
                   ])),
+                  RecordingRow(
+                    zrodlo: RecordingHelper.zrodloNotes,
+                    powiazanieId: '${notatki.id}',
+                    male: true,
+                  ),
+                ],
+              ),
 
               //trailing: const Icon(Icons.edit),
               isThreeLine: true,

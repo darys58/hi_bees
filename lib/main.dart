@@ -60,6 +60,7 @@ import './screens/apiarys_all_map_screen.dart';
 import './screens/notification_settings_screen.dart';
 import './screens/move_hive_screen.dart';
 import './helpers/notification_helper.dart';
+import './helpers/recording_helper.dart';
 
 //import './screens/languages_screen.dart';
 
@@ -72,6 +73,7 @@ import './models/sale.dart';
 import './models/purchase.dart';
 import './models/infos.dart';
 import './models/photo.dart';
+import './models/recording.dart'; //nagrania dyktowanych notatek
 import './models/memory.dart';
 import './models/dodatki1.dart';
 import './models/dodatki2.dart';
@@ -161,11 +163,29 @@ class _MyAppState extends State<MyApp> {
   final _notes = Notes();
   final _queens = Queens();
   final _photos = Photos();
+  final _recordings = Recordings();
 
   @override
   void initState() {
     super.initState();
     MyApp.localeOverride.addListener(_onLocaleChanged);
+    _przygotujNagrania();
+  }
+
+  //Nagrania dyktowanych notatek: najpierw sprzątanie (przeterminowane, sieroty
+  //po skasowanych notatkach i przeglądach, pliki bez wpisu), potem wczytanie
+  //tego, co zostało - listy przeglądów i notatek pytają providera o ikonkę
+  //głośnika przy każdym wierszu.
+  //
+  //Bez await w initState i pod try: to sprzątanie, a nie funkcja aplikacji -
+  //nie ma prawa opóźnić ani wywrócić startu.
+  Future<void> _przygotujNagrania() async {
+    try {
+      await RecordingHelper.sprzataj();
+      await _recordings.fetchAndSetRecordings();
+    } catch (e) {
+      debugPrint('Nagrania: przygotowanie przy starcie - $e');
+    }
   }
 
   @override
@@ -225,6 +245,9 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider.value(
           value: _photos,
+        ),
+        ChangeNotifierProvider.value(
+          value: _recordings,
         ),
 
       ],

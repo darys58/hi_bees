@@ -90,6 +90,14 @@ bool voice2LiveLandscape = false; //wymuszenie układu poziomego dla live podgl�
 //Ustawienie sesyjne (jak voice2LivePodglad) - po restarcie apki wraca na false.
 bool voiceDiagnostyka = false;
 
+//Nagrywanie dyktowanych notatek: obok tekstu zapisujemy ścieżkę dźwiękową (WAV
+//16 kHz mono, ~32 kB/s) i przypinamy ją do notatki. Po to, żeby dało się
+//sprawdzić, co pszczelarz naprawdę powiedział, gdy transkrypcja z Vosk wyszła
+//przekręcona. Nagrania zostają NA TELEFONIE (do chmury nie idą) i znikają po
+//RecordingHelper.dniPrzechowywania dniach albo razem z notatką.
+//Domyślnie WŁĄCZONE - wyłącznik jest w Parametryzacji, dla oszczędzania miejsca.
+bool nagrywajNotatki = true;
+
 // Aktualności ula - widoczność kategorii (0=ukryta, 1=widoczna)
 // Pozycje: 0-ramki, 1-rodzina, 2-matka, 3-zbiory, 4-dokarmianie, 5-leczenie, 6-zdjęcia
 String summaryVisibility = '1111111'; // domyślnie wszystko widoczne

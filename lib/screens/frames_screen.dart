@@ -10,6 +10,8 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
+import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
+import '../widgets/recording_player.dart'; //odtwarzacz nagrania notatki
 import '../models/frames.dart';
 import '../models/frame.dart';
 import '../models/hives.dart';
@@ -433,7 +435,15 @@ class _FramesScreenState extends State<FramesScreen> {
             child: Text('$notatka',
                 style: const TextStyle(
                     fontSize: 18, color: Color.fromARGB(255, 0, 0, 0))),
-          )
+          ),
+//nagranie podyktowanej notatki - taka sama ikonka jak na listach przeglądów i
+//notatek, tyle że wyśrodkowana pod przyciskiem, bo cała ta kolumna stoi na
+//środku ekranu. Bez nagrania RecordingRow nie zajmuje ani piksela.
+          RecordingRow(
+            zrodlo: RecordingHelper.zrodloPrzeglad,
+            powiazanieId: idNotatki,
+            male: true,
+          ),
         ],
       ),
     );

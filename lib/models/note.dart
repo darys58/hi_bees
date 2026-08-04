@@ -165,7 +165,11 @@ class Notes with ChangeNotifier {
   }
 
   //zapisanie danych do bazy lokalnej
-  static Future<void> insertNotatki(
+  //Zwraca id wstawionego rekordu (klucz jest AUTOINCREMENT). Potrzebne tam,
+  //gdzie do świeżo zapisanej notatki trzeba coś przypiąć - np. nagranie
+  //dyktowanej notatki (patrz RecordingHelper). Pozostałe wywołania mogą wynik
+  //zignorować i wołać metodę jak dotąd.
+  static Future<int> insertNotatki(
     // String id,
     String data,
     String tytul,
@@ -180,7 +184,7 @@ class Notes with ChangeNotifier {
     String uwagi,
     int arch,
   ) async {
-    await DBHelper.insert('notatki', {
+    return DBHelper.insertZwrocId('notatki', {
       // 'id': id,
       'data': data,
       'tytul': tytul,

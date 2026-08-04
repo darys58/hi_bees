@@ -6,6 +6,8 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../helpers/db_helper.dart';
 import '../helpers/notification_helper.dart';
+import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
+import '../widgets/recording_player.dart';
 import 'package:flutter/services.dart';
 import '../models/note.dart';
 import '../models/apiary.dart';
@@ -712,6 +714,23 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                     nowyNotatka = value;
                                     return null;
                                   }),
+
+//nagranie podyktowanej notatki - TU jest najbardziej potrzebne: odsłuchanie
+//obok pola z tekstem to jedyny sposób, żeby poprawić to, co model przekręcił
+//(patrz RecordingHelper). Notatka wpisana z ręki nie ma nagrania i wtedy
+//RecordingRow nie zajmuje miejsca.
+                              if (edycja && notatki.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: RecordingRow(
+                                    zrodlo: RecordingHelper.zrodloNotes,
+                                    powiazanieId: '${notatki[0].id}',
+                                    //z suwakiem: poprawianie notatki to skakanie
+                                    //po nagraniu (jedno przekręcone słowo), a nie
+                                    //słuchanie go od początku za każdym razem
+                                    zSuwakiem: true,
+                                  ),
+                                ),
 
 //priorytet
                               SizedBox(

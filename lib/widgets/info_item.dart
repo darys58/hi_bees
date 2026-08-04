@@ -8,6 +8,9 @@ import '../models/apiarys.dart';
 import '../models/infos.dart';
 import '../models/info.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/recording_helper.dart';
+import '../models/recording.dart';
+import 'recording_player.dart';
 import '../screens/frames_screen.dart';
 import '../screens/infos_edit_screen.dart';
 import '../globals.dart' as globals;
@@ -79,6 +82,11 @@ class InfoItem extends StatelessWidget {
                 TextButton(
                   onPressed: () => {
                     Navigator.of(context).pop(true), //skasowanie elementu listy
+                    //Nagranie podyktowanej notatki ginie razem z wpisem, do
+                    //którego było przypięte - tu, a nie w gałęziach niżej, bo
+                    //każda z nich kasuje ten sam info.id, tylko inną drogą.
+                    Provider.of<Recordings>(context, listen: false)
+                        .usunDla(RecordingHelper.zrodloPrzeglad, info.id),
                     if (info.kategoria == 'inspection')
                       {
                         //kasowanie wszystkich wpisów dotyczących przeglądu dla pasieki, ula i daty
@@ -523,9 +531,14 @@ class InfoItem extends StatelessWidget {
                               style: const TextStyle(fontSize: 14))
                           : Text('${info.data}  ${info.czas}  ${info.temp}',
                               style: const TextStyle(fontSize: 14)),
-                      subtitle: 
-                      //Row(
-                        //children: [
+                      //Notatka podyktowana głosem ma nagranie (patrz
+                      //RecordingHelper) - ikonka głośnika stoi POD treścią
+                      //uwag, bo to do nich się odnosi. Gdy nagrania nie ma,
+                      //RecordingRow nie zajmuje ani piksela.
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           RichText(
                         text: TextSpan(
                             style: TextStyle(color: Colors.black),
@@ -576,6 +589,13 @@ class InfoItem extends StatelessWidget {
                                 color: Color.fromARGB(255, 0, 0, 0)),
                           )
                         ])),
+                          RecordingRow(
+                            zrodlo: RecordingHelper.zrodloPrzeglad,
+                            powiazanieId: info.id,
+                            male: true,
+                          ),
+                        ],
+                      ),
                       trailing: const Icon(Icons.arrow_forward_ios))
 //******************************************* */
 //lista pozostałych info (oprócz przegladu)

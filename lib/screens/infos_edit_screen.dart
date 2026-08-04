@@ -7,6 +7,8 @@ import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 import '../helpers/db_helper.dart';
 import '../helpers/notification_helper.dart';
+import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
+import '../models/recording.dart';
 import '../models/apiarys.dart';
 // import '../models/frame.dart';
 import '../models/hives.dart';
@@ -19,6 +21,7 @@ import '../models/queen.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/dodatki2.dart';
+import '../widgets/recording_player.dart'; //odtwarzacz nagrania notatki
 
 class InfosEditScreen extends StatefulWidget {
   static const routeName = '/infos_edit';
@@ -2172,6 +2175,18 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                         return null;
                       }
                     ),
+//nagranie podyktowanej notatki do przeglądu - pod polem z tekstem, bo tylko tu
+//da się poprawić to, co model przekręcił, słuchając oryginału. Przegląd wpisany
+//z ręki nie ma nagrania i wtedy RecordingRow nie zajmuje ani piksela.
+                    if (edycja && info.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: RecordingRow(
+                          zrodlo: RecordingHelper.zrodloPrzeglad,
+                          powiazanieId: info[0].id,
+                          zSuwakiem: true,
+                        ),
+                      ),
                               //   ),
                               // ]),
                   ]
@@ -2355,6 +2370,24 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                       minuta: _przypomnienieMinuta,
                                       dataNotif: dataNotifStr,
                                     );
+                                  });
+                                }
+                                //Edycja przeglądu to kasowanie starego rekordu i
+                                //zapis nowego - a id składa się z daty, pasieki,
+                                //ula i parametru, więc po zmianie któregokolwiek
+                                //z nich NAGRANIE podyktowanej notatki zostałoby
+                                //przypięte do nieistniejącego wpisu i wyleciało
+                                //przy najbliższym sprzątaniu (RecordingHelper).
+                                //Przepinamy je na nowe id.
+                                if (nowyInfoId != info[0].id) {
+                                  DBHelper.przepnijNagrania(
+                                    RecordingHelper.zrodloPrzeglad,
+                                    info[0].id,
+                                    nowyInfoId,
+                                  ).then((_) {
+                                    if (!mounted) return;
+                                    Provider.of<Recordings>(context, listen: false)
+                                        .fetchAndSetRecordings();
                                   });
                                 }
                                 Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(nowaPasieka, nowyUl)

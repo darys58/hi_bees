@@ -324,6 +324,32 @@ class VoskEngine {
   // Poziom sygnału do wskaźnika na ekranie (0..1).
   double _poziom = 0;
 
+  // -- nagranie dyktowanej notatki ------------------------------------------
+  //
+  // Ścieżkę dźwiękową notatki odbijamy z porcji, które i tak idą do
+  // recognizera (_karmDyktowanie) - drugi strumień z mikrofonu byłby na iOS
+  // walką o tę samą sesję audio, czyli dokładnie tą klasą awarii, która
+  // kosztowała najwięcej czasu w migracji na Vosk.
+  //
+  // Zbieramy do PAMIĘCI, a plik składa dopiero ekran (RecordingHelper): zapis
+  // na dysk w takt porcji wpychałby operację I/O w ścieżkę dekodowania mowy, a
+  // przy twardym limicie notatki (90 s) mówimy o ~2,9 MB - to mieści się bez
+  // problemu, a przerwane dyktowanie nie zostawia niedokończonego pliku.
+  final BytesBuilder _pcmNotatki = BytesBuilder(copy: false);
+
+  // Bezpiecznik na wypadek, gdyby dyktowanie kiedyś przestało mieć twardy limit
+  // czasu: bufor w pamięci nie może rosnąć bez końca. 120 s przy 32 kB/s.
+  static const int _limitBajtowNagrania = 120 * 32000;
+
+  // Gotowe nagranie ostatniej notatki - ekran odbiera je w [onKoniecDyktowania].
+  Uint8List? _pcmOstatniejNotatki;
+  bool _nagranieUciete = false;
+  int _porcjeZDzwiekiem = 0;
+
+  /// Czy zbierać ścieżkę dźwiękową notatki. Ekran ustawia to z globals przed
+  /// wejściem w dyktowanie; przy false silnik działa dokładnie jak przedtem.
+  bool nagrywajNotatke = true;
+
   TrybNasluchu get tryb => _tryb;
   bool get gotowy => _gotowy;
   bool get nagrywa => _nagrywa;
@@ -340,6 +366,31 @@ class VoskEngine {
   /// „notatka nie działa" bez powodu nie daje się zdiagnozować na urządzeniu,
   /// a do konsoli Xcode użytkownik zagląda rzadko.
   String? get powodOdmowyDyktowania => _powodOdmowyDyktowania;
+
+  /// Surowe PCM (16 bit LE, 16 kHz, mono) ostatniej podyktowanej notatki albo
+  /// null, gdy nagrania nie ma. Ważne TYLKO w [onKoniecDyktowania] - kolejne
+  /// dyktowanie zaczyna od zera, a po zapisaniu pliku ekran ma wołać
+  /// [porzucNagranie], żeby nie trzymać megabajtów w pamięci przez cały przegląd.
+  Uint8List? get pcmOstatniejNotatki => _pcmOstatniejNotatki;
+
+  /// Czy w nagraniu w ogóle coś było słychać. Rozstrzyga los notatki, z której
+  /// Vosk nie wyciągnął ANI JEDNEGO słowa: gdy dźwięk jest, nagranie warto
+  /// zachować (właśnie po to ono jest), gdy to cisza - nie ma czego zapisywać.
+  bool get nagranieMaDzwiek => _porcjeZDzwiekiem >= _porcjiNaDzwiek;
+
+  /// Czy nagranie urwał bezpiecznik rozmiaru (a nie koniec dyktowania).
+  bool get nagranieUciete => _nagranieUciete;
+
+  /// Zwolnienie bufora po zapisaniu pliku.
+  void porzucNagranie() => _pcmOstatniejNotatki = null;
+
+  // Ile porcji (po 0,2 s) z sygnałem powyżej [_progDzwieku] uznajemy za "coś
+  // tam było". Sekunda - krócej to stuknięcie w telefon albo trzask sesji audio.
+  static const int _porcjiNaDzwiek = 5;
+
+  // Próg RMS (0..1) odróżniający mowę od szumu mikrofonu. Zmierzone w POC:
+  // cisza cyfrowa to 0,00x, spokojna mowa z odległości ręki - powyżej 0,02.
+  static const double _progDzwieku = 0.02;
 
   // -- cykl życia -----------------------------------------------------------
 
@@ -473,6 +524,9 @@ class VoskEngine {
     _model?.dispose();
     _model = null;
     _gotowy = false;
+    //bufory nagrania - ekran już ich nie odbierze, a to megabajty
+    _pcmNotatki.clear();
+    _pcmOstatniejNotatki = null;
   }
 
   // -- tryby ----------------------------------------------------------------
@@ -560,6 +614,12 @@ class VoskEngine {
     _dyktowanieOd = DateTime.now();
     _ostatniaMowa = null;
     _zadanieKonca = null;
+    //nowa notatka - nowe nagranie. Poprzednie porzucamy nawet wtedy, gdy ekran
+    //go nie odebrał: bufor w pamięci ma żyć jedną notatkę, nie całą sesję.
+    _pcmNotatki.clear();
+    _pcmOstatniejNotatki = null;
+    _nagranieUciete = false;
+    _porcjeZDzwiekiem = 0;
     try {
       // Detektor mógł zostać z resztkami poprzedniej notatki - inaczej pierwsza
       // porcja domknęłaby starą frazę i notatka skończyłaby się natychmiast.
@@ -618,8 +678,14 @@ class VoskEngine {
       _porzucOgon();
       _stan(_opisTrybu(TrybNasluchu.komendy));
     }
+    //Nagranie oddajemy PRZED callbackiem - ekran sięga po nie w trakcie zapisu
+    //notatki (patrz [pcmOstatniejNotatki]). takeBytes czyści bufor, więc
+    //następne dyktowanie startuje z pustym.
+    final Uint8List pcm = _pcmNotatki.takeBytes();
+    _pcmOstatniejNotatki = pcm.isEmpty ? null : pcm;
     debugPrint('VoskEngine: koniec dyktowania (${powod.name}), '
-        '${tekst.length} znaków.');
+        '${tekst.length} znaków, nagranie ${pcm.length} B'
+        '${_nagranieUciete ? " (ucięte)" : ""}.');
     onDyktowanieTekst?.call('');
     onKoniecDyktowania?.call(tekst, powod);
   }
@@ -1006,6 +1072,7 @@ class VoskEngine {
   // natywnej jest seryjne, więc koszt porcji rośnie mniej więcej dwukrotnie -
   // to jest ta liczba, którą trzeba zmierzyć na urządzeniu.
   Future<void> _karmDyktowanie(Recognizer r, Uint8List chunk) async {
+    _odbijDoNagrania(chunk);
     final Recognizer? det = _recDetektor;
     // W karencji frazy kończącej NIE SŁUCHAMY, ale porcje i tak podajemy -
     // detektor ma iść w takt notatki, a nie odtwarzać potem zaległe audio.
@@ -1061,6 +1128,27 @@ class VoskEngine {
     if (odkad != null && teraz.difference(odkad) >= okno) {
       _zadanieKonca = PowodKoncaDyktowania.cisza;
     }
+  }
+
+  // Kopia porcji do bufora nagrania. Ta sama porcja, którą przed chwilą dostał
+  // recognizer - dzięki temu w pliku jest DOKŁADNIE to, z czego powstał tekst
+  // notatki, razem z ewentualnym echem odzywki na początku.
+  //
+  // Nagranie jest dodatkiem: gdy bufor urośnie ponad bezpiecznik, przestajemy
+  // dopisywać, ale dyktowanie leci dalej. Odwrotna kolejność (przerwanie
+  // notatki, bo skończyło się miejsce na dźwięk) byłaby nie do wytłumaczenia.
+  void _odbijDoNagrania(Uint8List chunk) {
+    if (!nagrywajNotatke) return;
+    if (_poziom > _progDzwieku) _porcjeZDzwiekiem++;
+    if (_pcmNotatki.length >= _limitBajtowNagrania) {
+      if (!_nagranieUciete) {
+        _nagranieUciete = true;
+        debugPrint('VoskEngine: nagranie notatki ucięte na bezpieczniku '
+            '(${_pcmNotatki.length} B).');
+      }
+      return;
+    }
+    _pcmNotatki.add(chunk);
   }
 
   // Czy jesteśmy jeszcze w karencji frazy kończącej (patrz

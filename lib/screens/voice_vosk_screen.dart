@@ -41,6 +41,7 @@
 // Warstwa audio siedzi w lib/helpers/vosk_engine.dart - tu jej nie ma.
 import 'dart:async';
 import 'dart:io' show Platform;
+import 'dart:typed_data' show Uint8List; //surowe PCM nagrywanej notatki
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_beep/flutter_beep.dart';
@@ -67,6 +68,8 @@ import '../models/apiarys.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/note.dart'; //Notes - notatka dyktowana do Notesu
+import '../models/recording.dart'; //Recordings - nagrania dyktowanych notatek
+import '../helpers/recording_helper.dart'; //zapis WAV + cykl życia nagrań
 import '../models/weather.dart';
 import '../models/weathers.dart';
 //import '../models/dodatki1.dart';
@@ -317,6 +320,57 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   List<Frame> _daty = []; //unikalne daty
   double widthCanvas = 0; //szerokość płótna
   double highCanvas = 0; //wysokość płótna
+
+  //=== TRZY NIEZALEŻNE STREFY EKRANU (04.08.2026) ===
+  //1. dane komendy (buildAnswerArea) - gdzie jesteśmy: pasieka, ul, korpus,
+  //   ramka, zasób, zapis,
+  //2. korpus (buildKorpusArea) - jeden korpus w widoku "po", z datą nad nim,
+  //3. teksty (buildPasekStanu / buildRhinoTextArea) - notatka, komunikaty, błędy.
+  //
+  //Do 04.08.2026 strefy dzieliły się flexem odziedziczonym po Picovoice
+  //(4 / 2 / 0-4), a rysunek korpusu nie miał żadnego ograniczenia rozmiaru i
+  //rozlewał się na sąsiadów. Dwie przyczyny, obie w [MyHive]:
+  // - painter maluje numery ramek POZA zadeklarowanym `size` (y = -16 nad
+  //   obrysem i high+3 pod nim), a CustomPaint niczego nie przycina - stąd
+  //   numery wchodziły na teksty nad korpusem w układzie pionowym,
+  // - szerokość jest sztywna (widthCanvas = ramek * 20 + 20), więc ul
+  //   20-ramkowy to 420 px, które w układzie poziomym wychodziły na lewy panel.
+  //Teraz strefa 2 ma wysokość LICZONĄ z typu korpusu, jest przycięta (ClipRect)
+  //i w razie potrzeby przeskalowana w dół (FittedBox) - cały korpus jest zawsze
+  //widoczny bez przewijania, bo przy ulu nie ma jak przewijać w rękawicach.
+  static const double _kNaglowekKorpusu = 22; //wiersz "po <data przeglądu>"
+  static const double _kNumeryRamek = 18; //pas na numery ramek nad i pod obrysem
+  static const double _kZapasKorpusu = 8; //margines estetyczny strefy korpusu
+  static const double _kMinStrefaTekstu = 64; //minimum dla strefy 3 w poziomie
+
+  //STAŁE WYSOKOŚCI STREF 1 i 2 (04.08.2026). Wcześniej obie strefy zajmowały
+  //tyle, ile akurat miały treści, więc dopóki nie było otwartej pasieki i ula,
+  //wiersz uli i komunikaty podjeżdżały pod pasek tytułu, a przy pierwszej
+  //komendzie zjeżdżały w dół - ekran "skakał" przy każdym słowie. Teraz obie
+  //strefy dostają miejsce policzone z NAJWYŻSZEGO możliwego układu i trzymają
+  //je niezależnie od tego, co jest wypełnione.
+  //
+  //STREFA 1 - suma wierszy [buildAnswerArea] w wariancie dla większych ekranów:
+  //   padding kontenera 2 * 15                        30
+  //   wiersz pasieki                                  45
+  //   wiersz ul/korpus/ramka 92 + 2 * marginRow(10)  112
+  //   dane matki (ikona 24 + margines 5)              29
+  //   rozmiar i strona ramki                          45
+  //   zapisywany zasób albo info (wyklucza się        110
+  //     wzajemnie) hightSave(100) + marginRow(10)
+  //Wiersza "wszystkie ule" (60 + 2 * 10 = 80) NIE liczymy: nigdy nie stoi razem
+  //z wierszem ul/korpus/ramka, bo `readyAllHives = true` zawsze zeruje
+  //`readyHive`, a każde `readyHive = true` zeruje `readyAllHives`. Jest przy tym
+  //niższy od tamtego (80 < 112), więc to wiersz ul/korpus/ramka wyznacza maksimum.
+  static const double _kStrefaDanych = 371;
+  //ten sam rachunek dla ekranów < 590 px w pionie, gdzie wiersze mają mniejsze
+  //warianty: 30 + 40 + (60 + 2 * marginRow) + 29 + 40 + (75 + marginRow).
+  //Wiersz "wszystkie ule" odpada tak samo jak wyżej; tu oba wykluczające się
+  //wiersze mają po 80 px, więc obojętne, który zostaje w sumie.
+  static const double _kStrefaDanychMala = 304;
+  //STREFA 2 - najwyższy korpus (typ 2 => 2 * 75 + 30 = 180) z pasami na numery
+  //ramek, nagłówkiem daty i zapasem: 22 + (180 + 2 * 18) + 2 * 8
+  static const double _kStrefaKorpusu = 254;
 
   //zmienne pogodowe
   String pobranie = '';
@@ -703,6 +757,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         _tekstNotatki = '';
       });
       _slad('włączam dyktowanie');
+      //Przełącznik nagrywania czytamy PRZY KAŻDEJ notatce, a nie raz przy
+      //budowie silnika - użytkownik może go wyłączyć w Ustawieniach w trakcie
+      //pracy i następna notatka ma być już bez dźwięku.
+      e.nagrywajNotatke = globals.nagrywajNotatki;
       //Zawieszone wywołanie kanału też musi mieć wyjście - stąd twardy limit
       //czasu zamiast czekania w nieskończoność.
       bool ok = false;
@@ -782,12 +840,28 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       _tekstNotatki = '';
     });
 
-    final String tresc = tekst.trim();
-    if (tresc.isEmpty) {
+    //Ścieżka dźwiękowa notatki - patrz [RecordingHelper]. Odbieramy ją TU, na
+    //samym początku: bufor żyje w silniku tylko do następnego dyktowania, a
+    //dalej jest kilka miejsc, z których ta metoda potrafi wyjść.
+    final VoskEngine? silnik = _engine;
+    final Uint8List? nagranie = silnik?.pcmOstatniejNotatki;
+    final bool nagranieZDzwiekiem = silnik?.nagranieMaDzwiek ?? false;
+    silnik?.porzucNagranie(); //bufor mamy u siebie - silnik ma go nie trzymać
+
+    final String rozpoznane = tekst.trim();
+    //Notatka bez ani jednego rozpoznanego słowa, ale z SŁYSZALNYM dźwiękiem, to
+    //dokładnie ten przypadek, dla którego nagrania powstały: model nie poradził
+    //sobie z mową, a pszczelarz mówił. Zapisujemy wpis z treścią zastępczą, żeby
+    //nagranie miało do czego być przypięte i dało się go odsłuchać. Cisza (nikt
+    //nic nie powiedział) leci starą drogą - nie ma czego ratować.
+    final bool ratujemyNagranie =
+        rozpoznane.isEmpty && nagranie != null && nagranieZDzwiekiem;
+    if (rozpoznane.isEmpty && !ratujemyNagranie) {
       _powiedzONotatce('Nie usłyszałam notatki - nic nie zapisałam.');
       await _zagraj('nie_rozumiem');
       return;
     }
+    final String tresc = rozpoznane.isEmpty ? _trescBezTekstu : rozpoznane;
 
     if (ustawianaData != '')
       formattedDate = ustawianaData;
@@ -797,7 +871,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
     //notes ma własną tabelę i własne pola - dalej idzie osobną drogą
     if (_ujscieNotatki == UjscieNotatki.notes) {
-      await _zapiszDoNotesu(tresc, powod);
+      await _zapiszDoNotesu(
+        tresc,
+        powod,
+        nagranie: nagranie,
+        rozpoznane: rozpoznane,
+        czas: godzina,
+      );
       return;
     }
 
@@ -850,17 +930,95 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
     if (!mounted) return;
+    //Nagranie PO zapisie notatki: bez rekordu przeglądu nie ma do czego go
+    //przypiąć. Odwrotnie już nie - notatka bez nagrania jest w porządku.
+    final bool zapisaneNagranie = await _zapiszNagranie(
+      nagranie,
+      zrodlo: RecordingHelper.zrodloPrzeglad,
+      powiazanieId: idInfo,
+      czas: godzina,
+      tekst: rozpoznane,
+    );
+    if (!mounted) return;
     //Belka ula POZA głównym try: notatka jest już w bazie, więc potknięcie na
     //dacie przeglądu nie ma prawa zamienić się w komunikat "nie udało się zapisać".
     await _przestawDatePrzegladu();
     if (!mounted) return;
-    _powiedzONotatce(powod == PowodKoncaDyktowania.limitCzasu
-        ? 'Zapisałam notatkę (osiągnięty limit długości).'
-        : 'Zapisałam notatkę.');
+    _powiedzONotatce(_komunikatPoZapisie(
+      powod,
+      ratujemyNagranie: ratujemyNagranie,
+      zapisaneNagranie: zapisaneNagranie,
+      co: 'notatkę',
+      gdzie: 'przy przeglądzie',
+    ));
     //odzywka MOWĄ, nie sygnałem: notatka to rzadka, świadoma czynność i
     //użytkownik musi wiedzieć, że tekst wylądował w bazie. Przy komendach
     //"zapisałam" było za długie i zastąpił je beep - patrz [_playSuccess]
-    await _zagraj('success');
+    await _zagraj(ratujemyNagranie ? 'nie_rozumiem' : 'success');
+  }
+
+  //Treść zastępcza wpisu, z którego Vosk nie wyciągnął ani jednego słowa, a w
+  //nagraniu coś słychać. Bez niej nagranie nie miałoby do czego być przypięte,
+  //a użytkownik nie miałby czego szukać w Notesie ani w przeglądzie.
+  static const String _trescBezTekstu = '(nagranie - nie rozpoznałam słów)';
+
+  //Zapis pliku WAV plus wpis w tabeli "nagrania". Zwraca true, gdy nagranie
+  //jest na dysku. NIE RZUCA - notatka jest w tym momencie już zapisana, więc
+  //awaria dźwięku nie ma prawa wyglądać jak nieudany zapis notatki.
+  Future<bool> _zapiszNagranie(
+    Uint8List? pcm, {
+    required String zrodlo,
+    required String powiazanieId,
+    required String czas,
+    required String tekst,
+  }) async {
+    if (pcm == null || pcm.isEmpty) return false;
+    final String? id = await RecordingHelper.zapisz(
+      pcm: pcm,
+      zrodlo: zrodlo,
+      powiazanieId: powiazanieId,
+      data: formattedDate,
+      czas: czas,
+      pasiekaNr: nrXXOfApiary,
+      ulNr: nrXXOfHive,
+      tekst: tekst,
+    );
+    if (id == null) {
+      debugPrint('Notatka: nagranie NIE zostało zapisane.');
+      return false;
+    }
+    if (!mounted) return true;
+    //odświeżenie listy, żeby ikonka głośnika pojawiła się przy notatce od razu
+    try {
+      await Provider.of<Recordings>(context, listen: false)
+          .fetchAndSetRecordings();
+    } catch (e) {
+      debugPrint('Notatka: odświeżenie nagrań - $e');
+    }
+    return true;
+  }
+
+  //Komunikat po zapisie. Trzy rzeczy, o których użytkownik musi wiedzieć:
+  //co zapisano, czy dyktowanie ucięło się na limicie i czy tekst w ogóle
+  //powstał (gdy nie - jedyną treścią wpisu jest nagranie).
+  //[co] jest w bierniku („notatkę"), [gdzie] w miejscowniku („przy notatce") -
+  //komunikat idzie na ekran i ma się dać przeczytać.
+  String _komunikatPoZapisie(
+    PowodKoncaDyktowania powod, {
+    required bool ratujemyNagranie,
+    required bool zapisaneNagranie,
+    required String co,
+    required String gdzie,
+  }) {
+    if (ratujemyNagranie) {
+      return 'Nie rozpoznałam słów, ale nagranie zapisałam - odsłuchaj je '
+          '$gdzie.';
+    }
+    final String limit = powod == PowodKoncaDyktowania.limitCzasu
+        ? ' (osiągnięty limit długości)'
+        : '';
+    final String dzwiek = zapisaneNagranie ? ' razem z nagraniem' : '';
+    return 'Zapisałam $co$dzwiek$limit.';
   }
 
   //NOTATKA DO NOTESU - drugie ujście dyktowania ("hej maja notatka do notesu").
@@ -874,12 +1032,20 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //dlatego NIE wołamy NotificationHelper.scheduleAllNotifications(): planowanie
   //powiadomień dotyczy wyłącznie notatek z datą zadania.
   Future<void> _zapiszDoNotesu(
-      String tresc, PowodKoncaDyktowania powod) async {
+    String tresc,
+    PowodKoncaDyktowania powod, {
+    Uint8List? nagranie,
+    String rozpoznane = '',
+    String czas = '',
+  }) async {
     //ZAPIS POD KONTROLĄ - tak samo jak przy notatce przeglądu: metoda leci
     //z callbacka silnika, więc wyjątek z bazy nie miałby gdzie wypłynąć, a
     //użytkownik uznałby ciszę za udany zapis.
+    final int idNotatki;
     try {
-      await Notes.insertNotatki(
+      //id z bazy (AUTOINCREMENT), bo do niego przypinamy nagranie - inaczej nie
+      //dałoby się odróżnić dwóch notatek podyktowanych tego samego dnia.
+      idNotatki = await Notes.insertNotatki(
         formattedDate, //data
         _tytulZTresci(tresc), //tytul
         nrXXOfApiary, //pasiekaNr - 0, gdy nie wybrano
@@ -902,11 +1068,22 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       await _zagraj('error');
       return;
     }
+    final bool zapisaneNagranie = await _zapiszNagranie(
+      nagranie,
+      zrodlo: RecordingHelper.zrodloNotes,
+      powiazanieId: '$idNotatki',
+      czas: czas,
+      tekst: rozpoznane,
+    );
     if (!mounted) return;
-    _powiedzONotatce(powod == PowodKoncaDyktowania.limitCzasu
-        ? 'Zapisałam notatkę w notesie (osiągnięty limit długości).'
-        : 'Zapisałam notatkę w notesie.');
-    await _zagraj('success');
+    _powiedzONotatce(_komunikatPoZapisie(
+      powod,
+      ratujemyNagranie: rozpoznane.isEmpty,
+      zapisaneNagranie: zapisaneNagranie,
+      co: 'notatkę w notesie',
+      gdzie: 'w Notesie',
+    ));
+    await _zagraj(rozpoznane.isEmpty ? 'nie_rozumiem' : 'success');
   }
 
   //Tytuł notatki z jej treści. Lista notatek pokazuje w belce datę i TYTUŁ, a
@@ -8368,11 +8545,22 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
 //dla mniejszych ekranów zmiana wysokośći wiersza  'Save' - zapis zasobu do bazy
 //sony Z3 592px, mały ios 568px
+//
+//UWAGA na pasmo 590-600 px (Sony Z3 = 592). Wariant "mały" wiersza Save wybiera
+//warunek `heightScreen < 590`, więc te ekrany dostają wariant DUŻY (fontSize 20),
+//tylko w niższym kontenerze. A tekst `zapis` zawija się na dwie linie - najdłuższe
+//komunikaty info to np. "rodzina jest w nastroju do ucieczki" (34 znaki), matka ze
+//znakiem i numerem, osyp pszczół, a po niemiecku/francusku prawie każdy dłuższy
+//zwrot. Przy 60 px druga linia wychodziła poza kontener (pasy przepełnienia).
+//Rachunek na dwie linie: padding 7 + 3, etykieta "Zapis:" ~20, dwie linie
+//pogrubionej dwudziestki 2 * ~23 => 77 px. Stąd 80, a nie 60. Strefa 1 przewija
+//się w środku (SingleChildScrollView), więc te 20 px nie psuje niczego wyżej,
+//a `_kStrefaDanych` liczy dla tego wiersza 110 px, czyli nadal z zapasem.
     heightScreen = MediaQuery.of(context).size.height;
     // print('wysokość ekranu');
     // print(heightScreen);
     if (heightScreen < 600 && heightScreen > 590) {
-      hightSave = 60;
+      hightSave = 80;
       marginRow = 7;
     }
     //dane z bazy
@@ -8420,6 +8608,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 print('openDialog = $openDialog');
     return MaterialApp(
       home: Scaffold(
+        //BIAŁE TŁO JAWNIE. Ten ekran opakowuje się we WŁASNY [MaterialApp] bez
+        //motywu, więc nie dziedziczy `scaffoldBackgroundColor` z main.dart i
+        //dostawał domyślny motyw Material 3: `surface` = jasny róż (#FEF7FF).
+        //Widać go było wszędzie tam, gdzie nie sięga biały kontener strefy -
+        //w poziomie na lewej kolumnie i pod obszarem komunikatów.
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
           title: Text(
@@ -8492,57 +8686,110 @@ print('openDialog = $openDialog');
             )
           ],
         ),
-        body: ((MediaQuery.of(context).orientation == Orientation.landscape || globals.voice2LiveLandscape) && globals.voice2LivePodglad)
-            //układ poziomy: lewa = dane/stan, prawa = live korpus
-            ? Row(
+        //TRZY STREFY - podział zależy od tego, czy live podgląd korpusu jest
+        //włączony, i od orientacji. Wysokości liczymy z [LayoutBuilder], bo
+        //strefa 2 musi znać miejsce, którym dysponuje: dopiero wtedy wie, czy
+        //korpus mieści się w skali 1:1, czy trzeba go zmniejszyć.
+        body: LayoutBuilder(
+          builder: (BuildContext ctx, BoxConstraints wymiary) {
+            //UKŁAD KLASYCZNY (bez live podglądu) - bez zmian: dane u góry,
+            //teksty z notatką do czterech linii, na dole błąd silnika.
+            if (!globals.voice2LivePodglad) {
+              return Column(
+                children: [
+                  buildAnswerArea(context),
+                  //buildStartButton(context),
+                  buildRhinoTextArea(context),
+                  buildErrorMessage(context),
+                ],
+              );
+            }
+
+            final double wysokosc = wymiary.maxHeight;
+            final bool poziom =
+                MediaQuery.of(context).orientation == Orientation.landscape ||
+                    globals.voice2LiveLandscape;
+
+            //UKŁAD POZIOMY: lewa kolumna to strefa 1, prawa to strefa 2 nad
+            //strefą 3. Teksty siedzą POD korpusem, a nie w lewym panelu - dane
+            //komendy i komunikaty silnika to dwie różne rzeczy i mieszanie ich
+            //w jednej kolumnie kazało szukać komunikatu wśród numerów ramek.
+            if (poziom) {
+              //w poziomie strefa 1 jest całą lewą kolumną - jej wysokość i tak
+              //wyznacza ekran, więc stała dotyczy tylko strefy korpusu
+              final double strefaKorpusu = math.min(
+                  _kStrefaKorpusu, wysokosc - _kMinStrefaTekstu);
+              return Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          buildAnswerArea(context, flex: false),
-                          buildRhinoTextArea(context, flex: false),
-                          buildErrorMessage(context, flex: false),
-                        ],
-                      ),
+                      child: buildAnswerArea(context, flex: false),
                     ),
                   ),
                   Expanded(
                     child: Column(
                       children: [
-                        buildLivePanel(context),
-                        //const SizedBox(height: 50),
+                        buildKorpusArea(context, maxWysokosc: strefaKorpusu),
+                        _kreska(),
+                        //STREFA 3. Do 03.08.2026 układ z live podglądem nie
+                        //budował ani [buildRhinoTextArea], ani
+                        //[buildErrorMessage] - miejsce zajmował korpus - więc
+                        //dyktowanie notatki było w nim CAŁKOWICIE nieme.
+                        //Teraz strefa ma własne, stałe miejsce i nic go jej nie
+                        //zabiera.
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: buildPasekStanu(context),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
-              )
-            //układ pionowy (dotychczasowy)
-            : Column(
-                children: [
-                  buildAnswerArea(context),
-                  //buildStartButton(context),
-                  if (globals.voice2LivePodglad) ...[
-                    const SizedBox(height: 35), //odstęp od sekcji informacyjnej, by tła się nie nakładały
-                    buildLivePanel(context),
-                    //PASEK STANU DLA UKŁADU Z LIVE PODGLĄDEM. Ten układ nie
-                    //buduje ani [buildRhinoTextArea], ani [buildErrorMessage] -
-                    //miejsce zajmuje korpus. Do 03.08.2026 znaczyło to, że
-                    //dyktowanie notatki było w nim CAŁKOWICIE nieme: żadnego
-                    //podglądu tekstu, żadnego „Notatka niedostępna: ...",
-                    //żadnego błędu silnika. Stąd zgłoszenie „Słucham i nic
-                    //więcej się nie dzieje" - komunikaty POWSTAWAŁY, tylko nie
-                    //miały gdzie się pokazać.
-                    buildPasekStanu(context),
-                  ]
-                  else ...[
-                    buildRhinoTextArea(context),
-                    buildErrorMessage(context),
-                  ],
-                ],
-              ),
+              );
+            }
+
+            //UKŁAD PIONOWY z live podglądem: strefy 1 i 2 mają STAŁE wysokości
+            //(_kStrefaDanych, _kStrefaKorpusu), a cała reszta ekranu należy do
+            //tekstów. Wcześniej strefy dzieliły się procentami wysokości i
+            //kurczyły do treści, więc bez otwartej pasieki wszystko podjeżdżało
+            //do góry, a po pierwszej komendzie układ się przestawiał.
+            //Na bardzo niskich ekranach obie stałe naraz mogą się nie zmieścić
+            //(304 + 254 + kreski + minimum tekstów) - wtedy skracamy je
+            //PROPORCJONALNIE, zostawiając strefie 3 jej minimum. Wysokość dalej
+            //jest stała dla danego urządzenia, więc nic nie skacze: strefa 1
+            //przewija się w środku, a korpus zmniejsza [FittedBox].
+            double strefaDanych = heightScreen < 590
+                ? _kStrefaDanychMala
+                : _kStrefaDanych;
+            double strefaKorpusu = _kStrefaKorpusu;
+            final double doPodzialu = wysokosc - 2 - _kMinStrefaTekstu; //2 kreski
+            if (strefaDanych + strefaKorpusu > doPodzialu && doPodzialu > 0) {
+              final double skala = doPodzialu / (strefaDanych + strefaKorpusu);
+              strefaDanych = strefaDanych * skala;
+              strefaKorpusu = strefaKorpusu * skala;
+            }
+            return Column(
+              children: [
+                SizedBox(
+                  height: strefaDanych,
+                  child: SingleChildScrollView(
+                    child: buildAnswerArea(context, flex: false),
+                  ),
+                ),
+                _kreska(),
+                buildKorpusArea(context, maxWysokosc: strefaKorpusu),
+                _kreska(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: buildPasekStanu(context),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
    
@@ -8551,11 +8798,19 @@ print('openDialog = $openDialog');
   
   
   buildAnswerArea(BuildContext context, {bool flex = true}) {
-
+    //ODSTĘP NAD OBWÓDKĄ WIERSZA PASIEKI to górna część `padding` tego kontenera
+    //(15 px; wewnątrz obwódki jest jeszcze własny padding wiersza). W poziomie
+    //zdejmujemy go do zera: strefa 1 jest tam wąską lewą kolumną i każdy piksel
+    //wysokości jest potrzebny na wiersze, a odstęp od paska tytułu daje już sam
+    //AppBar. W pionie zostaje 15 px - tam miejsca nie brakuje, a wiersz pasieki
+    //wklejony w pasek tytułu wyglądałby na jego przedłużenie.
+    final bool poziom =
+        MediaQuery.of(context).orientation == Orientation.landscape ||
+            globals.voice2LiveLandscape;
     final content = Container(
           color: Color.fromARGB(255, 255, 255, 255),
           alignment: Alignment.center,
-          padding: EdgeInsets.all(15),
+          padding: EdgeInsets.fromLTRB(15, poziom ? 0 : 15, 15, 15),
           child: Column(
             children: [
             
@@ -8569,7 +8824,7 @@ print('openDialog = $openDialog');
                             child: Container(
                               height: 40,
                               padding: const EdgeInsets.only(
-                                  top: 5, left: 20, right: 20),
+                                  top: 1, left: 20, right: 20),
                               alignment: Alignment.topCenter,
                               decoration: BoxDecoration(
                                 border: Border.all(
@@ -9340,9 +9595,19 @@ print('openDialog = $openDialog');
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Expanded(
+                            //TE SAME 75 px i fontSize 18 co pudełko info nizej.
+                            //Wcześniej było 60 px przy fontSize 20, czyli miejsce
+                            //na JEDNĄ linię - a najdłuższe teksty zasobu też się
+                            //zawijają: "Do zrobienia = trzeba wirować" (29 znaków),
+                            //"Zrobiono = przesuń w prawo", a po francusku
+                            //"cellules royales supprimées = 12" (32). Na małym iOS
+                            //(568 x 320) druga linia wychodziła poza kontener.
+                            //`_kStrefaDanychMala` i tak liczy dla tego wiersza 75 px
+                            //(zasób i info wykluczają się wzajemnie), więc budżet
+                            //strefy się nie zmienia.
                             child: Container(
                               //width: 100,
-                              height: 60,
+                              height: 75,
                               margin: EdgeInsets.only(top: marginRow),
                               padding:
                                   EdgeInsets.only(top: 7, left: 20, right: 20),
@@ -9358,7 +9623,7 @@ print('openDialog = $openDialog');
                                       ? Text(
                                           zapis,
                                           style: TextStyle(
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             color: Color.fromARGB(255, 0, 0, 0),
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -9366,7 +9631,7 @@ print('openDialog = $openDialog');
                                       : Text(
                                           AppLocalizations.of(context)!.noSave,
                                           style: const TextStyle(
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             color:
                                                 Color.fromARGB(255, 255, 0, 0),
                                             fontWeight: FontWeight.bold,
@@ -9766,8 +10031,85 @@ print('openDialog = $openDialog');
     }
   }
 
-  //panel live podglądu korpusu - zamiast podpowiedzi poleceń
-  Widget buildLivePanel(BuildContext context) {
+  //Cienka linia rozdzielająca strefy - żeby było widać, że to trzy osobne
+  //obszary, a nie jeden ciąg tekstu z rysunkiem w środku.
+  Widget _kreska() => Container(
+        height: 1,
+        color: const Color.fromARGB(255, 225, 225, 225),
+      );
+
+  //Nagłówek strefy 2: słowo "po" i data przeglądu - dokładnie jak w okienku
+  //pomocy [_dialogBuilderHive]. Bez tego wiersza widok korpusu kłamie: przy ulu,
+  //w którym dziś jeszcze nie było przeglądu, pokazuje ostatni istniejący (patrz
+  //[_refreshLiveView]), a użytkownik ma prawo sądzić, że patrzy na dzisiejszy.
+  //Dzisiejszy przegląd jest oznaczony kropką i zielenią - to jedyne odróżnienie
+  //"pracuję na żywo" od "oglądam historię".
+  Widget _naglowekKorpusu(BuildContext context) {
+    final bool dzis = wybranaData == formattedDate;
+    final Color kolor = dzis
+        ? const Color.fromARGB(255, 0, 130, 0)
+        : const Color.fromARGB(255, 60, 60, 60);
+    return SizedBox(
+      height: _kNaglowekKorpusu,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (dzis) ...[
+            Icon(Icons.fiber_manual_record, size: 9, color: kolor),
+            const SizedBox(width: 5),
+          ],
+          Text(
+            AppLocalizations.of(context)!.after,
+            style: TextStyle(fontSize: 14, color: kolor),
+          ),
+          Text(
+            '  $wybranaData',
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold, color: kolor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //Strefa 2 bez danych do narysowania. Zajmuje CAŁE swoje miejsce, a nie tyle,
+  //ile potrzebuje napis - inaczej ekran przeskakiwałby przy pierwszej komendzie,
+  //bo strefa nagle rosłaby do rozmiaru korpusu.
+  Widget _pustaStrefaKorpusu(BuildContext context, double maxWysokosc) =>
+      SizedBox(
+        height: maxWysokosc,
+        child: Center(
+          child: Text(AppLocalizations.of(context)!.hive,
+              style: const TextStyle(color: Colors.grey, fontSize: 14)),
+        ),
+      );
+
+  //STREFA 2 - live podgląd jednego korpusu (widok "po") z datą przeglądu nad
+  //rysunkiem. Miejsce dostaje z góry, STAŁE (_kStrefaKorpusu), policzone z
+  //najwyższego możliwego korpusu:
+  //
+  //   nagłówek "po <data>"          _kNaglowekKorpusu
+  //   numery ramek nad obrysem      _kNumeryRamek
+  //   korpus  = typ * 75 + 30       105 px (półkorpus) / 180 px (korpus)
+  //   numery ramek pod obrysem      _kNumeryRamek
+  //   zapas estetyczny              2 * _kZapasKorpusu
+  //
+  //Rysunek niższy od tego (półkorpus) zostaje wyśrodkowany w strefie - strefa
+  //się pod niego NIE kurczy, bo wtedy teksty spod spodu podskakiwałyby przy
+  //każdej zmianie korpusu.
+  //
+  //Pas na numery ramek MUSI być zarezerwowany, bo painter maluje je poza swoim
+  //`size` (y = -16 i high+3) - bez tego wchodzą na sąsiednie strefy. Gdy tyle
+  //miejsca nie ma (pełny korpus na niskim ekranie w poziomie albo ul 20-ramkowy
+  //szerszy niż panel), [FittedBox] zmniejsza rysunek tak, żeby zmieścił się w
+  //całości. Przewijania tu nie ma świadomie: przy ulu, w rękawicach, nie ma jak
+  //przewijać, a niepełny korpus na ekranie jest gorszy niż korpus mniejszy.
+  Widget buildKorpusArea(BuildContext context, {required double maxWysokosc}) {
+    //Skrajnie niski ekran (okno wielozadaniowe iPada, klawiatura systemowa):
+    //strefa 2 wtedy w ogóle się nie pokazuje. Lepiej oddać całe miejsce
+    //komunikatom, niż wcisnąć nieczytelny skrawek korpusu.
+    if (maxWysokosc < _kNaglowekKorpusu + 40) return const SizedBox.shrink();
+
     final framesData = Provider.of<Frames>(context, listen: false);
     //widok "po" - pomijamy ramki usunięte (ramkaNrPo == 0), zgodnie z _dialogBuilderHive
     final frames = framesData.items.where((fr) {
@@ -9777,13 +10119,7 @@ print('openDialog = $openDialog');
         .items.where((inf) => inf.data == wybranaData).toList();
 
     if (_korpusy.isEmpty || frames.isEmpty || widthCanvas == 0) {
-      return Expanded(
-        flex: 4,
-        child: Center(
-          child: Text(AppLocalizations.of(context)!.hive,
-              style: TextStyle(color: Colors.grey, fontSize: 14)),
-        ),
-      );
+      return _pustaStrefaKorpusu(context, maxWysokosc);
     }
 
     //tylko aktualnie modyfikowany korpus - przy orientacji poziomej dwa się nie mieszczą
@@ -9801,40 +10137,62 @@ print('openDialog = $openDialog');
         frames.where((f) => f.korpusNr == activeKorpusNr).toList();
 
     if (activeKorpus.isEmpty || activeFrames.isEmpty) {
-      return Expanded(
-        flex: 4,
-        child: Center(
-          child: Text(AppLocalizations.of(context)!.hive,
-              style: TextStyle(color: Colors.grey, fontSize: 14)),
-        ),
-      );
+      return _pustaStrefaKorpusu(context, maxWysokosc);
     }
 
-    final activeHigh = activeKorpus[0].typ * 75 + 30; //wysokość pojedynczego korpusu
+    final double activeHigh =
+        (activeKorpus[0].typ * 75 + 30).toDouble(); //wysokość jednego korpusu
+    final double wysokoscRysunku = activeHigh + 2 * _kNumeryRamek;
+    //strefa bierze CAŁE przydzielone miejsce, także dla półkorpusu - miejsce
+    //jest policzone dla najwyższego korpusu i ma być stałe. Niższy rysunek
+    //zostaje wyśrodkowany, zamiast podciągać do góry teksty spod spodu.
 
-    return Expanded(
-      flex: 4,
-      child: SingleChildScrollView(
-        child: Container(
-          margin: EdgeInsets.all(10),
-          padding: EdgeInsets.only(top: 10), //odstęp na numery ramek rysowane nad obrysem korpusu
-          child: Container(
-            color: Color.fromARGB(173, 173, 173, 173),
-            child: RepaintBoundary(
-              child: CustomPaint(
-                painter: MyHive(
-                  ulPo: true,
-                  ramki: activeFrames,
-                  korpusy: activeKorpus,
-                  width: widthCanvas,
-                  high: activeHigh.toDouble(),
-                  informacje: infos,
+    return SizedBox(
+      height: maxWysokosc,
+      child: Column(
+        children: [
+          _naglowekKorpusu(context),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: _kZapasKorpusu),
+              child: ClipRect(
+                child: FittedBox(
+                  //scaleDown, nie contain: przy typowym ulu (12 ramek,
+                  //półkorpus) rysunek zostaje w skali 1:1 i nic się nie
+                  //powiększa ponad naturalny rozmiar.
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: widthCanvas,
+                    height: wysokoscRysunku,
+                    child: Padding(
+                      //miejsce na numery ramek malowane nad i pod obrysem
+                      padding: const EdgeInsets.symmetric(
+                          vertical: _kNumeryRamek),
+                      child: Container(
+                        color: const Color.fromARGB(173, 173, 173, 173),
+                        child: RepaintBoundary(
+                          child: CustomPaint(
+                            painter: MyHive(
+                              ulPo: true,
+                              ramki: activeFrames,
+                              korpusy: activeKorpus,
+                              width: widthCanvas,
+                              high: activeHigh,
+                              informacje: infos,
+                            ),
+                            size: Size(widthCanvas, activeHigh),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                size: Size(widthCanvas, activeHigh.toDouble()),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -9848,7 +10206,8 @@ print('openDialog = $openDialog');
     final String podglad = _tekstNotatki.length > 90
         ? '…${_tekstNotatki.substring(_tekstNotatki.length - 90)}'
         : _tekstNotatki;
-    final bool cokolwiek = _dyktuje ||
+    final bool cokolwiek = rhinoText.isNotEmpty ||
+        _dyktuje ||
         isError ||
         _stanNasluchu.isNotEmpty ||
         _komunikatNotatki.isNotEmpty ||
@@ -9863,6 +10222,21 @@ print('openDialog = $openDialog');
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          //ECHO KOMENDY - to samo, co w układzie klasycznym pokazuje
+          //[buildRhinoTextArea]. Układ z live podglądem go do 04.08.2026 nie
+          //budował, więc jedyne potwierdzenie „przyjęłam to i to" nie miało
+          //gdzie się pokazać; zostawał sam rysunek, po którym trzeba było
+          //zgadywać, czy komenda w ogóle weszła.
+          if (rhinoText.isNotEmpty)
+            Text(
+              rhinoText,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: Color.fromARGB(255, 0, 0, 0),
+                  fontSize: heightScreen < 600 ? 14 : 15),
+            ),
           if (_dyktuje)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

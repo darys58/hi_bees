@@ -49,6 +49,7 @@ class DBHelper {
           'CREATE TABLE zdjecia(id TEXT PRIMARY KEY, data TEXT, czas TEXT, pasiekaNr INTEGER, ulNr INTEGER, sciezka TEXT, uwagi TEXT, arch INTEGER)');
       await db.execute(
           'CREATE TABLE powiadomienia(id INTEGER PRIMARY KEY AUTOINCREMENT, infoId TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, dni INTEGER, godzina INTEGER, minuta INTEGER, dataInfo TEXT, dataNotif TEXT, aktywne INTEGER)');
+      await db.execute(_createNagrania);
 
       //    'CREATE TABLE podkategorie(id TEXT PRIMARY KEY, kolejnosc TEXT, kaId TEXT, nazwa TEXT)');
     }, onUpgrade: (db, oldVersion, newVersion) async {
@@ -66,11 +67,28 @@ class DBHelper {
           await db.execute(
               'CREATE TABLE IF NOT EXISTS powiadomienia(id INTEGER PRIMARY KEY AUTOINCREMENT, infoId TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, dni INTEGER, godzina INTEGER, minuta INTEGER, dataInfo TEXT, dataNotif TEXT, aktywne INTEGER)');
         }
+        if (oldVersion < 5) {
+          //nagrania dyktowanych notatek - patrz RecordingHelper
+          await db.execute(_createNagrania);
+        }
       } catch (e) {
         debugPrint('Błąd migracji bazy danych (v$oldVersion -> v$newVersion): $e');
       }
-    }, version: 4);
+    }, version: 5);
   }
+
+  //Nagrania dyktowanych notatek. Zbudowane jak "zdjecia" (ten sam zestaw pól
+  //kontekstowych), z trzema różnicami:
+  // - "sciezka" to SAMA NAZWA pliku, nie ścieżka bezwzględna: katalog Documents
+  //   na iOS zmienia identyfikator kontenera przy aktualizacji aplikacji,
+  // - "zrodlo" + "powiazanieId" mówią, do czego nagranie jest przypięte:
+  //   'inspection' -> id rekordu z tabeli info, 'notes' -> id z tabeli notatki,
+  // - "arch" zostaje 0 na zawsze - nagrania NIE idą do chmury (decyzja z
+  //   04.08.2026, przy 32 kB/s transfer byłby nieproporcjonalny do korzyści).
+  static const String _createNagrania =
+      'CREATE TABLE IF NOT EXISTS nagrania(id TEXT PRIMARY KEY, data TEXT, czas TEXT, '
+      'pasiekaNr INTEGER, ulNr INTEGER, zrodlo TEXT, powiazanieId TEXT, sciezka TEXT, '
+      'sekundy INTEGER, bajty INTEGER, tekst TEXT, uwagi TEXT, arch INTEGER)';
 
   static Future<void> deleteBase() async {
     final dbPath = await sql.getDatabasesPath();
@@ -91,6 +109,18 @@ class DBHelper {
 
   //batch insert z konfliktem REPLACE, commit w chunkach - używane przy imporcie
   //chunkSize 500 = jeden commit = jeden fsync na 500 rekordów zamiast 1:1
+  //zapis zwracający id wstawionego rekordu (rowid). Potrzebny tam, gdzie klucz
+  //jest AUTOINCREMENT i dopiero po zapisie wiadomo, do czego przypiąć załącznik
+  //- np. nagranie dyktowanej notatki w Notesie (patrz RecordingHelper).
+  static Future<int> insertZwrocId(String table, Map<String, Object> data) async {
+    final db = await DBHelper.database();
+    return db.insert(
+      table,
+      data,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   static Future<int> batchInsert(
     String table,
     List<Map<String, Object?>> rows, {
@@ -909,6 +939,53 @@ class DBHelper {
   static Future<void> deletePhoto(String id) async {
     final db = await DBHelper.database();
     db.delete('zdjecia', where: 'id= ?', whereArgs: [id]);
+  }
+
+  //=== NAGRANIA dyktowanych notatek (patrz RecordingHelper) ==================
+
+  //wszystkie nagrania - dla providera Recordings i dla sprzątania
+  static Future<List<Map<String, dynamic>>> getNagrania() async {
+    final db = await DBHelper.database();
+    return db.query('nagrania', orderBy: 'data DESC, czas DESC');
+  }
+
+  //nagrania przypięte do jednej notatki albo jednego przeglądu
+  static Future<List<Map<String, dynamic>>> getNagraniaDla(
+      String zrodlo, String powiazanieId) async {
+    final db = await DBHelper.database();
+    return db.query('nagrania',
+        where: 'zrodlo=? and powiazanieId=?',
+        whereArgs: [zrodlo, powiazanieId],
+        orderBy: 'czas');
+  }
+
+  //Przepięcie nagrań na inne id wpisu. Potrzebne przy EDYCJI przeglądu:
+  //infos_edit_screen kasuje stary rekord i zapisuje nowy pod id złożonym z daty,
+  //pasieki, ula i parametru - po zmianie którejkolwiek z tych rzeczy nagranie
+  //zostałoby sierotą (patrz RecordingHelper.sprzataj).
+  static Future<void> przepnijNagrania(
+      String zrodlo, String stareId, String noweId) async {
+    final db = await DBHelper.database();
+    await db.update(
+      'nagrania',
+      {'powiazanieId': noweId},
+      where: 'zrodlo=? and powiazanieId=?',
+      whereArgs: [zrodlo, stareId],
+    );
+  }
+
+  static Future<void> deleteNagranie(String id) async {
+    final db = await DBHelper.database();
+    await db.delete('nagrania', where: 'id= ?', whereArgs: [id]);
+  }
+
+  //Same identyfikatory tabeli - do wykrywania nagrań-sierot (RecordingHelper.
+  //sprzataj). Bierzemy jedną kolumnę zamiast całych rekordów, bo przy kilku
+  //tysiącach przeglądów to różnica między kilkoma kB a kilkoma MB w pamięci.
+  static Future<Set<String>> getIdyTabeli(String tabela) async {
+    final db = await DBHelper.database();
+    final List<Map<String, dynamic>> w = await db.query(tabela, columns: ['id']);
+    return w.map((e) => '${e['id']}').toSet();
   }
 
   //pobieranie ostatniej daty info per ul dla danej kategorii - dla powiadomień
