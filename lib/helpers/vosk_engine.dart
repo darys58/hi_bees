@@ -1341,7 +1341,27 @@ class VoskEngine {
   void _stan(String opis) => onStan?.call(opis, _tryb);
 
   void _blad(String opis) {
-    _stan(opis);
-    onBlad?.call(opis);
+    //PEŁNA treść tylko do konsoli. Na ekran idzie skrót, bo w [opis] siedzi
+    //`$e` z wyjątku, a natywne błędy iOS potrafią mieć kilka kilobajtów (dump
+    //z dlopen, lista przeszukanych ścieżek - zgłoszenie z 05.08.2026). Taki
+    //tekst rozsadzał strefę komunikatów ekranu głosowego (RenderFlex overflow
+    //612 px) i tak czy owak nikt go tam nie przeczyta.
+    debugPrint('VOSK błąd: $opis');
+    final String naEkran = _skrocDoEkranu(opis);
+    _stan(naEkran);
+    onBlad?.call(naEkran);
+  }
+
+  //pierwsza linia (nazwa problemu po polsku) + początek treści technicznej
+  static String _skrocDoEkranu(String opis) {
+    final List<String> linie = opis.split('\n');
+    final String naglowek = linie.first.trim();
+    final String reszta = linie.skip(1).join(' ').trim();
+    if (reszta.isEmpty) return naglowek;
+    const int limit = 120;
+    final String szczegol = reszta.length > limit
+        ? '${reszta.substring(0, limit)}…'
+        : reszta;
+    return '$naglowek\n$szczegol';
   }
 }

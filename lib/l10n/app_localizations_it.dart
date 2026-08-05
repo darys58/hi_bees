@@ -2682,4 +2682,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sUpport => 'Opportunità di supporto:';
+
+  @override
+  String get undoDone => 'Annullato';
+
+  @override
+  String get undoNothing => 'Niente da annullare';
+
+  @override
+  String get undoFailed => 'Annullamento non riuscito';
 }

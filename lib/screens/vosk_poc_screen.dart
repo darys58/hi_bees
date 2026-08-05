@@ -120,7 +120,7 @@ final List<String> _commandWords = [
   'czerwony', 'czterysta', 'czysta', 'data', 'datę', 'dawka', 'do', 'dobra',
   'dojrzały', 'dokarmianie', 'duża', 'dużych', 'dużą', 'dwieście', 'dwóch',
   'dziewicza', 'dziewięćset', 'dzień', 'gram', 'grama', 'gramy', 'i',
-  'ilość', 'inny', 'izolacja', 'izolować', 'jaja', 'jajka', 'jeden',
+  'ilość', 'inna', 'inny', 'izolacja', 'izolować', 'jaja', 'jajka', 'jeden',
   'jednego', 'jest', 'kilo', 'kilogram', 'kilograma', 'kilogramy',
   'kilogramów', 'klatce', 'korpus', 'korpusie', 'korpusu', 'krata', 'kratę',
   'kropka', 'kryty', 'królowa', 'królowej', 'kwas', 'kłąb', 'larwy',
@@ -219,7 +219,7 @@ final Set<String> _anchorWords = {
   // $siteOfFrame (wyrażenie „(ustaw) (z) $siteOfFrame [stron,...]")
   'z', 'obu', 'obie', 'prawa', 'prawą', 'prawej', 'lewa', 'lewą', 'lewej',
   // $queen (kolory matki otwierają wyrażenie o matce na ramce)
-  'biała', 'niebieska', 'zielona', 'czerwona', 'żółta', 'czarna',
+  'biała', 'niebieska', 'zielona', 'czerwona', 'żółta', 'czarna', 'inna',
   // setFeeding / setTreatment
   'zostało', 'syrop', 'ciasto', 'kwas', 'roztocza', 'chemia',
   // setEquipment

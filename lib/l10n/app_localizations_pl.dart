@@ -2676,4 +2676,13 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get sUpport => 'Możliwość wsparcia:';
+
+  @override
+  String get undoDone => 'Cofnięte';
+
+  @override
+  String get undoNothing => 'Nie ma czego cofnąć';
+
+  @override
+  String get undoFailed => 'Nie udało się cofnąć';
 }

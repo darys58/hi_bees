@@ -949,6 +949,12 @@
     "legendBodyNumber": "numéro de hausse",
     "@legendBodyNumber": {},
     "sUpport": "Possibilités de soutien:",
-    "@sUpport": {}
+    "@sUpport": {},
+    "undoDone": "Annulé",
+    "@undoDone": {},
+    "undoNothing": "Rien à annuler",
+    "@undoNothing": {},
+    "undoFailed": "Échec de l'annulation",
+    "@undoFailed": {}
 
 }

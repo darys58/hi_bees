@@ -2689,4 +2689,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sUpport => 'Possibilités de soutien:';
+
+  @override
+  String get undoDone => 'Annulé';
+
+  @override
+  String get undoNothing => 'Rien à annuler';
+
+  @override
+  String get undoFailed => 'Échec de l\'annulation';
 }

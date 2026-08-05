@@ -2680,4 +2680,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sUpport => 'Oportunidades de apoio:';
+
+  @override
+  String get undoDone => 'Desfeito';
+
+  @override
+  String get undoNothing => 'Nada para desfazer';
+
+  @override
+  String get undoFailed => 'Não foi possível desfazer';
 }

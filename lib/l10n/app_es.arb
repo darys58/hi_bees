@@ -949,6 +949,12 @@
     "legendBodyNumber": "número de alza",
     "@legendBodyNumber": {},
     "sUpport": "Oportunidades de apoyo:",
-    "@sUpport": {}
+    "@sUpport": {},
+    "undoDone": "Deshecho",
+    "@undoDone": {},
+    "undoNothing": "Nada que deshacer",
+    "@undoNothing": {},
+    "undoFailed": "No se pudo deshacer",
+    "@undoFailed": {}
 
 }

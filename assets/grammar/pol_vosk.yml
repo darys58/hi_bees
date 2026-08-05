@@ -67,6 +67,27 @@ context:
       - hej maja notatka do przeglądu
     voiceNotepad:
       - hej maja notatka do notesu
+    # --- cofanie ostatniego zapisu ------------------------------------------
+    # Przywraca stan bazy sprzed ostatniej ZAPISUJĄCEJ komendy (patrz
+    # lib/helpers/undo_helper.dart). Intent przechwytuje voice_vosk_screen.dart
+    # przed switchem pasiecznym, PO bramce pewności - cofanie zmienia bazę, więc
+    # niepewne rozpoznanie ma je odrzucić, tak samo jak dyktowanie notatki.
+    #
+    # WYMAGANY PREFIKS "hej maja" I PEŁNA FRAZA. Po "hej maja start" recognizer
+    # słucha ciągle, a przy ulu toczy się rozmowa - komenda, która ZMIENIA BAZĘ,
+    # nie może dać się wywołać przypadkiem. Były tu warianty krótsze ("cofnij
+    # ostatni zapis", "cofnij zapis", "hej maja cofnij zapis"); usunięte
+    # świadomie, bo "cofnij" i "zapis" to słowa, które padają w zwykłej rozmowie.
+    # Zawołanie jest tym samym zabezpieczeniem co przy otwieraniu i zamykaniu
+    # sesji, a cofanie jest na tyle rzadkie, że dłuższa wypowiedź nic nie
+    # kosztuje. Zostają dwie formy, różniące się tylko ostatnim słowem - "zapis"
+    # i "wpis" mówi się wymiennie, a przy wymaganym zawołaniu ta druga forma nic
+    # nie osłabia.
+    # Cena: jedno przekręcone słowo = brak dopasowania i trzeba powtórzyć.
+    # Wszystkie słowa sprawdzone w słowniku modelu (pliki/vosk_slownik_pl.txt).
+    voiceUndo:
+      - hej maja cofnij ostatni zapis
+      - hej maja cofnij ostatni wpis
     setApiary:
       - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:
@@ -157,7 +178,7 @@ context:
       - zbiór pyłku ($hundred:beePollenHarvestHML)
         ($pv.TwoDigitInteger:beePollenHarvestML) (mililitrów)
       - zbiór pyłku $pv.SingleDigitInteger:beePollenHarvestI (przecinek,kropka)
-        ($pv.TwoDigitInteger:beePlllenHarvestD) [litr,litra,litry,litrów]
+        ($pv.TwoDigitInteger:beePollenHarvestD) [litr,litra,litry,litrów]
       - zbiór pyłku $pv.TwoDigitInteger:beePollenHarvest (raz,razy)[miarka,porcja]
       - "[zbiór miodu,miodu branie] $pv.TwoDigitInteger:honeySmallHarvest
         (raz,razy)[mała ramka,małych ramek]"
@@ -219,6 +240,7 @@ context:
       - czerwona
       - żółta
       - czarna
+      - inna
     quality:
       - ok
       - okej
@@ -239,6 +261,7 @@ context:
       - ma czerwony znak
       - ma żółty znak
       - ma biały znak
+      - ma inny znak
       - brak
       - nie ma
       - nie ma znaku
@@ -441,3 +464,33 @@ context:
 #   ZADANIE DLA PARSERA: dopasowując slot, traktuj jednoliterowe przyimki (z, w) jako
 #   OPCJONALNE w tekście z Vosk, ale zwracaj ZAWSZE kanoniczną wartość z tego pliku.
 #   Czyli tekst "przesuń prawo" musi dać slot isDone = "przesuń w prawo".
+#
+# AUDYT 04.08.2026 — WARTOŚCI SLOTÓW KONTRA app_pl.arb
+#   Porównanie tego pliku z gramatyką Rhino (pliki/gramatyka_rhino/pol1.yml) pokazało
+#   9 slotów, w których wartości dostały ładniejszą/poprawniejszą formę. Problem: te
+#   same pola zapisuje też ręczna edycja (infos_edit_screen) wartościami z ARB, a na
+#   nich stoją ikony ula, raporty i historia matki - porównywane ZNAK W ZNAK. Rozjazd
+#   nie wywala błędu, tylko cicho gubi działanie komendy (albo zapisuje stan odwrotny).
+#   Realnie urwane były: isDone (usuń/wstaw ramkę), sizeOfFrame (małą/dużą),
+#   queenState (dziewicza), queenMark (nie ma znaku), queenQuality (do wymiany),
+#   colonyForce (normalna), colonyState (agresywna, zawiązała kłąb).
+#
+#   NAPRAWIONE PRZELICZENIEM w voice_vosk_screen.dart, metoda _ujednolicWartosciSlotow()
+#   - nie tutaj, bo formy z tego pliku są tym, co człowiek naprawdę mówi przy ulu, i są
+#   w słowniku modelu (pliki/vosk_slownik_pl.txt). Wyjątek merytoryczny: "w kłębie"
+#   NIE MOŻE wrócić do gramatyki, bo słowa "kłębie" w słowniku modelu nie ma - stąd
+#   "zawiązała kłąb" i przeliczenie na kanoniczne "w kłębie".
+#
+#   DOPISUJĄC WARTOŚĆ DO DOWOLNEGO SLOTU sprawdź, czy taki string jest w app_pl.arb.
+#   Jeśli nie ma - dopisz przeliczenie w _ujednolicWartosciSlotow().
+#
+# DOPISANE 04.08.2026 — matka "inna":
+#   queen: "inna" ("inna matka z lewej strony") - kod od dawna miał case 'inna'
+#     => queen = '7', brakowało tylko wartości w gramatyce. Przy okazji dołożony
+#     case '7' do paintera podglądu w voice_vosk_screen (rysował domyślną CZARNĄ
+#     kropkę, nie do odróżnienia od matki czarnej); frames_screen miał go już.
+#   queenMark: "ma inny znak" - zgodne znak w znak z app_pl.arb (markedOther),
+#     obsługiwane w voice_vosk_screen (~6172), hives_screen i queen_helpers.
+#   Oba słowa sprawdzone w pliki/vosk_slownik_pl.txt ("inna", "inny" - są).
+#   Listy słów w vosk_poc_screen.dart zsynchronizowane ("inna" do _commandWords
+#   i do _anchorWords - kolor matki może otwierać komendę).

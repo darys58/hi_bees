@@ -70,6 +70,7 @@ import '../models/infos.dart';
 import '../models/note.dart'; //Notes - notatka dyktowana do Notesu
 import '../models/recording.dart'; //Recordings - nagrania dyktowanych notatek
 import '../helpers/recording_helper.dart'; //zapis WAV + cykl życia nagrań
+import '../helpers/undo_helper.dart'; //cofanie ("hej maja cofnij ostatni zapis")
 import '../models/weather.dart';
 import '../models/weathers.dart';
 //import '../models/dodatki1.dart';
@@ -152,10 +153,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //przy `flutter run --release` bywa poza zasięgiem. Ostatni krok zostaje na
   //ekranie, więc od razu widać, gdzie łańcuszek się zatrzymał.
   String _sladNotatki = '';
-  //wczytana gramatyka nie zna intencji voiceNote - czyli w pakiecie apki siedzi
-  //stary assets/grammar/pol_vosk.yml. Komunikat zostaje na ekranie do końca
-  //sesji, bo bez niego objaw wygląda jak zepsuta notatka, a nie jak stary plik.
-  bool _gramatykaBezNotatki = false;
+  //wczytana gramatyka nie zna którejś z nowych intencji (notatka, cofanie) -
+  //czyli w pakiecie apki siedzi stary assets/grammar/pol_vosk.yml. Komunikat
+  //zostaje na ekranie do końca sesji, bo bez niego objaw wygląda jak zepsuta
+  //funkcja, a nie jak stary plik.
+  bool _gramatykaNieaktualna = false;
   bool _silnikGotowy = false;
   Timer? _inferenceTimer; //timer zastępujący Future.delayed - anulowalny przy nowej komendzie
   //flaga odroczonego dźwięku 'okej' - gra się dopiero po pętli slotów, jezeli 'zapisałam' (success) nie wyparł go
@@ -178,6 +180,17 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   int ileUli = 0;
   String miejsce = '0';
   String zapis = '0'; //co i ile zostanie zapisane w bazie
+
+  //COFANIE OSTATNICH ZAPISÓW. Stos migawek żyje tylko tyle, co ten ekran -
+  //ratuje pomyłkę sprzed kilkunastu sekund przy otwartym ulu, nie zastępuje
+  //historii zmian. Szczegóły modelu w lib/helpers/undo_helper.dart.
+  final StosCofania _stosCofania = StosCofania();
+  //czy BIEŻĄCA komenda coś zapisała - ustawiane przez zapisDoBazy /
+  //zapisInfoDoBazy, czytane po switchu w _obsluzKomende
+  bool _zapisWTejKomendzie = false;
+  //cofanie w toku - obejmuje TAKŻE odświeżanie providerów po przywróceniu
+  //plastra, więc jest szersze niż blokada wewnątrz StosCofania
+  bool _cofanieWToku = false;
   bool openDialog = false; //czy otwarte jest jakieś okno pomocy
   double hightSave =
       100; //wysokość wiersza "Save" - zapis zasobu lub info do bazy
@@ -515,14 +528,15 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //wykonuje CUDZĄ komendę, zamiast powiedzieć, że notatki nie zna (zgłoszenie
     //z 03.08.2026). Sprawdzenie jest darmowe i od razu wskazuje winnego.
     if (!_gramatyka!.intencje.contains('voiceNote') ||
-        !_gramatyka!.intencje.contains('voiceNotepad')) {
-      debugPrint('VOSK: wczytana gramatyka NIE ZNA intencji notatki '
-          '(voiceNote/voiceNotepad) - w pakiecie jest stary '
+        !_gramatyka!.intencje.contains('voiceNotepad') ||
+        !_gramatyka!.intencje.contains('voiceUndo')) {
+      debugPrint('VOSK: wczytana gramatyka NIE ZNA intencji notatki albo '
+          'cofania (voiceNote/voiceNotepad/voiceUndo) - w pakiecie jest stary '
           'assets/grammar/pol_vosk.yml');
       //FLAGA, nie komunikat na pasku: pasek stanu zaraz i tak nadpisze silnik
       //('Przygotowuję rozpoznawanie mowy...'), a to jest informacja, która ma
       //zostać na ekranie do końca sesji.
-      if (mounted) setState(() => _gramatykaBezNotatki = true);
+      if (mounted) setState(() => _gramatykaNieaktualna = true);
     }
 
     _engine = VoskEngine(
@@ -611,6 +625,15 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     }
     if (f.inference.intent == 'voiceNotepad') {
       _zacznijNotatke(UjscieNotatki.notes);
+      return;
+    }
+
+    //5. cofanie ostatniego zapisu - tak jak dyktowanie, PO bramce pewności:
+    //komenda zmienia bazę, więc niepewne rozpoznanie ma ją odrzucić. Do switcha
+    //pasiecznego nie trafia, bo nie jest komendą pasieczną - nie ma ustawiać
+    //żadnego kontekstu ani czyścić slotów.
+    if (f.inference.intent == 'voiceUndo') {
+      _cofnijOstatniZapis();
       return;
     }
 
@@ -1287,6 +1310,39 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     });
   }
 
+  //Intencje, które COKOLWIEK zapisują do bazy - tylko dla nich zdejmujemy
+  //migawkę do cofania. Reszta (setHive, setBody, setApiary, setDate, setHelp)
+  //ustawia jedynie kontekst komendy i nie ma czego cofać.
+  static const Set<String> _intentyZapisujace = {
+    'setStore',     //zasoby na ramce
+    'setFrames',    //zasoby dla zakresu ramek
+    'setFrame',     //wstawienie ramki (zasob 14)
+    'setChange',    //zmiana numeru "po" ramki - przenumerowanie korpusu
+    'setMoveBody',  //przeniesienie ramki do innego korpusu LUB ULA
+    'setEquipment', //krata odgrodowa, podłoga, poławiacz, ilość ramek
+    'setQueen',     //matka
+    'setFeeding',   //dokarmianie
+    'setTreatment', //leczenie
+    'setColony',    //stan rodziny, osyp
+    'setHarvest',   //zbiory
+  };
+
+  //Intencje zmieniające kontekst - po nich stos cofania jest czyszczony, bo
+  //cofnięcie dotyczyłoby ula/korpusu/daty, których użytkownik już nie widzi.
+  static const Set<String> _intentyKontekstu = {
+    'setApiary',
+    'setHive',
+    'setBody',
+    'setHalfBody',
+    'setDate',
+    //"ustaw wszystkie ule" SAMO NIC NIE ZAPISUJE - przestawia tylko tryb
+    //(readyAllHives = true, nrXXOfHive = 0), więc nie ma go w intencjach
+    //zapisujących. Jest za to zmianą kontekstu dokładnie tak samo jak
+    //"ustaw ul 5": bez czyszczenia stosu zostawały na nim migawki jednego ula
+    //sprzed przełączenia i "cofnij" sięgało po nie zamiast po wpis zbiorczy.
+    'setAllHives',
+  };
+
   //KOMENDA PASIECZNA. VoskInference ma ten sam kształt co dawny RhinoInference
   //({isUnderstood, intent, slots}), więc prettyPrintInference i cały switch
   //pod nim zostały bez zmian - to jest sens całej migracji.
@@ -1296,9 +1352,46 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
     if (!mounted) return; //widget już nie istnieje - nie przetwarzaj
 
+    //MIGAWKA DO COFANIA - MUSI BYĆ PIERWSZA. Zapisy w switchu nie są awaitowane
+    //(lecą w łańcuchach .then() po fetchAndSetHives), więc jedyne, co gwarantuje
+    //nam stan SPRZED komendy, to zakolejkowanie transakcji odczytu zanim
+    //cokolwiek zapisze. Wywołanie jest celowo bez await: gdybyśmy tu czekali,
+    //trzeba by zrobić asynchroniczne całe prettyPrintInference i switch pod nim.
+    final Future<MigawkaZapisu?>? przyszlaMigawka = _przygotujMigawke(inference);
+
+    if (_intentyKontekstu.contains(inference.intent)) _stosCofania.wyczysc();
+
+    _zapisWTejKomendzie = false; //ustawiają go zapisDoBazy / zapisInfoDoBazy
     setState(() {
       rhinoText = prettyPrintInference(inference);
     });
+
+    //Dopiero TERAZ wiadomo, czy komenda cokolwiek zapisała i pod jakim opisem -
+    //`zapis` to ten sam tekst, który ekran pokazuje w wierszu "Zapis:".
+    //
+    //NIE UŻYWAMY tu readyStory/readyInfo: te flagi są LEPKIE, zostają w stanie
+    //ekranu po poprzedniej komendzie, więc komenda odrzucona przez własny
+    //warunek (np. zasób bez wybranego ula) odkładałaby na pięciopozycyjny stos
+    //pustą migawkę i wypychała z niego prawdziwą.
+    //
+    //setChange i setMoveBody piszą z pominięciem obu funkcji zapisu (kasują i
+    //wstawiają ramki wprost w switchu, przenumerowując korpus), więc dla nich
+    //migawkę odkładamy zawsze - to jedyne dwa takie miejsca.
+    final bool zapisano = _zapisWTejKomendzie ||
+        inference.intent == 'setChange' ||
+        inference.intent == 'setMoveBody';
+    //ŚLAD W KONSOLI XCODE - jedyne miejsce, w którym widać ZARAZEM wszystkie
+    //trzy warunki odłożenia kroku. Bez niego objaw "nie ma czego cofnąć" nie
+    //odróżnia braku migawki od braku sygnału zapisu i od wyczyszczonego stosu.
+    debugPrint('Cofanie: ${inference.intent} '
+        'migawka=${przyszlaMigawka != null} zapis=$zapisano '
+        'stos=${_stosCofania.ile}');
+    if (przyszlaMigawka != null && zapisano) {
+      //ODŁOŻENIE JEST SYNCHRONICZNE. Wcześniej krok dopisywał się dopiero po
+      //doczytaniu migawki (await w środku), więc o kolejności na stosie
+      //decydował wyścig z synchronicznym `wyczysc()` komendy kontekstowej.
+      _stosCofania.odloz(przyszlaMigawka, zapis);
+    }
 
     //live podgląd korpusu - odświeżenie gdy intencja zmienia zawartość korpusu
     //lub zmienia wybór pasieki/ula/korpusu
@@ -1334,8 +1427,235 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     });
   }
 
+  //Zdejmuje migawkę bazy sprzed komendy. Zwraca null dla komend, które niczego
+  //nie zapisują - wtedy nie ma po co czytać bazy.
+  //
+  //ZAKRES dobieramy z intencji ORAZ ze stanu ekranu, bo od niego zależy, ile
+  //trzeba przeczytać:
+  //  - setMoveBody może przenieść ramkę do innego ula, którego numeru NIE ZNAMY
+  //    przed wykonaniem komendy (siedzi w slocie) - stąd cała pasieka Z ramkami.
+  //    Komenda jest rzadka, więc szerszy odczyt jest tańszy niż cofanie, które
+  //    zgubiłoby ul docelowy,
+  //  - tryb "wszystkie ule" (readyAllHives) pisze info i belkę dla KAŻDEGO ula
+  //    pasieki, ale ramek nie rusza - stąd cała pasieka BEZ tabeli `ramka`.
+  //    Uwaga: to STAN, a nie intencja bieżącej komendy - patrz warunek niżej,
+  //  - reszta dotyczy wybranego ula.
+  Future<MigawkaZapisu?>? _przygotujMigawke(VoskInference inference) {
+    if (inference.isUnderstood != true) return null;
+    final String? intent = inference.intent;
+    if (intent == null || !_intentyZapisujace.contains(intent)) return null;
+    if (nrXXOfApiary == 0) return null; //bez pasieki nie ma czego zrzucać
+
+    //ta sama data, którą wyliczą zapisDoBazy / zapisInfoDoBazy
+    final String data =
+        ustawianaData != '' ? ustawianaData : formatter.format(now);
+
+    final ZakresPlastra zakres;
+    if (intent == 'setMoveBody') {
+      zakres = ZakresPlastra.pasieka(data, nrXXOfApiary);
+    } else if (readyAllHives) {
+      //"WSZYSTKIE ULE" TO TRYB, NIE INTENCJA - i tu był błąd.
+      //Zakres brany z samej intencji dawał ZakresPlastra.ul dla komendy, która
+      //pisze do CAŁEJ pasieki: "ustaw wszystkie ule" (setAllHives) tylko włącza
+      //tryb, a wpis robi dopiero następna komenda z inną intencją
+      //("ciasto 2 kilogramy" = setFeeding). W trybie wszystkich uli
+      //nrXXOfHive == 0, więc gałąź `else` niżej wychodziła przez `return null`
+      //i migawki NIE BYŁO WCALE - a "cofnij" zdejmowało ze stosu starszą
+      //migawkę jednego ula. Stąd objaw: cofa w jednym ulu, w pozostałych wpis
+      //zostaje.
+      //Bez ramek: włączenie trybu woła resetBody(), które zeruje readyFrame
+      //i readyFrames, a każda komenda ramkowa wymaga jednej z tych flag (albo
+      //readyHive, też zerowanego) - w tym trybie tabela `ramka` jest nietykana.
+      zakres = ZakresPlastra.pasieka(data, nrXXOfApiary, zRamkami: false);
+    } else {
+      if (nrXXOfHive == 0) return null;
+      zakres = ZakresPlastra.ul(data, nrXXOfApiary, nrXXOfHive);
+    }
+
+    debugPrint('Cofanie: zdejmuję migawkę $intent, zakres='
+        '${zakres.calaPasieka ? "pasieka ${zakres.pasiekaNr}" : "ul ${zakres.uleNr}"}'
+        '${zakres.zRamkami ? " z ramkami" : " bez ramek"}, data=${zakres.data}');
+
+    return _stosCofania.przygotuj(
+      zakres,
+      pasiekaNr: nrXXOfApiary,
+      ulNr: nrXXOfHive,
+      korpusNr: nrXOfBody != 0 ? nrXOfBody : nrXOfHalfBody,
+    );
+  }
+
+  //"hej maja cofnij ostatni zapis" - przywraca stan bazy sprzed ostatniej
+  //ZAPISUJĄCEJ komendy. Komunikat idzie na pasek stanu, a nie tylko dźwiękiem:
+  //przy ulu w rękawicach trzeba WIDZIEĆ, co zniknęło, zanim powie się to jeszcze
+  //raz.
+  //
+  //Komendy kontekstowe ("ustaw ul 5", "otwórz korpus 2") niczego nie zapisują,
+  //więc nie trafiają na stos - cofanie sięga do ostatniego WPISU, nie do
+  //ostatniej wypowiedzi. Tak też myśli użytkownik.
+  //
+  //ZNANE OGRANICZENIE: zapisy poprzedniej komendy nie są awaitowane, więc gdyby
+  //cofanie weszło, ZANIM jej łańcuch .then() dobiegnie końca, spóźniony zapis
+  //nałożyłby się z powrotem na przywrócony stan. Okno to kilkadziesiąt
+  //milisekund, a wypowiedzenie całej frazy z zawołaniem trwa około dwóch sekund,
+  //więc w praktyce jest zamknięte. Objaw byłby widoczny (wartość wraca na
+  //ekran), nie cichy - wtedy wystarczy powtórzyć komendę.
+  Future<void> _cofnijOstatniZapis() async {
+    //BLOKADA NA CAŁĄ METODĘ, nie tylko na transakcję bazy. Stos zwalnia swoją
+    //blokadę zaraz po przywróceniu plastra, a potem trwa jeszcze odświeżanie
+    //providerów - druga fraza "cofnij", która wpadnie w to okno, zastałaby stos
+    //już zdjęty i zameldowała "nie ma czego cofnąć" TUŻ PO udanym cofnięciu.
+    if (_cofanieWToku) return;
+    _cofanieWToku = true;
+    try {
+      final WynikCofania wynik = await _stosCofania.cofnij();
+      if (!mounted) return;
+
+      if (wynik.stan == StanCofania.brak) {
+        setState(
+            () => _stanNasluchu = AppLocalizations.of(context)!.undoNothing);
+        beep('error');
+        return;
+      }
+
+      if (wynik.stan == StanCofania.blad) {
+        //baza odmówiła (migawka albo przywracanie) - ZAPIS ZOSTAJE, więc nie
+        //wolno tego pokazać jako pustego stosu. Powód dopisujemy tylko przy
+        //włączonej diagnostyce: to komunikat dla nas, nie dla pszczelarza.
+        final String powod = globals.voiceDiagnostyka &&
+                _stosCofania.ostatniBlad != null
+            ? ': ${_stosCofania.ostatniBlad}'
+            : '';
+        setState(() =>
+            _stanNasluchu = AppLocalizations.of(context)!.undoFailed + powod);
+        beep('error');
+        return;
+      }
+
+      final MigawkaZapisu cofnieta = wynik.migawka!;
+
+      //providery trzymają dane z PRZED cofnięcia - bez tego ekran i widok uli
+      //pokazywałyby wartości, których nie ma już w bazie
+      try {
+        await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
+        if (!mounted) return;
+        if (cofnieta.ulNr == 0) {
+          //TRYB "WSZYSTKIE ULE": cofnięcie objęło każdy ul pasieki, a wybranego
+          //ula nie ma (nrXXOfHive == 0), więc nie ma czego odświeżać po ulu -
+          //ani ramek, bo w tym trybie tabela `ramka` jest nietykana. Zostają
+          //belki uli, na których widać dokarmianie i leczenie.
+          await Provider.of<Hives>(context, listen: false)
+              .fetchAndSetHives(cofnieta.pasiekaNr);
+        } else if (globals.voice2LivePodglad && cofnieta.pasiekaNr != 0) {
+          await _refreshLiveView(); //odświeża Frames, Infos, Hives i płótno
+        } else {
+          await Provider.of<Frames>(context, listen: false)
+              .fetchAndSetFramesForHive(cofnieta.pasiekaNr, cofnieta.ulNr);
+          await Provider.of<Infos>(context, listen: false)
+              .fetchAndSetInfosForHive(cofnieta.pasiekaNr, cofnieta.ulNr);
+          await Provider.of<Hives>(context, listen: false)
+              .fetchAndSetHives(cofnieta.pasiekaNr);
+        }
+      } catch (e) {
+        debugPrint('Cofanie: odświeżenie widoku nie powiodło się - $e');
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _stanNasluchu =
+            '${AppLocalizations.of(context)!.undoDone}: ${wynik.opis}';
+        //wiersz "Zapis:" pokazywał to, czego już nie ma w bazie
+        zapis = '0';
+        readyStory = false;
+        readyInfo = false;
+        rhinoText = '';
+      });
+      await _beepPotwierdzenia();
+    } finally {
+      _cofanieWToku = false;
+    }
+  }
+
+  //Gramatyka mówi po ludzku, baza trzyma jedno brzmienie.
+  //
+  //Vosk zwraca wartość slotu DOSŁOWNIE tak, jak stoi w pol_vosk.yml. Przy
+  //migracji z Picovoice część wartości dostała ładniejszą/poprawniejszą formę
+  //("usuń ramkę" zamiast "usuń ramka", "dziewicza" zamiast "dziewica"), ale
+  //reszta aplikacji porównuje te stringi ZNAK W ZNAK z wartościami z ARB - bo
+  //te same pola zapisuje też ręczna edycja (infos_edit_screen) i to na nich
+  //stoją ikony ula, raporty i historia matki. Rozjazd nie wywala niczego z
+  //błędem: komenda jest przyjmowana, zapisywana i... nie robi nic widocznego
+  //albo (gorzej) zapisuje stan odwrotny do wypowiedzianego.
+  //
+  //Dlatego wartości sprowadzamy do postaci kanonicznej JEDEN RAZ, tutaj, zanim
+  //cokolwiek je zobaczy. Gramatyka zostaje przy formach, które naprawdę padają
+  //przy ulu i są w słowniku modelu (pliki/vosk_slownik_pl.txt).
+  //
+  //DOPISUJĄC WARTOŚĆ DO SLOTU w pol_vosk.yml sprawdź, czy taki string jest w
+  //app_pl.arb. Jeśli nie ma - dopisz przeliczenie tutaj.
+  void _ujednolicWartosciSlotow(VoskInference inference) {
+    final sloty = inference.slots;
+    if (sloty == null || sloty.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    //klucz slotu -> {forma z gramatyki: forma kanoniczna (ARB)}
+    final Map<String, Map<String, String>> mapowanie = {
+      //trójkąt pod ramką + zmiana numeru ramki po przeglądzie (painter ~11570,
+      //warunki ~1926 / ~5527 / ~5554, frames_screen ~1997)
+      'isDone': {
+        'usuń ramkę': l10n.deleted, //"usuń ramka"
+        'wstaw ramkę': l10n.inserted, //"wstaw ramka"
+      },
+      //_rozmiar ramki w zapisDoBazy (~5354) - bez tego "otwórz MAŁĄ ramkę"
+      //zapisywało ramkę dużą
+      'sizeOfFrame': {
+        'małą': l10n.small,
+        'dużą': l10n.big,
+      },
+      //ikona matki: matka3 = nieunasienniona (~6211), hives_screen ~871,
+      //infos_screen ~504, queen_history_screen ~269
+      'queenState': {
+        'dziewicza': l10n.virgine, //"dziewica"
+      },
+      //ikona matki: matka2 = niez (switch ~6168), hives_screen ~946,
+      //queen_helpers.dart _allMarkTranslations
+      'queenMark': {
+        'nie ma znaku': l10n.unmarked, //"nie ma znak"
+      },
+      //ikona matki: matka1 = zła (~6149). "do wymiany" to ta sama informacja
+      //co "stara" - bez przeliczenia matka do wymiany wychodziła jako OK
+      'queenQuality': {
+        'do wymiany': l10n.exchange, //"stara"
+        'okej': 'ok',
+      },
+      //infos_screen ~931 tłumaczy zapis na etykietę - ręczna edycja zapisuje
+      //"norma", więc głos też musi
+      'colonyForce': {
+        'normalna': l10n.normal, //"norma"
+      },
+      //infos_screen ~946; "zawiązała kłąb" zostaje w gramatyce, bo słowa
+      //"kłębie" NIE MA w słowniku modelu - kanoniczne jest "w kłębie"
+      'colonyState': {
+        'agresywna': l10n.aggressive, //"zła"
+        'zawiązała kłąb': l10n.inCluster, //"w kłębie"
+        'okej': 'ok',
+      },
+      //dennica - wartość idzie do info jako tekst, ale ma brzmieć tak samo jak
+      //z ręcznej edycji
+      'bottomBoard': {
+        'wyczyszczona': l10n.clean, //"czysta"
+        'okej': 'ok',
+      },
+    };
+
+    for (final klucz in sloty.keys.toList()) {
+      final kanon = mapowanie[klucz]?[sloty[klucz]];
+      if (kanon != null) sloty[klucz] = kanon;
+    }
+  }
+
   String prettyPrintInference(VoskInference inference) {
     _pendingOpenBeep = false; //reset przed każdą nową inferencją - zabezpieczenie przed stanem z poprzedniej komendy
+    _ujednolicWartosciSlotow(inference); //MUSI być przed switchem intencji
     if (siteOfFrame == '0') siteOfFrame = AppLocalizations.of(context)!.both;
     if (sizeOfFrame == '0') sizeOfFrame = AppLocalizations.of(context)!.big;
     String printText = ""; //ogólny - intent
@@ -1714,6 +2034,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                           (readyBody == true || readyHalfBody == true) &&
                           readyFrame == true ||
                       readyFrames == true) {
+                    //wartość slotu jest już kanoniczna - patrz
+                    //_ujednolicWartosciSlotow() na początku tej metody
                     printText1 +=
                         "\n" + AppLocalizations.of(context)!.isDone + " =";
                     printText1 += " ${slots[key]}";
@@ -3639,7 +3961,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                         openDialog = true;
                         beep('open');
                         break;
+                      //gramatyka Rhino miała tu "pokarm", pol_vosk.yml mówi
+                      //"dokarmianie" (tak samo jak app_pl.arb: feeding).
+                      //Stara etykieta zostaje, żeby nic nie regresowało.
                       case 'pokarm':
+                      case 'dokarmianie':
                         if (openDialog) Navigator.pop(context); //zamknij okno
                         printText1 = ' ${slots[key]}';
                         _dialogBuilderFeeding(context);
@@ -3667,7 +3993,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                         openDialog = true;
                         beep('open');
                         break;
+                      //j.w. - Rhino miał "zbiór", pol_vosk.yml ma "zbiory"
+                      //(app_pl.arb: harvest)
                       case 'zbiór':
+                      case 'zbiory':
                         if (openDialog) Navigator.pop(context); //zamknij okno
                         printText1 = ' ${slots[key]}';
                         _dialogBuilderHarvest(context);
@@ -5134,6 +5463,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   }
 
   zapisDoBazy(int zas, wart) {
+    _zapisWTejKomendzie = true; //migawka do cofania trafi na stos po switchu
     zapisZas = 0; //zerowanie parametów wywołania tej funkcji
     zapisWart = '0'; //j.w.
 
@@ -5726,6 +6056,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
   //info(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ileUli INTEGER, data TEXT, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, uwagi TEXT)');
   zapisInfoDoBazy(String kat, String param, String wart, String miar) async {
+    _zapisWTejKomendzie = true; //migawka do cofania trafi na stos po switchu
     if (ustawianaData != '')
       formattedDate = ustawianaData;
     else
@@ -9924,6 +10255,14 @@ print('openDialog = $openDialog');
                     child: Text(
                       _stanNasluchu,
                       textAlign: TextAlign.center,
+                      //TWARDY bezpiecznik wysokości: strefa tekstów ma stałą
+                      //wysokość (trzy strefy ekranu), a w stanie potrafi
+                      //wylądować treść wyjątku - natywny błąd iOS ma czasem
+                      //kilkaset linii i rozsadzał Column (zgłoszenie
+                      //05.08.2026). Skracamy też u źródła (VoskEngine._blad),
+                      //ale ekran nie ma prawa paść od DOWOLNEGO komunikatu.
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                           color: isError
                               ? Color.fromARGB(255, 200, 0, 0)
@@ -9949,8 +10288,8 @@ print('openDialog = $openDialog');
                 //ślad kroków wejścia w dyktowanie - patrz [_sladNotatki]
                 if (globals.voiceDiagnostyka && _sladNotatki.isNotEmpty)
                   _sladNotatkiWidget(),
-                //stary asset gramatyki w pakiecie - patrz [_gramatykaBezNotatki]
-                if (_gramatykaBezNotatki) _ostrzezenieOGramatyce(),
+                //stary asset gramatyki w pakiecie - patrz [_gramatykaNieaktualna]
+                if (_gramatykaNieaktualna) _ostrzezenieOGramatyce(),
               ],
             ));
     return flex ? Expanded(flex: 2, child: content) : content;
@@ -9978,9 +10317,9 @@ print('openDialog = $openDialog');
   Widget _ostrzezenieOGramatyce() => Padding(
         padding: const EdgeInsets.only(top: 6),
         child: Text(
-          'UWAGA: wczytana gramatyka nie zna komendy notatki - w pakiecie apki '
-          'jest stary plik assets/grammar/pol_vosk.yml. Zbuduj apkę od nowa '
-          '(pełny restart, nie hot reload).',
+          'UWAGA: wczytana gramatyka nie zna komendy notatki albo cofania - w '
+          'pakiecie apki jest stary plik assets/grammar/pol_vosk.yml. Zbuduj '
+          'apkę od nowa (pełny restart, nie hot reload).',
           textAlign: TextAlign.center,
           style: TextStyle(
               color: Color.fromARGB(255, 200, 0, 0), fontSize: 12),
@@ -10212,7 +10551,7 @@ print('openDialog = $openDialog');
         _stanNasluchu.isNotEmpty ||
         _komunikatNotatki.isNotEmpty ||
         (globals.voiceDiagnostyka && _sladNotatki.isNotEmpty) ||
-        _gramatykaBezNotatki;
+        _gramatykaNieaktualna;
     if (!cokolwiek) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
@@ -10292,8 +10631,8 @@ print('openDialog = $openDialog');
           //ślad kroków wejścia w dyktowanie - patrz [_sladNotatki]
           if (globals.voiceDiagnostyka && _sladNotatki.isNotEmpty)
             _sladNotatkiWidget(),
-          //stary asset gramatyki w pakiecie - patrz [_gramatykaBezNotatki]
-          if (_gramatykaBezNotatki) _ostrzezenieOGramatyce(),
+          //stary asset gramatyki w pakiecie - patrz [_gramatykaNieaktualna]
+          if (_gramatykaNieaktualna) _ostrzezenieOGramatyce(),
         ],
       ),
     );
@@ -10312,6 +10651,10 @@ print('openDialog = $openDialog');
                 ? null
                 : Text(
                     errorMessage,
+                    //jak wyżej: treść wyjątku bywa wielolinijkowa, a to pole
+                    //siedzi w Expanded o stałej wysokości
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: Colors.white, fontSize: 18),
                   ));
     return flex ? Expanded(flex: isError ? 4 : 0, child: content) : content;
@@ -10392,6 +10735,9 @@ class MyHive extends CustomPainter {
     Paint matkaBlue = Paint()
       ..color = Color.fromARGB(255, 0, 89, 255)
       ..style = PaintingStyle.fill; //matkaBlue
+    Paint matkaOther = Paint()
+      ..color = Color.fromARGB(255, 125, 125, 125)
+      ..style = PaintingStyle.fill; //matkaOther - ten sam szary co w frames_screen
     Paint matecznik = Paint()
       ..color = Color.fromARGB(255, 255, 17, 0)
       ..style = PaintingStyle.fill
@@ -11084,6 +11430,20 @@ class MyHive extends CustomPainter {
                       start + 20),
                   3,
                   matkaWhite);
+              break;
+            //matka "inna" - komenda "inna matka ...". Bez tego case'a podgląd
+            //rysował ją domyślną CZARNĄ kropką, czyli nie do odróżnienia od
+            //matki czarnej (queen = '1'). frames_screen.dart (~1631) ma to samo.
+            case '7':
+              canvas.drawCircle(
+                  Offset(
+                      10 +
+                          (numerRamki - 1) * 20 +
+                          (ramki[i].strona * 12) -
+                          8,
+                      start + 20),
+                  3,
+                  matkaOther);
               break;
             default:
               canvas.drawCircle(

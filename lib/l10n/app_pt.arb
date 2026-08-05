@@ -949,6 +949,12 @@
     "legendBodyNumber": "número da alça",
     "@legendBodyNumber": {},
     "sUpport": "Oportunidades de apoio:",
-    "@sUpport": {}
+    "@sUpport": {},
+    "undoDone": "Desfeito",
+    "@undoDone": {},
+    "undoNothing": "Nada para desfazer",
+    "@undoNothing": {},
+    "undoFailed": "Não foi possível desfazer",
+    "@undoFailed": {}
 
 }

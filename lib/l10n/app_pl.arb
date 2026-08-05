@@ -964,6 +964,12 @@
     "legendBodyNumber": "numer korpusu",
     "@legendBodyNumber": {},
     "sUpport": "Możliwość wsparcia:",
-    "@sUpport": {}
+    "@sUpport": {},
+    "undoDone": "Cofnięte",
+    "@undoDone": {},
+    "undoNothing": "Nie ma czego cofnąć",
+    "@undoNothing": {},
+    "undoFailed": "Nie udało się cofnąć",
+    "@undoFailed": {}
 
 }

@@ -2679,4 +2679,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sUpport => 'Oportunidades de apoyo:';
+
+  @override
+  String get undoDone => 'Deshecho';
+
+  @override
+  String get undoNothing => 'Nada que deshacer';
+
+  @override
+  String get undoFailed => 'No se pudo deshacer';
 }

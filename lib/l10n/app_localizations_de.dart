@@ -2682,4 +2682,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sUpport => 'Unterstützungsmöglichkeiten:';
+
+  @override
+  String get undoDone => 'Rückgängig gemacht';
+
+  @override
+  String get undoNothing => 'Nichts zum Rückgängigmachen';
+
+  @override
+  String get undoFailed => 'Rückgängig machen fehlgeschlagen';
 }

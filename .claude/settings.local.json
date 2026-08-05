@@ -117,7 +117,16 @@
       "Bash(git mv *)",
       "Bash(git ls-tree *)",
       "Bash(git cat-file *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(awk -F: '$1>7500')",
+      "Bash(awk 'NR>=8734 && NR<=9770' lib/screens/voice_vosk_screen.dart)",
+      "Bash(sort -u -k2)",
+      "Bash(git log *)",
+      "Bash(awk 'NR>11400 && NR<11800 && /case /' lib/screens/voice_vosk_screen.dart)",
+      "Bash(sed -n '/^  resetBody\\(\\) {/,/^  }/p' lib/screens/voice_vosk_screen.dart)",
+      "Bash(sed -n '/^  resetSumowania\\(\\) {/,/^  }/p' lib/screens/voice_vosk_screen.dart)",
+      "Bash(awk 'NR>=1431 && NR<=1470' lib/screens/voice_vosk_screen.dart)",
+      "Bash(awk 'NR>=5230 && NR<=5340' lib/screens/voice_vosk_screen.dart)"
     ]
   }
 }

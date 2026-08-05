@@ -949,6 +949,12 @@
     "legendBodyNumber": "numero del melario",
     "@legendBodyNumber": {},
     "sUpport": "Opportunità di supporto:",
-    "@sUpport": {}
+    "@sUpport": {},
+    "undoDone": "Annullato",
+    "@undoDone": {},
+    "undoNothing": "Niente da annullare",
+    "@undoNothing": {},
+    "undoFailed": "Annullamento non riuscito",
+    "@undoFailed": {}
 
 }

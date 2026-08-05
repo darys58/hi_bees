@@ -1769,5 +1769,11 @@
     "legendBodyNumber": "body number",
     "@legendBodyNumber": {},
     "sUpport": "Support opportunities:",
-    "@sUpport": {}
+    "@sUpport": {},
+    "undoDone": "Undone",
+    "@undoDone": {},
+    "undoNothing": "Nothing to undo",
+    "@undoNothing": {},
+    "undoFailed": "Undo failed",
+    "@undoFailed": {}
 }

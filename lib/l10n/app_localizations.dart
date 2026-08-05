@@ -5291,6 +5291,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Support opportunities:'**
   String get sUpport;
+
+  /// No description provided for @undoDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Undone'**
+  String get undoDone;
+
+  /// No description provided for @undoNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to undo'**
+  String get undoNothing;
+
+  /// No description provided for @undoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo failed'**
+  String get undoFailed;
 }
 
 class _AppLocalizationsDelegate

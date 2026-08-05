@@ -196,6 +196,111 @@ git push --tags
 
 ---
 
+## BLOKADA (05.08.2026): `objective_c.framework` — ROZWIĄZANA
+
+> **Status 05.08.2026 (wieczór): naprawione i potwierdzone na urządzeniu.**
+> Po skasowaniu zatrutego stagingu (`rm -rf build/native_assets build/ios
+> .dart_tool/flutter_build`) framework w `Runner.app` jest **arm64**, a apka
+> instaluje się i startuje na fizycznym iPhone. Sekcja zostaje jako opis
+> przyczyny — procedura z „Naprawa" obowiązuje przy KAŻDYM przełączeniu
+> urządzenie ↔ symulator.
+
+Po upgrade apka **nie instalowała się ani na fizycznym iPhone 15, ani nie
+startowała na symulatorze** — oba błędy dotyczyły tej samej biblioteki:
+
+| Cel | Błąd |
+|-----|------|
+| iPhone 15 (iOS 26.5.2), Xcode | `Failed to verify code signature of .../Frameworks/objective_c.framework : 0xe8008014 (The executable contains an invalid signature.)` |
+| Symulator iPhone 15 (iOS 17.5) | `dlopen(objective_c.framework/objective_c): fat file, but missing compatible architecture (have 'arm64', need 'x86_64')` |
+
+### Przyczyna: intelowy Mac + wspólny katalog przejściowy native assets
+
+**To JEDNA przyczyna, nie dwie osobne usterki.** `objective_c` to zależność
+przechodnia `record` 6.x (przez `record_ios`). To pakiet FFI — jego framework
+buduje **pipeline native assets Darta** (`hooks`, `code_assets`,
+`native_toolchain_c` w `pubspec.lock`), a nie CocoaPods. Dlatego wysypuje się
+dokładnie ten JEDEN framework, a wszystkie pody podpisują się poprawnie.
+
+Pipeline wystawia gotowy framework do **jednego katalogu
+`build/native_assets/ios/`, wspólnego dla urządzenia i symulatora** — nie ma
+osobnego `iphoneos` i `iphonesimulator`. Wygrywa architektura tego celu, który
+budował się jako ostatni.
+
+**Ten Mac jest intelowy** (rozstrzygnięte 05.08.2026: `sysctl -n
+sysctl.proc_translated` → `unknown oid`, co na Apple Silicon jest niemożliwe —
+tam klucz zawsze zwraca 0 albo 1; dodatkowo brak pozycji „Otwórz w Rosetcie"
+w ⌘I). Nie ma tu żadnej Rosetty — `arch` → `i386`, `uname -m` → `x86_64`,
+x86_64 `dart` i `darwin-x64` w `flutter devices` to **poprawny, natywny** stan
+na tym sprzęcie.
+
+Skutek: symulator jest **zawsze** celem `ios_x64`, a urządzenie **zawsze**
+`ios_arm64`. Kolizja we wspólnym stagingu zachodzi więc przy KAŻDYM
+przełączeniu celu — to stan trwały, nie pech jednego builda. Na Apple Silicon
+oba cele są arm64, dlatego ten błąd jest w sieci prawie nieopisany.
+
+**Dowód z artefaktów builda (05.08.2026):**
+
+```
+build/native_assets/ios/objective_c.framework/objective_c   05.08 11:55  x86_64  ← staging
+build/ios/Release-iphoneos/…/objective_c.framework/…        05.08 11:55  x86_64  ← iPhone!
+build/ios/Debug-iphoneos/…/objective_c.framework/…          04.08 11:56  arm64   ← udany test
+build/ios/Debug-iphonesimulator/Runner.app/Runner           05.08 11:48  x86_64
+build/ios/Debug-iphonesimulator/…/objective_c.framework/…   04.08 12:34  arm64
+```
+
+W `.dart_tool/flutter_build/*/native_assets.json` obok `ios_arm64` widnieje
+**`ios_x64`**; `.dart_tool/native_assets.yaml` melduje host jako `macos_x64`
+(na intelowym Macu to wartość poprawna).
+
+**Przebieg:**
+
+1. **04.08 11:56** — build na iPhone, framework arm64 → działa („test na urządzeniu OK").
+2. **05.08 11:48** — symulator (x86_64): Runner x86_64, ale w Runner.app wciąż arm64-owy framework z 4.08 → `dlopen: have 'arm64', need 'x86_64'`.
+3. **05.08 11:55** — `flutter pub get` unieważnia cache hooka; przebudowa dla celu `ios_x64` **nadpisuje wspólny staging** x86_64-em.
+4. **05.08 11:55 / 12:30** — build `Release-iphoneos` kopiuje zatruty staging: x86_64 framework w arm64-owej apce → `0xe8008014`.
+
+**Wersje pakietów są niewinne.** `pubspec.lock` jest w gicie niezmieniony od
+commitów `37ae5e2` / `d32e111` / `81a6a2d`, a każdy z nich przeszedł test na
+urządzeniu: `record` 6.2.1, `objective_c` 9.3.0, `hooks` 1.0.3, `code_assets` 1.0.0.
+
+### Naprawa
+
+**1. Skasować zatruty staging** — to jedyna realna naprawa:
+
+```bash
+rm -rf build/native_assets build/ios .dart_tool/flutter_build
+```
+
+**2. Zbudować na urządzenie** i sprawdzić architekturę bez odpalania:
+
+```bash
+flutter run --debug     # z podłączonym iPhone'em
+file build/ios/Debug-iphoneos/Runner.app/Frameworks/objective_c.framework/objective_c
+# ma być arm64
+```
+
+**3. Powtarzać krok 1 przed KAŻDYM przełączeniem urządzenie ↔ symulator.**
+Dopóki staging jest wspólny, a cele mają różne architektury (na Intelu zawsze
+mają), przeciek architektury wróci. Najprościej: pracować tylko na urządzeniu
+albo tylko na symulatorze, a przy zmianie czyścić.
+
+### Czego NIE robić przy tej diagnozie
+
+- **Nie szukaj Rosetty.** Sprawdzone 05.08.2026 — Mac jest intelowy, Rosetty nie
+  ma i nie było. `arch` → `i386` to normalny output na Intelu, NIE dowód Rosetty;
+  rozstrzyga wyłącznie `sysctl -n sysctl.proc_translated` (na Apple Silicon
+  zwraca 0/1, na Intelu „unknown oid"). Nie przeinstalowuj Fluttera na
+  `macos_arm64` — na tym sprzęcie by nie działał.
+- **Nie schodź na `record: 5.2.1`.** Te same wersje działały 4.08 — pakiet nie jest winny.
+- **Nie ruszaj podpisów.** W `project.pbxproj` stoi jeszcze
+  `CODE_SIGN_IDENTITY[sdk=iphoneos*] = "iPhone Developer"` (dziś: Apple Development),
+  ale Xcode mapuje tę nazwę sam, a tą samą tożsamością podpisały się poprawnie
+  binarka apki, `Flutter.framework` i wszystkie pody. Zła tożsamość wywaliłaby
+  CAŁE podpisywanie („no signing certificate found"), a nie jeden framework.
+  `0xe8008014` to skutek złej architektury, nie złego certyfikatu.
+
+---
+
 ## Plan B — jak wrócić jeśli coś pójdzie nie tak
 
 1. `git checkout main` (wracasz do stanu przed upgrade)

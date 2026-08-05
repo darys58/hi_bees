@@ -2669,4 +2669,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sUpport => 'Support opportunities:';
+
+  @override
+  String get undoDone => 'Undone';
+
+  @override
+  String get undoNothing => 'Nothing to undo';
+
+  @override
+  String get undoFailed => 'Undo failed';
 }

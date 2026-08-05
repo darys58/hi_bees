@@ -111,14 +111,25 @@ class SoundHelper {
     // Nasłuch na koniec PRZED startem - inaczej krótki dźwięk zdąży się
     // skończyć, zanim zdążymy się podpiąć, i czekalibyśmy do limitu.
     //
-    // catchError PRZY ŹRÓDLE, nie dopiero przy await: gdy błąd przyjdzie już po
+    // Błąd łapiemy PRZY ŹRÓDLE, nie dopiero przy await: gdy przyjdzie już po
     // upływie [limit], nie ma go kto odebrać i leci jako nieobsłużony wyjątek
     // asynchroniczny (w release nie widać go nawet w konsoli).
-    final Future<void> koniec = player.onPlayerComplete.first.catchError(
-      (Object e) {
+    //
+    // WŁASNY async zamiast .catchError() na strumieniu: onPlayerComplete jest
+    // zadeklarowany jako Stream<void>, ale W ŚRODKU to przefiltrowany
+    // Stream<AudioEvent>, więc .first daje future o RZECZYWISTYM typie
+    // Future<AudioEvent>. Timeout sprawdza typ onTimeout po tym typie
+    // rzeczywistym i wywala „() => Null is not a subtype of
+    // () => FutureOr<AudioEvent>" (log z 05.08.2026) - czyli playAndWait
+    // wracał NATYCHMIAST i wyciszanie mikrofonu na czas odzywki Mai nie
+    // działało. Ciało async daje prawdziwe Future<void> i problem znika.
+    final Future<void> koniec = () async {
+      try {
+        await player.onPlayerComplete.first;
+      } catch (e) {
         debugPrint('SoundHelper: koniec „$name" nie przyszedł - $e');
-      },
-    );
+      }
+    }();
     await play(name);
     try {
       await koniec.timeout(limit, onTimeout: () {});

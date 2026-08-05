@@ -949,6 +949,12 @@
     "legendBodyNumber": "Zargennummer",
     "@legendBodyNumber": {},
     "sUpport": "Unterstützungsmöglichkeiten:",
-    "@sUpport": {}
+    "@sUpport": {},
+    "undoDone": "Rückgängig gemacht",
+    "@undoDone": {},
+    "undoNothing": "Nichts zum Rückgängigmachen",
+    "@undoNothing": {},
+    "undoFailed": "Rückgängig machen fehlgeschlagen",
+    "@undoFailed": {}
 
 }
