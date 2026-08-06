@@ -722,11 +722,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
                                 Image.asset('assets/image/matka11.png', width: 28, height: 17, fit: BoxFit.fill),
                               if (hive.matka4 != '' && hive.matka4 != '0')
                                 const SizedBox(width: 10),
-                              // matka1 - jakość
-                              if (hive.matka1 == 'ok' || hive.matka1 == 'dobra' || hive.matka1 == 'good' || hive.matka1 == 'bardzo dobra' || hive.matka1 == 'very good' || hive.matka1 == 'duża' || hive.matka1 == 'big')
-                                const Icon(Icons.thumb_up_outlined, size: 24.0, color: Color.fromARGB(255, 15, 200, 8))
-                              else if (hive.matka1 == 'zła' || hive.matka1 == 'canceled' || hive.matka1 == 'słaba' || hive.matka1 == 'weak' || hive.matka1 == 'mała' || hive.matka1 == 'small' || hive.matka1 == 'stara' || hive.matka1 == 'to exchange')
-                                const Icon(Icons.thumb_down_outlined, size: 24.0, color: Color.fromARGB(255, 255, 1, 1)),
+                              // matka1 - jakość; wartości (także te w innych językach
+                              // i sprzed zamiany "zła" na "do wymiany") zna queen_helpers
+                              if (qualityIsSet(hive.matka1))
+                                qualityIsBad(hive.matka1)
+                                    ? const Icon(Icons.thumb_down_outlined, size: 24.0, color: Color.fromARGB(255, 255, 1, 1))
+                                    : const Icon(Icons.thumb_up_outlined, size: 24.0, color: Color.fromARGB(255, 15, 200, 8)),
                               if (hive.matka1 != '' && hive.matka1 != '0')
                                 const SizedBox(width: 10),
                               // matka3 - unasiennienie

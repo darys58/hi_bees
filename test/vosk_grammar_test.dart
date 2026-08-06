@@ -40,11 +40,22 @@ void main() {
     });
 
     test('brak słów spoza gramatyki i komplet liczebników', () {
-      // 224 słowa literalne - ta liczba jest zweryfikowana wobec słownika
-      // modelu (pliki/vosk_gramatyka_test.py --oov: zero OOV). Po zmianie .yml
+      // Liczba słów literalnych zweryfikowana wobec słownika modelu
+      // (pliki/vosk_gramatyka_test.py --oov: zero OOV). Po zmianie .yml
       // uruchom --oov i podbij tę liczbę, jeśli zmiana była zamierzona.
-      expect(silnik.slowa().length, 224,
+      //
+      // 227 = 224 (stan z d32e111, kiedy pisano ten test) + 3. Delty NIE dało się
+      // policzyć Dartem (brak SDK w kontenerze), więc liczone referencją
+      // pliki/vosk_parser_ref.py --slowa: 265 -> 268. Składa się na to komenda
+      // "ustaw ule od X do Y" i usunięcie "załóż"/"zabierz" z $state (commit
+      // 395c0f3, który tej liczby nie podbił) oraz usunięcie "zła" z
+      // $queenQuality (opcję zastąpiło "do wymiany"). Gdyby test podał inną
+      // liczbę - prawdą jest liczba z testu, byle różnica była tłumaczona
+      // świadomymi zmianami .yml.
+      expect(silnik.slowa().length, 227,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec słownika modelu');
+      expect(silnik.slowa(), isNot(contains('zła')),
+          reason: 'jakość matki "zła" zastąpiona przez "do wymiany"');
       expect(silnik.liczebniki(), contains('pięćdziesiąt'));
       expect(silnik.liczebniki(), contains('procent'));
     });
@@ -205,14 +216,17 @@ void main() {
           reason: 'do czuwania wciekła fraza spoza sesji: $czuwanie');
       // Zawężenie nie może uszkodzić pełnej gramatyki.
       //
-      // 3121 = 3079 (stan z commita 0cada23) + 42 z niezacommitowanych zmian
-      // .yml: 40 wartości slotu matki/królowej i 2 komendy notatki
-      // ("hej maja notatka do przeglądu", "hej maja notatka do notesu").
-      // Delta policzona referencją (pliki/vosk_parser_ref.py --frazy), która
-      // liczy o kilkadziesiąt fraz więcej niż port - jeśli test poda inną
-      // liczbę, prawdą jest liczba z testu, byle różnica wynosiła dokładnie
-      // tyle, ile fraz świadomie dołożono.
-      expect(silnik.frazy().length, 3121);
+      // 3248 = 3121 (stan z d32e111) + 127. Delta policzona referencją
+      // (pliki/vosk_parser_ref.py --frazy): 3216 -> 3343, bo w kontenerze nie
+      // ma SDK, żeby policzyć to Dartem. Referencja liczy o kilkadziesiąt fraz
+      // więcej niż port, ale SAMA DELTA jest wspólna. Składają się na nią:
+      // cofanie ("hej maja cofnij ostatni zapis"), komenda "ustaw ule od X do Y"
+      // i usunięcie "załóż"/"zabierz" z $state (commity 632c78d i 395c0f3 -
+      // żaden nie podbił tej liczby) oraz -5 fraz po usunięciu "zła"
+      // z $queenQuality (opcję zastąpiło "do wymiany").
+      // Jeśli test poda inną liczbę, prawdą jest liczba z testu, byle różnica
+      // wynosiła dokładnie tyle, ile fraz świadomie zmieniono.
+      expect(silnik.frazy().length, 3248);
     });
   });
 
@@ -338,6 +352,11 @@ void main() {
       expect(silnik.rozpoznaj('trzeba usunąć').slots!['toDo'], 'trzeba usunąć');
       expect(silnik.rozpoznaj('matka jest do wymiany').slots!['queenQuality'],
           'do wymiany');
+      // "do wymiany" jest teraz WŁASNĄ pozycją listy jakości matki (wcześniej
+      // ekran podmieniał ją na "stara"), a dawna opcja "zła" wypadła z gramatyki
+      expect(silnik.rozpoznaj('matka jest zła').isUnderstood, isFalse);
+      expect(silnik.rozpoznaj('matka jest stara').slots!['queenQuality'],
+          'stara');
     });
 
     test('usuń/wstaw ramkę trafia do isDone', () {

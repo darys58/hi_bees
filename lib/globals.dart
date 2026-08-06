@@ -78,7 +78,11 @@ int raportNrStrony = 1; //numer strony dla wykresu raportu zbiorów lub leczenia
 int raportIleUliNaStronie = 20; //ilość uli na stronie w raporcie zbiorów lub leczenia (od 1 do 20)
 String rokRaportow = 'wszystkie'; //DateTime.now().toString().substring(0, 4); //rok wybrany w Info do raportów
 
-bool voice2LivePodglad = false; //sterowanie głosem: podgląd korpusu na żywo (poziomo) zamiast podpowiedzi komend (pionowo)
+//Sterowanie głosem: podgląd korpusu na żywo (poziomo) zamiast podpowiedzi komend
+//(pionowo). Domyślnie WŁĄCZONY od 06.08.2026 - przy ulu liczy się to, co dzieje
+//się z plastrem po komendzie, a podpowiedzi są potrzebne tylko na początku.
+//Ustawienie sesyjne: po restarcie apki wraca na true. Wyłącznik w Parametryzacji.
+bool voice2LivePodglad = true;
 bool voice2LiveLandscape = false; //wymuszenie układu poziomego dla live podglądu korpusu (niezależnie od orientacji urządzenia)
 
 //Diagnostyka sterowania głosem: pokazuje na ekranie SUROWY tekst z Vosk wraz
@@ -86,7 +90,9 @@ bool voice2LiveLandscape = false; //wymuszenie układu poziomego dla live podgl�
 //gramatyka celowo zawiera aliasy fonetyczne („pierzcha" = pierzga, „węża" =
 //węza, „miodu branie" = miodobranie, „na grób" = nakrop), bo tylko takie formy
 //istnieją w słowniku modelu. Pszczelarz wziąłby je za błąd aplikacji.
-//Włączana ręcznie w Parametryzacji na czas strojenia progów pewności.
+//Od 06.08.2026 PRZEŁĄCZNIK W PARAMETRYZACJI JEST ZAKOMENTOWANY (sekcja
+//"Sterowanie głosem" w parametr_screen). Żeby włączyć diagnostykę, trzeba
+//odkomentować tamtą kartę - cały mechanizm czytający tę flagę zostaje w kodzie.
 //Ustawienie sesyjne (jak voice2LivePodglad) - po restarcie apki wraca na false.
 bool voiceDiagnostyka = false;
 

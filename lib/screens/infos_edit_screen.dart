@@ -7,6 +7,7 @@ import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 import '../helpers/db_helper.dart';
 import '../helpers/notification_helper.dart';
+import '../helpers/queen_helpers.dart';
 import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
 import '../models/recording.dart';
 import '../models/apiarys.dart';
@@ -64,7 +65,68 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   int _przypomnienieGodzina = 8;
   int _przypomnienieMinuta = 0;
 
+  //Jedno źródło prawdy dla obu list rozwijanych przy "liczba ramek =".
+  List<String> _rodzajeUla(BuildContext ctx) => [
+        AppLocalizations.of(ctx)!.hIve,
+        AppLocalizations.of(ctx)!.nUc,
+        'Mini',
+      ];
 
+  List<String> _typyUla(BuildContext ctx) => [
+        'WIELKOPOLSKI',
+        'DADANT',
+        'OSTROWSKIEJ',
+        'WARSZAWSKI ZWYKŁY',
+        'WARSZAWSKI POSZERZANY',
+        'APIPOL',
+        'LANGSTROTH',
+        'ZANDER',
+        'GERSTUNG',
+        'APIMAYE',
+        'DEUTSCH NORMAL',
+        'NORMALMASS',
+        'FRANKENBEUTE',
+        'NATIONAL',
+        'WBC',
+        'WIELKOPOLSKI GÓRSKI',
+        'TYP A', //własne nazwy uli
+        'TYP B',
+        'TYP C',
+        'TYP D',
+        'MINI PLUS',
+        AppLocalizations.of(ctx)!.wEeddingHive,
+      ];
+
+  //DropdownButton wywraca się na asercji, gdy dostanie value spoza swojej listy - a ul
+  //może mieć rodzaj/typ zapisany przy innym języku aplikacji. Taką wartość DOKŁADAMY do
+  //listy zamiast podmieniać, bo samo wejście w edycję nie ma prawa zmienić typu ula.
+  List<String> _zBiezaca(List<String> lista, String biezaca) {
+    if (biezaca.isNotEmpty && !lista.contains(biezaca)) lista.insert(0, biezaca);
+    return lista;
+  }
+
+  //Rodzaj (h1) i typ ula (h2) mieszkają we wpisie "liczba ramek =": pogoda = rodzaj,
+  //miara = typ - i to z nich import odtwarza belkę ula. Starsze wpisy (zakładane głosem
+  //albo domyślnymi stałymi ekranu) mają te pola puste lub przypadkowe, więc czego brakuje,
+  //to uzupełniamy z tabeli ule, a nie stałą "Ul"/"WIELKOPOLSKI" - inaczej każda zmiana
+  //liczby ramek robiła z Odkładu Ul, a z ulika weselnego wielkopolski, i to zarówno
+  //w info (czyli po imporcie), jak i od razu w tabeli ule.
+  void _uzupelnijRodzajITyp(BuildContext ctx) {
+    final ule = Provider.of<Hives>(ctx, listen: false).items.where((element) {
+      return element.id == ('$nowaPasieka.$nowyUl');
+    }).toList();
+    if (ule.isNotEmpty) {
+      if (typUla.isEmpty || typUla == '0') typUla = ule[0].h2;
+      if (rodzajUla.isEmpty || rodzajUla == '0') rodzajUla = ule[0].h1;
+    }
+    //ul bez zapisanego rodzaju/typu (np. odbudowany po starym imporcie) - wartości domyślne
+    if (typUla.isEmpty || typUla == '0') typUla = 'WIELKOPOLSKI';
+    if (rodzajUla.isEmpty || rodzajUla == '0') {
+      rodzajUla = AppLocalizations.of(ctx)!.hIve;
+    }
+    nowyMiara = typUla;
+    globals.typUla = typUla;
+  }
 
   @override
   void didChangeDependencies() {
@@ -107,8 +169,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowyMiara = info[0].miara;
       if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {
         typUla = info[0].miara; //dla iloscRamek =
-        globals.typUla = typUla;
         rodzajUla = info[0].pogoda; //dane tylko dla iloscRamek =
+        _uzupelnijRodzajITyp(context); //braki z tabeli ule + walidacja list rozwijanych
       }
       if(nowaKategoria == 'queen' && info[0].pogoda != '') matkaID = int.parse(info[0].pogoda);
       else{
@@ -147,8 +209,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowyWartosc = wartosc.toString();
       
       if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {//pole "miara" = typ ula
-        nowyMiara = typUla;//wartość domyślna typUla
-        rodzajUla = AppLocalizations.of(context)!.hIve; //wartość domyślna rodzajUla //pole "pogoda" = rodzaj ula    
+        //nowy wpis o liczbie ramek startuje z rodzajem i typem TEGO ula, a nie ze stałych
+        typUla = '';
+        rodzajUla = ''; //pole "pogoda" = rodzaj ula
+        _uzupelnijRodzajITyp(context);
       } else nowyMiara = '';
       
       
@@ -747,14 +811,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: rodzajUla,  
-                                items: [
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.hIve),
-                                                  value: AppLocalizations.of(context)!.hIve),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.nUc),
-                                                  value: AppLocalizations.of(context)!.nUc),
-                                  DropdownMenuItem(child: Text('Mini'),
-                                                  value: 'Mini'),                                                                                                        
-                                ], //lista elementów do wyboru
+                                items: _zBiezaca(_rodzajeUla(context), rodzajUla)
+                                    .map((r) => DropdownMenuItem(child: Text(r), value: r))
+                                    .toList(), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     rodzajUla = newValue!.toString(); 
@@ -794,52 +853,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: typUla,  
-                                items: [
-                                  DropdownMenuItem(child: Text('WIELKOPOLSKI'),
-                                                  value: 'WIELKOPOLSKI'),
-                                  DropdownMenuItem(child: Text('DADANT'),
-                                                  value: 'DADANT'),
-                                  DropdownMenuItem(child: Text('OSTROWSKIEJ'),
-                                                  value: 'OSTROWSKIEJ'),
-                                  DropdownMenuItem(child: Text('WARSZAWSKI ZWYKŁY'),
-                                                  value: 'WARSZAWSKI ZWYKŁY'),
-                                  DropdownMenuItem(child: Text('WARSZAWSKI POSZERZANY'),
-                                                  value: 'WARSZAWSKI POSZERZANY'),
-                                  DropdownMenuItem(child: Text('APIPOL'),
-                                                  value: 'APIPOL'),
-                                  DropdownMenuItem(child: Text('LANGSTROTH'),
-                                                  value: 'LANGSTROTH'),
-                                  DropdownMenuItem(child: Text('ZANDER'),
-                                                  value: 'ZANDER'),
-                                  DropdownMenuItem(child: Text('GERSTUNG'),
-                                                  value: 'GERSTUNG'),
-                                  DropdownMenuItem(child: Text('APIMAYE'),
-                                                  value: 'APIMAYE'),
-                                  DropdownMenuItem(child: Text('DEUTSCH NORMAL'),
-                                                  value: 'DEUTSCH NORMAL'),
-                                  DropdownMenuItem(child: Text('NORMALMASS'),
-                                                  value: 'NORMALMASS'),
-                                  DropdownMenuItem(child: Text('FRANKENBEUTE'),
-                                                  value: 'FRANKENBEUTE'),
-                                  DropdownMenuItem(child: Text('NATIONAL'),
-                                                  value: 'NATIONAL'),
-                                  DropdownMenuItem(child: Text('WBC'),
-                                                  value: 'WBC'),
-                                  DropdownMenuItem(child: Text('WIELKOPOLSKI GÓRSKI'),
-                                                  value: 'WIELKOPOLSKI GÓRSKI'),
-                                  DropdownMenuItem(child: Text('TYP A'), //własna nazwa ula TYP A
-                                                  value: 'TYP A'), 
-                                  DropdownMenuItem(child: Text('TYP B'),
-                                                  value: 'TYP B'),
-                                  DropdownMenuItem(child: Text('TYP C'),
-                                                  value: 'TYP C'),
-                                  DropdownMenuItem(child: Text('TYP D'),
-                                                  value: 'TYP D'),
-                                  DropdownMenuItem(child: Text('MINI PLUS'),
-                                                  value: 'MINI PLUS'),                                  
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.wEeddingHive),
-                                                  value: AppLocalizations.of(context)!.wEeddingHive), 
-                                ], //lista elementów do wyboru
+                                items: _zBiezaca(_typyUla(context), typUla)
+                                    .map((t) => DropdownMenuItem(child: Text(t), value: t))
+                                    .toList(), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     typUla = newValue!.toString(); 
@@ -1473,24 +1489,23 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               child: DropdownButton(
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
-                                value: nowyWartosc,  
-                                items: [
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.veryGood),
-                                                  value:AppLocalizations.of(context)!.veryGood),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.good),
-                                                  value:AppLocalizations.of(context)!.good),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.big),
-                                                  value:AppLocalizations.of(context)!.big),
-                                  DropdownMenuItem(child: Text('ok'),value: 'ok'),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.canceled),
-                                                  value:AppLocalizations.of(context)!.canceled),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.small),
-                                                  value:AppLocalizations.of(context)!.small),                                             
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.weak),
-                                                  value:AppLocalizations.of(context)!.weak),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.exchange),
-                                                  value:AppLocalizations.of(context)!.exchange),                                       
-                                ], //lista elementów do wyboru
+                                value: nowyWartosc,
+                                //l10n.canceled to dawna "zła", teraz "do wymiany" - ten sam
+                                //zwrot mówi się głosem ("matka do wymiany"). Stare wpisy mają
+                                //w bazie jeszcze "zła", więc idą przez _zBiezaca, inaczej
+                                //DropdownButton wywala się na assercie "exactly one item".
+                                items: _zBiezaca([
+                                  AppLocalizations.of(context)!.veryGood,
+                                  AppLocalizations.of(context)!.good,
+                                  AppLocalizations.of(context)!.big,
+                                  'ok',
+                                  AppLocalizations.of(context)!.canceled,
+                                  AppLocalizations.of(context)!.small,
+                                  AppLocalizations.of(context)!.weak,
+                                  AppLocalizations.of(context)!.exchange,
+                                ], nowyWartosc)
+                                    .map((w) => DropdownMenuItem(child: Text(w), value: w))
+                                    .toList(), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     nowyWartosc = newValue!.toString(); 
@@ -2668,8 +2683,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           String matka3 = hive[0].matka3;
                           String matka4 = hive[0].matka4;
                           String matka5 = hive[0].matka5;
-                          if(nowyParametr != AppLocalizations.of(context)!.numberOfFrame + " = " && hive[0].h1 != '') rodzajUla = hive[0].h1; //nie zachowuj starego rodzaju ula jezeli jest jakiś nowy rodzaj 
-                          if(nowyParametr != AppLocalizations.of(context)!.numberOfFrame + " = " && hive[0].h2 != '') typUla = hive[0].h2; //nie zachowuj starego typu ula jezeli jest jakiś nowy typ 
+                          //Rodzaj i typ ula zmienia WYŁĄCZNIE wpis "liczba ramek =" - tylko on
+                          //ma listy rozwijane. Przy każdym innym wpisie przepisujemy wartości
+                          //z ula bez warunku na pustość: wcześniej ul z pustym h2 dostawał przy
+                          //byle jakim info domyślne 'WIELKOPOLSKI' ze stałej tego ekranu.
+                          if(nowyParametr != AppLocalizations.of(context)!.numberOfFrame + " = ") {
+                            rodzajUla = hive[0].h1;
+                            typUla = hive[0].h2;
+                          }
                           String tagNFC = hive[0].h3;
                           //print('zeby nie stracic info po - rodzaj ula = $rodzajUla'); 
                           //jezeli wpis  dotyczy leczenia lub dokarmiania
@@ -2690,9 +2711,11 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           
   //** */ Quality - matka1
                             final loc = AppLocalizations.of(context)!;
+                            //jakość matki znają queen_helpers - razem z wartościami sprzed
+                            //zamiany opcji "zła" na "do wymiany" i z innymi językami
+                            //(matka1 = 'zła' to wewnętrzna flaga belki, nie etykieta z listy)
                             if (nowyParametr == loc.queen + '  ' + loc.isIs)
-                              if (nowyWartosc == loc.small || nowyWartosc == loc.weak ||
-                                  nowyWartosc == loc.canceled || nowyWartosc == loc.exchange) {
+                              if (qualityIsBad(nowyWartosc)) {
                                 matka1 = 'zła';
                                 ikona = 'orange';                              
                                 if (matka2 == 'brak') matka2 = '';

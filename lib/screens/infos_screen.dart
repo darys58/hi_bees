@@ -973,9 +973,12 @@ class _InfoScreenState extends State<InfoScreen> {
             infos[i].parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
-            if(infos[i].wartosc == 'ok' || infos[i].wartosc == AppLocalizations.of(context)!.big || infos[i].wartosc == AppLocalizations.of(context)!.good || infos[i].wartosc == AppLocalizations.of(context)!.veryGood)              
-              icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),); 
-            else icon1 = Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),);                    
+            //porównanie z bieżącym l10n dawało kciuk w dół każdemu wpisowi zrobionemu
+            //przy innym języku (np. "bardzo dobra" oglądane po angielsku) - listę
+            //wszystkich języków i wartości historycznych trzyma queen_helpers
+            if(qualityIsBad(infos[i].wartosc))
+              icon1 = Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),);
+            else icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
             wartosc1 = 'ID' + infos[i].pogoda + ' ' + infos[i].wartosc +
                 ' (${zmienDate_cala(infos[i].data)})';
                 //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';

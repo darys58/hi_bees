@@ -364,13 +364,21 @@ class DBHelper {
   }
 
   //batch update pojedynczego pola w tabeli ule - używane przy przywracaniu po imporcie
-  //kolumn, których nie da się odtworzyć z serwera: h3 (tagi NFC) i h2 (typ ula)
-  static Future<void> batchUpdateUleField(String field, Map<String, String> entries) async {
+  //kolumn, których nie da się odtworzyć z serwera: h3 (tagi NFC), h2 (typ ula), h1 (rodzaj)
+  //tylkoGdyPuste = kopia lokalna tylko ŁATA DZIURY po odbudowie z info, a nie nadpisuje jej.
+  //Dla h1/h2 to istotne: lokalna wartość sama bywa pamiątką po starszym imporcie, więc
+  //gdy info niesie rodzaj/typ, to ono ma rację - inaczej raz zepsuta belka nigdy by się
+  //nie naprawiła. Dla h3 (NFC) serwer nie ma nic, więc dziura jest zawsze.
+  static Future<void> batchUpdateUleField(String field, Map<String, String> entries,
+      {bool tylkoGdyPuste = false}) async {
     if (entries.isEmpty) return;
     final db = await DBHelper.database();
     final batch = db.batch();
+    final warunek = tylkoGdyPuste
+        ? "id = ? AND ($field IS NULL OR $field = '' OR $field = '0')"
+        : 'id = ?';
     for (final entry in entries.entries) {
-      batch.update('ule', {field: entry.value}, where: 'id = ?', whereArgs: [entry.key]);
+      batch.update('ule', {field: entry.value}, where: warunek, whereArgs: [entry.key]);
     }
     await batch.commit(noResult: true);
   }
@@ -1271,7 +1279,8 @@ class DBHelper {
 
   //aktualizacja stanu uli na podstawie najnowszego chronologicznie wpisu info
   //parametr == frameCountParam -> ikona 'green', ramek = wartosc, h1 = pogoda, h2 = miara
-  //parametr ∈ liquidationValues -> ikona 'black', ramek = 10, h1 = hiveLabel
+  //parametr ∈ liquidationValues -> ikona 'black', reszta (ramek, h1, h2) z ostatniego
+  //wpisu "liczba ramek =" tego ula, a dopiero w jego braku wartości domyślne
   static Future<void> applyInfoStateToHives({
     required Set<String> liquidationValues,
     required String frameCountParam,
@@ -1290,17 +1299,26 @@ class DBHelper {
     if (rows.isEmpty) return;
 
     //dla każdego ula wybieramy wpis z najwyższym (data, czas)
+    bool nowszy(Map<String, Object?> a, Map<String, Object?> b) {
+      final cmpD = (a['data'] as String? ?? '').compareTo(b['data'] as String? ?? '');
+      return cmpD > 0 ||
+          (cmpD == 0 &&
+              (a['czas'] as String? ?? '').compareTo(b['czas'] as String? ?? '') > 0);
+    }
+
+    //osobno najnowszy wpis "liczba ramek =", bo TYLKO on niesie rodzaj ula (pogoda),
+    //typ ula (miara) i liczbę ramek. Wpis o likwidacji tych pól nie ma, więc dla ula
+    //zlikwidowanego bierzemy je stąd - wcześniej szły tu wartości domyślne i belka
+    //"Mini (ULI WE 1)" zamieniała się po imporcie na "Ul ( 10)".
     final Map<String, Map<String, Object?>> latest = {};
+    final Map<String, Map<String, Object?>> latestFrames = {};
     for (final row in rows) {
       final key = '${row['pasiekaNr']}.${row['ulNr']}';
       final cur = latest[key];
-      if (cur == null) {
-        latest[key] = row;
-      } else {
-        final cmpD = (row['data'] as String? ?? '').compareTo(cur['data'] as String? ?? '');
-        final isNewer = cmpD > 0 ||
-            (cmpD == 0 && (row['czas'] as String? ?? '').compareTo(cur['czas'] as String? ?? '') > 0);
-        if (isNewer) latest[key] = row;
+      if (cur == null || nowszy(row, cur)) latest[key] = row;
+      if ((row['parametr'] as String? ?? '') == frameCountParam) {
+        final curF = latestFrames[key];
+        if (curF == null || nowszy(row, curF)) latestFrames[key] = row;
       }
     }
 
@@ -1331,19 +1349,25 @@ class DBHelper {
           'aktual': 0,
         };
       } else if (liquidationValues.contains(parametr)) {
+        //ul zlikwidowany ma zostać w belce taki, jaki był - zmienia się tylko ikona
+        final fr = latestFrames[entry.key];
+        final frRodzaj = (fr?['pogoda'] as String?) ?? '';
+        final frTyp = (fr?['miara'] as String?) ?? '';
         record = {
           'id': entry.key,
           'pasiekaNr': p, 'ulNr': u,
           'przeglad': formattedDate,
           'ikona': 'black',
-          'ramek': 10,
+          'ramek': int.tryParse((fr?['wartosc'] as String?) ?? '') ?? 10,
           'korpusNr': 0,
           'trut': 0, 'czerw': 0, 'larwy': 0, 'jaja': 0, 'pierzga': 0,
           'miod': 0, 'dojrzaly': 0, 'weza': 0, 'susz': 0,
           'matka': 0, 'mateczniki': 0, 'usunmat': 0,
           'todo': '0', 'kategoria': '0', 'parametr': '0', 'wartosc': '0', 'miara': '0',
           'matka1': '0', 'matka2': '0', 'matka3': '0', 'matka4': '0', 'matka5': '0',
-          'h1': hiveLabel, 'h2': '0', 'h3': '0',
+          'h1': frRodzaj.isNotEmpty ? frRodzaj : hiveLabel,
+          'h2': frTyp.isNotEmpty ? frTyp : '0',
+          'h3': '0',
           'aktual': 0,
         };
       } else {

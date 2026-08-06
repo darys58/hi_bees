@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
+import '../helpers/queen_helpers.dart';
 import '../models/apiarys.dart';
 import '../models/dodatki1.dart';
 import '../models/frame.dart';
@@ -839,8 +840,9 @@ class _HivesScreenState extends State<HivesScreen> {
             List<Info> infosMatka1 = hivesInfo.where((m1) {
                 return  m1.data == tempDataMatka1 && m1.kategoria == 'queen' &&  m1.parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs; 
               }).toList();
-              if (infosMatka1[0].wartosc == 'mała' || infosMatka1[0].wartosc == 'słaba' || infosMatka1[0].wartosc == 'zła' || infosMatka1[0].wartosc == 'stara' ||
-                infosMatka1[0].wartosc == 'small' || infosMatka1[0].wartosc == 'to exchange' || infosMatka1[0].wartosc == 'canceled' || infosMatka1[0].wartosc == 'weak' ) {
+              //jakość matki znają queen_helpers - lista literałów łapała tylko polski
+              //i angielski, więc np. niemieckie "zu ersetzen" szło na kciuk w górę
+              if (qualityIsBad(infosMatka1[0].wartosc)) {
                 matka1 = 'zła';
                 if (ikona == 'red') { //bo był brak matki
                   ikona = 'orange';

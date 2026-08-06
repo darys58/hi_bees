@@ -497,7 +497,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get isVeryGoodCanceled =>
-      'è ottima/buona/ok/grande/piccola/debole/cattiva/vecchia';
+      'è ottima/buona/ok/grande/piccola/debole/da sostituire/vecchia';
 
   @override
   String get isMarked =>
@@ -1251,7 +1251,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get good => 'buona';
 
   @override
-  String get canceled => 'cattiva';
+  String get canceled => 'da sostituire';
 
   @override
   String get exchange => 'vecchia';

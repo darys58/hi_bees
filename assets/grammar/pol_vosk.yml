@@ -282,7 +282,6 @@ context:
       - stara
       - ok
       - okej
-      - zła
       - duża
       - mała
       - słaba
@@ -359,6 +358,9 @@ context:
 # zamiast zbieracz pyłek jest zbieracz pyłku - poprawnie gramatycznie
 # zamiast "ramka na korpus" jest teraz "ramek w korpusie" z dodatkowymi słowami poprawiającymi gramatyke - nie wiem czy przesadziłem
 # $queenQuality dopisałem "do wymiany" bo to typowy zwrot
+# $queenQuality: usunąłem "zła" - w liście wyboru jakości matki ta opcja została
+#   zastąpiona przez "do wymiany", więc głos nie ma czego zapisywać pod tym słowem
+#   (stare wpisy z wartością "zła" nadal czytamy i dalej dają kciuk w dół)
 # queenMark: było "nie ma znak" jest "nie ma znaku"
 # queenState: zamiast "dziewica" jest "dziewicza" - chyba lepiej brzmi
 # oprócz "matka jest z roku" dodałem "matka rocznik" XX

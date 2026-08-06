@@ -9,6 +9,7 @@ import 'dart:math' as math;
 import '../screens/infos_screen.dart';
 import '../screens/summary_screen.dart';
 import '../globals.dart' as globals;
+import '../helpers/queen_helpers.dart';
 import '../models/hive.dart';
 //import '../models/info.dart';
 
@@ -352,9 +353,10 @@ class HivesItem extends StatelessWidget {
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))
-                        if(hive.matka1 == 'ok')               
-                          Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),) 
-                        else if(hive.matka1 == 'zła') Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),), 
+                        if(qualityIsSet(hive.matka1))
+                          qualityIsBad(hive.matka1)
+                            ? Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),)
+                            : Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),),
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))  
@@ -452,9 +454,10 @@ class HivesItem extends StatelessWidget {
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))
-                        if(hive.matka1 == 'ok')               
-                          Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),) 
-                        else if(hive.matka1 == 'zła') Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),), 
+                        if(qualityIsSet(hive.matka1))
+                          qualityIsBad(hive.matka1)
+                            ? Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),)
+                            : Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),),
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
                               hive.kategoria != 'treatment'))  

@@ -48,6 +48,7 @@ import 'package:flutter_beep/flutter_beep.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:hi_bees/helpers/db_helper.dart';
 import 'package:provider/provider.dart';
+import '../helpers/queen_helpers.dart';
 import '../helpers/sound_helper.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:hi_bees/l10n/app_localizations.dart';
@@ -1707,10 +1708,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       'queenMark': {
         'nie ma znaku': l10n.unmarked, //"nie ma znak"
       },
-      //ikona matki: matka1 = zła (~6149). "do wymiany" to ta sama informacja
-      //co "stara" - bez przeliczenia matka do wymiany wychodziła jako OK
+      //ikona matki: matka1 = zła (~6149). "do wymiany" jest teraz OSOBNĄ pozycją listy
+      //(l10n.canceled - dawna "zła"), więc głos zapisuje dokładnie to, co da się
+      //wybrać ręcznie; wcześniej podmienialiśmy je na "stara"
       'queenQuality': {
-        'do wymiany': l10n.exchange, //"stara"
+        'do wymiany': l10n.canceled, //"do wymiany"
         'okej': 'ok',
       },
       //infos_screen ~931 tłumaczy zapis na etykietę - ręczna edycja zapisuje
@@ -6259,6 +6261,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //info(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ileUli INTEGER, data TEXT, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, uwagi TEXT)');
   zapisInfoDoBazy(String kat, String param, String wart, String miar) async {
     _zapisWTejKomendzie = true; //migawka do cofania trafi na stos po switchu
+    //Wpis "liczba ramek =" jest JEDYNYM, z którego import odtwarza belkę ula:
+    //pole pogoda = rodzaj ula (h1), pole miara = typ ula (h2). Dla niego muszą tam
+    //trafić dane ula, a nie ikona pogody i pusty ciąg - inaczej po imporcie Odkład
+    //gubił słowo "Odkład", a ulik weselny skrót typu.
+    final bool toLiczbaRamek =
+        param == AppLocalizations.of(context)!.numberOfFrame + " = ";
     if (ustawianaData != '')
       formattedDate = ustawianaData;
     else
@@ -6289,8 +6297,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               kat, //karegoria
               param, //parametr
               wart, //wartosc
-              miar, //miara
-              icon, //ikona pogody
+              toLiczbaRamek ? hives[i].h2 : miar, //miara (dla ramek: typ ula)
+              toLiczbaRamek ? hives[i].h1 : icon, //ikona pogody (dla ramek: rodzaj ula)
               '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
               formatedTime, //czas
               '', //uwagi
@@ -6396,6 +6404,18 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           matkaID = data[0]['id'] as int; //numer id matki - index z tabeli "matka"
         }
       }
+      //rodzaj i typ ula do wpisu "liczba ramek =" - patrz komentarz na początku metody
+      String rodzajDoInfo = '';
+      String typDoInfo = miar;
+      if (toLiczbaRamek) {
+        final ule = Provider.of<Hives>(context, listen: false).items.where((element) {
+          return element.id == ('$nrXXOfApiary.$nrXXOfHive');
+        }).toList();
+        if (ule.isNotEmpty) {
+          rodzajDoInfo = ule[0].h1;
+          typDoInfo = ule[0].h2;
+        }
+      }
       Infos.insertInfo(
           '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$kat.$param', //id
           formattedDate, //data
@@ -6404,10 +6424,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           kat, //karegoria
           param, //parametr
           wart, //wartosc
-          miar, //miara
-          matkaID > 0 //jezeli jest ID matki a jak nie ma to '' //ikona pogody
-            ?  matkaID.toString()
-            :'',
+          toLiczbaRamek ? typDoInfo : miar, //miara (dla ramek: typ ula)
+          toLiczbaRamek //ikona pogody (dla ramek: rodzaj ula)
+            ? rodzajDoInfo
+            : matkaID > 0 //jezeli jest ID matki a jak nie ma to ''
+              ?  matkaID.toString()
+              :'',
           '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
           formatedTime, //czas
           '', //uwagi
@@ -6471,8 +6493,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           korpusNr = tempKorpusNr; //zeby nie stracić belki z przegledem jezeli jest
 //Quality - matka1
           if (param == AppLocalizations.of(context)!.queen + '  ' +  AppLocalizations.of(context)!.isIs) 
-            if (wart == 'mała' || wart == 'słaba' || wart == 'zła' || wart == 'stara' ||
-                wart == 'small' || wart == 'to exchange' || wart == 'canceled' || wart == 'weak' ) {
+            //jakość matki znają queen_helpers - lista literałów łapała tylko polski
+            //i angielski, więc np. niemieckie "zu ersetzen" szło na kciuk w górę
+            if (qualityIsBad(wart)) {
               matka1 = 'zła';
               if (ikona == 'red') {//bo był brak matki                
                 ikona = 'orange';
@@ -10019,9 +10042,10 @@ print('openDialog = $openDialog');
                         if(hive.isNotEmpty && hive[0].matka4 != '' && hive[0].matka4 != '0')
                           SizedBox(width: 8),
   //ok //brak                    
-                        if(hive.isNotEmpty && hive[0].matka1 == 'ok')
-                        Icon(Icons.thumb_up_outlined,color: Color.fromARGB(255, 15, 200, 8),) 
-                        else if(hive[0].matka1 == 'zła') Icon(Icons.thumb_down_outlined,color: Color.fromARGB(255, 255, 0, 0),), 
+                        if(hive.isNotEmpty && qualityIsSet(hive[0].matka1))
+                          qualityIsBad(hive[0].matka1)
+                            ? Icon(Icons.thumb_down_outlined,color: Color.fromARGB(255, 255, 0, 0),)
+                            : Icon(Icons.thumb_up_outlined,color: Color.fromARGB(255, 15, 200, 8),),
                         if(hive.isNotEmpty && hive[0].matka1 != '' && hive[0].matka1 != '0')
                           SizedBox(width: 5),
   //unasienniona?                    

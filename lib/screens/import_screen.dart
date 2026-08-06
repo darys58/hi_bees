@@ -59,6 +59,7 @@ class _ImportScreenState extends State<ImportScreen> {
   // bool archOstatniRok = true;
   Map<String, String> _nfcTags = {}; // Przechowywanie tagow NFC podczas importu
   Map<String, String> _hiveTypes = {}; // Przechowywanie typow uli (h2) podczas importu
+  Map<String, String> _hiveKinds = {}; // Przechowywanie rodzajow uli (h1) podczas importu
   final ValueNotifier<double> _progressNotifier = ValueNotifier<double>(0.0);
   final ValueNotifier<String> _progressLabelNotifier = ValueNotifier<String>('');
   int _completedSteps = 0;
@@ -840,16 +841,21 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // Zapisanie tagow NFC i typow uli przed importem
               //tabela "ule" nie jest pobierana z serwera tylko odbudowywana z "ramka" i "info",
-              //wiec h2 (typ ula) przepada tak samo jak h3 (NFC) - obie kolumny trzeba odtworzyc
+              //wiec h1 (rodzaj ula) i h2 (typ ula) przepadaja tak samo jak h3 (NFC) -
+              //wszystkie trzy kolumny trzeba odtworzyc z kopii lokalnej
               final hivesRaw = await DBHelper.getData('ule');
               _nfcTags.clear();
               _hiveTypes.clear();
+              _hiveKinds.clear();
               for (var hive in hivesRaw) {
                 if (hive['h3'] != null && hive['h3'] != '0' && hive['h3'] != '') {
                   _nfcTags[hive['id']] = hive['h3'];
                 }
                 if (hive['h2'] != null && hive['h2'] != '0' && hive['h2'] != '') {
                   _hiveTypes[hive['id']] = hive['h2'];
+                }
+                if (hive['h1'] != null && hive['h1'] != '0' && hive['h1'] != '') {
+                  _hiveKinds[hive['id']] = hive['h1'];
                 }
               }
 
@@ -952,10 +958,13 @@ class _ImportScreenState extends State<ImportScreen> {
                 hiveLabel: loc.hIve,
               );
 
-              // 12a. Przywrocenie typow uli (h2) - przed zaladowaniem uli, zeby provider mial juz poprawne dane.
-              //Lokalna wartosc ma pierwszenstwo przed odtworzona z info.miara (analogicznie do NFC).
-              //Przy pustej mapie (nowa instalacja) nic nie robi - zostaje wartosc z applyInfoStateToHives.
-              await DBHelper.batchUpdateUleField('h2', _hiveTypes);
+              // 12a. Przywrocenie rodzajow (h1) i typow uli (h2) - przed zaladowaniem uli,
+              //zeby provider mial juz poprawne dane. Kopia lokalna LATA TYLKO DZIURY po
+              //odbudowie z info (stare wpisy "liczba ramek =" potrafia miec te pola puste),
+              //nie nadpisuje wartosci, ktora info przyniosla - patrz batchUpdateUleField.
+              //Przy pustej mapie (nowa instalacja) nic nie robi.
+              await DBHelper.batchUpdateUleField('h1', _hiveKinds, tylkoGdyPuste: true);
+              await DBHelper.batchUpdateUleField('h2', _hiveTypes, tylkoGdyPuste: true);
 
               // 13. Ładowanie uli
               _updateProgress(loc.rebuildingHives + '...');
@@ -1061,16 +1070,21 @@ class _ImportScreenState extends State<ImportScreen> {
 
                     // Zapisanie tagow NFC i typow uli przed importem
                     //tabela "ule" nie jest pobierana z serwera tylko odbudowywana z "ramka" i "info",
-                    //wiec h2 (typ ula) przepada tak samo jak h3 (NFC) - obie kolumny trzeba odtworzyc
+                    //wiec h1 (rodzaj ula) i h2 (typ ula) przepadaja tak samo jak h3 (NFC) -
+                    //wszystkie trzy kolumny trzeba odtworzyc z kopii lokalnej
                     final hivesRaw = await DBHelper.getData('ule');
                     _nfcTags.clear();
                     _hiveTypes.clear();
+                    _hiveKinds.clear();
                     for (var hive in hivesRaw) {
                       if (hive['h3'] != null && hive['h3'] != '0' && hive['h3'] != '') {
                         _nfcTags[hive['id']] = hive['h3'];
                       }
                       if (hive['h2'] != null && hive['h2'] != '0' && hive['h2'] != '') {
                         _hiveTypes[hive['id']] = hive['h2'];
+                      }
+                      if (hive['h1'] != null && hive['h1'] != '0' && hive['h1'] != '') {
+                        _hiveKinds[hive['id']] = hive['h1'];
                       }
                     }
 
@@ -1173,10 +1187,13 @@ class _ImportScreenState extends State<ImportScreen> {
                       hiveLabel: loc.hIve,
                     );
 
-                    // 12a. Przywrocenie typow uli (h2) - przed zaladowaniem uli, zeby provider mial juz poprawne dane.
-                    //Lokalna wartosc ma pierwszenstwo przed odtworzona z info.miara (analogicznie do NFC).
-                    //Przy pustej mapie (nowa instalacja) nic nie robi - zostaje wartosc z applyInfoStateToHives.
-                    await DBHelper.batchUpdateUleField('h2', _hiveTypes);
+                    // 12a. Przywrocenie rodzajow (h1) i typow uli (h2) - przed zaladowaniem uli,
+                    //zeby provider mial juz poprawne dane. Kopia lokalna LATA TYLKO DZIURY po
+                    //odbudowie z info (stare wpisy "liczba ramek =" potrafia miec te pola puste),
+                    //nie nadpisuje wartosci, ktora info przyniosla - patrz batchUpdateUleField.
+                    //Przy pustej mapie (nowa instalacja) nic nie robi.
+                    await DBHelper.batchUpdateUleField('h1', _hiveKinds, tylkoGdyPuste: true);
+                    await DBHelper.batchUpdateUleField('h2', _hiveTypes, tylkoGdyPuste: true);
 
                     // 13. Ładowanie uli
                     _updateProgress(loc.rebuildingHives + '...');

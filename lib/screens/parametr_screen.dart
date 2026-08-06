@@ -4,11 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:hi_bees/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
-import '../helpers/sound_helper.dart';
-import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
 import '../screens/parametry_ula_screen.dart';
 import '../screens/parametr_edit_screen.dart';
 import '../screens/hive_news_settings_screen.dart';
+import '../screens/voice_settings_screen.dart'; //ustawienia sterowania głosem
 //import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/dodatki1.dart';
@@ -26,8 +25,6 @@ class _ParametrScreenState extends State<ParametrScreen> {
   double miodMala = 0;
   double miodDuza = 0;
   bool _showZakupySprzedaz = true;
-  final _sound = SoundHelper();
-  bool _soundReady = false;
 
   @override
   void didChangeDependencies() {
@@ -39,12 +36,8 @@ class _ParametrScreenState extends State<ParametrScreen> {
       Provider.of<Infos>(context, listen: false).fetchAndSetInfos().then((_) {
         //wszystkie informacje dla wybranej pasieki i ula
       });
-      //inicjalizacja dźwięków (tylko gdy sterowanie głosem aktywne)
-      if (globals.key != '' && globals.key != 'bez_klucza') {
-        _sound.init().then((_) {
-          if (mounted) setState(() => _soundReady = true);
-        });
-      }
+      //dźwięki inicjuje ekran "Sterowanie głosem" (VoiceSettingsScreen) - tam
+      //stoją suwaki głośności; ekran głosowy robi to samo u siebie
       //inicjalizacja przełącznika Zakupy/Sprzedaż
       final dod1Init = Provider.of<Dodatki1>(context, listen: false).items;
       if (dod1Init.isNotEmpty) {
@@ -424,9 +417,24 @@ class _ParametrScreenState extends State<ParametrScreen> {
                     ),
                   ),
 
-//głośność dźwięków (tylko gdy sterowanie głosem aktywne)
-                  if (globals.key != '' && globals.key != 'bez_klucza' && _soundReady)
-                    _buildSoundVolumeSection(context),
+//Sterowanie głosem - osobny ekran (podgląd korpusu, nagrywanie notatek,
+//głośność odzywek), tak samo jak "Aktualności ula" wyżej. Belka bez ikony
+//i bez pogrubienia - konwencja tej listy.
+//Tekst po polsku, poza ARB: sterowanie głosem działa wyłącznie przy
+//globals.jezyk == 'pl_PL' (mamy tylko polski model Vosk).
+                  if (globals.key != '' && globals.key != 'bez_klucza')
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context)
+                            .pushNamed(VoiceSettingsScreen.routeName);
+                      },
+                      child: Card(
+                        child: ListTile(
+                          title: const Text('Sterowanie głosem'),
+                          trailing: const Icon(Icons.chevron_right),
+                        ),
+                      ),
+                    ),
 
 //ul TYP A
 
@@ -621,200 +629,5 @@ class _ParametrScreenState extends State<ParametrScreen> {
        */
                 ],
               ));
-  }
-
-  /// Mapowanie nazwy dźwięku na klucz lokalizacji.
-  String _soundLabel(BuildContext context, String name) {
-    final l = AppLocalizations.of(context)!;
-    switch (name) {
-      case 'wake_word': return l.soundWakeWord;
-      case 'start': return l.soundStart;
-      case 'listening': return l.soundListening;
-      case 'success': return l.soundSuccess;
-      case 'open': return l.soundOpen;
-      case 'close': return l.soundClose;
-      case 'error': return l.soundError;
-      case 'nie_rozumiem': return l.soundNieRozumiem;
-      default: return name;
-    }
-  }
-
-  /// Sekcja głośności dźwięków w Parametryzacji.
-  Widget _buildSoundVolumeSection(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-             // Sterowanie głosem: podgląd korpusu na żywo zamiast podpowiedzi poleceń.
-            // WYŁĄCZONY  -> podpowiedzi komend, ekran pionowy.
-            // WŁĄCZONY   -> korpus aktualizowany na żywo, ekran poziomy.
-            // (Wybór ekranu głosowego zniknął - został wyłącznie Vosk.)
-            Card(
-              child: ListTile(
-                title: Text('Live korpus'),
-                subtitle: Text('Podgląd aktualizowanego korpusu w trakcie poleceń (zamiast podpowiedzi, układ poziomy)'),
-                trailing: Switch.adaptive(
-                  value: globals.voice2LivePodglad,
-                  onChanged: (value) {
-                    setState(() {
-                      globals.voice2LivePodglad = value;
-                    });
-                  },
-                ),
-              ),
-            ),
-            // Diagnostyka głosu - tryb serwisowy do strojenia progów pewności.
-            // WYŁĄCZONA (produkcja) -> na ekranie nie pojawia się surowy tekst
-            //   z Vosk. Powód w globals.voiceDiagnostyka: gramatyka stoi na
-            //   aliasach fonetycznych ("pierzcha", "węża", "miodu branie",
-            //   "na grób") i pokazanie ich wygląda na błąd aplikacji.
-            // WŁĄCZONA -> pełny podgląd: co Vosk usłyszał, czy fraza przeszła
-            //   bramkę i z jaką pewnością (śr./min).
-            Card(
-              child: ListTile(
-                title: Text('Diagnostyka głosu'),
-                subtitle: Text(
-                    'Pokazuje rozpoznany tekst i pewność rozpoznania. Tekst bywa zapisany inaczej niż wypowiedziane słowo - to dopasowanie fonetyczne, nie błąd'),
-                trailing: Switch.adaptive(
-                  value: globals.voiceDiagnostyka,
-                  onChanged: (value) {
-                    setState(() {
-                      globals.voiceDiagnostyka = value;
-                    });
-                  },
-                ),
-              ),
-            ),
-            // Nagrywanie dyktowanych notatek. Obok tekstu zapisujemy ścieżkę
-            // dźwiękową (WAV 16 kHz mono) i przypinamy ją do notatki - po to,
-            // żeby dało się sprawdzić, co pszczelarz naprawdę powiedział, gdy
-            // transkrypcja wyszła przekręcona. Nagrania NIE idą do chmury i
-            // znikają po tygodniu albo razem z notatką (patrz RecordingHelper).
-            Card(
-              child: ListTile(
-                title: Text('Nagrywanie notatek'),
-                subtitle: Text(
-                    'Do dyktowanej notatki zapisywany jest też dźwięk - do odsłuchania, gdy tekst wyszedł przekręcony. Nagrania zostają na telefonie i kasują się po ${RecordingHelper.dniPrzechowywania} dniach'),
-                trailing: Switch.adaptive(
-                  value: globals.nagrywajNotatki,
-                  onChanged: (value) {
-                    setState(() {
-                      globals.nagrywajNotatki = value;
-                    });
-                  },
-                ),
-              ),
-            ),
-            // Voice screen 2 - wymuszenie układu poziomego (niezależnie od orientacji urządzenia)
-            // Card(
-            //   child: ListTile(
-            //     title: Text('Voice 2 - układ poziomy'),
-            //     subtitle: Text('Wymuś układ poziomy dla live podglądu korpusu (niezależnie od orientacji urządzenia)'),
-            //     trailing: Switch.adaptive(
-            //       value: globals.voice2LiveLandscape,
-            //       onChanged: (value) {
-            //         setState(() {
-            //           globals.voice2LiveLandscape = value;
-            //         });
-            //       },
-            //     ),
-            //   ),
-            // ),
-            
-            // nagłówek sekcji
-            ListTile(
-              leading: const Icon(Icons.volume_up),
-              title: Text(
-                l.soundVolume,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            // suwak głównej głośności
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(l.masterVolume,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Slider(
-                      value: _sound.masterVolume,
-                      min: 0.0,
-                      max: 1.0,
-                      divisions: 20,
-                      label: '${(_sound.masterVolume * 100).round()}%',
-                      onChanged: (v) {
-                        setState(() => _sound.masterVolume = v);
-                      },
-                      onChangeEnd: (_) => _sound.saveVolumes(),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 40,
-                    child: Text('${(_sound.masterVolume * 100).round()}%',
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontSize: 12)),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            // suwaki poszczególnych dźwięków
-            ...SoundHelper.soundNames.map((name) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                child: Row(
-                  children: [
-                    // przycisk odtwarzania
-                    IconButton(
-                      icon: const Icon(Icons.play_circle_outline, size: 28),
-                      tooltip: l.soundPlay,
-                      onPressed: () => _sound.play(name),
-                    ),
-                    // nazwa dźwięku
-                    SizedBox(
-                      width: 100,
-                      child: Text(
-                        _soundLabel(context, name),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                    // suwak
-                    Expanded(
-                      child: Slider(
-                        value: _sound.volumes[name] ?? 1.0,
-                        min: 0.0,
-                        max: 1.0,
-                        divisions: 20,
-                        label: '${((_sound.volumes[name] ?? 1.0) * 100).round()}%',
-                        onChanged: (v) {
-                          setState(() => _sound.volumes[name] = v);
-                        },
-                        onChangeEnd: (_) => _sound.saveVolumes(),
-                      ),
-                    ),
-                    // wartość %
-                    SizedBox(
-                      width: 40,
-                      child: Text(
-                        '${((_sound.volumes[name] ?? 1.0) * 100).round()}%',
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
   }
 }

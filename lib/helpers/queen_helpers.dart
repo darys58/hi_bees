@@ -19,6 +19,16 @@ const String kBreedEastern = 'eastern';
 const String kBreedAnatolian = 'anatolian';
 const String kBreedOther = 'other';
 
+// Canonical keys for queen quality (jakość matki)
+const String kQualityVeryGood = 'quality_very_good';
+const String kQualityGood = 'quality_good';
+const String kQualityBig = 'quality_big';
+const String kQualityOk = 'quality_ok';
+const String kQualityToReplace = 'quality_to_replace';
+const String kQualitySmall = 'quality_small';
+const String kQualityWeak = 'quality_weak';
+const String kQualityOld = 'quality_old';
+
 // Canonical keys for queen mark (znak)
 const String kMarkUnmarked = 'unMarked';
 const String kMarkWhite = 'mark_white';
@@ -145,6 +155,93 @@ const Map<String, String> _allMarkTranslations = {
   kMarkGreen: kMarkGreen, kMarkBlue: kMarkBlue,
   kMarkOther: kMarkOther,
 };
+
+// Jakość matki - info(kategoria 'queen', parametr "matka  jest") i kolumna ule.matka1.
+//
+// Do bazy leci GOŁE SŁOWO w języku ustawionym w chwili zapisu, a nie klucz. Wpisy
+// zrobione przed zmianą języka albo ściągnięte importem z innego telefonu są więc
+// po niemiecku czy po włosku - porównanie z bieżącym l10n ich NIE łapie i matka
+// do wymiany dostawała kciuk w górę. Stąd tabela wszystkich tłumaczeń, tak samo
+// jak przy rasie i znaku matki.
+//
+// Są tu też wartości HISTORYCZNE, bo w bazie zostają na zawsze:
+//   * "zła"/"canceled"/"schlecht"/... - opcja zastąpiona 06.08.2026 przez "do wymiany",
+//   * "to exchange" - angielska etykieta zamieniona wtedy na "old",
+//   * 'zła'/'ok' - WEWNĘTRZNE flagi belki ula (ule.matka1), nie etykiety z listy.
+const Map<String, String> _allQualityTranslations = {
+  // bardzo dobra (pl, en, de, fr, es, it, pt)
+  'bardzo dobra': kQualityVeryGood, 'very good': kQualityVeryGood,
+  'sehr gut': kQualityVeryGood, 'très bonne': kQualityVeryGood,
+  'muy buena': kQualityVeryGood, 'ottima': kQualityVeryGood,
+  'muito boa': kQualityVeryGood,
+  // dobra
+  'dobra': kQualityGood, 'good': kQualityGood, 'gut': kQualityGood,
+  'bonne': kQualityGood, 'buena': kQualityGood, 'buona': kQualityGood,
+  'boa': kQualityGood,
+  // duża ("grande" jest wspólne dla fr/es/it/pt)
+  'duża': kQualityBig, 'big': kQualityBig, 'groß': kQualityBig,
+  'grande': kQualityBig,
+  // ok - jedna wartość dla wszystkich języków, zarazem flaga belki
+  'ok': kQualityOk,
+  // do wymiany (dawniej "zła")
+  'do wymiany': kQualityToReplace, 'to replace': kQualityToReplace,
+  'zu ersetzen': kQualityToReplace, 'à remplacer': kQualityToReplace,
+  'a reemplazar': kQualityToReplace, 'da sostituire': kQualityToReplace,
+  'a substituir': kQualityToReplace,
+  'zła': kQualityToReplace, 'canceled': kQualityToReplace,
+  'schlecht': kQualityToReplace, 'mauvaise': kQualityToReplace,
+  'mala': kQualityToReplace, 'cattiva': kQualityToReplace,
+  'má': kQualityToReplace,
+  // mała (formy żeńskie z podpowiedzi isVeryGoodCanceled - na wszelki wypadek)
+  'mała': kQualitySmall, 'small': kQualitySmall, 'klein': kQualitySmall,
+  'petite': kQualitySmall, 'pequeno': kQualitySmall, 'pequena': kQualitySmall,
+  'piccolo': kQualitySmall, 'piccola': kQualitySmall,
+  // słaba
+  'słaba': kQualityWeak, 'weak': kQualityWeak, 'schwach': kQualityWeak,
+  'faible': kQualityWeak, 'debil': kQualityWeak, 'débil': kQualityWeak,
+  'debole': kQualityWeak, 'fraca': kQualityWeak,
+  // stara (en: dawniej "to exchange")
+  'stara': kQualityOld, 'old': kQualityOld, 'to exchange': kQualityOld,
+  'alt': kQualityOld, 'vieille': kQualityOld, 'vieja': kQualityOld,
+  'vecchia': kQualityOld, 'velha': kQualityOld,
+  // Canonical keys map to themselves
+  kQualityVeryGood: kQualityVeryGood, kQualityGood: kQualityGood,
+  kQualityBig: kQualityBig, kQualityOk: kQualityOk,
+  kQualityToReplace: kQualityToReplace,
+  kQualitySmall: kQualitySmall, kQualityWeak: kQualityWeak,
+  kQualityOld: kQualityOld,
+};
+
+/// Klucz jakości matki dla wartości z bazy; nieznanej NIE zgadujemy.
+String qualityToKey(String value) {
+  final v = value.trim();
+  return _allQualityTranslations[v] ??
+      _allQualityTranslations[v.toLowerCase()] ??
+      v;
+}
+
+/// Czy jakość matki ma dać kciuk W DÓŁ.
+///
+/// Wartość nieznana (wpisana ręcznie w prehistorycznej wersji, uszkodzona
+/// synchronizacją) liczy się jako DOBRA - lepiej nie straszyć czerwoną ikoną
+/// bez pokrycia w danych. Tak samo działały dotąd trzy z czterech miejsc.
+bool qualityIsBad(String value) {
+  switch (qualityToKey(value)) {
+    case kQualityToReplace:
+    case kQualitySmall:
+    case kQualityWeak:
+    case kQualityOld:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/// Czy jest co pokazywać - pusta jakość i '0' nie rysują kciuka w ogóle.
+bool qualityIsSet(String value) {
+  final v = value.trim();
+  return v.isNotEmpty && v != '0';
+}
 
 /// Convert a stored DB value to canonical key.
 /// If the value is already a canonical key or unknown, returns it as-is.
