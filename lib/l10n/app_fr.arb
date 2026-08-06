@@ -108,6 +108,7 @@
     "noActivation": "Sans activation",
     "subscription": "Abonnement",
     "hives": "ruche(s)",
+    "hivesPlural": "ruches",
     "hIve": "Ruche",
     "dAy": "Jour",
     "removeThisItem": "Voulez-vous supprimer cet élément ?",

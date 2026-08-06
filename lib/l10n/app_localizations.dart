@@ -756,6 +756,12 @@ abstract class AppLocalizations {
   /// **'hives'**
   String get hives;
 
+  /// No description provided for @hivesPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'hives'**
+  String get hivesPlural;
+
   /// No description provided for @hIve.
   ///
   /// In en, this message translates to:

@@ -219,6 +219,15 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   int nrXXOfApiary = 0; //numer pasieki
   int nrXXOfApairyTemp = 0;
   String? allHivesState;
+  //ZAKRES ULI ("ustaw ule od X do Y") - nie jest osobnym trybem, tylko
+  //zawężeniem trybu zbiorczego. Komenda ustawia readyAllHives = true i te
+  //granice; zero w którejkolwiek = tryb obejmuje CAŁĄ pasiekę, czyli zachowuje
+  //się dokładnie jak "ustaw wszystkie ule".
+  String? hivesRangeState;
+  int nrXXOdHive = 0;
+  int nrXXOdHiveTemp = 0;
+  int nrXXDoHive = 0;
+  int nrXXDoHiveTemp = 0;
   String? hiveState;
   int nrXXOfHive = 0;
   int nrXXOfHiveTemp = 0; //tymczasowy numer ula potrzebny przy resecie bo inna kolejność pól w slocie
@@ -1310,6 +1319,68 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     });
   }
 
+  //Czy tryb zbiorczy jest zawężony do przedziału numerów uli.
+  //Warunek `readyAllHives` jest tu celowo: gdy tryb gaśnie (wybór jednego ula,
+  //zmiana pasieki - kilkanaście miejsc ustawia readyAllHives = false), zakres
+  //ma przestać obowiązywać SAM, bez dopisywania zerowania w każdym z nich.
+  bool get _zakresUliAktywny =>
+      readyAllHives && nrXXOdHive != 0 && nrXXDoHive != 0;
+
+  //Ule objęte bieżącym zapisem zbiorczym. Bez zakresu - cała pasieka, czyli
+  //zachowanie sprzed dołożenia komendy "ustaw ule od X do Y".
+  List<Hive> _uleObjeteZapisem(List<Hive> wszystkie) {
+    if (!_zakresUliAktywny) return wszystkie;
+    return wszystkie
+        .where((ul) => ul.ulNr >= nrXXOdHive && ul.ulNr <= nrXXDoHive)
+        .toList();
+  }
+
+  //Numery uli z zakresu - dla migawki cofania. Numery bez istniejącego ula nic
+  //nie kosztują: odczyt po prostu nie znajdzie dla nich wierszy.
+  List<int> get _numeryUliZZakresu =>
+      [for (var nr = nrXXOdHive; nr <= nrXXDoHive; nr++) nr];
+
+  void resetZakresUli() {
+    hivesRangeState = null;
+    nrXXOdHive = 0;
+    nrXXOdHiveTemp = 0;
+    nrXXDoHive = 0;
+    nrXXDoHiveTemp = 0;
+  }
+
+  //"ule od dziesięć do pięć" ma znaczyć to samo co "od pięć do dziesięć" -
+  //przy ulu nikt nie będzie powtarzał komendy przez kolejność liczb.
+  void _uporzadkujZakresUli() {
+    if (nrXXOdHive != 0 && nrXXDoHive != 0 && nrXXOdHive > nrXXDoHive) {
+      final int pomoc = nrXXOdHive;
+      nrXXOdHive = nrXXDoHive;
+      nrXXDoHive = pomoc;
+    }
+  }
+
+  //Włączenie trybu zbiorczego przez "ustaw ule od X do Y". Skutki uboczne są
+  //TE SAME co przy "ustaw wszystkie ule" (case 'setAllHives') - jedyną różnicą
+  //są granice zakresu, których ta metoda celowo NIE dotyka.
+  void _wlaczTrybZbiorczyDlaZakresu() {
+    readyAllHives = true;
+    //UI wiersza zbiorczego czyta allHivesState; wartość inna niż `close`
+    //oznacza "otwarte", więc zakres pokazuje się w tym samym wierszu
+    allHivesState = AppLocalizations.of(context)!.set;
+    readyHive = false;
+    hiveState = AppLocalizations.of(context)!.close;
+    nrXXOfHive = 0;
+    bodyState = AppLocalizations.of(context)!.close;
+    readyBody = false;
+    globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+    if (nrXXOfApiary != 0) {
+      aktualizacjaPogody(nrXXOfApiary); //wpis do tabeli 'pogoda'
+    }
+    resetSumowania();
+    resetBody();
+    resetStory();
+    resetInfo();
+  }
+
   //Intencje, które COKOLWIEK zapisują do bazy - tylko dla nich zdejmujemy
   //migawkę do cofania. Reszta (setHive, setBody, setApiary, setDate, setHelp)
   //ustawia jedynie kontekst komendy i nie ma czego cofać.
@@ -1341,6 +1412,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //"ustaw ul 5": bez czyszczenia stosu zostawały na nim migawki jednego ula
     //sprzed przełączenia i "cofnij" sięgało po nie zamiast po wpis zbiorczy.
     'setAllHives',
+    //"ustaw ule od X do Y" - ten sam tryb, tylko węższy, więc i ten sam powód
+    //czyszczenia stosu: migawka sprzed zmiany zakresu dotyczy innych uli.
+    'setHivesRange',
   };
 
   //KOMENDA PASIECZNA. VoskInference ma ten sam kształt co dawny RhinoInference
@@ -1466,7 +1540,19 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       //Bez ramek: włączenie trybu woła resetBody(), które zeruje readyFrame
       //i readyFrames, a każda komenda ramkowa wymaga jednej z tych flag (albo
       //readyHive, też zerowanego) - w tym trybie tabela `ramka` jest nietykana.
-      zakres = ZakresPlastra.pasieka(data, nrXXOfApiary, zRamkami: false);
+      //
+      //ZAKRES ULI zawęża ten sam tryb, więc i migawkę: pusta lista `uleNr`
+      //znaczy "cała pasieka", a lista numerów - dokładnie te ule, do których
+      //poleci zapis. Czytanie całej pasieki też by zadziałało, ale cofanie
+      //przywracałoby wtedy wiersze uli, których komenda w ogóle nie dotknęła.
+      zakres = _zakresUliAktywny
+          ? ZakresPlastra(
+              data: data,
+              pasiekaNr: nrXXOfApiary,
+              uleNr: _numeryUliZZakresu,
+              zRamkami: false,
+            )
+          : ZakresPlastra.pasieka(data, nrXXOfApiary, zRamkami: false);
     } else {
       if (nrXXOfHive == 0) return null;
       zakres = ZakresPlastra.ul(data, nrXXOfApiary, nrXXOfHive);
@@ -5146,6 +5232,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                     readyBody = false;
                     readyInfo = false;
                     globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+                    resetZakresUli();
                     resetSumowania();
                     resetBody();
                     resetStory();
@@ -5155,6 +5242,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                       printText1 += AppLocalizations.of(context)!.allHivesAre;
                       printText1 += " ${slots[key]}";
                       readyAllHives = true;
+                      //"wszystkie ule" po "ule od X do Y" ma znowu znaczyć CAŁĄ
+                      //pasiekę - bez tego zostawałyby stare granice zakresu
+                      resetZakresUli();
                       beep('open');
                       readyHive = false;
                       hiveState = AppLocalizations.of(context)!.close;
@@ -5189,7 +5279,119 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               : printText += printText1;
           break;
 
-//setApiary - numer pasieki        
+//setHivesRange - zakres uli "ustaw ule od X do Y"
+//To NIE jest trzeci tryb pracy, tylko zawężenie trybu zbiorczego: włącza
+//readyAllHives dokładnie tak jak "ustaw wszystkie ule" i dokłada granice
+//nrXXOdHive/nrXXDoHive, po których filtruje się pętla zapisu. Dzięki temu
+//wpis info, belka ula i cofanie działają bez żadnych dodatkowych gałęzi.
+//Układ slotów przepisany z setFrames (para od-do z wariantami Temp na wypadek,
+//gdy liczby przyjdą przed czasownikiem), skutki uboczne z setAllHives.
+        case 'setHivesRange':
+          printText += AppLocalizations.of(context)!.hivesPlural; //" ule"
+          if (inference.slots!.isNotEmpty) {
+            Map<String, String> slots = inference.slots!;
+            //dla kazdego elementu slotu (parametru w wypowiadanej komendzie)
+            for (String key in slots.keys) {
+              switch (key) {
+                case 'hivesRangeState':
+                  hivesRangeState = '${slots[key]}';
+                  if (hivesRangeState ==
+                      AppLocalizations.of(context)!.close) {
+                    beep('close');
+                    printText1 += " ${slots[key]}";
+                    //zamknięcie zakresu gasi CAŁY tryb zbiorczy, a nie tylko
+                    //granice - inaczej "zamknij ule od 3 do 7" cicho rozszerzyłoby
+                    //zapis na całą pasiekę zamiast go zatrzymać
+                    readyAllHives = false;
+                    allHivesState = AppLocalizations.of(context)!.close;
+                    readyHive = false;
+                    hiveState = AppLocalizations.of(context)!.close;
+                    nrXXOfHive = 0;
+                    bodyState = AppLocalizations.of(context)!.close;
+                    readyBody = false;
+                    readyInfo = false;
+                    globals.ikonaUla = 'green'; //"zerowanie" ikony ula
+                    resetZakresUli();
+                    resetSumowania();
+                    resetBody();
+                    resetStory();
+                  } else {
+                    if (readyApiary == true) {
+                      printText1 += " ${slots[key]}";
+                      //granice mogły paść przed czasownikiem - wtedy czekają w Temp
+                      nrXXOdHive = nrXXOdHiveTemp;
+                      nrXXDoHive = nrXXDoHiveTemp;
+                      nrXXOdHiveTemp = 0;
+                      nrXXDoHiveTemp = 0;
+                      _uporzadkujZakresUli();
+                      _wlaczTrybZbiorczyDlaZakresu();
+                      beep('open');
+                    }
+                  }
+                  break;
+                case 'nrXXOdHive':
+                  nrXXOdHive = int.parse('${slots[key]}');
+                  //warunek jest "cokolwiek poza zamknięciem", a NIE "otwórz albo
+                  //ustaw" jak w setFrames. Slot $state ma dziewięć wartości i
+                  //przy zawężonej liście "wstaw ule od 3 do 7" wpadałoby w gałąź
+                  //else, zerując granice - a wtedy tryb zbiorczy pisze do CAŁEJ
+                  //pasieki. Przy ramkach to pomyłka o jedną ramkę, przy ulach
+                  //o całą pasiekę, więc tu nie ma miejsca na cichy fallback.
+                  if (hivesRangeState != null &&
+                      hivesRangeState !=
+                          AppLocalizations.of(context)!.close &&
+                      readyApiary == true) {
+                    beep('open');
+                    printText1 += " ${slots[key]}";
+                    //granica jest już zastosowana, więc Temp zostaje PUSTY.
+                    //Inaczej przeżyłby do następnej komendy, a case czasownika
+                    //czyta go w ciemno - "ustaw ule od 10 do 12" po wcześniejszym
+                    //"od 5 do 9" porównywałoby 10 ze starą dziewiątką i zamieniało
+                    //granice miejscami.
+                    _uporzadkujZakresUli();
+                  } else {
+                    if (readyApiary == true) {
+                      printText1 += " ${slots[key]}";
+                      nrXXOdHiveTemp = nrXXOdHive;
+                      nrXXOdHive = 0;
+                    }
+                  }
+                  break;
+                case 'nrXXDoHive':
+                  nrXXDoHive = int.parse('${slots[key]}');
+                  //patrz komentarz przy nrXXOdHive
+                  if (hivesRangeState != null &&
+                      hivesRangeState !=
+                          AppLocalizations.of(context)!.close &&
+                      readyApiary == true) {
+                    beep('open');
+                    printText1 += " ${slots[key]}";
+                    //Temp zostaje pusty - patrz komentarz przy nrXXOdHive
+                    _uporzadkujZakresUli();
+                  } else {
+                    if (readyApiary == true) {
+                      printText1 += " ${slots[key]}";
+                      nrXXDoHiveTemp = nrXXDoHive;
+                      nrXXDoHive = 0;
+                    }
+                  }
+                  break;
+              }
+            }
+          } else {
+            //jezeli nie zdekodowano slotu czyli parametrów intencji
+            printText = AppLocalizations.of(context)!.error;
+            beep('error');
+          }
+          printText1 == '' //jezeli nie ma slotu bo niewłaściwa kolejność komend
+              ? {
+                  printText = AppLocalizations.of(context)!.wrongCommand,
+                  beep('error'),
+                }
+              : printText += printText1;
+          break;
+
+//setApiary - numer pasieki
         case 'setApiary':
           printText += AppLocalizations.of(context)!.apiary; //" Apiary";
           intention = 'setApiary';
@@ -6071,9 +6273,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrXXOfApiary)
       .then((_) {
         final hivesData = Provider.of<Hives>(context, listen: false);
-        final hives = hivesData.items;
+        //JEDYNE miejsce, w którym "ustaw ule od X do Y" różni się od "ustaw
+        //wszystkie ule" - bez zakresu zwraca całą listę, czyli zachowanie
+        //sprzed dołożenia tej komendy.
+        final hives = _uleObjeteZapisem(hivesData.items);
         //print('ilość uli do wpisania info = ${hives.length}');
-        
+
         for (var i = 0; i < hives.length; i++) {
           //print('wpis nr $i');
           Infos.insertInfo(
@@ -6096,41 +6301,38 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           if (kat == 'feeding' || kat == 'treatment') {
 
             //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli
-            Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrXXOfApiary)
-            .then((_) {
-              final hiveData = Provider.of<Hives>(context, listen: false);
-              hive = hiveData.items.where((element) {
-                //to wczytanie danych ula
-                return element.id == ('$nrXXOfApiary.${hives[i].ulNr}');
-              }).toList();
+            //UWAGA: odczyt MUSI byc synchroniczny. Wczesniej byl tu zagniezdzony
+            //fetchAndSetHives().then(...), ktorego nikt nie awaitowal - insertHive ponizej
+            //wykonywal sie PRZED callbackiem i zapisywal stare/puste wartosci (m.in. h2 = typ ula,
+            //przez co znikal skrot typu w belce, a typ jednego ula wedrowal na inne).
+            //Lista "hives" pobrana wyzej ma juz pelne rekordy, wiec dodatkowy fetch byl zbedny.
+            final biezacyUl = hives[i];
+            hive = [biezacyUl];
 
-              if (hive.isNotEmpty) {
-                //pobranie danych o ulu
-                ikona = hive[0].ikona;
-                ramek = hive[0].ramek;
-                trut = hive[0].trut;
-                czerw = hive[0].czerw;
-                larwy = hive[0].larwy;
-                jaja = hive[0].jaja;
-                pierzga = hive[0].pierzga;
-                miod = hive[0].miod;
-                dojrzaly = hive[0].dojrzaly;
-                weza = hive[0].weza;
-                susz = hive[0].susz;
-                matka = hive[0].matka;
-                mateczniki = hive[0].mateczniki;
-                usunmat = hive[0].usunmat;
-                todo = hive[0].todo;
-                matka1 = hive[0].matka1;
-                matka2 = hive[0].matka2;
-                matka3 = hive[0].matka3;
-                matka4 = hive[0].matka4;
-                matka5 = hive[0].matka5;
-                rodzajUla = hive[0].h1;
-                typUla = hive[0].h2;
-                tagNFC = hive[0].h3;
-              }
-            });
+            //pobranie danych o ulu
+            ikona = biezacyUl.ikona;
+            ramek = biezacyUl.ramek;
+            trut = biezacyUl.trut;
+            czerw = biezacyUl.czerw;
+            larwy = biezacyUl.larwy;
+            jaja = biezacyUl.jaja;
+            pierzga = biezacyUl.pierzga;
+            miod = biezacyUl.miod;
+            dojrzaly = biezacyUl.dojrzaly;
+            weza = biezacyUl.weza;
+            susz = biezacyUl.susz;
+            matka = biezacyUl.matka;
+            mateczniki = biezacyUl.mateczniki;
+            usunmat = biezacyUl.usunmat;
+            todo = biezacyUl.todo;
+            matka1 = biezacyUl.matka1;
+            matka2 = biezacyUl.matka2;
+            matka3 = biezacyUl.matka3;
+            matka4 = biezacyUl.matka4;
+            matka5 = biezacyUl.matka5;
+            rodzajUla = biezacyUl.h1;
+            typUla = biezacyUl.h2;
+            tagNFC = biezacyUl.h3;
             // print(
             //     'wstawianie do tabeli ule !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ul = ${hives[i].ulNr}');
             //wpis do tabeli "ule"
@@ -6618,6 +6820,20 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                     TextSpan(
                         text: ' ' + AppLocalizations.of(context)!.allHives,
                         style: TextStyle(fontWeight: FontWeight.bold)),
+         //ustaw ule od do - zakres uli
+                    TextSpan(
+                        text: '.\n\n' + AppLocalizations.of(context)!.sEt),
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.hivesPlural +
+                            ' ' +
+                            AppLocalizations.of(context)!.from,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(text: ' 1', style: TextStyle(color: Colors.red)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.to,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(text: ' 5', style: TextStyle(color: Colors.red)),
                     TextSpan(
                         text: '.\n\n' + AppLocalizations.of(context)!.oPen),
                     TextSpan(
@@ -7539,6 +7755,20 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                     TextSpan(
                         text: ' ' + AppLocalizations.of(context)!.allHives,
                         style: TextStyle(fontWeight: FontWeight.bold)),
+         //ustaw ule od do - zakres uli
+                    TextSpan(
+                        text: '.\n\n' + AppLocalizations.of(context)!.sEt),
+                    TextSpan(
+                        text: ' ' +
+                            AppLocalizations.of(context)!.hivesPlural +
+                            ' ' +
+                            AppLocalizations.of(context)!.from,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(text: ' 1', style: TextStyle(color: Colors.red)),
+                    TextSpan(
+                        text: ' ' + AppLocalizations.of(context)!.to,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(text: ' 5', style: TextStyle(color: Colors.red)),
                     TextSpan(
                         text: '.\n\n' + AppLocalizations.of(context)!.oPen),
                     TextSpan(
@@ -9285,8 +9515,13 @@ print('openDialog = $openDialog');
                           //Text(AppLocalizations.of(context)!.hive),
                           allHivesState != AppLocalizations.of(context)!.close
                               ? Text(
-                                  AppLocalizations.of(context)!
-                                      .allTheHivesAreOpen,
+                                  //przy zakresie MUSI być widać granice: bez nich
+                                  //ekran wygląda identycznie jak przy zapisie do
+                                  //całej pasieki, a to dwie różne komendy
+                                  _zakresUliAktywny
+                                      ? '${AppLocalizations.of(context)!.hivesPlural} $nrXXOdHive-$nrXXDoHive'
+                                      : AppLocalizations.of(context)!
+                                          .allTheHivesAreOpen,
                                   style: const TextStyle(
                                     fontSize: 20,
                                     color: Color.fromARGB(255, 0, 0, 0),

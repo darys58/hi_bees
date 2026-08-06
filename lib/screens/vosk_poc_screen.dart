@@ -142,7 +142,9 @@ final List<String> _commandWords = [
   'ule', 'ustaw', 'usunąć', 'usuń', 'w', 'wcześniej', 'wirować', 'wolna',
   'wosk', 'wstaw', 'wszystkie', 'wyczyszczona', 'wymiany', 'wyposażenie',
   'wytnij', 'wyłącz', 'węża', 'z', 'zabierz', 'zamknij', 'zamknięta',
-  'zawiązała', 'załóż', 'załącz', 'zbieracz', 'zbiory', 'zbiór', 'zielona',
+  //'załóż' usunięte razem z wartością ze slotu $state (06.08.2026).
+  //'zabierz' ZOSTAJE - jest jeszcze w slocie `deleted` ("zabierz kratę").
+  'zawiązała', 'załącz', 'zbieracz', 'zbiory', 'zbiór', 'zielona',
   'zielony', 'znak', 'znaku', 'zostało', 'zła', 'ów', 'łagodna', 'żyje',
   'żółta', 'żółty',
 ];
@@ -207,8 +209,10 @@ final String _nakropFraza = _nakropTokeny.join(' ');
 // „na" świadomie POMINIĘTE mimo aliasu „na grób": zbyt pospolity przyimek,
 // żeby otwierał komendę. Bramka wpuszcza alias po dokładnym prefiksie.
 final Set<String> _anchorWords = {
-  // $state (setApiary/Hive/Body/Frame/HalfBody/AllHives/Frames/Equipment)
-  'wstaw', 'załóż', 'zabierz', 'usuń', 'załącz', 'wyłącz', 'otwórz', 'zamknij',
+  // $state (setApiary/Hive/Body/Frame/HalfBody/AllHives/HivesRange/Frames/Equipment)
+  //bez 'załóż' - usunięte ze slotu $state 06.08.2026 jako nieużywane.
+  //'zabierz' zostaje: otwiera komendę "zabierz kratę" ze slotu `deleted`.
+  'wstaw', 'zabierz', 'usuń', 'załącz', 'wyłącz', 'otwórz', 'zamknij',
   'ustaw',
   // $sizeOfFrame + „ramka/ramki/ramkę" (setFrame, setFrames, setChange)
   'mała', 'duża', 'małą', 'dużą', 'ramka', 'ramki', 'ramkę',

@@ -132,6 +132,16 @@ context:
         $pv.SingleDigitInteger:nrXOfHalfBody
     setAllHives:
       - $state:allHivesState wszystkie ule
+    # setHivesRange to WARIANT trybu "wszystkie ule" zawężony do przedziału
+    # numerów ("ustaw ule od pięć do dziesięć"). Włącza dokładnie ten sam tryb
+    # (readyAllHives), tylko zapis leci do uli z zakresu - patrz voice_vosk_screen.
+    # $state WYMAGANY, tak jak w setAllHives (a nie opcjonalny jak w setFrames):
+    # "ule od ... do ..." bez czasownika za łatwo pada w zwykłej rozmowie przy ulu,
+    # a ta komenda przestawia cel WSZYSTKICH kolejnych zapisów.
+    # Słowa "ule", "od", "do" są już w gramatyce (setAllHives, setFrames).
+    setHivesRange:
+      - $state:hivesRangeState ule od $pv.TwoDigitInteger:nrXXOdHive do
+        $pv.TwoDigitInteger:nrXXDoHive
     setFeeding:
       - zostało $pv.Percent:leftFood pokarmu
       - usuń $pv.Percent:removedFood pokarmu
@@ -199,9 +209,11 @@ context:
         $pv.TwoDigitInteger:nrTempFrame
   slots:
     state:
+      # "załóż" i "zabierz" USUNIĘTE 06.08.2026 - nigdy nie były używane, a slot
+      # $state wchodzi do OŚMIU wyrażeń, więc każda wartość mnoży się przez nie
+      # w gramatyce frazowej. Uwaga: "zabierz" ZOSTAJE w slocie `deleted`
+      # ("zabierz kratę") - to osobna lista i osobna komenda.
       - wstaw
-      - załóż
-      - zabierz
       - usuń
       - załącz
       - wyłącz
@@ -494,3 +506,29 @@ context:
 #   Oba słowa sprawdzone w pliki/vosk_slownik_pl.txt ("inna", "inny" - są).
 #   Listy słów w vosk_poc_screen.dart zsynchronizowane ("inna" do _commandWords
 #   i do _anchorWords - kolor matki może otwierać komendę).
+#
+# DOPISANE 06.08.2026 — setHivesRange ("ustaw ule od X do Y"):
+#   Brakujące ogniwo między "ustaw ul 5" (jeden ul) a "ustaw wszystkie ule"
+#   (cała pasieka). Zaimplementowane jako ZAWĘŻENIE trybu zbiorczego, nie jako
+#   trzeci tryb: komenda ustawia readyAllHives = true i dokłada granice
+#   nrXXOdHive/nrXXDoHive, a pętla zapisu w zapisInfoDoBazy filtruje po nich
+#   listę uli. Dzięki temu bez zmian działają: wpis info dla każdego ula,
+#   belka ula i cofanie (migawka dostaje ZakresPlastra z listą numerów uli
+#   zamiast pustej listy oznaczającej całą pasiekę).
+#   Wzorzec słowny wzięty z setFrames (od X do Y), semantyka z setAllHives.
+#   Żadnych nowych wartości slotów - $state jest wspólny, więc audyt wartości
+#   wobec app_pl.arb nie ma tu czego sprawdzać.
+#
+# USUNIĘTE 06.08.2026 — "załóż" i "zabierz" ze slotu $state (decyzja użytkownika:
+#   nigdy nie użyte). $state stoi w ośmiu wyrażeniach, więc dwie wartości mniej
+#   to zauważalnie mniejsza gramatyka frazowa przy zerowej stracie funkcjonalnej.
+#   SPRAWDZONE PRZED USUNIĘCIEM - nic na tych słowach nie stało:
+#     - kod porównuje wartości $state wyłącznie z loc.close/open/set
+#       ("zamknij"/"otwórz"/"ustaw"), a te zostają;
+#     - beePolenTrap i biovar przepuszczają wartość slotu do bazy jako WOLNY
+#       TEKST, bez żadnego case'a - nie było więc gałęzi do urwania;
+#     - "zabierz" ZOSTAJE w slocie `deleted` ($deleted:excluderDel, "zabierz
+#       kratę") - to inna lista, komenda działa dalej;
+#     - poławiacz pyłku: zostaje "usuń" (= app_pl.arb "remove"), a stare wpisy
+#       z wartością "zabierz" nadal wyświetla info_item.dart:745, bo porównanie
+#       z loc.delete siedzi w kodzie, nie w gramatyce.

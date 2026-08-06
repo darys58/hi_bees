@@ -108,6 +108,7 @@
     "noActivation": "Sin activacion",
     "subscription": "Suscripcion",
     "hives": "colmena(s)",
+    "hivesPlural": "colmenas",
     "hIve": "Colmena",
     "dAy": "Dia",
     "removeThisItem": "Deseas eliminar este elemento?",

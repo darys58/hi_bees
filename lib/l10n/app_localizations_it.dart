@@ -339,6 +339,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get hives => 'arnie';
 
   @override
+  String get hivesPlural => 'arnie';
+
+  @override
   String get hIve => 'Arnia';
 
   @override

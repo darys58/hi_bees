@@ -363,7 +363,8 @@ class DBHelper {
     await db.update('ule', {'$pole': wartosc}, where: 'id = ?', whereArgs: [id]);
   }
 
-  //batch update pojedynczego pola w tabeli ule - używane przy przywracaniu tagów NFC po imporcie
+  //batch update pojedynczego pola w tabeli ule - używane przy przywracaniu po imporcie
+  //kolumn, których nie da się odtworzyć z serwera: h3 (tagi NFC) i h2 (typ ula)
   static Future<void> batchUpdateUleField(String field, Map<String, String> entries) async {
     if (entries.isEmpty) return;
     final db = await DBHelper.database();

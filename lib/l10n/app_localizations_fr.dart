@@ -340,6 +340,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hives => 'ruche(s)';
 
   @override
+  String get hivesPlural => 'ruches';
+
+  @override
   String get hIve => 'Ruche';
 
   @override

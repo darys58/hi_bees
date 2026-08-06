@@ -158,7 +158,9 @@ class HivesItem extends StatelessWidget {
                         ),
                       ),
       //typ ula                
-                      hive.h2.isNotEmpty
+                      //'0' to znacznik "brak typu" wstawiany przy odbudowie uli podczas importu,
+                      //nie jest nazwa typu - nie wolno go pokazywac jako skrot
+                      hive.h2.isNotEmpty && hive.h2 != '0'
                       //? Text('(${hive.h2.substring(0, hive.h2.length < 5 ? hive.h2.length : 5)} ',
                       ? Text('(' + shorten('${hive.h2}'),
                           style: const TextStyle(

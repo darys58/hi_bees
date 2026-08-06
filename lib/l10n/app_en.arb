@@ -215,6 +215,7 @@
     "subscription": "Subscription",
     "@subscription": {},
     "hives": "hives",
+    "hivesPlural": "hives",
     "@hives": {},
     "hIve": "Hive",
     "@hIve": {},

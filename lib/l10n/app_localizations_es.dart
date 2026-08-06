@@ -339,6 +339,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get hives => 'colmena(s)';
 
   @override
+  String get hivesPlural => 'colmenas';
+
+  @override
   String get hIve => 'Colmena';
 
   @override

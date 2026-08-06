@@ -126,7 +126,9 @@
       "Bash(sed -n '/^  resetBody\\(\\) {/,/^  }/p' lib/screens/voice_vosk_screen.dart)",
       "Bash(sed -n '/^  resetSumowania\\(\\) {/,/^  }/p' lib/screens/voice_vosk_screen.dart)",
       "Bash(awk 'NR>=1431 && NR<=1470' lib/screens/voice_vosk_screen.dart)",
-      "Bash(awk 'NR>=5230 && NR<=5340' lib/screens/voice_vosk_screen.dart)"
+      "Bash(awk 'NR>=5230 && NR<=5340' lib/screens/voice_vosk_screen.dart)",
+      "Bash(awk 'NR>=5480 && NR<=5915 && /^\\\\s*\\\\}\\\\\\)/ {print NR\": \"$0}' lib/screens/voice_vosk_screen.dart)",
+      "Bash(awk *)"
     ]
   }
 }

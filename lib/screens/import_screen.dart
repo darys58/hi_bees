@@ -58,6 +58,7 @@ class _ImportScreenState extends State<ImportScreen> {
   // bool archRamki = true;
   // bool archOstatniRok = true;
   Map<String, String> _nfcTags = {}; // Przechowywanie tagow NFC podczas importu
+  Map<String, String> _hiveTypes = {}; // Przechowywanie typow uli (h2) podczas importu
   final ValueNotifier<double> _progressNotifier = ValueNotifier<double>(0.0);
   final ValueNotifier<String> _progressLabelNotifier = ValueNotifier<String>('');
   int _completedSteps = 0;
@@ -837,12 +838,18 @@ class _ImportScreenState extends State<ImportScreen> {
 
               final loc = AppLocalizations.of(context)!;
 
-              // Zapisanie tagow NFC przed importem
+              // Zapisanie tagow NFC i typow uli przed importem
+              //tabela "ule" nie jest pobierana z serwera tylko odbudowywana z "ramka" i "info",
+              //wiec h2 (typ ula) przepada tak samo jak h3 (NFC) - obie kolumny trzeba odtworzyc
               final hivesRaw = await DBHelper.getData('ule');
               _nfcTags.clear();
+              _hiveTypes.clear();
               for (var hive in hivesRaw) {
                 if (hive['h3'] != null && hive['h3'] != '0' && hive['h3'] != '') {
                   _nfcTags[hive['id']] = hive['h3'];
+                }
+                if (hive['h2'] != null && hive['h2'] != '0' && hive['h2'] != '') {
+                  _hiveTypes[hive['id']] = hive['h2'];
                 }
               }
 
@@ -944,6 +951,11 @@ class _ImportScreenState extends State<ImportScreen> {
                 formattedDate: formattedDate,
                 hiveLabel: loc.hIve,
               );
+
+              // 12a. Przywrocenie typow uli (h2) - przed zaladowaniem uli, zeby provider mial juz poprawne dane.
+              //Lokalna wartosc ma pierwszenstwo przed odtworzona z info.miara (analogicznie do NFC).
+              //Przy pustej mapie (nowa instalacja) nic nie robi - zostaje wartosc z applyInfoStateToHives.
+              await DBHelper.batchUpdateUleField('h2', _hiveTypes);
 
               // 13. Ładowanie uli
               _updateProgress(loc.rebuildingHives + '...');
@@ -1047,12 +1059,18 @@ class _ImportScreenState extends State<ImportScreen> {
                     showProgressDialog(context, '${AppLocalizations.of(context)!.dataImport} $rok', 16);
                     final loc = AppLocalizations.of(context)!;
 
-                    // Zapisanie tagow NFC przed importem
+                    // Zapisanie tagow NFC i typow uli przed importem
+                    //tabela "ule" nie jest pobierana z serwera tylko odbudowywana z "ramka" i "info",
+                    //wiec h2 (typ ula) przepada tak samo jak h3 (NFC) - obie kolumny trzeba odtworzyc
                     final hivesRaw = await DBHelper.getData('ule');
                     _nfcTags.clear();
+                    _hiveTypes.clear();
                     for (var hive in hivesRaw) {
                       if (hive['h3'] != null && hive['h3'] != '0' && hive['h3'] != '') {
                         _nfcTags[hive['id']] = hive['h3'];
+                      }
+                      if (hive['h2'] != null && hive['h2'] != '0' && hive['h2'] != '') {
+                        _hiveTypes[hive['id']] = hive['h2'];
                       }
                     }
 
@@ -1154,6 +1172,11 @@ class _ImportScreenState extends State<ImportScreen> {
                       formattedDate: formattedDate,
                       hiveLabel: loc.hIve,
                     );
+
+                    // 12a. Przywrocenie typow uli (h2) - przed zaladowaniem uli, zeby provider mial juz poprawne dane.
+                    //Lokalna wartosc ma pierwszenstwo przed odtworzona z info.miara (analogicznie do NFC).
+                    //Przy pustej mapie (nowa instalacja) nic nie robi - zostaje wartosc z applyInfoStateToHives.
+                    await DBHelper.batchUpdateUleField('h2', _hiveTypes);
 
                     // 13. Ładowanie uli
                     _updateProgress(loc.rebuildingHives + '...');

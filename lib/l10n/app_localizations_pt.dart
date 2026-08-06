@@ -338,6 +338,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get hives => 'colmeia(s)';
 
   @override
+  String get hivesPlural => 'colmeias';
+
+  @override
   String get hIve => 'Colmeia';
 
   @override

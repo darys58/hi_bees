@@ -338,6 +338,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get hives => 'ule(i)';
 
   @override
+  String get hivesPlural => 'ule';
+
+  @override
   String get hIve => 'Ul';
 
   @override
