@@ -4,7 +4,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:hi_bees/l10n/app_localizations.dart';
 import '../models/weathers.dart';
-import '../models/weather.dart';
 import '../models/apiarys.dart';
 
 class ApiarysAllMapScreen extends StatefulWidget {

@@ -1053,7 +1053,7 @@ abstract class AppLocalizations {
   /// No description provided for @isVeryGoodCanceled.
   ///
   /// In en, this message translates to:
-  /// **'is very good/good/ok/big/small/weak/canceled/to exchange'**
+  /// **'is very good/good/ok/big/small/weak/to replace/old'**
   String get isVeryGoodCanceled;
 
   /// No description provided for @isMarked.
@@ -2517,13 +2517,13 @@ abstract class AppLocalizations {
   /// No description provided for @canceled.
   ///
   /// In en, this message translates to:
-  /// **'canceled'**
+  /// **'to replace'**
   String get canceled;
 
   /// No description provided for @exchange.
   ///
   /// In en, this message translates to:
-  /// **'to exchange'**
+  /// **'old'**
   String get exchange;
 
   /// No description provided for @unmarked.

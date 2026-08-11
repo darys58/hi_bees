@@ -41,9 +41,8 @@
 // Warstwa audio siedzi w lib/helpers/vosk_engine.dart - tu jej nie ma.
 import 'dart:async';
 import 'dart:io' show Platform;
-import 'dart:typed_data' show Uint8List; //surowe PCM nagrywanej notatki
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart'; //stąd Uint8List - surowe PCM notatki
 import 'package:flutter_beep/flutter_beep.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:hi_bees/helpers/db_helper.dart';

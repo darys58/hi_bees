@@ -13,7 +13,6 @@ import '../models/frames.dart';
 import '../models/frame.dart';
 import '../models/hives.dart';
 import '../models/hive.dart';
-import '../models/infos.dart';
 
 class FramesDetailItem extends StatefulWidget {
   @override

@@ -32,9 +32,15 @@ void main() {
       // Liczby celowo dokładne - wychwytują sytuację, w której edycja .yml
       // cicho wywala wyrażenie (np. przez zły cudzysłów). Po ŚWIADOMEJ zmianie
       // gramatyki trzeba je tu podbić.
-      expect(silnik.liczbaWyrazen, 68,
+      //
+      // 71 = 68 (stan z d32e111) + 3: dwie formy voiceUndo ("hej maja cofnij
+      // ostatni zapis/wpis", commit 632c78d) i jedno wyrażenie setHivesRange
+      // ("ustaw ule od X do Y", commit 395c0f3). Zmiana jakości matki
+      // ("zła" -> "do wymiany") ruszyła tylko slot $queenQuality, więc liczby
+      // wyrażeń nie dotknęła.
+      expect(silnik.liczbaWyrazen, 71,
           reason: 'zmieniła się liczba wyrażeń w assets/grammar/pol_vosk.yml');
-      expect(silnik.intencje.length, 22);
+      expect(silnik.intencje.length, 24); // 22 + voiceUndo + setHivesRange
       expect(silnik.intencje, contains('setStore'));
       expect(silnik.intencje, contains('setMoveBody'));
     });
@@ -49,9 +55,8 @@ void main() {
       // pliki/vosk_parser_ref.py --slowa: 265 -> 268. Składa się na to komenda
       // "ustaw ule od X do Y" i usunięcie "załóż"/"zabierz" z $state (commit
       // 395c0f3, który tej liczby nie podbił) oraz usunięcie "zła" z
-      // $queenQuality (opcję zastąpiło "do wymiany"). Gdyby test podał inną
-      // liczbę - prawdą jest liczba z testu, byle różnica była tłumaczona
-      // świadomymi zmianami .yml.
+      // $queenQuality (opcję zastąpiło "do wymiany"). POTWIERDZONE pomiarem
+      // 06.08.2026 - ten expect przeszedł, więc szacunek trafił.
       expect(silnik.slowa().length, 227,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec słownika modelu');
       expect(silnik.slowa(), isNot(contains('zła')),
@@ -216,17 +221,17 @@ void main() {
           reason: 'do czuwania wciekła fraza spoza sesji: $czuwanie');
       // Zawężenie nie może uszkodzić pełnej gramatyki.
       //
-      // 3248 = 3121 (stan z d32e111) + 127. Delta policzona referencją
-      // (pliki/vosk_parser_ref.py --frazy): 3216 -> 3343, bo w kontenerze nie
-      // ma SDK, żeby policzyć to Dartem. Referencja liczy o kilkadziesiąt fraz
-      // więcej niż port, ale SAMA DELTA jest wspólna. Składają się na nią:
-      // cofanie ("hej maja cofnij ostatni zapis"), komenda "ustaw ule od X do Y"
-      // i usunięcie "załóż"/"zabierz" z $state (commity 632c78d i 395c0f3 -
-      // żaden nie podbił tej liczby) oraz -5 fraz po usunięciu "zła"
-      // z $queenQuality (opcję zastąpiło "do wymiany").
-      // Jeśli test poda inną liczbę, prawdą jest liczba z testu, byle różnica
-      // wynosiła dokładnie tyle, ile fraz świadomie zmieniono.
-      expect(silnik.frazy().length, 3248);
+      // 3343 = liczba ZMIERZONA (flutter test, 06.08.2026) i zgodna co do
+      // sztuki z referencją pliki/vosk_parser_ref.py --frazy. Wcześniejsza
+      // wartość 3248 była SZACUNKIEM z kontenera bez Dart SDK: przyjęto tam,
+      // że port liczy o kilkadziesiąt fraz mniej niż referencja i że wspólna
+      // jest sama delta. Pomiar to obalił - port i referencja dają dziś tę samą
+      // liczbę, więc wpisujemy ją wprost.
+      // Na stan 3343 składa się (od 3121 z d32e111): cofanie
+      // ("hej maja cofnij ostatni zapis/wpis", 632c78d), komenda
+      // "ustaw ule od X do Y" i usunięcie "załóż"/"zabierz" z $state (395c0f3)
+      // oraz wymiana "zła" na "do wymiany" w $queenQuality (c7a4e9d).
+      expect(silnik.frazy().length, 3343);
     });
   });
 

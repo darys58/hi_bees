@@ -26,7 +26,6 @@ class InfoItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final info = Provider.of<Info>(context, listen: false);
-    final loc = AppLocalizations.of(context)!;
     // Porównanie ze wszystkimi tłumaczeniami, bo parametr jest zapisany w języku w którym był utworzony
     const liquidationValues = {
       'likwidacja ula', 'hive liquidation', 'liquidation der Beute',
