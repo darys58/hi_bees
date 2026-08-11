@@ -87,7 +87,9 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           Card(
             child: ListTile(
               title: const Text('Podgląd korpusu w trakcie poleceń'),
-              trailing: Switch.adaptive(
+              //zwykły Switch, NIE Switch.adaptive: .adaptive daje na iOS zielony
+              //CupertinoSwitch, a Powiadomienia (SwitchListTile) są materiałowe
+              trailing: Switch(
                 value: globals.voice2LivePodglad,
                 onChanged: (value) {
                   setState(() {
@@ -132,7 +134,9 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
               title: const Text('Nagrywanie notatek'),
               subtitle: Text(
                   'Nagrania zostają na telefonie i kasują się po ${RecordingHelper.dniPrzechowywania} dniach'),
-              trailing: Switch.adaptive(
+              //zwykły Switch, NIE Switch.adaptive: .adaptive daje na iOS zielony
+              //CupertinoSwitch, a Powiadomienia (SwitchListTile) są materiałowe
+              trailing: Switch(
                 value: globals.nagrywajNotatki,
                 onChanged: (value) {
                   setState(() {

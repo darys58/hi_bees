@@ -389,7 +389,9 @@ class _ParametrScreenState extends State<ParametrScreen> {
                   Card(
                     child: ListTile(
                       title: Text(AppLocalizations.of(context)!.showPurchaseSale),
-                      trailing: Switch.adaptive(
+                      //zwykły Switch, NIE Switch.adaptive: .adaptive daje na iOS zielony
+                      //CupertinoSwitch, a Powiadomienia (SwitchListTile) są materiałowe
+                      trailing: Switch(
                         value: _showZakupySprzedaz,
                         onChanged: (value) {
                           DBHelper.updateDodatki1('d', value ? 'true' : 'false').then((_) {

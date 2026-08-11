@@ -40,7 +40,9 @@ import '../models/queen.dart';
 import '../helpers/nfc_helper.dart';
 import '../models/hives.dart';
 import '../screens/move_hive_screen.dart';
-import '../screens/vosk_poc_screen.dart'; //POC Faza 0 - test Vosk-PL (tymczasowe)
+//import '../screens/vosk_poc_screen.dart'; //POC Faza 0 - test Vosk-PL. Zaremowany
+//razem z ikoną POC niżej w actions (inaczej flutter analyze zgłasza unused_import).
+//Odkomentować oba naraz, jeżeli ekran POC ma znów być dostępny.
 //import '../models/apiarys.dart';
 
 //ekran startowy
@@ -1327,13 +1329,16 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             255, 255, 255, 255), //Color.fromARGB(255, 233, 140, 0),
         actions: <Widget>[
 
-          //POC Faza 0 - test Vosk-PL (TYMCZASOWE, do usunięcia po decyzji go/no-go)
-          IconButton(
-            icon: Icon(Icons.record_voice_over, color: Colors.deepPurple),
-            tooltip: 'POC Vosk-PL',
-            onPressed: () =>
-                Navigator.of(context).pushNamed(VoskPocScreen.routeName),
-          ),
+          //POC Faza 0 - test Vosk-PL. Ikona ZAKOMENTOWANA 11.08.2026: ekran jest
+          //narzędziem deweloperskim (surowy tekst z Vosk, tryby nasłuchu), nie ma
+          //czego szukać u użytkownika. Sam ekran i trasa zostają - żeby go włączyć,
+          //wystarczy odkomentować ten IconButton.
+          // IconButton(
+          //   icon: Icon(Icons.record_voice_over, color: Colors.deepPurple),
+          //   tooltip: 'POC Vosk-PL',
+          //   onPressed: () =>
+          //       Navigator.of(context).pushNamed(VoskPocScreen.routeName),
+          // ),
 
           //dodawanie ula (z pasieką)
           if(globals.key != '')

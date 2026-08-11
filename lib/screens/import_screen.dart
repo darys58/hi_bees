@@ -3570,7 +3570,9 @@ class _ImportScreenState extends State<ImportScreen> {
                 title: Text(AppLocalizations.of(context)!.autoEksportDoChmury, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle:
                     Text(AppLocalizations.of(context)!.onlyInspection),
-                trailing: Switch.adaptive(
+                //zwykły Switch, NIE Switch.adaptive: .adaptive daje na iOS zielony
+                //CupertinoSwitch, a Powiadomienia (SwitchListTile) są materiałowe
+                trailing: Switch(
                   value: isSwitched,
                   onChanged: (value) {
                     DBHelper.updateDodatki1('a', '$value');

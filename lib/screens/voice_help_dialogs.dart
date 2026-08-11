@@ -233,9 +233,9 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
     TextSpan(text: ' ' + l.queenCells, style: _wymagany),
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     _punktor,
-    TextSpan(text: l.dElete),
+    TextSpan(text: l.dElete, style: _wymagany),
     TextSpan(text: ' 3', style: _wartosc),
-    TextSpan(text: ' ' + l.queenCells),
+    TextSpan(text: ' ' + l.queenCells, style: _wymagany),
     //ustaw stronę ramki - $siteOfFrame ma też "obu", stąd leftRightBoth
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     _punktor,

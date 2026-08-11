@@ -68,7 +68,9 @@ class _HiveNewsSettingsScreenState extends State<HiveNewsSettingsScreen> {
             child: ListTile(
               leading: Icon(categories[i]['icon'] as IconData),
               title: Text(categories[i]['label'] as String),
-              trailing: Switch.adaptive(
+              //zwykły Switch, NIE Switch.adaptive: .adaptive daje na iOS zielony
+              //CupertinoSwitch, a Powiadomienia (SwitchListTile) są materiałowe
+              trailing: Switch(
                 value: _flags[categories[i]['flagIndex'] as int],
                 onChanged: (value) {
                   setState(() {
