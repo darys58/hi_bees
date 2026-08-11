@@ -9,9 +9,9 @@
 // CO JEST INACZEJ NIŻ W voice_screen2:
 //   1. Brak przycisku START. Nasłuch rusza sam po wejściu na ekran i trwa,
 //      dopóki ekran jest otwarty. Rolę przycisku przejęły komendy:
-//        "hej maja start"  ("zaczynamy", "startujemy") -> nasłuch komend,
-//        "hej maja stop"   ("kończymy", "koniec") -> powrót do czuwania.
-//      "hej maja" nie jest już osobnym silnikiem wake-word (Porcupine), tylko
+//        "Hej Maja start"  ("zaczynamy", "startujemy") -> nasłuch komend,
+//        "Hej Maja stop"   ("kończymy", "koniec") -> powrót do czuwania.
+//      "Hej Maja" nie jest już osobnym silnikiem wake-word (Porcupine), tylko
 //      zwykłą frazą gramatyki - patrz intencje voiceStart/voiceStop w
 //      assets/grammar/pol_vosk.yml.
 //   2. Dwie gramatyki. W czuwaniu recognizer zna WYŁĄCZNIE frazy sesji (6),
@@ -32,11 +32,11 @@
 //      POWROTEM DO CZUWANIA, nigdy cichym zawieszeniem. Decyzja z 01.08.2026.
 //   5. Dyktowanie notatki (nasłuch swobodny, recognizer bez gramatyki) ma DWA
 //      UJŚCIA - patrz [UjscieNotatki]:
-//        "zanotuj" / "zapisz notatkę" / "hej maja notatka do przeglądu"
+//        "zanotuj" / "zapisz notatkę" / "Hej Maja notatka do przeglądu"
 //              -> uwagi dzisiejszego przeglądu wybranego ula (tabela "info"),
-//        "hej maja notatka do notesu"
+//        "Hej Maja notatka do notesu"
 //              -> nowy wpis w Notesie (tabela "notatki").
-//      Jedno i drugie kończy "hej maja".
+//      Jedno i drugie kończy "Hej Maja".
 //
 // Warstwa audio siedzi w lib/helpers/vosk_engine.dart - tu jej nie ma.
 import 'dart:async';
@@ -70,7 +70,7 @@ import '../models/infos.dart';
 import '../models/note.dart'; //Notes - notatka dyktowana do Notesu
 import '../models/recording.dart'; //Recordings - nagrania dyktowanych notatek
 import '../helpers/recording_helper.dart'; //zapis WAV + cykl życia nagrań
-import '../helpers/undo_helper.dart'; //cofanie ("hej maja cofnij ostatni zapis")
+import '../helpers/undo_helper.dart'; //cofanie ("Hej Maja cofnij ostatni zapis")
 import 'voice_help_dialogs.dart'; //okna pomocy - wydzielone z tego pliku
 import '../models/weather.dart';
 import '../models/weathers.dart';
@@ -80,7 +80,7 @@ import '../models/weathers.dart';
 //}
 
 //Gdzie ma trafić dyktowana notatka. Komenda otwierająca mówi to wprost
-//("hej maja notatka do przeglądu" / "hej maja notatka do notesu"), bo pomyłka
+//("Hej Maja notatka do przeglądu" / "Hej Maja notatka do notesu"), bo pomyłka
 //jest droga: to dwie różne tabele i dwa różne miejsca w aplikacji.
 enum UjscieNotatki {
   /// Uwagi dzisiejszego przeglądu wybranego ula (tabela "info", kategoria
@@ -109,7 +109,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   String errorMessage = "";
   bool isButtonDisabled = false; //czy klawisz nieaktywny?
   bool isProcessing =
-      false; //czy trwa nasłuch komend (po "hej maja start")
+      false; //czy trwa nasłuch komend (po "Hej Maja start")
   String rhinoText = "";
 
   //warstwa wejścia: mikrofon -> Vosk -> gramatyka. Cała obsługa audio,
@@ -688,7 +688,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     return 'Nie zrozumiałam polecenia.';
   }
 
-  //otwarcie sesji: "hej maja start" zastąpiło przycisk START
+  //otwarcie sesji: "Hej Maja start" zastąpiło przycisk START
   Future<void> _startSesji() async {
     final VoskEngine? e = _engine;
     if (e == null || e.tryb == TrybNasluchu.komendy) return;
@@ -709,7 +709,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _zagraj('start'); //"czekam na polecenia"
   }
 
-  //zamknięcie sesji: "hej maja stop" -> powrót do czuwania, ekran zostaje
+  //zamknięcie sesji: "Hej Maja stop" -> powrót do czuwania, ekran zostaje
   Future<void> _stopSesji() async {
     final VoskEngine? e = _engine;
     if (e == null || e.tryb != TrybNasluchu.komendy) return;
@@ -738,8 +738,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
   //DYKTOWANIE NOTATKI
   //
-  //"zanotuj" / "zapisz notatkę" / "hej maja notatka do przeglądu" -> uwagi
-  //dzisiejszego przeglądu tego ula. "hej maja notatka do notesu" -> nowy wpis
+  //"zanotuj" / "zapisz notatkę" / "Hej Maja notatka do przeglądu" -> uwagi
+  //dzisiejszego przeglądu tego ula. "Hej Maja notatka do notesu" -> nowy wpis
   //w Notesie. Jedno i drugie otwiera ten sam nasłuch swobodny (recognizer bez
   //gramatyki); różni je wyłącznie [ujscie], czyli miejsce zapisu.
   //
@@ -1054,7 +1054,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     return 'Zapisałam $co$dzwiek$limit.';
   }
 
-  //NOTATKA DO NOTESU - drugie ujście dyktowania ("hej maja notatka do notesu").
+  //NOTATKA DO NOTESU - drugie ujście dyktowania ("Hej Maja notatka do notesu").
   //
   //Wpis idzie do tabeli "notatki", czyli tam, gdzie lądują notatki zakładane
   //ręcznie w Notesie - i tak samo jak one jest osobnym rekordem, a nie doklejką
@@ -1207,7 +1207,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //ręczny odpowiednik komend sesji - gdy w pasiece jest zbyt głośno
   void _przelaczSesjeRecznie() {
     if (_engine == null || !_silnikGotowy) return;
-    //w dyktowaniu ten sam gest KOŃCZY NOTATKĘ: użytkownik, którego "hej maja"
+    //w dyktowaniu ten sam gest KOŃCZY NOTATKĘ: użytkownik, którego "Hej Maja"
     //nie zostało usłyszane, musiałby inaczej czekać na ciszę albo na limit
     //czasu. Tekst zebrany do tej pory i tak zostanie zapisany.
     if (_engine!.dyktuje) {
@@ -1493,7 +1493,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //anulowalny timer zastępujący Future.delayed - przy nowej komendzie stary
     //timer jest anulowany. Po zwłoce sprzątamy ekran po komendzie; sesja trwa
     //dalej, więc NIE ma tu już żadnego dźwięku ani powrotu do wake-worda -
-    //następną komendę można powiedzieć od razu, bez "hej maja".
+    //następną komendę można powiedzieć od razu, bez "Hej Maja".
     _inferenceTimer = Timer(Duration(milliseconds: zwloka), () {
       if (!mounted) return; //sprawdzenie mounted wewnątrz timera
       setState(() {
@@ -1571,7 +1571,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     );
   }
 
-  //"hej maja cofnij ostatni zapis" - przywraca stan bazy sprzed ostatniej
+  //"Hej Maja cofnij ostatni zapis" - przywraca stan bazy sprzed ostatniej
   //ZAPISUJĄCEJ komendy. Komunikat idzie na pasek stanu, a nie tylko dźwiękiem:
   //przy ulu w rękawicach trzeba WIDZIEĆ, co zniknęło, zanim powie się to jeszcze
   //raz.
@@ -6779,7 +6779,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   }
 
   //Nasłuch startuje sam przy wejściu na ekran i nie ma przycisku START -
-  //sesję komend otwiera "hej maja start", a zamyka "hej maja stop"
+  //sesję komend otwiera "Hej Maja start", a zamyka "Hej Maja stop"
   //(_startSesji / _stopSesji przy warstwie wejścia). Ikona na pasku pokazuje
   //stan i służy jako ręczna awaryjna alternatywa, gdy w pasiece jest za głośno.
 
@@ -7067,7 +7067,7 @@ print('openDialog = $openDialog');
           ),
           actions: <Widget>[
             //WSKAŹNIK STANU, nie przycisk startu: mikrofon pracuje od wejścia
-            //na ekran. Czerwona kropka = sesja komend otwarta ("hej maja
+            //na ekran. Czerwona kropka = sesja komend otwarta ("Hej Maja
             //start"), zielone ucho = czuwanie. Dotknięcie robi to samo co
             //komenda - awaryjnie, gdy w pasiece jest za głośno na rozpoznanie.
             //W stanie awarii (przekreślony mikrofon) dotknięcie PONAWIA próbę
@@ -7077,7 +7077,7 @@ print('openDialog = $openDialog');
             //jest widoczna w KAŻDYM układzie ekranu. Podgląd notatki i pasek
             //stanu potrafią zniknąć razem z sekcją tekstową (live podgląd
             //korpusu), a użytkownik musi wiedzieć, że mikrofon nagrywa notatkę,
-            //a nie czeka na komendę. Zgłoszenie z 03.08.2026: po „hej maja
+            //a nie czeka na komendę. Zgłoszenie z 03.08.2026: po „Hej Maja
             //zanotuj" ekran wyglądał identycznie jak przed nią.
             IconButton(
               icon: Icon(
@@ -7102,8 +7102,8 @@ print('openDialog = $openDialog');
                   : ((isError || _mikrofonMilczy)
                       ? 'Mikrofon niedostępny — dotknij, by spróbować ponownie'
                       : (isProcessing
-                          ? 'Słucham komend — „hej maja stop"'
-                          : 'Czuwam — „hej maja start"')),
+                          ? 'Słucham komend — „Hej Maja stop"'
+                          : 'Czuwam — „Hej Maja start"')),
               //lambda, nie referencja: obie gałęzie muszą mieć ten sam typ
               //void Function(), inaczej wnioskowanie nie da VoidCallback?
               onPressed: (isError || _mikrofonMilczy)
@@ -8311,8 +8311,8 @@ print('openDialog = $openDialog');
                           //„notatka do przeglądu" a „notatka do notesu" ekran
                           //wygląda identycznie, a tekst ląduje gdzie indziej
                           _ujscieNotatki == UjscieNotatki.notes
-                              ? 'Notatka do notesu - zakończ słowami „hej maja"'
-                              : 'Notatka do przeglądu - zakończ słowami „hej maja"',
+                              ? 'Notatka do notesu - zakończ słowami „Hej Maja"'
+                              : 'Notatka do przeglądu - zakończ słowami „Hej Maja"',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color: Color.fromARGB(255, 120, 120, 120),
@@ -8695,7 +8695,7 @@ print('openDialog = $openDialog');
                 Flexible(
                   child: Text(
                     podglad.isEmpty
-                        ? 'Notatka - mów, zakończ słowami „hej maja"'
+                        ? 'Notatka - mów, zakończ słowami „Hej Maja"'
                         : podglad,
                     textAlign: TextAlign.center,
                     maxLines: 2,

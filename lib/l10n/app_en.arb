@@ -781,7 +781,7 @@
     "@addFrame": {},
     "introA": "\n\nTo create an apiary and individual hives, use the \"+\" icon above. \n\nInformation about the application on the website heymaya.eu is available after selecting the \"?\" icon above.",
     "@introA": {},
-    "introB": "\n\nExample:\n1. Select \"VOICE CONTROL\" - listening starts on its own.\n2. Say \"hej maja start\" (from now on say commands with no prefix; \"hej maja stop\" ends listening).\n3. Say \"Set apiary number one.\"\n4. Say \"Set hive number one.\"\n5. Say \"Set body number one.\"\n6. Say \"Set frame number one.\"\n7. Say \"Set eggs, twenty percent, on the left side\".",
+    "introB": "\n\nExample:\n1. Select \"VOICE CONTROL\" - listening starts on its own.\n2. Say \"Hej Maja start\" (from now on say commands with no prefix; \"Hej Maja stop\" ends listening).\n3. Say \"Set apiary number one.\"\n4. Say \"Set hive number one.\"\n5. Say \"Set body number one.\"\n6. Say \"Set frame number one.\"\n7. Say \"Set eggs, twenty percent, on the left side\".",
     "@introB": {},
     "introC": "\n\nApiary no. 1 will be created with hive no. 1, consisting of one body in which there is one frame with eggs, occupying 20% of the frame area on the left side. You can continue the inspection or end it by selecting \"STOP\" button.",
     "@introC": {},

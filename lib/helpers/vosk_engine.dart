@@ -456,7 +456,7 @@ class VoskEngine {
     // fizycznie odebrany dźwięk (patrz _porcja).
     _watchdog?.cancel();
     _watchdog = Timer.periodic(const Duration(seconds: 1), (_) => _sprawdzMikrofon());
-    _stan('Czuwam. Powiedz „hej maja start", żeby zacząć.');
+    _stan('Czuwam. Powiedz „Hej Maja start", żeby zacząć.');
     return true;
   }
 
@@ -554,10 +554,10 @@ class VoskEngine {
       case TrybNasluchu.komendy:
         return 'Słucham komend.';
       case TrybNasluchu.dyktowanie:
-        return 'Dyktuj notatkę. Zakończ słowami „hej maja".';
+        return 'Dyktuj notatkę. Zakończ słowami „Hej Maja".';
       case TrybNasluchu.czuwanie:
       case TrybNasluchu.wylaczony:
-        return 'Czuwam. Powiedz „hej maja start", żeby zacząć.';
+        return 'Czuwam. Powiedz „Hej Maja start", żeby zacząć.';
     }
   }
 

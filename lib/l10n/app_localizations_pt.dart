@@ -1219,7 +1219,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get introB =>
-      '\n\nExemplo:\n1. Selecione \"CONTROLO POR VOZ\" - a escuta inicia sozinha.\n2. Diga \"hej maja start\" (a partir de agora diga os comandos sem prefixo; \"hej maja stop\" termina a escuta).\n3. Diga \"Definir apiário número um\".\n4. Diga \"Definir colmeia número um\".\n5. Diga \"Definir alça número um\".\n6. Diga \"Definir quadro número um\".\n7. Diga \"Definir ovos, vinte por cento, do lado esquerdo\".';
+      '\n\nExemplo:\n1. Selecione \"CONTROLO POR VOZ\" - a escuta inicia sozinha.\n2. Diga \"Hej Maja start\" (a partir de agora diga os comandos sem prefixo; \"Hej Maja stop\" termina a escuta).\n3. Diga \"Definir apiário número um\".\n4. Diga \"Definir colmeia número um\".\n5. Diga \"Definir alça número um\".\n6. Diga \"Definir quadro número um\".\n7. Diga \"Definir ovos, vinte por cento, do lado esquerdo\".';
 
   @override
   String get introC =>

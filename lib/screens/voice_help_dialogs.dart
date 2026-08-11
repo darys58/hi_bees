@@ -49,6 +49,14 @@ const TextStyle _wartosc = TextStyle(color: Colors.red);
 const TextStyle _wartoscOpc =
     TextStyle(fontStyle: FontStyle.italic, color: Colors.red);
 
+// Wypunktowanie przed KAŻDYM poleceniem. Odstępy między poleceniami zeszły do
+// jednej nowej linii, żeby pomoc mieściła się na ekranie w poziomie - w pionie
+// polecenia zaczęły się przez to zlewać. Kropka daje oku punkt zaczepienia,
+// nie dokładając ani jednej linii wysokości.
+// Wstawiać przed pierwszym spanem polecenia, NIE przed nagłówkiem sekcji,
+// warunkiem ("kiedy pasieka i ul...") ani wierszami legendy.
+const TextSpan _punktor = TextSpan(text: '• ', style: _wymagany);
+
 typedef _Sekcja = List<TextSpan> Function(BuildContext);
 
 //---------------------------------------------------------------------------
@@ -69,23 +77,29 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
     TextSpan(
         text: '(te polecenia działają zawsze, także bez wybranej pasieki i ula:)\n\n',
         style: _warunek),
+    _punktor,
     TextSpan(text: 'Hej Maja', style: _wymagany),
     TextSpan(text: ' start/startujemy/zaczynamy'),
     TextSpan(text: ' - otwiera nasłuch poleceń.\n', style: _komentarz),
+    _punktor,
     TextSpan(text: 'Hej Maja', style: _wymagany),
     TextSpan(text: ' stop/koniec/kończymy'),
     TextSpan(text: ' - wraca do czuwania.\n', style: _komentarz),
+    _punktor,
     TextSpan(text: 'Zanotuj', style: _wymagany),
     TextSpan(text: '/zapisz notatkę/Hej Maja notatka do przeglądu'),
     TextSpan(
         text: ' - notatka do aktualnego przeglądu.\n',
         style: _komentarz),
+    _punktor,
     TextSpan(text: 'Hej Maja notatka do Notesu', style: _wymagany),
     TextSpan(text: ' - notatka do Notesu jako osobny wpis.\n',
-        style: _komentarz),   
+        style: _komentarz),
+    _punktor,
     TextSpan(text: 'Hej Maja', style: _wymagany),
     TextSpan(text: ' - koniec dyktowania notatki', style: _komentarz),
     TextSpan(text: '.\n', style: _komentarz),
+    _punktor,
     TextSpan(text: 'Hej Maja cofnij ostatni zapis/wpis', style: _wymagany),
     TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n\n',
         style: _komentarz),
@@ -99,37 +113,49 @@ List<TextSpan> _sekcjaLokacja(BuildContext context) {
   return [
     TextSpan(text: '\n' + l.resourceLocationSay, style: _naglowek),
     //otwórz pasiekę numer 1 - biernik (apiaryAcc), bo gramatyka ma "pasiekę"
-    TextSpan(text: '\n\n' + l.oPen, style: _wymagany),
+    TextSpan(text: '\n\n'),
+    _punktor,
+    TextSpan(text: l.oPen, style: _wymagany),
     TextSpan(text: ' ' + l.apiaryAcc, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 1', style: _wartosc),
     //otwórz wszystkie ule
-    TextSpan(text: '.\n' + l.oPen, style: _wymagany),
+    TextSpan(text: '.\n'),
+    _punktor,
+    TextSpan(text: l.oPen, style: _wymagany),
     TextSpan(text: ' ' + l.allHives, style: _wymagany),
     //ustaw ule od do - zakres uli
-    TextSpan(text: '.\n' + l.sEt, style: _wymagany),
+    TextSpan(text: '.\n'),
+    _punktor,
+    TextSpan(text: l.sEt, style: _wymagany),
     TextSpan(text: ' ' + l.hivesPlural + ' ' + l.from, style: _wymagany),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: ' ' + l.to, style: _wymagany),
     TextSpan(text: ' 5', style: _wartosc),
     //otwórz ul numer 5
-    TextSpan(text: '.\n' + l.oPen, style: _wymagany),
+    TextSpan(text: '.\n'),
+    _punktor,
+    TextSpan(text: l.oPen, style: _wymagany),
     TextSpan(text: ' ' + l.hive, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 5', style: _wartosc),
     //korpus numer
-    TextSpan(text: '.\n' + l.oPen, style: _wymagany),
+    TextSpan(text: '.\n'),
+    _punktor,
+    TextSpan(text: l.oPen, style: _wymagany),
     TextSpan(text: ' ' + l.body + '/' + l.halfBody, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 2', style: _wartosc),
     //ramka numer - tu gramatyka dopuszcza [ramka,ramkę], więc mianownik zostaje
-    //TextSpan(text: '.\n' + l.oPen),
-    TextSpan(text: '.\n' + l.oPen + ' ' + l.big + '/' + l.small, style: _opcjonalny),
+    TextSpan(text: '.\n'),
+    _punktor,
+    TextSpan(text: l.oPen + ' ' + l.big + '/' + l.small, style: _opcjonalny),
     TextSpan(text: ' ' + l.frame, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 6', style: _wartosc),
     TextSpan(text: ' ' + l.leftRightBoth + '.\n', style: _opcjonalny),
     //ramka po przeglądzie
+    _punktor,
     TextSpan(text: l.fRame, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 2 ', style: _wartosc),
@@ -138,6 +164,7 @@ List<TextSpan> _sekcjaLokacja(BuildContext context) {
     TextSpan(text: ' 5', style: _wartosc),
     TextSpan(text: '.\n'),
     //przenieś
+    _punktor,
     TextSpan(text: l.mOve, style: _wymagany),
     TextSpan(text: ': ' + l.hive + ' ' + l.number + ' 4 ', style: _opcjonalny),
     TextSpan(text: ' ' + l.body + '/' + l.halfBody, style: _wymagany),
@@ -147,13 +174,16 @@ List<TextSpan> _sekcjaLokacja(BuildContext context) {
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 10', style: _wartosc),
     //wstaw ramka
-    TextSpan(text: '.\n' + l.iNsert, style: _wymagany),
+    TextSpan(text: '.\n'),
+    _punktor,
+    TextSpan(text: l.iNsert, style: _wymagany),
     TextSpan(text: ' ' + l.big + '/' + l.small, style: _opcjonalny),
     TextSpan(text: ' ' + l.frameAcc, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 4', style: _wartosc),
     TextSpan(text: '.\n'),
     //ustaw ramkę od do - biernik (frameAcc), bo setFrames ma [ramkę,ramki]
+    _punktor,
     TextSpan(text: l.sEt, style: _wymagany),
     TextSpan(text: ' ' + l.frameAcc + ' ' + l.from, style: _wymagany),
     TextSpan(text: ' 1', style: _wartosc),
@@ -170,11 +200,13 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
     TextSpan(text: '\n' + l.inspectionSay + '\n', style: _naglowek),
     TextSpan(text: l.whenTheApiary + '\n\n', style: _komentarz),
     //czerw trut - "trut" to forma wymawiana, gramatyka ma homofon "trud"
+    _punktor,
     TextSpan(text: l.bRood, style: _opcjonalny),
     TextSpan(text: ' ' + l.trut, style: _wymagany),
     TextSpan(text: ' 10%', style: _wartosc),
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //czerw kryty - w PL przymiotnik idzie po rzeczowniku, w EN odwrotnie
+    _punktor,
     if (globals.jezyk == 'pl_PL')
       TextSpan(text: l.bRood, style: _opcjonalny)
     else
@@ -186,28 +218,36 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
     TextSpan(text: ' 20%', style: _wartosc),
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //pozostałe zasoby procentowe
+    _punktor,
     TextSpan(text: l.larvaeEggsPollenHoneySealdWaxComb, style: _wymagany),
     TextSpan(text: ' 35%', style: _wartosc),
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //matka na ramce
+    _punktor,
     TextSpan(text: l.queenColors + ' ', style: _wymagany),
     TextSpan(text: l.queen, style: _wymagany),
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //mateczniki
+    _punktor,
     TextSpan(text: '2', style: _wartosc),
     TextSpan(text: ' ' + l.queenCells, style: _wymagany),
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
+    _punktor,
     TextSpan(text: l.dElete),
     TextSpan(text: ' 3', style: _wartosc),
     TextSpan(text: ' ' + l.queenCells),
     //ustaw stronę ramki - $siteOfFrame ma też "obu", stąd leftRightBoth
-    TextSpan(text: ' ' + l.leftRight + '.\n' + l.sEt + ' ', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
+    _punktor,
+    TextSpan(text: l.sEt + ' ', style: _opcjonalny),
     TextSpan(text: ' ' + l.leftRightBoth),
     TextSpan(text: '  ' + l.site, style: _wymagany),
     TextSpan(text: '.\n'),
     //do zrobienia / zostało zrobione
+    _punktor,
     TextSpan(text: l.workFrameToExtraction + '.', style: _wymagany),
     TextSpan(text: ' - ' + l.tOdo + '\n', style: _komentarz),
+    _punktor,
     TextSpan(text: l.deletedInserted + '.', style: _wymagany),
     TextSpan(text: ' - ' + l.iSdone + '\n\n', style: _komentarz),
   ];
@@ -220,6 +260,7 @@ List<TextSpan> _sekcjaWyposazenie(BuildContext context) {
     TextSpan(text: '\n' + l.equipmentSay + '\n', style: _naglowek),
     TextSpan(text: l.whenAtLeastApiaryAndHive + '\n\n', style: _warunek),
     //ustaw ilość ramek w korpusie jest 10
+    _punktor,
     TextSpan(text: l.sEt, style: _opcjonalny),
     TextSpan(text: '  ' + l.numberOfFrame, style: _wymagany),
     TextSpan(text: ' ' + l.inBody),
@@ -227,19 +268,25 @@ List<TextSpan> _sekcjaWyposazenie(BuildContext context) {
     TextSpan(text: ' 10', style: _wartosc),
     TextSpan(text: '.\n\n'),
     //krata
+    _punktor,
     TextSpan(text: l.eXclud, style: _wymagany),
     TextSpan(text: ' ' + l.onBodyNumber),
     TextSpan(text: ' 1', style: _wartosc),
-    TextSpan(text: '.\n\n' + l.dElete + ' ' + l.exclud + '.\n\n', style: _wymagany),
+    TextSpan(text: '.\n\n'),
+    _punktor,
+    TextSpan(text: l.dElete + ' ' + l.exclud + '.\n\n', style: _wymagany),
     //podłoga
+    _punktor,
     TextSpan(text: l.bOttomBoard, style: _wymagany),
     TextSpan(text: ' ' + l.isDisinfectedOkDirty + '.'),
     //zbieracz pyłku - gramatyka ma "zbieracz", nie "poławiacz";
     //lista czasowników to slot $state z pol_vosk.yml (bez "włącz"!)
+    TextSpan(text: '\n\n'),
+    _punktor,
     if (globals.jezyk == 'pl_PL')
-      TextSpan(text: '\n\nZałącz/wyłącz/otwórz/zamknij/ustaw')
+      TextSpan(text: 'Załącz/wyłącz/otwórz/zamknij/ustaw')
     else
-      TextSpan(text: '\n\nBee pollen trap', style: _wymagany),
+      TextSpan(text: 'Bee pollen trap', style: _wymagany),
     if (globals.jezyk == 'pl_PL')
       TextSpan(text: ' zbieracz pyłku.\n\n', style: _wymagany)
     else
@@ -253,18 +300,23 @@ List<TextSpan> _sekcjaMatka(BuildContext context) {
   return [
     TextSpan(text: '\n' + l.queenSay + '\n', style: _naglowek),
     TextSpan(text: l.whenAtLeastApiaryAndHive + '\n\n', style: _warunek),
+    _punktor,
     TextSpan(text: l.qUeen, style: _wymagany),
     TextSpan(text: ' ' + l.wasBornIn),
     TextSpan(text: ' 23', style: _wartosc),
     TextSpan(text: '.\n\n'),
+    _punktor,
     TextSpan(text: l.qUeen, style: _wymagany),
     TextSpan(text: ' ' + l.isVirgine + '.\n\n'),
+    _punktor,
     TextSpan(text: l.qUeen, style: _wymagany),
     TextSpan(text: ' ' + l.isFreed + '.\n\n'),
+    _punktor,
     TextSpan(text: l.qUeen, style: _wymagany),
     TextSpan(text: ' ' + l.isMarked),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 55.\n\n', style: _wartoscOpc),
+    _punktor,
     TextSpan(text: l.qUeen, style: _wymagany),
     TextSpan(text: ' ' + l.isVeryGoodCanceled + '.\n\n'),
   ];
@@ -276,13 +328,16 @@ List<TextSpan> _sekcjaRodzina(BuildContext context) {
   return [
     TextSpan(text: '\n' + l.colonySay + '\n', style: _naglowek),
     TextSpan(text: l.whenAtLeastApiaryAndHive + '\n\n', style: _warunek),
+    _punktor,
     TextSpan(text: l.cOlony, style: _wymagany),
     TextSpan(text: ' ' + l.isIs, style: _opcjonalny),
     TextSpan(text: ' ' + l.deadFlight + '.\n\n'),
+    _punktor,
     TextSpan(text: l.cOlony, style: _wymagany),
     TextSpan(text: ' ' + l.isIs, style: _opcjonalny),
     TextSpan(text: ' ' + l.veryWeakStrong + '.\n\n'),
     //osyp - gramatyka ma "martwe pszczoły"/"martwych pszczół"
+    _punktor,
     TextSpan(text: l.dEadBees, style: _wymagany),
     TextSpan(text: ' 250', style: _wartosc),
     TextSpan(text: ' ' + l.milliliter + '.\n\n'),
@@ -295,33 +350,39 @@ List<TextSpan> _sekcjaDokarmianie(BuildContext context) {
   return [
     TextSpan(text: '\n' + l.feedingSay + '\n', style: _naglowek),
     TextSpan(text: l.whenAtLeastApiaryAndHive + '\n\n', style: _warunek),
+    _punktor,
     TextSpan(text: l.syrupOneToOne, style: _wymagany),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
     TextSpan(text: ' 5', style: _wartoscOpc),
     TextSpan(text: ' ' + l.liters + '.\n'),
+    _punktor,
     TextSpan(text: l.syrupThreeToTwo, style: _wymagany),
     TextSpan(text: ' 3', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
     TextSpan(text: ' 5', style: _wartoscOpc),
     TextSpan(text: ' ' + l.liters + '.\n'),
+    _punktor,
     TextSpan(text: l.bee, style: _opcjonalny),
     TextSpan(text: l.cAndy, style: _wymagany),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
     TextSpan(text: ' 0', style: _wartoscOpc),
     TextSpan(text: ' kilo.\n'),
+    _punktor,
     TextSpan(text: l.invert, style: _wymagany),
     TextSpan(text: ' 2', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
     TextSpan(text: ' 7', style: _wartoscOpc),
     TextSpan(text: ' ' + l.liters + '.\n'),
+    _punktor,
     TextSpan(text: l.lEftFood, style: _wymagany),
     TextSpan(text: ' 30%', style: _wartosc),
     if (globals.jezyk == 'pl_PL')
       TextSpan(text: ' pokarmu.\n')
     else
       TextSpan(text: '.\n'),
+    _punktor,
     TextSpan(text: l.rEmoveFood, style: _wymagany),
     TextSpan(text: ' 30%', style: _wartosc),
     if (globals.jezyk == 'pl_PL')
@@ -338,15 +399,18 @@ List<TextSpan> _sekcjaLeczenie(BuildContext context) {
     TextSpan(text: '\n' + l.treatmentSay + '\n', style: _naglowek),
     TextSpan(text: l.whenAtLeastApiaryAndHive + '\n\n', style: _warunek),
     //"chemia 1. dawka" nie istnieje w gramatyce polskiej - liczba idzie na końcu
+    if (globals.jezyk == 'en_US') _punktor,
     if (globals.jezyk == 'en_US') TextSpan(text: l.apivarolChemistry, style: _wymagany),
     if (globals.jezyk == 'en_US') TextSpan(text: ' ' + l.first, style: _wartosc),
     if (globals.jezyk == 'en_US') TextSpan(text: ' ' + l.dosePortionPart + '.\n\n'),
+    _punktor,
     TextSpan(text: l.apivarolChemistry, style: _wymagany),
     TextSpan(text: ' ' + l.dosePortionPart + ' ' + l.number),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: '.\n\n'),
     //paski - gramatyka: $state paski N [sztuk,sztuka,sztuki].
     //Słowa "Biovar" w gramatyce NIE MA, a czasownik stoi PRZED "paski".
+    _punktor,
     TextSpan(text: l.rem, style: _wymagany),
     TextSpan(text: ' ' + l.belts, style: _wymagany),
     TextSpan(text: ' 3', style: _wartosc),
@@ -356,9 +420,11 @@ List<TextSpan> _sekcjaLeczenie(BuildContext context) {
       TextSpan(text: ' sztuki.\n\n')
     else
       TextSpan(text: ' ' + l.mites + '.\n\n'),
+    _punktor,
     TextSpan(text: l.aCid, style: _wymagany),
     TextSpan(text: ' 40', style: _wartosc),
     TextSpan(text: ' ' + l.milliliter + '.\n\n'),
+    _punktor,
     TextSpan(text: l.vArroa, style: _wymagany),
     TextSpan(text: ' 218', style: _wartosc),
     TextSpan(text: ' ' + l.mites + '.\n\n'),
@@ -371,21 +437,25 @@ List<TextSpan> _sekcjaZbiory(BuildContext context) {
   return [
     TextSpan(text: '\n' + l.harvestSay + '\n', style: _naglowek),
     TextSpan(text: l.whenAtLeastApiaryAndHive + '\n\n', style: _warunek),
+    _punktor,
     TextSpan(text: l.honeyHarvest, style: _wymagany),
     TextSpan(text: ' 10 ', style: _wartosc),
     TextSpan(text: l.razy, style: _opcjonalny),
     TextSpan(text: ' ' + l.small + '/' + l.big + ' ' + l.frame),
     TextSpan(text: '.\n\n'),
+    _punktor,
     TextSpan(text: l.beePollenHarvest, style: _wymagany),
     TextSpan(text: ' 2 ', style: _wartosc),
     TextSpan(text: l.razy, style: _opcjonalny),
     TextSpan(text: ' ' + l.miarka),
     TextSpan(text: '.\n\n'),
     //wariant mililitrowy nie ma "razy" - patrz zbiór pyłku ($hundred) (NN)
+    _punktor,
     TextSpan(text: l.beePollenHarvest, style: _wymagany),
     TextSpan(text: ' 825 ', style: _wartosc),
     TextSpan(text: l.milliliter),
     TextSpan(text: '.\n\n'),
+    _punktor,
     TextSpan(text: l.beePollenHarvest, style: _wymagany),
     TextSpan(text: ' 0', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
@@ -399,19 +469,24 @@ List<TextSpan> _sekcjaData(BuildContext context) {
   final l = AppLocalizations.of(context)!;
   return [
     TextSpan(text: '\n' + l.dateSay + '\n', style: _naglowek),
-    TextSpan(text: '\n' + l.setOther),
+    TextSpan(text: '\n'),
+    _punktor,
+    TextSpan(text: l.setOther),
     TextSpan(text: ' ' + l.day, style: _wymagany),
     TextSpan(text: ' 15', style: _wartosc),
     TextSpan(text: '.\n\n'),
+    _punktor,
     TextSpan(text: l.setOther),
     TextSpan(text: ' ' + l.month, style: _wymagany),
     TextSpan(text: ' 3', style: _wartosc),
     TextSpan(text: '.\n\n'),
+    _punktor,
     TextSpan(text: l.setOther),
     TextSpan(text: ' ' + l.year, style: _wymagany),
     TextSpan(text: ' 22', style: _wartosc),
     TextSpan(text: '.\n\n'),
     //"ustaw aktualną datę" - gramatyka $date: aktualną, aktualna
+    _punktor,
     TextSpan(text: l.sEt),
     TextSpan(text: ' ' + l.current, style: _wymagany),
     TextSpan(text: ' ' + l.datee + '.\n\n'),
@@ -423,6 +498,7 @@ List<TextSpan> _sekcjaPomoc(BuildContext context) {
   final l = AppLocalizations.of(context)!;
 
   List<TextSpan> pozycja(String haslo) => [
+        _punktor,
         TextSpan(text: haslo, style: _wymagany),
         TextSpan(text: ' ' + l.helpMe + '.\n'),
       ];
@@ -445,6 +521,7 @@ List<TextSpan> _sekcjaPomoc(BuildContext context) {
     ...pozycja(l.tReatment),
     ...pozycja(l.hArvest),
     ...pozycja(l.dAte),
+    _punktor,
     TextSpan(text: l.closeHelp, style: _wymagany),
     TextSpan(text: '.\n'),
     TextSpan(text: l.whenAtLeastApiaryAndHive + '\n', style: _warunek),

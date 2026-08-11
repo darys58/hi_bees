@@ -391,7 +391,7 @@
     "editingFrame": "Edição de informações do quadro",
     "addFrame": "Adicionar informações do quadro",
     "introA": "\n\nPara criar um apiário e as colmeias individuais, utilize o ícone \"+\" acima. \n\nInformações sobre a aplicação no site heymaya.eu estão disponíveis ao selecionar o ícone \"?\" acima.",
-    "introB": "\n\nExemplo:\n1. Selecione \"CONTROLO POR VOZ\" - a escuta inicia sozinha.\n2. Diga \"hej maja start\" (a partir de agora diga os comandos sem prefixo; \"hej maja stop\" termina a escuta).\n3. Diga \"Definir apiário número um\".\n4. Diga \"Definir colmeia número um\".\n5. Diga \"Definir alça número um\".\n6. Diga \"Definir quadro número um\".\n7. Diga \"Definir ovos, vinte por cento, do lado esquerdo\".",
+    "introB": "\n\nExemplo:\n1. Selecione \"CONTROLO POR VOZ\" - a escuta inicia sozinha.\n2. Diga \"Hej Maja start\" (a partir de agora diga os comandos sem prefixo; \"Hej Maja stop\" termina a escuta).\n3. Diga \"Definir apiário número um\".\n4. Diga \"Definir colmeia número um\".\n5. Diga \"Definir alça número um\".\n6. Diga \"Definir quadro número um\".\n7. Diga \"Definir ovos, vinte por cento, do lado esquerdo\".",
     "introC": "\n\nSerá criado o apiário n.º 1 com a colmeia n.º 1, composta por uma alça, na qual se encontra um quadro com ovos, ocupando 20% da superfície do quadro do lado esquerdo. Pode continuar a inspeção ou terminá-la selecionando o botão \"STOP\".",
     "milliliter": "mililitros",
     "resourceLocationSay": "Localização do recurso - diga p. ex.:",
