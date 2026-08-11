@@ -4028,6 +4028,16 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                   helpMe = '${slots[key]}';
                   if (globals.jezyk == "pl_PL") {
                     switch (helpMe) {
+                      //sesja, dyktowanie notatek i cofanie - polecenia, które
+                      //powstały dopiero przy Vosku. Tylko w gałęzi polskiej,
+                      //bo slot $helpMe ma "notatki" wyłącznie w pol_vosk.yml.
+                      case 'notatki':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        pomocSesja(context, poZamknieciu: () => openDialog = false);
+                        beep('open');
+                        openDialog = true;
+                        break;
                       case 'lokacja':
                         if (openDialog) Navigator.pop(context); //zamknij okno
                         printText1 = ' ${slots[key]}';

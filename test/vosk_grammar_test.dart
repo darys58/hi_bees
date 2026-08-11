@@ -57,7 +57,11 @@ void main() {
       // 395c0f3, który tej liczby nie podbił) oraz usunięcie "zła" z
       // $queenQuality (opcję zastąpiło "do wymiany"). POTWIERDZONE pomiarem
       // 06.08.2026 - ten expect przeszedł, więc szacunek trafił.
-      expect(silnik.slowa().length, 227,
+      //
+      // 228 = 227 + "notatki" (11.08.2026): nowa wartość slotu $helpMe, przez
+      // którą "notatki pomóż mi" otwiera sekcję sesji/dyktowania/cofania.
+      // Zero OOV potwierdzone: pliki/vosk_gramatyka_test.py --oov.
+      expect(silnik.slowa().length, 228,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec słownika modelu');
       expect(silnik.slowa(), isNot(contains('zła')),
           reason: 'jakość matki "zła" zastąpiona przez "do wymiany"');
@@ -231,7 +235,12 @@ void main() {
       // ("hej maja cofnij ostatni zapis/wpis", 632c78d), komenda
       // "ustaw ule od X do Y" i usunięcie "załóż"/"zabierz" z $state (395c0f3)
       // oraz wymiana "zła" na "do wymiany" w $queenQuality (c7a4e9d).
-      expect(silnik.frazy().length, 3343);
+      //
+      // 3345 = 3343 + 2 (11.08.2026, referencja --frazy). Dołożono JEDNĄ wartość
+      // slotu $helpMe ("notatki"), a generator wypuszcza z niej DWIE frazy:
+      // samą wartość i całe "notatki pomóż mi" - tak samo jak dla pozostałych
+      // wartości tego slotu.
+      expect(silnik.frazy().length, 3345);
     });
   });
 

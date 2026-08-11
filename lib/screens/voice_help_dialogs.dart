@@ -55,8 +55,10 @@ typedef _Sekcja = List<TextSpan> Function(BuildContext);
 // sekcje
 //---------------------------------------------------------------------------
 
-// Sesja, dyktowanie notatki i cofanie - komendy, które pojawiły się dopiero
-// po przejściu z Picovoice na Vosk. Tekst po polsku POZA plikami ARB, bo
+// Sesja, dyktowanie notatki i cofanie - polecenia, które pojawiły się dopiero
+// po przejściu z Picovoice na Vosk. Wywołanie głosem: "notatki pomóż mi"
+// (wartość "notatki" slotu $helpMe w pol_vosk.yml -> case 'notatki'
+// w voice_vosk_screen). Tekst po polsku POZA plikami ARB, bo
 // sterowanie głosem działa wyłącznie przy globals.jezyk == 'pl_PL' (mamy tylko
 // polski model Vosk), więc tłumaczenia nie miałyby czego opisywać - tak samo
 // jak w voice_settings_screen.dart. Stąd też strażnik na języku poniżej.
@@ -65,31 +67,27 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
   return [
     TextSpan(text: '\nSesja, notatki i cofanie - powiedz np.:\n', style: _naglowek),
     TextSpan(
-        text: '(te komendy działają zawsze, także bez wybranej pasieki i ula:)\n\n',
+        text: '(te polecenia działają zawsze, także bez wybranej pasieki i ula:)\n\n',
         style: _warunek),
-    TextSpan(text: 'hej maja start', style: _wymagany),
-    TextSpan(text: ' (albo: zaczynamy, startujemy)', style: _opcjonalny),
-    TextSpan(text: ' - otwiera nasłuch komend.\n\n', style: _komentarz),
-    TextSpan(text: 'hej maja stop', style: _wymagany),
-    TextSpan(text: ' (albo: kończymy, koniec)', style: _opcjonalny),
-    TextSpan(text: ' - wraca do czuwania.\n\n', style: _komentarz),
-    TextSpan(text: 'zanotuj', style: _wymagany),
-    TextSpan(text: ' (albo: zapisz notatkę, hej maja notatka do przeglądu)',
-        style: _opcjonalny),
+    TextSpan(text: 'Hej Maja', style: _wymagany),
+    TextSpan(text: ' start/startujemy/zaczynamy'),
+    TextSpan(text: ' - otwiera nasłuch poleceń.\n', style: _komentarz),
+    TextSpan(text: 'Hej Maja', style: _wymagany),
+    TextSpan(text: ' stop/koniec/kończymy'),
+    TextSpan(text: ' - wraca do czuwania.\n', style: _komentarz),
+    TextSpan(text: 'Zanotuj', style: _wymagany),
+    TextSpan(text: '/zapisz notatkę/Hej Maja notatka do przeglądu'),
     TextSpan(
-        text: ' - dyktowana notatka trafia do uwag dzisiejszego przeglądu '
-            'wybranego ula.\n\n',
+        text: ' - notatka do aktualnego przeglądu.\n',
         style: _komentarz),
-    TextSpan(text: 'hej maja notatka do notesu', style: _wymagany),
-    TextSpan(text: ' - dyktowana notatka trafia do Notesu jako osobny wpis.\n\n',
-        style: _komentarz),
-    TextSpan(text: 'Notatkę kończysz słowami ', style: _komentarz),
-    TextSpan(text: 'hej maja', style: _wymagany),
-    TextSpan(text: '.\n\n', style: _komentarz),
-    TextSpan(text: 'hej maja cofnij ostatni zapis', style: _wymagany),
-    TextSpan(text: ' (albo: ostatni wpis)', style: _opcjonalny),
-    TextSpan(
-        text: ' - przywraca stan sprzed ostatniej zapisującej komendy.\n\n',
+    TextSpan(text: 'Hej Maja notatka do Notesu', style: _wymagany),
+    TextSpan(text: ' - notatka do Notesu jako osobny wpis.\n',
+        style: _komentarz),   
+    TextSpan(text: 'Hej Maja', style: _wymagany),
+    TextSpan(text: ' - koniec dyktowania notatki', style: _komentarz),
+    TextSpan(text: '.\n', style: _komentarz),
+    TextSpan(text: 'Hej Maja cofnij ostatni zapis/wpis', style: _wymagany),
+    TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n\n',
         style: _komentarz),
   ];
 }
@@ -101,36 +99,36 @@ List<TextSpan> _sekcjaLokacja(BuildContext context) {
   return [
     TextSpan(text: '\n' + l.resourceLocationSay, style: _naglowek),
     //otwórz pasiekę numer 1 - biernik (apiaryAcc), bo gramatyka ma "pasiekę"
-    TextSpan(text: '\n\n' + l.oPen),
+    TextSpan(text: '\n\n' + l.oPen, style: _wymagany),
     TextSpan(text: ' ' + l.apiaryAcc, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 1', style: _wartosc),
     //otwórz wszystkie ule
-    TextSpan(text: '.\n\n' + l.oPen),
+    TextSpan(text: '.\n' + l.oPen, style: _wymagany),
     TextSpan(text: ' ' + l.allHives, style: _wymagany),
     //ustaw ule od do - zakres uli
-    TextSpan(text: '.\n\n' + l.sEt),
+    TextSpan(text: '.\n' + l.sEt, style: _wymagany),
     TextSpan(text: ' ' + l.hivesPlural + ' ' + l.from, style: _wymagany),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: ' ' + l.to, style: _wymagany),
     TextSpan(text: ' 5', style: _wartosc),
     //otwórz ul numer 5
-    TextSpan(text: '.\n\n' + l.oPen),
+    TextSpan(text: '.\n' + l.oPen, style: _wymagany),
     TextSpan(text: ' ' + l.hive, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 5', style: _wartosc),
     //korpus numer
-    TextSpan(text: '.\n\n' + l.oPen),
+    TextSpan(text: '.\n' + l.oPen, style: _wymagany),
     TextSpan(text: ' ' + l.body + '/' + l.halfBody, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 2', style: _wartosc),
     //ramka numer - tu gramatyka dopuszcza [ramka,ramkę], więc mianownik zostaje
-    TextSpan(text: '.\n\n' + l.oPen),
-    TextSpan(text: ' ' + l.big + '/' + l.small, style: _opcjonalny),
+    //TextSpan(text: '.\n' + l.oPen),
+    TextSpan(text: '.\n' + l.oPen + ' ' + l.big + '/' + l.small, style: _opcjonalny),
     TextSpan(text: ' ' + l.frame, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 6', style: _wartosc),
-    TextSpan(text: ' ' + l.leftRightBoth + '.\n\n', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRightBoth + '.\n', style: _opcjonalny),
     //ramka po przeglądzie
     TextSpan(text: l.fRame, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
@@ -138,10 +136,10 @@ List<TextSpan> _sekcjaLokacja(BuildContext context) {
     TextSpan(text: l.framesAfter, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 5', style: _wartosc),
-    TextSpan(text: '.\n\n'),
+    TextSpan(text: '.\n'),
     //przenieś
-    TextSpan(text: l.mOve),
-    TextSpan(text: ' ' + l.hive + ' ' + l.number + ' 4 ', style: _opcjonalny),
+    TextSpan(text: l.mOve, style: _wymagany),
+    TextSpan(text: ': ' + l.hive + ' ' + l.number + ' 4 ', style: _opcjonalny),
     TextSpan(text: ' ' + l.body + '/' + l.halfBody, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 3', style: _wartosc),
@@ -149,14 +147,14 @@ List<TextSpan> _sekcjaLokacja(BuildContext context) {
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 10', style: _wartosc),
     //wstaw ramka
-    TextSpan(text: '\n\n' + l.iNsert),
+    TextSpan(text: '.\n' + l.iNsert, style: _wymagany),
     TextSpan(text: ' ' + l.big + '/' + l.small, style: _opcjonalny),
-    TextSpan(text: ' ' + l.frame, style: _wymagany),
+    TextSpan(text: ' ' + l.frameAcc, style: _wymagany),
     TextSpan(text: ' ' + l.number, style: _opcjonalny),
     TextSpan(text: ' 4', style: _wartosc),
-    TextSpan(text: '.\n\n'),
+    TextSpan(text: '.\n'),
     //ustaw ramkę od do - biernik (frameAcc), bo setFrames ma [ramkę,ramki]
-    TextSpan(text: l.sEt, style: _opcjonalny),
+    TextSpan(text: l.sEt, style: _wymagany),
     TextSpan(text: ' ' + l.frameAcc + ' ' + l.from, style: _wymagany),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: ' ' + l.to, style: _wymagany),
@@ -175,7 +173,7 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
     TextSpan(text: l.bRood, style: _opcjonalny),
     TextSpan(text: ' ' + l.trut, style: _wymagany),
     TextSpan(text: ' 10%', style: _wartosc),
-    TextSpan(text: ' ' + l.leftRight + '.\n\n', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //czerw kryty - w PL przymiotnik idzie po rzeczowniku, w EN odwrotnie
     if (globals.jezyk == 'pl_PL')
       TextSpan(text: l.bRood, style: _opcjonalny)
@@ -186,30 +184,30 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
     else
       TextSpan(text: ' ' + l.bRood, style: _wymagany),
     TextSpan(text: ' 20%', style: _wartosc),
-    TextSpan(text: ' ' + l.leftRight + '.\n\n', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //pozostałe zasoby procentowe
     TextSpan(text: l.larvaeEggsPollenHoneySealdWaxComb, style: _wymagany),
     TextSpan(text: ' 35%', style: _wartosc),
-    TextSpan(text: ' ' + l.leftRight + '.\n\n', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //matka na ramce
     TextSpan(text: l.queenColors + ' ', style: _wymagany),
     TextSpan(text: l.queen, style: _wymagany),
-    TextSpan(text: ' ' + l.leftRight + '.\n\n', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //mateczniki
     TextSpan(text: '2', style: _wartosc),
     TextSpan(text: ' ' + l.queenCells, style: _wymagany),
-    TextSpan(text: ' ' + l.leftRight + '.\n\n', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     TextSpan(text: l.dElete),
     TextSpan(text: ' 3', style: _wartosc),
     TextSpan(text: ' ' + l.queenCells),
     //ustaw stronę ramki - $siteOfFrame ma też "obu", stąd leftRightBoth
-    TextSpan(text: ' ' + l.leftRight + '.\n\n' + l.sEt + ' ', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRight + '.\n' + l.sEt + ' ', style: _opcjonalny),
     TextSpan(text: ' ' + l.leftRightBoth),
     TextSpan(text: '  ' + l.site, style: _wymagany),
-    TextSpan(text: '.\n\n'),
+    TextSpan(text: '.\n'),
     //do zrobienia / zostało zrobione
     TextSpan(text: l.workFrameToExtraction + '.', style: _wymagany),
-    TextSpan(text: ' - ' + l.tOdo + '\n\n', style: _komentarz),
+    TextSpan(text: ' - ' + l.tOdo + '\n', style: _komentarz),
     TextSpan(text: l.deletedInserted + '.', style: _wymagany),
     TextSpan(text: ' - ' + l.iSdone + '\n\n', style: _komentarz),
   ];
@@ -229,7 +227,7 @@ List<TextSpan> _sekcjaWyposazenie(BuildContext context) {
     TextSpan(text: ' 10', style: _wartosc),
     TextSpan(text: '.\n\n'),
     //krata
-    TextSpan(text: '  ' + l.eXclud, style: _wymagany),
+    TextSpan(text: l.eXclud, style: _wymagany),
     TextSpan(text: ' ' + l.onBodyNumber),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: '.\n\n' + l.dElete + ' ' + l.exclud + '.\n\n', style: _wymagany),
@@ -301,29 +299,29 @@ List<TextSpan> _sekcjaDokarmianie(BuildContext context) {
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
     TextSpan(text: ' 5', style: _wartoscOpc),
-    TextSpan(text: ' ' + l.liters + '.\n\n'),
+    TextSpan(text: ' ' + l.liters + '.\n'),
     TextSpan(text: l.syrupThreeToTwo, style: _wymagany),
     TextSpan(text: ' 3', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
     TextSpan(text: ' 5', style: _wartoscOpc),
-    TextSpan(text: ' ' + l.liters + '.\n\n'),
+    TextSpan(text: ' ' + l.liters + '.\n'),
     TextSpan(text: l.bee, style: _opcjonalny),
     TextSpan(text: l.cAndy, style: _wymagany),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
     TextSpan(text: ' 0', style: _wartoscOpc),
-    TextSpan(text: ' kilo.\n\n'),
+    TextSpan(text: ' kilo.\n'),
     TextSpan(text: l.invert, style: _wymagany),
     TextSpan(text: ' 2', style: _wartosc),
     TextSpan(text: ' ' + l.point, style: _opcjonalny),
     TextSpan(text: ' 7', style: _wartoscOpc),
-    TextSpan(text: ' ' + l.liters + '.\n\n'),
+    TextSpan(text: ' ' + l.liters + '.\n'),
     TextSpan(text: l.lEftFood, style: _wymagany),
     TextSpan(text: ' 30%', style: _wartosc),
     if (globals.jezyk == 'pl_PL')
-      TextSpan(text: ' pokarmu.\n\n')
+      TextSpan(text: ' pokarmu.\n')
     else
-      TextSpan(text: '.\n\n'),
+      TextSpan(text: '.\n'),
     TextSpan(text: l.rEmoveFood, style: _wymagany),
     TextSpan(text: ' 30%', style: _wartosc),
     if (globals.jezyk == 'pl_PL')
@@ -426,12 +424,17 @@ List<TextSpan> _sekcjaPomoc(BuildContext context) {
 
   List<TextSpan> pozycja(String haslo) => [
         TextSpan(text: haslo, style: _wymagany),
-        TextSpan(text: ' ' + l.helpMe + '.\n\n'),
+        TextSpan(text: ' ' + l.helpMe + '.\n'),
       ];
 
   return [
-    TextSpan(text: '\n' + l.helpSay + '\n', style: _naglowek),
-    TextSpan(text: '(' + l.forPreciseHelp + ')\n\n', style: _warunek),
+    TextSpan(text: '\n' + l.helpSay + ' ', style: _naglowek),
+    TextSpan(text: '(' + l.forPreciseHelp + ')\n', style: _warunek),
+    //"notatki pomóż mi" -> _sekcjaSesja. Po polsku i za strażnikiem języka
+    //z tego samego powodu co sama sekcja: opisuje polecenia, które istnieją
+    //tylko w polskim modelu Vosk. Bez strażnika pozycja prowadziłaby do
+    //pustego okna, bo _sekcjaSesja zwraca wtedy [].
+    if (globals.jezyk == 'pl_PL') ...pozycja('Notatki'),
     ...pozycja(l.lOcation),
     ...pozycja(l.iNspection),
     ...pozycja(l.eQuipment),
@@ -443,8 +446,8 @@ List<TextSpan> _sekcjaPomoc(BuildContext context) {
     ...pozycja(l.hArvest),
     ...pozycja(l.dAte),
     TextSpan(text: l.closeHelp, style: _wymagany),
-    TextSpan(text: '.\n\n'),
-    TextSpan(text: l.whenAtLeastApiaryAndHive + '\n\n', style: _warunek),
+    TextSpan(text: '.\n'),
+    TextSpan(text: l.whenAtLeastApiaryAndHive + '\n', style: _warunek),
     ...pozycja(l.hIve),
     ...pozycja(l.hIve + ' ' + l.before),
     ...pozycja(l.hIve + ' ' + l.after),
@@ -535,6 +538,10 @@ Future<void> pomocPelna(BuildContext context, {VoidCallback? poZamknieciu}) =>
       _sekcjaPomoc,
       _sekcjaLegenda,
     ], poZamknieciu);
+
+// polecenie "notatki pomóż mi" - sesja, dyktowanie notatek i cofanie
+Future<void> pomocSesja(BuildContext context, {VoidCallback? poZamknieciu}) =>
+    _pokazOkno(context, [_sekcjaSesja], poZamknieciu);
 
 Future<void> pomocLokacja(BuildContext context, {VoidCallback? poZamknieciu}) =>
     _pokazOkno(context, [_sekcjaLokacja], poZamknieciu);

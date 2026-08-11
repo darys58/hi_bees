@@ -138,6 +138,7 @@ POMOC = [
         'ustaw inny rok dwadzieścia dwa', 'ustaw aktualną datę',
     ]),
     ('pomóż mi', [
+        'notatki pomóż mi',
         'lokacja pomóż mi', 'przegląd pomóż mi', 'wyposażenie pomóż mi',
         'matka pomóż mi', 'rodzina pomóż mi', 'dokarmianie pomóż mi',
         'leczenie pomóż mi', 'zbiory pomóż mi', 'data pomóż mi',

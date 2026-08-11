@@ -517,11 +517,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'łagodna/agresywna/ok/w nastroju do ucieczki/zawiązała kłąb/nie żyje';
 
   @override
-  String get veryWeakStrong =>
-      'bardzo silna/silna/normalna/słaba/bardzo słaba';
+  String get veryWeakStrong => 'bardzo silna/silna/normalna/słaba/bardzo słaba';
 
   @override
-  String get feedingSay => 'Pokarm:';
+  String get feedingSay => 'Dokarmianie:';
 
   @override
   String get syrupOneToOne => 'Syrop jeden do jednego';

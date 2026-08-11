@@ -288,6 +288,12 @@ context:
       - bardzo dobra
       - dobra
     helpMe:
+      # "notatki pomóż mi" otwiera sekcję sesji, dyktowania i cofania - jedyne
+      # polecenia, które NIE mają odpowiednika w pomocy z czasów Rhino, bo
+      # powstały dopiero przy Vosku. Słowo "notatki" jest w słowniku modelu
+      # (pliki/vosk_slownik_pl.txt) i w gramatyce stoi już "notatka"/"notatkę"
+      # (voiceNote), więc nie wnosi nowego kontrastu do rozróżnienia.
+      - notatki
       - ul po
       - ul przed
       - lokacja
