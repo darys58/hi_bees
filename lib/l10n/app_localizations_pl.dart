@@ -31,6 +31,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get apiary => 'pasieka';
 
   @override
+  String get apiaryAcc => 'pasiekę';
+
+  @override
   String get aPiary => 'Pasieka';
 
   @override
@@ -47,6 +50,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get frame => 'ramka';
+
+  @override
+  String get frameAcc => 'ramkę';
 
   @override
   String get store => 'zasoby';
@@ -433,7 +439,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get larvaeEggsPollenHoneySealdWaxComb =>
-      'Larwa/jajka/pierzga/miód/pokarm/nakrop/dojrzały/węza/susz';
+      'Larwy/jajka/pierzga/miód/pokarm/nakrop/dojrzały/węza/susz';
 
   @override
   String get dElete => 'Usuń';
@@ -447,7 +453,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get deletedInserted =>
-      'Usuń ramka/wstaw ramka/izolacja/przesuń w lewo/ przesuń w prawo';
+      'Usuń ramkę/wstaw ramkę/izolacja/przesuń w lewo/przesuń w prawo';
 
   @override
   String get iSdone => 'zostało zrobione';
@@ -463,13 +469,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get frameNumber => 'numer ramki';
 
   @override
-  String get inBody => 'na korpus';
+  String get inBody => 'w korpusie';
 
   @override
-  String get bOttomBoard => 'Podłoga/dennica';
+  String get bOttomBoard => 'Podłoga';
 
   @override
-  String get isDisinfectedOkDirty => 'jest ok/brudna/czysta';
+  String get isDisinfectedOkDirty => 'jest ok/brudna/czysta/wyczyszczona';
 
   @override
   String get beepOllenTrap => 'Zbieracz pyłek';
@@ -487,7 +493,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bornIn => 'rocznik';
 
   @override
-  String get isVirgine => 'jest dziewica/sztuczna/naturalna';
+  String get isVirgine => 'jest dziewicza/sztuczna/naturalna';
 
   @override
   String get isFreed => 'jest wolna/zamknięta/w klatce';
@@ -498,7 +504,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get isMarked =>
-      'nie ma znak/ma biały/żółty/czerwony/zielony/niebieski znak/nie ma/brak';
+      'nie ma znaku/ma biały/żółty/czerwony/zielony/niebieski znak/nie ma/brak';
 
   @override
   String get colonySay => 'Rodzina:';
@@ -508,10 +514,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get deadFlight =>
-      'łagodna/zła/ok/w nastroju do ucieczki/w kłębie/nie żyje';
+      'łagodna/agresywna/ok/w nastroju do ucieczki/zawiązała kłąb/nie żyje';
 
   @override
-  String get veryWeakStrong => 'bardzo silna/silna/norma/słaba/bardzo słaba';
+  String get veryWeakStrong =>
+      'bardzo silna/silna/normalna/słaba/bardzo słaba';
 
   @override
   String get feedingSay => 'Pokarm:';
@@ -565,7 +572,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get setOther => 'Ustaw inny';
 
   @override
-  String get current => 'prawdziwą';
+  String get current => 'aktualną';
 
   @override
   String get datee => 'datę';
@@ -580,7 +587,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get eQuipment => 'Wyposażenie';
 
   @override
-  String get fEeding => 'Pokarm';
+  String get fEeding => 'Dokarmianie';
 
   @override
   String get tReatment => 'Leczenie';
@@ -759,7 +766,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bRood => 'Czerw';
 
   @override
-  String get hArvest => 'Zbiór';
+  String get hArvest => 'Zbiory';
 
   @override
   String get about => 'O aplikacji';
@@ -984,7 +991,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get honeyZbior => 'zbiór miodu';
 
   @override
-  String get queenColors => 'Czarna/żółta/czerwona/zielona/niebieska/biała';
+  String get queenColors =>
+      'Czarna/żółta/czerwona/zielona/niebieska/biała/inna';
 
   @override
   String get earlier => 'wcześniej';
@@ -1073,7 +1081,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get paramEdition => 'Edycja parametru';
 
   @override
-  String get rem => 'załóż/wstaw/usuń/zabierz';
+  String get rem => 'Wstaw/usuń';
 
   @override
   String get value => 'wartość';
@@ -1239,7 +1247,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get deadBees => 'osyp pszczół';
 
   @override
-  String get dEadBees => 'Osyp pszczół';
+  String get dEadBees => 'Martwe pszczoły/martwych pszczół';
 
   @override
   String get veryGood => 'bardzo dobra';

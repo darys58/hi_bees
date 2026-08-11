@@ -31,6 +31,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get apiary => 'Bienenstand';
 
   @override
+  String get apiaryAcc => 'Bienenstand';
+
+  @override
   String get aPiary => 'Bienenstand';
 
   @override
@@ -47,6 +50,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get frame => 'Rahmen';
+
+  @override
+  String get frameAcc => 'Rahmen';
 
   @override
   String get store => 'Vorräte';

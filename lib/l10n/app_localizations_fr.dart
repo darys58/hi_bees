@@ -31,6 +31,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get apiary => 'rucher';
 
   @override
+  String get apiaryAcc => 'rucher';
+
+  @override
   String get aPiary => 'Rucher';
 
   @override
@@ -47,6 +50,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get frame => 'cadre';
+
+  @override
+  String get frameAcc => 'cadre';
 
   @override
   String get store => 'ressources';

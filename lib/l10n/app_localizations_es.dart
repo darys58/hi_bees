@@ -31,6 +31,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get apiary => 'colmenar';
 
   @override
+  String get apiaryAcc => 'colmenar';
+
+  @override
   String get aPiary => 'Colmenar';
 
   @override
@@ -47,6 +50,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get frame => 'cuadro';
+
+  @override
+  String get frameAcc => 'cuadro';
 
   @override
   String get store => 'recursos';

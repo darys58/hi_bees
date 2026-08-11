@@ -31,6 +31,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get apiary => 'apiario';
 
   @override
+  String get apiaryAcc => 'apiario';
+
+  @override
   String get aPiary => 'Apiario';
 
   @override
@@ -47,6 +50,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get frame => 'telaino';
+
+  @override
+  String get frameAcc => 'telaino';
 
   @override
   String get store => 'risorse';

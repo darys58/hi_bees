@@ -150,6 +150,12 @@ abstract class AppLocalizations {
   /// **'apiary'**
   String get apiary;
 
+  /// No description provided for @apiaryAcc.
+  ///
+  /// In en, this message translates to:
+  /// **'apiary'**
+  String get apiaryAcc;
+
   /// No description provided for @aPiary.
   ///
   /// In en, this message translates to:
@@ -185,6 +191,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'frame'**
   String get frame;
+
+  /// No description provided for @frameAcc.
+  ///
+  /// In en, this message translates to:
+  /// **'frame'**
+  String get frameAcc;
 
   /// No description provided for @store.
   ///
