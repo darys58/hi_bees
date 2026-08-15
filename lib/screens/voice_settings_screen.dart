@@ -33,6 +33,11 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
   final _sound = SoundHelper();
   bool _soundReady = false;
 
+  //opis ostatniego sygnału potwierdzenia; null = jeszcze nie sprawdzano.
+  //Pod komentarzem razem z pozycją "Sygnał potwierdzenia komendy" (15.08.2026,
+  //przed publikacją) - patrz komentarz przy tamtym Card w [build].
+  // String? _opisSygnalu;
+
   @override
   void initState() {
     super.initState();
@@ -99,22 +104,28 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
               ),
             ),
           ),
-          // DIAGNOSTYKA GŁOSU - PRZEŁĄCZNIK CELOWO ZAKOMENTOWANY (06.08.2026).
-          // Tryb serwisowy do strojenia progów pewności, niepotrzebny na co
-          // dzień. Odkomentować tę kartę, gdy trzeba zobaczyć, co Vosk
-          // usłyszał, czy fraza przeszła bramkę i z jaką pewnością (śr./min).
-          // Sam mechanizm ZOSTAJE w kodzie - globals.voiceDiagnostyka nadal
-          // istnieje i jest czytany w voice_vosk_screen; wyłączony jest tylko
-          // dostęp z tego ekranu, więc odkomentowanie wystarcza.
-          // Powód ukrycia (patrz globals.voiceDiagnostyka): gramatyka stoi na
-          // aliasach fonetycznych ("pierzcha", "węża", "miodu branie",
-          // "na grób") i pokazanie ich wygląda na błąd aplikacji.
+          // DIAGNOSTYKA GŁOSU - przełącznik UKRYTY PONOWNIE 15.08.2026, przed
+          // publikacją. Historia: ukryty 06.08.2026 jako tryb serwisowy
+          // niepotrzebny na co dzień, odkomentowany 14.08.2026 na czas
+          // uruchamiania Androida (bez niego zgłoszenie „komendy nie działają"
+          // jest nie do rozstrzygnięcia z ekranu: odrzucona fraza jest
+          // z założenia CICHA - patrz _opisFrazy w voice_vosk_screen - więc
+          // „nie usłyszałam" i „usłyszałam, ale odrzuciłam" wyglądają
+          // identycznie). Temat Androida zamknięty, więc wraca pod komentarz.
+          //
+          // Powód ukrywania na produkcji (patrz globals.voiceDiagnostyka):
+          // gramatyka stoi na aliasach fonetycznych ("pierzcha", "węża",
+          // "miodu branie", "na grób") i pokazanie ich wygląda na błąd aplikacji.
+          //
+          // Sama diagnostyka ZOSTAJE w kodzie i budzi się przez
+          // globals.voiceDiagnostyka - wystarczy odkomentować ten Card.
           // Card(
           //   child: ListTile(
-          //     title: Text('Diagnostyka głosu'),
-          //     subtitle: Text(
+          //     title: const Text('Diagnostyka głosu'),
+          //     subtitle: const Text(
           //         'Pokazuje rozpoznany tekst i pewność rozpoznania. Tekst bywa zapisany inaczej niż wypowiedziane słowo - to dopasowanie fonetyczne, nie błąd'),
-          //     trailing: Switch.adaptive(
+          //     //zwykły Switch, NIE Switch.adaptive - jak pozostałe na tym ekranie
+          //     trailing: Switch(
           //       value: globals.voiceDiagnostyka,
           //       onChanged: (value) {
           //         setState(() {
@@ -158,6 +169,40 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           //         setState(() {
           //           globals.voice2LiveLandscape = value;
           //         });
+          //       },
+          //     ),
+          //   ),
+          // ),
+
+          // SYGNAŁ POTWIERDZENIA KOMENDY - dźwięk systemowy (ToneGenerator na
+          // Androidzie, AudioServicesPlaySystemSound na iOS), a dopiero gdy
+          // system odmówi - plik z assetów. Sygnał NIE MA suwaka: to znak
+          // techniczny, a nie odzywka Mai, i ma być zawsze słyszalny.
+          //
+          // POZYCJA UKRYTA 15.08.2026, przed publikacją - to narzędzie
+          // serwisowe, nie ustawienie: pokazuje techniczny opis kanału
+          // ("ok: ton na media", nazwy strumieni, treść wyjątku), czyli coś,
+          // czego pszczelarz nie ma jak zinterpretować.
+          //
+          // Powstała, bo to jedyny sposób, żeby z telefonu dowiedzieć się,
+          // KTÓRA z dróg zagrała - bez niej wszystkie porażki brzmią tak samo
+          // (słychać plik) i nie wiadomo, czy to stary build, czy odmowa
+          // systemu. Sam mechanizm ([SoundHelper.beep] i jego
+          // [SoundHelper.ostatniSygnal]) ZOSTAJE nietknięty, więc przy kolejnej
+          // diagnozie wystarczy odkomentować ten Card i pole [_opisSygnalu].
+          // Card(
+          //   child: ListTile(
+          //     title: const Text('Sygnał potwierdzenia komendy'),
+          //     subtitle: Text(_opisSygnalu ??
+          //         'Naciśnij dzwonek po prawej - powinien zabrzmieć krótki '
+          //             'dźwięk systemowy. Pod spodem pokaże się, czym zagrał.'),
+          //     trailing: IconButton(
+          //       icon: const Icon(Icons.notifications_active_outlined, size: 28),
+          //       tooltip: 'Sprawdź sygnał',
+          //       onPressed: () async {
+          //         await _sound.beep();
+          //         if (!mounted) return;
+          //         setState(() => _opisSygnalu = _sound.ostatniSygnal);
           //       },
           //     ),
           //   ),

@@ -392,6 +392,49 @@ class VoskEngine {
   // cisza cyfrowa to 0,00x, spokojna mowa z odległości ręki - powyżej 0,02.
   static const double _progDzwieku = 0.02;
 
+  // -- ślad diagnostyczny ---------------------------------------------------
+  //
+  // WPROWADZONE 14.08.2026 pod uruchomienie Androida. Zgłoszenie brzmiało
+  // „«hej maja start» wchodzi, komendy już nie" i z samego ekranu NIE DA SIĘ go
+  // rozstrzygnąć, bo cztery różne przyczyny wyglądają na nim identycznie
+  // (cisza na pasku stanu):
+  //   1. recognizer komend w ogóle się nie podmienił - silnik myśli, że jest
+  //      w komendach, a karmi gramatykę czuwania (6 fraz),
+  //   2. Vosk nic nie słyszy - do frazy nie dochodzi,
+  //   3. słyszy, ale wszystko wychodzi jako [unk] albo leci na próg pewności
+  //      i bramka odrzuca po cichu (patrz _opisFrazy w voice_vosk_screen),
+  //   4. dekodowanie jest wolniejsze niż mowa i zaległość rośnie bez końca -
+  //      wtedy wynik przychodzi, tylko z minutowym opóźnieniem.
+  // Punkt 4 dotyczy WYŁĄCZNIE trybu komend (graf 3,3 tys. fraz zamiast 6),
+  // więc pasuje do objawu tak samo dobrze jak punkty 1-3 i musi być mierzony,
+  // a nie zgadywany. Stąd raport tempa w [_zmierzTempo].
+  //
+  // Wyłącznik zostaje w kodzie - to samo pytanie wróci przy każdej nowej
+  // platformie. false = ani jednej linii w logu.
+  //
+  // WYŁĄCZONY 15.08.2026, przed publikacją (temat Androida zamknięty). Ślad
+  // idzie przez [debugPrint], więc w buildzie release i tak nie ma go gdzie
+  // czytać - ale liczenie porcji i sklejanie napisów działo się mimo to, na
+  // ścieżce wołanej co 0,2 s nasłuchu.
+  static const bool _sladDiagnostyczny = false;
+
+  static void _log(String tekst) {
+    if (_sladDiagnostyczny) debugPrint('VOSK/ślad: $tekst');
+  }
+
+  // Pomiar tempa dekodowania. Porcja to 0,2 s dźwięku, więc średnia powyżej
+  // 200 ms znaczy, że silnik NIE NADĄŻA za mówiącym.
+  final Stopwatch _zegar = Stopwatch()..start();
+  int _msPorcji = 0;
+  int _porcjiOdRaportu = 0;
+
+  // Najgłośniejsza porcja od ostatniego raportu. Rozstrzyga pytanie, którego
+  // sam tekst z Vosk nie rozstrzyga: czy z mikrofonu w ogóle coś płynie.
+  // Skala jak w [_progDzwieku]: cisza cyfrowa to 0,00x, mowa z odległości ręki
+  // przekracza 0,02. Szczyt, a nie średnia - mowa to sekunda dźwięku na kilka
+  // sekund ciszy, więc średnia i tak siedziałaby przy zerze.
+  double _szczytPoziomu = 0;
+
   // -- cykl życia -----------------------------------------------------------
 
   /// Pobiera model (raz), tworzy recognizer i zaczyna słuchać w [czuwanie].
@@ -432,7 +475,7 @@ class VoskEngine {
       // To jedyna naprawdę terminalna przyczyna - sama nie minie, więc jako
       // jedyna wyłącza automatyczne ponawianie.
       _brakZgody = true;
-      _blad('Brak zgody na mikrofon.\niOS: Ustawienia → Hi Bees → Mikrofon.');
+      _blad('Brak zgody na mikrofon.\n${_gdzieZgodaNaMikrofon()}');
       return false;
     }
     _brakZgody = false;
@@ -543,7 +586,14 @@ class VoskEngine {
         wrocDoKomend: false,
       );
     }
-    await _przelaczGramatyke(nowy);
+    // Tryb zmieniamy WYŁĄCZNIE wtedy, gdy recognizer naprawdę się podmienił -
+    // patrz [_przelaczGramatyke]. Ekran sprawdza `tryb` po powrocie stąd
+    // (_startSesji w voice_vosk_screen), więc kłamstwo w tym miejscu kosztuje
+    // całą sesję: „czekam na polecenia" pada, a mikrofon zna dalej sześć fraz.
+    if (!await _przelaczGramatyke(nowy)) {
+      _blad('Nie udało się przełączyć nasłuchu w tryb „${nowy.name}".');
+      return;
+    }
     _tryb = nowy;
     _porzucOgon();
     _stan(_opisTrybu(nowy));
@@ -820,6 +870,10 @@ class VoskEngine {
     // Jawna, zapisywalna ścieżka: domyślna wpada na iOS w read-only katalog
     // procesu (FileSystemException errno 30). Application Support nie idzie
     // do backupu iCloud - 50 MB modelu nie ma po co tam lądować.
+    // Na Androidzie to `files/vosk_models`, a tamtejszy auto-backup obejmuje
+    // files/ - dlatego katalog jest wyłączony z kopii w res/xml/backup_rules.xml
+    // i res/xml/data_extraction_rules.xml (limit kopii to 25 MB na aplikację;
+    // przekroczony wyłącza kopię CAŁEJ apki, razem z bazą pasiek).
     final Directory base = await getApplicationSupportDirectory();
     final Directory dir = Directory('${base.path}/vosk_models');
     if (!dir.existsSync()) dir.createSync(recursive: true);
@@ -843,7 +897,16 @@ class VoskEngine {
     if (_model == null) return;
     _recCzuwanie = await _nowyRecognizer(TrybNasluchu.czuwanie);
     _stan('Buduję gramatykę komend...');
+    // Czas budowy grafu ma tu wartość diagnostyczną: jest pierwszym sygnałem,
+    // czy urządzenie w ogóle udźwignie gramatykę komend. Na wolnym telefonie
+    // długa budowa i wolne dekodowanie chodzą w parze.
+    final int t0 = _zegar.elapsedMilliseconds;
     _recKomendy = await _nowyRecognizer(TrybNasluchu.komendy);
+    _log('recognizery gotowe: czuwanie #${_recCzuwanie?.id} '
+        '(${_gramatykaDla(TrybNasluchu.czuwanie)?.length} fraz), '
+        'komendy #${_recKomendy?.id} '
+        '(${_gramatykaDla(TrybNasluchu.komendy)?.length} fraz, budowa '
+        '${_zegar.elapsedMilliseconds - t0} ms)');
     _recognizer = _recCzuwanie;
     // Para do dyktowania. Osobno i BEZ przerywania startu przy niepowodzeniu:
     // brak dyktowania ma wyłączyć jedną komendę, a nie całe sterowanie głosem.
@@ -947,9 +1010,17 @@ class VoskEngine {
     }
   }
 
-  Future<void> _przelaczGramatyke(TrybNasluchu t) async {
+  /// Zwraca false, gdy recognizera dla [t] nie ma - wtedy podmiana się NIE
+  /// odbyła i wołający nie może udawać, że jest już w nowym trybie. Do
+  /// 14.08.2026 metoda milczała w tej sytuacji, a [ustawTryb] i tak ustawiał
+  /// [_tryb]: silnik meldował „słucham komend", karmiąc dalej gramatykę
+  /// czuwania (6 fraz). Z zewnątrz nie do odróżnienia od „komendy nie działają".
+  Future<bool> _przelaczGramatyke(TrybNasluchu t) async {
     final Recognizer? cel = _recognizerDla(t);
-    if (cel == null) return;
+    if (cel == null) {
+      _log('BRAK recognizera dla trybu ${t.name} - zostaję w ${_tryb.name}.');
+      return false;
+    }
     // Podmiana jest natychmiastowa, ale i tak wstrzymujemy karmienie: porcja
     // w locie nie może się rozjechać między dwa recognizery.
     _zmianaGramatyki = true;
@@ -963,7 +1034,14 @@ class VoskEngine {
     } finally {
       _zmianaGramatyki = false;
       _ostatniaPorcja = DateTime.now(); // przerwa na podmianę to nie awaria
+      // Tempo liczymy osobno dla każdego trybu - graf komend jest o trzy rzędy
+      // wielkości większy od grafu czuwania, więc uśrednianie ich razem
+      // zacierałoby dokładnie tę różnicę, o którą chodzi.
+      _msPorcji = 0;
+      _porcjiOdRaportu = 0;
     }
+    _log('tryb ${_tryb.name} -> ${t.name}, karmię recognizer #${cel.id}');
+    return true;
   }
 
   Future<void> _startStrumienia() async {
@@ -972,11 +1050,49 @@ class VoskEngine {
         encoder: AudioEncoder.pcm16bits,
         sampleRate: _rate,
         numChannels: 1,
+        // TO JEST PRZYCZYNA "KOMENDY NIE DZIAŁAJĄ NA ANDROIDZIE" (14.08.2026).
+        // Domyślne `pause` każe wtyczce `record` poprosić o AUDIOFOCUS, a jej
+        // listener na KAŻDEJ utracie focusa woła pauseRecording() - także wtedy,
+        // gdy focus zabiera NASZA WŁASNA odzywka „słucham" (MediaPlayer, usage
+        // MEDIA). Wznowienie po powrocie focusa robi w record_android 1.5.2
+        // wyłącznie tryb PAUSE_RESUME (AudioRecorder.kt, linia 245), więc przy
+        // `pause` mikrofon zostawał zapauzowany NA ZAWSZE. Dalej szło już samo:
+        // 3 s bez porcji -> watchdog -> _utraconoMikrofon -> wstrzymaj + wznow,
+        // a wznow z założenia wraca do CZUWANIA (decyzja z 01.08.2026). Sesja
+        // komend umierała pół sekundy po „hej maja start", a użytkownik mówił
+        // polecenia do gramatyki znającej sześć fraz.
+        // `none` = nie prosimy o focus, więc nikt nas nie pauzuje. Nic na tym nie
+        // tracimy: rozmowę telefoniczną łapie cykl życia ekranu (paused ->
+        // wstrzymaj, resumed -> wznowOdNowa), a martwy strumień - watchdog.
+        // Na iOS zostaje domyślne zachowanie - tam odzywka nigdy nie przerywała
+        // nagrywania i nie ma po co ruszać przetestowanej ścieżki.
+        audioInterruption: Platform.isAndroid
+            ? AudioInterruptionMode.none
+            : AudioInterruptionMode.pause,
         // "Surowy" mikrofon - dokładnie ta konfiguracja została zmierzona jako
         // działająca. echoCancel/autoGain iOS potrafią wyciąć mowę do zera.
+        // Na Androidzie te trzy flagi decydują, czy do AudioRecord doczepiane
+        // są efekty AcousticEchoCanceler / NoiseSuppressor / AutomaticGainControl
+        // - false znaczy "żadnych", czyli to samo, co osiągamy na iOS.
         echoCancel: false,
         noiseSuppress: false,
         autoGain: false,
+        androidConfig: const AndroidRecordConfig(
+          // VOICE_RECOGNITION zamiast DEFAULT: to jedyne źródło, przy którym
+          // Android obiecuje ścieżkę bez obróbki pod rozmowę (AGC, bramka
+          // szumów). Przy DEFAULT część producentów dokłada własne "ulepszenia"
+          // - dla ucha brzmią lepiej, dla dekodera to zniekształcenie.
+          audioSource: AndroidAudioSource.voiceRecognition,
+          // Odzywki Mai MUSZĄ być słyszalne - muteAudio wyciszyłoby wszystkie
+          // strumienie systemu na czas nagrywania, czyli przez cały czas pracy
+          // ekranu.
+          muteAudio: false,
+          // modeNormal + brak speakerphone: nie przestawiamy trybu audio
+          // telefonu. Tryb rozmowy włącza AEC, ale przy okazji przerzuca
+          // dźwięk na słuchawkę przy uchu - w pasiece telefon leży na ulu.
+          speakerphone: false,
+          audioManagerMode: AudioManagerMode.modeNormal,
+        ),
       ),
     );
     _audioSub = stream.listen(
@@ -1011,6 +1127,7 @@ class VoskEngine {
       sumaKw += s.toDouble() * s.toDouble();
     }
     _poziom = math.sqrt(sumaKw / probek) / 32768.0;
+    if (_poziom > _szczytPoziomu) _szczytPoziomu = _poziom;
   }
 
   Future<void> _karm() async {
@@ -1033,6 +1150,7 @@ class VoskEngine {
           continue;
         }
 
+        final int start = _zegar.elapsedMilliseconds;
         final bool koniecFrazy = await r.acceptWaveformBytes(chunk);
         if (koniecFrazy) {
           _przyjmijFraze(await r.getResult());
@@ -1043,6 +1161,7 @@ class VoskEngine {
             onPartial?.call(p);
           }
         }
+        _zmierzTempo(_zegar.elapsedMilliseconds - start);
       }
     } catch (e) {
       _blad('Błąd przetwarzania audio:\n$e');
@@ -1157,6 +1276,30 @@ class VoskEngine {
       _dyktowanieOd != null &&
       DateTime.now().difference(_dyktowanieOd!) < _karencjaTerminatora;
 
+  // Raport tempa co 50 porcji, czyli co 10 sekund NAGRANEGO dźwięku (a nie co
+  // 10 sekund zegara - gdy silnik nie nadąża, raporty same zaczynają się
+  // rozjeżdżać w czasie i to też jest informacja).
+  //
+  // Jak czytać:
+  //   ~30-80 ms/porcję i zaległość 0 B  -> dekodowanie jest zdrowe,
+  //   >200 ms/porcję                    -> wolniej niż mowa; zaległość rośnie
+  //                                        liniowo i komenda dojdzie z
+  //                                        opóźnieniem rosnącym bez końca,
+  //   zaległość rzędu setek kB          -> to samo, widziane od drugiej strony.
+  void _zmierzTempo(int ms) {
+    _msPorcji += ms;
+    if (++_porcjiOdRaportu < 50) return;
+    final double srednia = _msPorcji / _porcjiOdRaportu;
+    _log('tempo ${_tryb.name}: ${srednia.toStringAsFixed(0)} ms/porcję '
+        '(porcja = 200 ms dźwięku), zaległość ${_bufor.length} B, '
+        'szczyt sygnału ${_szczytPoziomu.toStringAsFixed(3)}'
+        '${srednia > 200 ? "  <-- NIE NADĄŻAM" : ""}'
+        '${_szczytPoziomu < _progDzwieku ? "  <-- CISZA Z MIKROFONU" : ""}');
+    _msPorcji = 0;
+    _porcjiOdRaportu = 0;
+    _szczytPoziomu = 0;
+  }
+
   Future<void> _poczekajNaKarmienie() async {
     // Wywołania przez MethodChannel nie mogą się nakładać.
     for (int i = 0; i < 50 && _karmienie; i++) {
@@ -1234,6 +1377,16 @@ class VoskEngine {
       powod = 'przechodzi bramkę (sklejona z dwóch fraz)';
     }
 
+    // Jedyne miejsce, w którym widać ZARAZEM: co Vosk usłyszał, na co to
+    // sparsował i dlaczego bramka tak zdecydowała. Ekran pokazuje to wyłącznie
+    // przy włączonej diagnostyce, a odrzucone frazy ukrywa nawet wtedy, gdy są
+    // spoza gramatyki - więc bez tej linii „nic się nie dzieje" jest nie do
+    // odróżnienia od „usłyszałam i odrzuciłam".
+    _log('fraza: „$doParsowania" -> ${inf.intent ?? "(nie pasuje)"} | '
+        '${przyjeta ? "PRZYJĘTA" : "ODRZUCONA"}: $powod | '
+        'unk $unk, śr. ${sredniaConf.toStringAsFixed(2)}, '
+        'min ${minConf.toStringAsFixed(2)}');
+
     onFraza?.call(VoskFraza(
       tekst: doParsowania,
       inference: inf,
@@ -1266,7 +1419,9 @@ class VoskEngine {
     final DateTime? ostatnia = _ostatniaPorcja;
     if (ostatnia == null) return;
     if (DateTime.now().difference(ostatnia) <= _limitCiszy) return;
-    await _utraconoMikrofon('Mikrofon zamilkł (rozmowa, Siri albo alarm).');
+    await _utraconoMikrofon(Platform.isAndroid
+        ? 'Mikrofon zamilkł (rozmowa, asystent albo alarm).'
+        : 'Mikrofon zamilkł (rozmowa, Siri albo alarm).');
   }
 
   /// Reakcja watchdoga na ciszę. Pierwsze próby robimy NATYCHMIAST (krótkie
@@ -1275,6 +1430,12 @@ class VoskEngine {
   /// rekorder co 3 sekundy, bez najmniejszej szansy na powodzenie.
   Future<void> _utraconoMikrofon(String opis) async {
     if (_wznawianie) return;
+    // Ten ślad kosztował całą rundę testów 14.08.2026: w logu z telefonu widać
+    // było wyłącznie skutek („tryb wylaczony -> czuwanie"), bez ani jednego
+    // słowa o tym, że przed chwilą zginął mikrofon. Powód utraty i tryb, z
+    // którego wylatujemy, muszą być w logu obok siebie.
+    _log('UTRATA MIKROFONU w trybie ${_tryb.name} (próba '
+        '${_proboWznowienia + 1}): $opis');
     if (_proboWznowienia >= 2) {
       await wstrzymaj();
       if (!_brakZgody) _zaplanujPonowienie(opis);
@@ -1337,6 +1498,13 @@ class VoskEngine {
       return <String, dynamic>{};
     }
   }
+
+  // Gdzie użytkownik ma sam włączyć mikrofon. Ekranu ustawień systemowych nie
+  // otwieramy - to jedyny komunikat, po którym nasłuch NIE wróci sam, więc musi
+  // mówić dokładnie, gdzie kliknąć na TYM systemie.
+  static String _gdzieZgodaNaMikrofon() => Platform.isAndroid
+      ? 'Android: Ustawienia → Aplikacje → Hi Bees → Uprawnienia → Mikrofon.'
+      : 'iOS: Ustawienia → Hi Bees → Mikrofon.';
 
   void _stan(String opis) => onStan?.call(opis, _tryb);
 

@@ -30,7 +30,16 @@ dependencies:
   sqflite: ^2.2.2
   intl: ^0.20.2
   provider: ^6.0.5
-  flutter_beep: ^1.0.0
+  # flutter_beep: ^1.0.0
+  # USUNIĘTY 14.08.2026. Sygnał potwierdzenia komendy głosowej gra teraz
+  # SoundHelper.beep() przez własny kanał „hej_maja/sygnal":
+  #   iOS     - AudioServicesPlaySystemSound(1116) w ios/Runner/AppDelegate.swift
+  #             (1116 = dawne iOSSoundIDs.JBL_NoMatch, czyli DOKŁADNIE ten sam dźwięk),
+  #   Android - ToneGenerator w MainActivity.kt projektu androidowego.
+  # Powód: `flutter_beep` nie deklaruje `namespace` w swoim android/build.gradle,
+  # więc od AGP 8 zatrzymuje build Androida jeszcze na konfiguracji Gradle.
+  # Cały pakiet to po jednym wywołaniu systemowego API na platformę - nie ma za co
+  # trzymać zależności, której druga platforma i tak nie może użyć.
   audioplayers: ^6.1.0
   wakelock_plus: ^1.2.10
   http: ^1.2.2
@@ -117,6 +126,12 @@ flutter:
     - assets/audio/zamkniete.mp3
     - assets/audio/blad.mp3
     - assets/audio/nie_rozumiem.mp3
+    # wyjście awaryjne sygnału potwierdzenia, gdyby kanał systemowy nie odpowiedział
+    - assets/audio/listening.wav
+    # Własny sygnał zamiast wbudowanego: wrzuć plik pod tę nazwę i odkomentuj
+    # linię - SoundHelper bierze go automatycznie (patrz _plikSygnaluWlasny).
+    # Bez pliku linia MUSI zostać zakomentowana, inaczej build się wywali.
+   # - assets/audio/beep.mp3
   
   
   uses-material-design: true

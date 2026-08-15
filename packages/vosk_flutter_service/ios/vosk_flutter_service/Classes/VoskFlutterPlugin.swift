@@ -52,10 +52,9 @@ import AVFoundation
 // trzeba nanieść ponownie. Dlatego kopia jest w repo (packages/), a nie
 // łatka na .pub-cache.
 //
-// UWAGA — Android: `VoskFlutterPlugin.java` ma tę samą wadę (accept/result
-// wołane wprost w `onMethodCall`, czyli na wątku UI; na `TaskRunner` schodzi
-// tylko ładowanie modelu). Nie ruszane, bo objaw mierzyliśmy wyłącznie na iOS
-// i nie ma tu jak skompilować Javy — do zrobienia przy testach na Androidzie.
+// Android: `VoskFlutterPlugin.java` miał tę samą wadę (accept/result wołane
+// wprost w `onMethodCall`, czyli na wątku UI). Naprawione 13.08.2026 tym samym
+// sposobem — kolejka szeregowa `voskQueue`, opis w HI_BEES_PATCH.md.
 // ============================================================================
 
 /// Szczegółowe logi wtyczki. Domyślnie WYŁĄCZONE — logowanie przy każdej

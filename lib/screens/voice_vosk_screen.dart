@@ -40,10 +40,12 @@
 //
 // Warstwa audio siedzi w lib/helpers/vosk_engine.dart - tu jej nie ma.
 import 'dart:async';
-import 'dart:io' show Platform;
+//dart:io (Platform) i flutter_beep były potrzebne tylko do rozgałęzienia sygnału
+//potwierdzenia komendy - po przejściu na SoundHelper.beep() sygnał jest ten sam
+//na obu platformach i oba importy zniknęły (inaczej `flutter analyze` zgłasza
+//unused_import).
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; //stąd Uint8List - surowe PCM notatki
-import 'package:flutter_beep/flutter_beep.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 //import 'package:hi_bees/helpers/db_helper.dart';
 import 'package:provider/provider.dart';
@@ -164,6 +166,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //flaga odroczonego dźwięku 'okej' - gra się dopiero po pętli slotów, jezeli 'zapisałam' (success) nie wyparł go
   bool _pendingOpenBeep = false;
   double heightScreen = 601;
+  //WARIANT WIERSZY STREFY 1: true = pudełka niższe i węższe, cyfry mniejsze.
+  //Liczony RAZ na budowę ekranu, w [LayoutBuilder] - patrz komentarz tam.
+  //Wcześniej każdy z dziewięciu wierszy powtarzał ten sam warunek
+  //`heightScreen < 590 && orientacja == portrait && !voice2LiveLandscape`,
+  //przez co w poziomie zawsze wychodził wariant DUŻY - a lewa kolumna ma tam
+  //połowę szerokości ekranu i pudełka po 100 px wchodziły na siebie.
+  bool _maleWiersze = false;
   bool czyJesWidget = false;
   // String rhinoModelPath = 'assets/models/rhino_params_pl.pv';
   // String porcupineModelPath = 'assets/models/porcupine_params_pl.pv';
@@ -386,11 +395,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //`readyHive`, a każde `readyHive = true` zeruje `readyAllHives`. Jest przy tym
   //niższy od tamtego (80 < 112), więc to wiersz ul/korpus/ramka wyznacza maksimum.
   static const double _kStrefaDanych = 371;
-  //ten sam rachunek dla ekranów < 590 px w pionie, gdzie wiersze mają mniejsze
-  //warianty: 30 + 40 + (60 + 2 * marginRow) + 29 + 40 + (75 + marginRow).
+  //ten sam rachunek dla wariantu MAŁEGO ([_maleWiersze]: ekrany za niskie na
+  //układ duży oraz KAŻDY układ poziomy), gdzie wiersze mają mniejsze warianty:
+  //30 + 40 + (60 + 2 * marginRow) + 29 + 40 + (85 + marginRow).
   //Wiersz "wszystkie ule" odpada tak samo jak wyżej; tu oba wykluczające się
   //wiersze mają po 80 px, więc obojętne, który zostaje w sumie.
-  static const double _kStrefaDanychMala = 304;
+  //15.08.2026: ostatni składnik urósł z 75 na 85 px - pudełko "Zapis:" nie
+  //mieściło dwóch linii (rachunek przy tamtym pudełku).
+  static const double _kStrefaDanychMala = 314;
   //STREFA 2 - najwyższy korpus (typ 2 => 2 * 75 + 30 = 180) z pasami na numery
   //ramek, nagłówkiem daty i zapasem: 22 + (180 + 2 * 18) + 2 * 8
   static const double _kStrefaKorpusu = 254;
@@ -1251,14 +1263,20 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //więc "okej" wracało z Vosk jako fraza i zaśmiecało pasek stanu. Beep jest
   //krótszy i przede wszystkim NIE JEST MOWĄ - nawet jeśli przecieknie, nie ma
   //z czego zbudować słowa. Ten sam sygnał był w voice_screen2 (linie ~447/499).
+  //
+  //Od 14.08.2026 gra go SoundHelper.beep(), a nie pakiet `flutter_beep`. Dźwięk
+  //na iOS jest DOKŁADNIE TEN SAM (`iOSSoundIDs.JBL_NoMatch` to stała 1116,
+  //podawana teraz wprost do `AudioServicesPlaySystemSound` w AppDelegate.swift);
+  //pakiet odpadł dlatego, że na Androidzie nie przechodzi buildu od AGP 8 - stoi
+  //na wtyczkowym build.gradle bez `namespace` i zatrzymuje build jeszcze na
+  //konfiguracji Gradle. Skoro i tak trzeba było napisać to samo po stronie
+  //Androida, obie platformy wołają teraz własny kanał.
   Future<void> _beepPotwierdzenia() async {
     final VoskEngine? e = _engine;
     e?.wyciszNaOdzywke();
     try {
-      Platform.isAndroid
-          ? FlutterBeep.playSysSound(AndroidSoundIDs.TONE_CDMA_ONE_MIN_BEEP)
-          : FlutterBeep.playSysSound(iOSSoundIDs.JBL_NoMatch);
-      //playSysSound wraca natychmiast, nie po wybrzmieniu - stąd stałe okno.
+      await _sound.beep();
+      //beep() wraca po WYSŁANIU sygnału, nie po wybrzmieniu - stąd stałe okno.
       //Krótsze niż okej.mp3, więc mikrofon wraca SZYBCIEJ niż dotąd.
       await Future.delayed(const Duration(milliseconds: 250));
     } finally {
@@ -6979,21 +6997,32 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 //dla mniejszych ekranów zmiana wysokośći wiersza  'Save' - zapis zasobu do bazy
 //sony Z3 592px, mały ios 568px
 //
-//UWAGA na pasmo 590-600 px (Sony Z3 = 592). Wariant "mały" wiersza Save wybiera
-//warunek `heightScreen < 590`, więc te ekrany dostają wariant DUŻY (fontSize 20),
-//tylko w niższym kontenerze. A tekst `zapis` zawija się na dwie linie - najdłuższe
+//UWAGA na pasmo 590-600 px (Sony Z3 = 592). Ta korekta pochodzi z czasów, gdy
+//wariant "mały" wybierał warunek `heightScreen < 590` i takie ekrany dostawały
+//wariant DUŻY (fontSize 20) w niższym kontenerze. Od 14.08.2026 decyduje
+//[_maleWiersze] liczone z miejsca, które treść naprawdę dostała, i te ekrany idą
+//już wariantem małym - korekta zostaje jako zabezpieczenie na wypadek, gdyby
+//wariant duży trafił tam mimo wszystko (inny rozkład stref, mniejszy pasek
+//tytułu). A tekst `zapis` zawija się na dwie linie - najdłuższe
 //komunikaty info to np. "rodzina jest w nastroju do ucieczki" (34 znaki), matka ze
 //znakiem i numerem, osyp pszczół, a po niemiecku/francusku prawie każdy dłuższy
 //zwrot. Przy 60 px druga linia wychodziła poza kontener (pasy przepełnienia).
-//Rachunek na dwie linie: padding 7 + 3, etykieta "Zapis:" ~20, dwie linie
-//pogrubionej dwudziestki 2 * ~23 => 77 px. Stąd 80, a nie 60. Strefa 1 przewija
-//się w środku (SingleChildScrollView), więc te 20 px nie psuje niczego wyżej,
-//a `_kStrefaDanych` liczy dla tego wiersza 110 px, czyli nadal z zapasem.
+//
+//RACHUNEK NA DWIE LINIE - POPRAWIONY 15.08.2026. Poprzedni ("dwie linie
+//pogrubionej dwudziestki 2 * ~23 => 77 px, stąd 80") był ZANIŻONY, bo zakładał
+//wysokość linii ~1,15. Tymczasem style tych tekstów ustawiają SAM `fontSize`,
+//a `height` dziedziczą po `bodyMedium` Material 3, gdzie wynosi **1,43**:
+//linia dwudziestki to 28,6 px, a nie 23. Z etykietą wychodzi 77,2 px czystego
+//tekstu, więc 80 px pudełka (minus obwódka 6 i padding 10 + 3) NIE mogło
+//wystarczyć. Teraz teksty `zapis` mają `height: 1.2` podane jawnie, a pudełka
+//własne wysokości - i jedno, i drugie opisane przy nich samych. Ta korekta
+//pasma podnosi więc 80 na 90. Strefa 1 przewija się w środku
+//(SingleChildScrollView), a `_kStrefaDanych` liczy dla tego wiersza 110 px.
     heightScreen = MediaQuery.of(context).size.height;
     // print('wysokość ekranu');
     // print(heightScreen);
     if (heightScreen < 600 && heightScreen > 590) {
-      hightSave = 80;
+      hightSave = 90;
       marginRow = 7;
     }
     //dane z bazy
@@ -7125,6 +7154,42 @@ print('openDialog = $openDialog');
         //korpus mieści się w skali 1:1, czy trzeba go zmniejszyć.
         body: LayoutBuilder(
           builder: (BuildContext ctx, BoxConstraints wymiary) {
+            final double wysokosc = wymiary.maxHeight;
+            final bool poziom =
+                MediaQuery.of(context).orientation == Orientation.landscape ||
+                    globals.voice2LiveLandscape;
+
+            //WYBÓR WARIANTU WIERSZY STREFY 1 (14.08.2026). Do tej pory decydowała
+            //stała `heightScreen < 590`, czyli WYSOKOŚĆ CAŁEGO EKRANU - liczba
+            //zgadnięta z dwóch urządzeń (mały iPhone 568, Sony Z3 592). Dawała
+            //dwa błędne wyniki:
+            //  * w POZIOMIE warunek celowo wykluczał orientację landscape, więc
+            //    wychodził wariant duży - a strefa 1 jest tam wąską lewą kolumną
+            //    i pudełka 100 px z cyframi 50 px wchodziły na siebie;
+            //  * w PIONIE na telefonach z ekranem wyższym od 590 px, ale nie na
+            //    tyle wysokim, żeby zmieścić pełny układ (zgłoszenie z Samsunga),
+            //    wychodził wariant duży, po czym strefy jechały w dół skalowaniem
+            //    proporcjonalnym - czyli i tak było ciasno, tylko brzydziej.
+            //Teraz pytamy o to, co naprawdę mamy: czy DUŻY układ mieści się w
+            //wysokości, którą dostała treść ekranu (`wymiary.maxHeight`, czyli
+            //bez paska tytułu i statusu). Jeżeli nie - od razu bierzemy wariant
+            //mały, który do 624 px schodzi bez żadnego skalowania.
+            //
+            //SKALA CZCIONKI SYSTEMOWEJ wchodzi do rachunku, bo pudełka mają
+            //STAŁE wysokości, a teksty w nich rosną razem z ustawieniem
+            //"rozmiar czcionki" w systemie (na Androidzie to zwykłe ustawienie
+            //ekranu, nie funkcja dostępności - dlatego bywa podniesione).
+            final double skalaTekstu =
+                MediaQuery.textScalerOf(context).scale(14) / 14;
+            //UKŁAD KLASYCZNY dzieli wysokość proporcjami (strefa 1 to Expanded
+            //flex 4 z sześciu), a układ z live podglądem daje strefie 1 stałe
+            //`_kStrefaDanych` obok korpusu i minimum tekstów - stąd dwa progi.
+            final double potrzebaNaDuze = globals.voice2LivePodglad
+                ? _kStrefaDanych + _kStrefaKorpusu + 2 + _kMinStrefaTekstu
+                : _kStrefaDanych * 6 / 4;
+            _maleWiersze =
+                poziom || wysokosc < potrzebaNaDuze * math.max(1.0, skalaTekstu);
+
             //UKŁAD KLASYCZNY (bez live podglądu) - bez zmian: dane u góry,
             //teksty z notatką do czterech linii, na dole błąd silnika.
             if (!globals.voice2LivePodglad) {
@@ -7137,11 +7202,6 @@ print('openDialog = $openDialog');
                 ],
               );
             }
-
-            final double wysokosc = wymiary.maxHeight;
-            final bool poziom =
-                MediaQuery.of(context).orientation == Orientation.landscape ||
-                    globals.voice2LiveLandscape;
 
             //UKŁAD POZIOMY: lewa kolumna to strefa 1, prawa to strefa 2 nad
             //strefą 3. Teksty siedzą POD korpusem, a nie w lewym panelu - dane
@@ -7193,9 +7253,8 @@ print('openDialog = $openDialog');
             //PROPORCJONALNIE, zostawiając strefie 3 jej minimum. Wysokość dalej
             //jest stała dla danego urządzenia, więc nic nie skacze: strefa 1
             //przewija się w środku, a korpus zmniejsza [FittedBox].
-            double strefaDanych = heightScreen < 590
-                ? _kStrefaDanychMala
-                : _kStrefaDanych;
+            double strefaDanych =
+                _maleWiersze ? _kStrefaDanychMala : _kStrefaDanych;
             double strefaKorpusu = _kStrefaKorpusu;
             final double doPodzialu = wysokosc - 2 - _kMinStrefaTekstu; //2 kreski
             if (strefaDanych + strefaKorpusu > doPodzialu && doPodzialu > 0) {
@@ -7230,6 +7289,44 @@ print('openDialog = $openDialog');
 
   
   
+  //SZEROKOŚĆ, jakiej potrzebuje wiersz "ul / korpus / półkorpus / ramka".
+  //Pudełka tego wiersza mają SZTYWNE szerokości, a [Row] ze `spaceEvenly` nie
+  //ma jak ich zwęzić - przy braku miejsca po prostu wychodzą poza kontener
+  //i nachodzą na siebie. W pionie miejsca starczało zawsze, ale w POZIOMIE
+  //strefa 1 jest tylko lewą połową ekranu: na małym iPhonie (568 x 320) to
+  //ok. 250 px, a same trzy pudełka to 260 px w wariancie małym i 300 w dużym.
+  //Liczymy więc, ile wiersz naprawdę zajmie - widoczność każdego pudełka
+  //wynika z tych samych flag `ready*`, którymi są w wierszu obudowane.
+  //UWAGA: te liczby MUSZĄ się zgadzać z `width:` pudełek niżej.
+  double _szerokoscWierszaUla() {
+    double suma = 0;
+    if (readyHive) suma += _maleWiersze ? 80 : 100;
+    if (readyBody) suma += 100;
+    if (readyHalfBody) suma += 100;
+    if (readyFrame) suma += _maleWiersze ? 80 : 100;
+    if (readyFrames) suma += _maleWiersze ? 80 : 100;
+    return suma;
+  }
+
+  //Wiersz zostaje BEZ ZMIAN, dopóki się mieści - dopiero gdy zabraknie
+  //szerokości, całość zjeżdża proporcjonalnie w dół ([FittedBox]). Wtedy
+  //pudełka stykają się bokami i są niższe, ale wszystkie są widoczne w całości.
+  //Skalowanie w dół nie psuje budżetu strefy 1: wiersz może być tylko niższy
+  //niż policzone dla niego 112 px (duży) / 80 px (mały).
+  Widget _dopasujWiersz(double potrzeba, Widget wiersz) {
+    if (potrzeba <= 0) return wiersz;
+    return LayoutBuilder(
+      builder: (BuildContext ctx, BoxConstraints c) =>
+          potrzeba <= c.maxWidth
+              ? wiersz
+              : FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: SizedBox(width: potrzeba, child: wiersz),
+                ),
+    );
+  }
+
   buildAnswerArea(BuildContext context, {bool flex = true}) {
     //ODSTĘP NAD OBWÓDKĄ WIERSZA PASIEKI to górna część `padding` tego kontenera
     //(15 px; wewnątrz obwódki jest jeszcze własny padding wiersza). W poziomie
@@ -7248,7 +7345,7 @@ print('openDialog = $openDialog');
             children: [
             
 //wiersz pasieka
-              heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
+              _maleWiersze
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -7256,9 +7353,16 @@ print('openDialog = $openDialog');
                           Expanded(
                             child: Container(
                               height: 40,
-                              padding: const EdgeInsets.only(
-                                  top: 1, left: 20, right: 20),
-                              alignment: Alignment.topCenter,
+                              //PIONOWO NA ŚRODKU (15.08.2026). Było
+                              //`topCenter` + padding górny 1: tekst 17 px zajmuje
+                              //ok. 24 px z 33 px wnętrza, więc pod spodem zostawało
+                              //9 px pustego i wiersz wyglądał na przyklejony do
+                              //górnej obwódki. Padding pionowy zdejmujemy do zera -
+                              //centrowanie robi teraz `Alignment.center`, a nie
+                              //ręcznie dobrana górna szpara.
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 border: Border.all(
                                     //color: Colors.black,
@@ -7314,9 +7418,12 @@ print('openDialog = $openDialog');
                           Expanded(
                             child: Container(
                               height: 45,
-                              padding: const EdgeInsets.only(
-                                  top: 5, left: 20, right: 20),
-                              alignment: Alignment.topCenter,
+                              //PIONOWO NA ŚRODKU - patrz bliźniaczy wiersz
+                              //w wariancie małym wyżej (tu tekst 20 px zostawiał
+                              //5 px pustego pod spodem).
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 border: Border.all(
                                     //color: Colors.black,
@@ -7422,11 +7529,12 @@ print('openDialog = $openDialog');
                   ),
               ]),
 
-//wiersz z ul, korpus ramka
-              Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+//wiersz z ul, korpus ramka (o [_dopasujWiersz] patrz komentarz przy metodzie)
+              _dopasujWiersz(_szerokoscWierszaUla(),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
 //ul numer
                 if (readyHive)
-                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
+                  _maleWiersze
                       ? Container(
                           width: 80,
                           height: 60,
@@ -7525,7 +7633,7 @@ print('openDialog = $openDialog');
                         ),
 //korpus numer
                 if (readyBody)
-                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
+                  _maleWiersze
                       ? Container(
                           width: 100,
                           height: 60,
@@ -7609,7 +7717,7 @@ print('openDialog = $openDialog');
                         ),
 //półkorpus numer
                 if (readyHalfBody)
-                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
+                  _maleWiersze
                       ? Container(
                           width: 100,
                           height: 60,
@@ -7696,7 +7804,7 @@ print('openDialog = $openDialog');
                 
 //ramka numer
                 if (readyFrame)
-                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
+                  _maleWiersze
                       ? Container(
                           width: 80,
                           height: 60,
@@ -7785,7 +7893,7 @@ print('openDialog = $openDialog');
 
 //ramki od do
                 if (readyFrames)
-                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
+                  _maleWiersze
                       ? Container(
                           width: 80,
                           height: 60,
@@ -7871,7 +7979,7 @@ print('openDialog = $openDialog');
                             ],
                           ),
                         ),
-              ]),
+              ])),
 
 //informacje o  matce
               if (readyApiary && readyHive && nrXXOfHive != 0 && hive.isNotEmpty)
@@ -7944,7 +8052,7 @@ print('openDialog = $openDialog');
 //wiersz opis ramki
               if (readyFrame || readyFrames)
                 if (nrXXOfFrame != 0 || nrXXOfFramePo != 0 || nrXXOdFrame != 0)
-                  heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
+                  _maleWiersze
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -7952,8 +8060,20 @@ print('openDialog = $openDialog');
                               child: Container(
                                 //width: 100,
                                 height: 40,
-                                padding: const EdgeInsets.only(
-                                    top: 5, bottom: 5, left: 20, right: 20),
+                                //PADDING PIONOWY 3 ZAMIAST 5 I TEKST W [FittedBox]
+                                //(15.08.2026 - zgłoszenie „brakuje 2 px" z Samsunga).
+                                //Rachunek: 40 - obwódka 6 - padding 5 + 5 = 24 px
+                                //wnętrza, a tekst 18 px zajmuje 25,7 px, bo styl
+                                //ustawia tylko `fontSize` i DZIEDZICZY `height: 1.43`
+                                //z Material 3 (bodyMedium). Stąd dokładnie owe
+                                //„BOTTOM OVERFLOWED BY 2.0 PIXELS".
+                                //[FittedBox] zdejmuje przy okazji drugą pułapkę tego
+                                //wiersza: „duża ramka na prawej stronie" to 28 znaków
+                                //i na węższym ekranie zawijało się na drugą linię -
+                                //wtedy brakowałoby nie 2 px, a 26. Teraz tekst
+                                //w razie potrzeby maleje, zamiast wyjść poza obwódkę.
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 3),
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                       //color: Colors.black,
@@ -7963,24 +8083,24 @@ print('openDialog = $openDialog');
                                   //color: Colors.yellowAccent,
                                 ),
                                 //color: Colors.blue,
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      "$sizeOfFrame " +
-                                          AppLocalizations.of(context)!
-                                              .frameOn +
-                                          " $siteOfFrame " +
-                                          AppLocalizations.of(context)!.site,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Color.fromARGB(255, 0, 0, 0),
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    "$sizeOfFrame " +
+                                        AppLocalizations.of(context)!.frameOn +
+                                        " $siteOfFrame " +
+                                        AppLocalizations.of(context)!.site,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Color.fromARGB(255, 0, 0, 0),
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                  ],
+                                  ),
                                 ),
 
-                                alignment: Alignment.topCenter,
+                                alignment: Alignment.center,
                               ),
                             ),
                           ],
@@ -7993,8 +8113,12 @@ print('openDialog = $openDialog');
                               child: Container(
                                 //width: 100,
                                 height: 45,
-                                padding: const EdgeInsets.only(
-                                    top: 5, bottom: 5, left: 20, right: 20),
+                                //to samo co w wariancie małym wyżej: tu zapas był
+                                //0,4 px (33 px wnętrza na tekst 28,6 px), czyli
+                                //wystarczyło minimalnie podnieść czcionkę systemową,
+                                //żeby wiersz zaczął przepełniać
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 3),
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                       //color: Colors.black,
@@ -8004,24 +8128,24 @@ print('openDialog = $openDialog');
                                   //color: Colors.yellowAccent,
                                 ),
                                 //color: Colors.blue,
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      "$sizeOfFrame " +
-                                          AppLocalizations.of(context)!
-                                              .frameOn +
-                                          " $siteOfFrame " +
-                                          AppLocalizations.of(context)!.site,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        color: Color.fromARGB(255, 0, 0, 0),
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    "$sizeOfFrame " +
+                                        AppLocalizations.of(context)!.frameOn +
+                                        " $siteOfFrame " +
+                                        AppLocalizations.of(context)!.site,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: Color.fromARGB(255, 0, 0, 0),
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                  ],
+                                  ),
                                 ),
 
-                                alignment: Alignment.topCenter,
+                                alignment: Alignment.center,
                               ),
                             ),
                           ],
@@ -8029,27 +8153,33 @@ print('openDialog = $openDialog');
 
 //zapis zasobu
               if (readyStory && !readyInfo)
-                heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape
+                _maleWiersze
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Expanded(
-                            //TE SAME 75 px i fontSize 18 co pudełko info nizej.
-                            //Wcześniej było 60 px przy fontSize 20, czyli miejsce
-                            //na JEDNĄ linię - a najdłuższe teksty zasobu też się
-                            //zawijają: "Do zrobienia = trzeba wirować" (29 znaków),
+                            //TE SAME 85 px i fontSize 18 co pudełko info nizej.
+                            //Historia: 60 px przy fontSize 20 to było miejsce na
+                            //JEDNĄ linię, a najdłuższe teksty zasobu się zawijają:
+                            //"Do zrobienia = trzeba wirować" (29 znaków),
                             //"Zrobiono = przesuń w prawo", a po francusku
-                            //"cellules royales supprimées = 12" (32). Na małym iOS
-                            //(568 x 320) druga linia wychodziła poza kontener.
-                            //`_kStrefaDanychMala` i tak liczy dla tego wiersza 75 px
-                            //(zasób i info wykluczają się wzajemnie), więc budżet
-                            //strefy się nie zmienia.
+                            //"cellules royales supprimées = 12" (32). Podniesienie
+                            //do 75 px MIAŁO dać dwie linie, ale rachunek był zły -
+                            //patrz komentarz na początku [build]: styl ustawia sam
+                            //`fontSize`, więc linia ma 1,43 * 18 = 25,7 px, a nie
+                            //~21. Dwie linie z etykietą to 71,5 px, przy 75 px
+                            //wysokości zostawało 62 px wnętrza - brakowało 10 px
+                            //(sprawdzone 15.08.2026 na Samsungu).
+                            //Teraz: 85 px, padding górny 5 => 74 px wnętrza,
+                            //a tekst dostał `height: 1.2` => potrzeba 63 px.
+                            //`_kStrefaDanychMala` liczy dla tego wiersza te 85 px
+                            //(zasób i info wykluczają się wzajemnie).
                             child: Container(
                               //width: 100,
-                              height: 75,
+                              height: 85,
                               margin: EdgeInsets.only(top: marginRow),
                               padding:
-                                  EdgeInsets.only(top: 7, left: 20, right: 20),
+                                  EdgeInsets.only(top: 5, left: 20, right: 20),
                               //color: Colors.blue,
                               child: Column(
                                 children: [
@@ -8061,7 +8191,11 @@ print('openDialog = $openDialog');
                                           (nrXXOfFrame != 0 || nrXXOfFramePo != 0 || nrXXOdFrame != 0)
                                       ? Text(
                                           zapis,
+                                          //`height` JAWNIE: bez niego linia bierze
+                                          //1,43 z Material 3 i dwie linie nie mieszczą
+                                          //się w pudełku (patrz komentarz wyżej)
                                           style: TextStyle(
+                                            height: 1.2,
                                             fontSize: 18,
                                             color: Color.fromARGB(255, 0, 0, 0),
                                             fontWeight: FontWeight.bold,
@@ -8120,7 +8254,12 @@ print('openDialog = $openDialog');
                                           (nrXXOfFrame != 0 || nrXXOfFramePo != 0 || nrXXOdFrame != 0)
                                       ? Text(
                                           zapis,
+                                          //`height` JAWNIE - jak w wariancie małym:
+                                          //przy dziedziczonym 1,43 dwie linie
+                                          //z etykietą to 77 px z 81 px wnętrza,
+                                          //czyli zapas mniejszy niż jedna kropka
                                           style: TextStyle(
+                                            height: 1.2,
                                             fontSize: 20,
                                             color: Color.fromARGB(255, 0, 0, 0),
                                             fontWeight: FontWeight.bold,
@@ -8156,17 +8295,19 @@ print('openDialog = $openDialog');
                       ),
 //zapis info
               if (readyInfo)
-                heightScreen < 590 && MediaQuery.of(context).orientation == Orientation.portrait && !globals.voice2LiveLandscape 
+                _maleWiersze 
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Expanded(
                             child: Container(
                               //width: 100,
-                              height: 75,
+                              //85 px i padding górny 5 - jak w bliźniaczym pudełku
+                              //zasobu wyżej; tam jest cały rachunek na dwie linie
+                              height: 85,
                               margin: EdgeInsets.only(top: marginRow),
                               padding:
-                                  EdgeInsets.only(top: 7, left: 20, right: 20),
+                                  EdgeInsets.only(top: 5, left: 20, right: 20),
                               child: Column(
                                 children: [
                                   Text(AppLocalizations.of(context)!.save +
@@ -8175,7 +8316,9 @@ print('openDialog = $openDialog');
                                           (nrXXOfHive != 0 || readyAllHives)
                                       ? Text(
                                           zapis,
+                                          //`height` JAWNIE - patrz pudełko zasobu
                                           style: TextStyle(
+                                            height: 1.2,
                                             fontSize: 18,
                                             color: Color.fromARGB(255, 0, 0, 0),
                                             fontWeight: FontWeight.bold,
@@ -8232,7 +8375,9 @@ print('openDialog = $openDialog');
                                           (nrXXOfHive != 0 || readyAllHives)
                                       ? Text(
                                           zapis,
+                                          //`height` JAWNIE - patrz pudełko zasobu
                                           style: TextStyle(
+                                            height: 1.2,
                                             fontSize: 20,
                                             color: Color.fromARGB(255, 0, 0, 0),
                                             fontWeight: FontWeight.bold,

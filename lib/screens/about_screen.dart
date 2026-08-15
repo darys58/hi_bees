@@ -137,7 +137,7 @@ class AboutScreen extends StatelessWidget {
                     // title: globals.isEuropeanFormat()
                     // ? Text(AppLocalizations.of(context)!.subscryptionTo + zmienDate(mem[0].ddo))
                     // : Text(AppLocalizations.of(context)!.subscryptionTo + mem[0].ddo),
-                    subtitle: Text(mem[0].key.substring(0, 10)),
+                    subtitle: Text(mem[0].key),
                     //trailing: Icon(Icons.chevron_right),
                   ),
                 )

@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Helper do odtwarzania dźwięków w sterowania głosowym.
@@ -12,6 +13,62 @@ class SoundHelper {
 
   final Map<String, AudioPlayer> _players = {};
   bool _initialized = false;
+
+  /// Sygnał potwierdzenia komendy - trzymany OSOBNO, poza [soundNames].
+  ///
+  /// Po co osobno: [soundNames] to lista odzywek Mai, po której iteruje ekran
+  /// "Sterowanie głosem" budując suwaki głośności. Sygnał nie jest odzywką i nie
+  /// ma tam czego robić - to znak techniczny, który ma być zawsze słyszalny.
+  ///
+  /// Ten odtwarzacz to WYJŚCIE AWARYJNE. Normalnie gra dźwięk systemowy przez
+  /// [_kanalSygnalu]; z pliku gramy dopiero wtedy, gdy kanał nie odpowie.
+  /// `listening.wav` trwa 0,15 s i - jak każdy sygnał w tym miejscu - NIE JEST
+  /// MOWĄ, więc nawet gdy przecieknie do mikrofonu, Vosk nie zbuduje z niego
+  /// frazy.
+  AudioPlayer? _beepPlayer;
+
+  /// Plik zapasowego sygnału. Wbudowany `listening.wav` to czysta sinusoida
+  /// 433 Hz (0,15 s, cichnie do zera na obu końcach), więc trzask, który słychać
+  /// na Androidzie, bierze się z rozruchu odtwarzacza, a nie z nagrania.
+  ///
+  /// [_plikSygnaluWlasny] jest po to, żeby dało się podłożyć własny dźwięk BEZ
+  /// ruszania kodu: wystarczy wrzucić `assets/audio/beep.mp3` i odkomentować
+  /// jego linię w `pubspec.yaml` (jest tam, obok `listening.wav`). Gdy pliku nie
+  /// ma - [init] cofa się do wbudowanego i nic się nie psuje.
+  static const String _plikSygnaluWlasny = 'audio/beep.mp3';
+  static const String _plikSygnaluWbudowany = 'audio/listening.wav';
+  String _plikSygnalu = _plikSygnaluWbudowany;
+
+  /// Kanał do natywnego dźwięku systemowego, obsługiwany po obu stronach:
+  /// iOS - `AudioServicesPlaySystemSound(1116)` w `AppDelegate.swift`,
+  /// Android - `ToneGenerator` w `MainActivity.kt`.
+  ///
+  /// Zastąpił pakiet `flutter_beep` (14.08.2026), który robił dokładnie to samo,
+  /// ale nie przechodził już buildu Androida od AGP 8. Dźwięk na iOS został ten
+  /// sam - `iOSSoundIDs.JBL_NoMatch` to była stała 1116.
+  static const MethodChannel _kanalSygnalu = MethodChannel('hej_maja/sygnal');
+
+  /// Czy kanał systemowy w ogóle ISTNIEJE w tym buildzie. Wyłączamy go na stałe
+  /// WYŁĄCZNIE po `MissingPluginException`, czyli gdy natywnej strony nie ma -
+  /// wtedy każde kolejne potwierdzenie komendy kosztowałoby wyjątek.
+  ///
+  /// Odmowa samego dźwięku (zajęta ścieżka audio) NIE wyłącza kanału: to stan
+  /// chwilowy i po następnej komendzie ton zwykle gra. Do 15.08.2026 gasiła go
+  /// na stałe i jedna nieudana próba skazywała całą sesję na plik z dysku.
+  bool _kanalSygnaluIstnieje = true;
+
+  /// Powód, dla którego kanał został wyłączony na stałe - pamiętany, żeby
+  /// pokazywać go przy każdym kolejnym sygnale, a nie tylko przy pierwszym.
+  String _powodBezKanalu = '';
+
+  /// Co się stało przy ostatnim sygnale potwierdzenia - do pokazania w
+  /// ustawieniach sterowania głosem (przycisk „Sprawdź sygnał").
+  ///
+  /// Po co: z telefonu WSZYSTKIE porażki brzmią identycznie - słychać plik.
+  /// „Build sprzed dodania kanału", „ToneGenerator odmówił" i „ton zagrał, ale
+  /// media są wyciszone" wymagają trzech różnych ruchów, a rozróżnić je można
+  /// tylko tutaj.
+  String ostatniSygnal = 'jeszcze nie grał';
 
   /// Nazwy dźwięków (publiczne - do iteracji w UI).
   static const List<String> soundNames = [
@@ -63,8 +120,94 @@ class SoundHelper {
       await player.setReleaseMode(ReleaseMode.stop);
       _players[name] = player;
     }
+    final beep = AudioPlayer();
+    // Własny plik ma pierwszeństwo, wbudowany jest zawsze na miejscu. Brak
+    // assetu leci z `rootBundle` jako błąd (nie wyjątek), stąd `catch (_)` bez
+    // typu - inaczej ustawienie źródła wywróciłoby całe init() i zamilkłyby
+    // TAKŻE odzywki Mai.
+    try {
+      await beep.setSource(AssetSource(_plikSygnaluWlasny));
+      _plikSygnalu = _plikSygnaluWlasny;
+    } catch (_) {
+      await beep.setSource(AssetSource(_plikSygnaluWbudowany));
+      _plikSygnalu = _plikSygnaluWbudowany;
+    }
+    await beep.setReleaseMode(ReleaseMode.stop);
+    _beepPlayer = beep;
     await loadVolumes();
     _initialized = true;
+  }
+
+  /// Krótki sygnał potwierdzenia przyjęcia komendy (patrz [_beepPlayer]).
+  ///
+  /// Jak [play]: NIE RZUCA. Sygnał jest ozdobą - jego awaria nie ma prawa
+  /// przerwać tego, co ekran głosowy właśnie robi.
+  ///
+  /// NAJPIERW dźwięk systemowy: krótszy, czystszy i - co ważniejsze na
+  /// Androidzie - nie prosi systemu o audio focus. Odebranie focusu pauzuje
+  /// nagrywanie w pakiecie `record`, czyli sterowanie głosem ogłuchłoby po
+  /// każdej komendzie (ta sama przyczyna, co w rundzie 3 w ANDROID_GLOS.md).
+  /// Dopiero gdy kanał odmówi - wracamy do pliku [_plikSygnalu], z głośnością
+  /// z [masterVolume] (to nie odzywka, nie ma własnego suwaka).
+  ///
+  /// Odpowiedź kanału czytamy jako OPIS: Android zwraca tekst mówiący, którą
+  /// drogą poszedł sygnał (patrz `MainActivity.zagrajSygnal`), iOS - samo
+  /// `true`. Umowa jest jedna: „ok" na początku znaczy „zagrało". Wynik ląduje
+  /// w [ostatniSygnal], bo z telefonu nie da się tego wyczytać inaczej.
+  Future<void> beep() async {
+    // Opis budujemy w ZMIENNEJ LOKALNEJ, a do [ostatniSygnal] wkładamy dopiero
+    // gotowy. Doklejanie do pola dawałoby napis rosnący z każdą komendą, gdy
+    // kanał jest wyłączony na stałe (jego powód nie zmienia się już nigdy).
+    String opis = _powodBezKanalu;
+    if (_kanalSygnaluIstnieje) {
+      try {
+        // Typ `Object`, nie `bool` ani `String`: obie platformy odpowiadają
+        // inaczej i typowanie na jedną z nich wywracałoby drugą na CastError -
+        // czyli sygnał na iOS działałby „przez wyjątek".
+        final Object? odpowiedz =
+            await _kanalSygnalu.invokeMethod<Object>('beep');
+        opis = odpowiedz is String
+            ? odpowiedz
+            : (odpowiedz == true
+                ? 'ok: dźwięk systemowy'
+                : 'brak: kanał zwrócił $odpowiedz');
+        if (opis.startsWith('ok')) {
+          ostatniSygnal = opis;
+          return;
+        }
+        debugPrint('SoundHelper: systemowy sygnał - $opis');
+      } on MissingPluginException catch (_) {
+        // Kanału NIE MA w tej aplikacji. Na Androidzie znaczy to najczęściej
+        // build sprzed dopisania MainActivity.kt - a że kanał wpina się przy
+        // starcie silnika, hot restart tego nie naprawi, trzeba zbudować od nowa.
+        _kanalSygnaluIstnieje = false;
+        _powodBezKanalu = 'brak kanału natywnego - aplikacja zbudowana bez '
+            'MainActivity.kt/AppDelegate.swift (potrzebny pełny rebuild, '
+            'hot restart nie wystarczy)';
+        opis = _powodBezKanalu;
+        debugPrint('SoundHelper: $opis');
+      } catch (e) {
+        // Awaria przejściowa - kanał zostaje włączony, próbujemy przy następnej
+        // komendzie.
+        opis = 'błąd kanału: $e';
+        debugPrint('SoundHelper: systemowy sygnał nie zagrał - $e');
+      }
+    }
+    final player = _beepPlayer;
+    if (player == null) {
+      ostatniSygnal = '$opis → brak odtwarzacza zapasowego';
+      return;
+    }
+    try {
+      await player.setVolume(0.0); // wycisz przed seek, żeby nie było trzasku
+      await player.seek(Duration.zero);
+      await player.setVolume(masterVolume.clamp(0.0, 1.0));
+      await player.resume();
+      ostatniSygnal = '$opis → plik $_plikSygnalu';
+    } catch (e) {
+      ostatniSygnal = '$opis → plik $_plikSygnalu też nie zagrał: $e';
+      debugPrint('SoundHelper: sygnał z pliku nie zagrał - $e');
+    }
   }
 
   /// Odtwórz dźwięk po nazwie.
@@ -162,6 +305,8 @@ class SoundHelper {
       await player.dispose();
     }
     _players.clear();
+    await _beepPlayer?.dispose();
+    _beepPlayer = null;
     _initialized = false;
   }
 }

@@ -62,3 +62,29 @@ app.*.map.json
 
 # Dowiązania wtyczek generowane przez `flutter pub get`
 /linux/flutter/ephemeral/
+
+# Wyniki Gradle'a (raporty problemów itp.) — odtwarzalne z builda
+/android/build/
+
+# Paczki robocze z rund testowych sygnału — kopie kodu, nie do gita
+/pliki/runda5_sygnal/
+
+# ==========================================================================
+# pliki/heymaya — fork androidowy (osobna apka, pakiet `heymaya`).
+# Do repo wchodzą TYLKO źródła. NIGDY klucze podpisu: to repo jest PUBLICZNE,
+# a utrata/wyciek keystore'a oznacza koniec aktualizacji apki w Google Play.
+# Keystore i hasła trzymamy wyłącznie lokalnie + w kopii zapasowej poza gitem.
+# ==========================================================================
+*.jks
+*.keystore
+# wzorzec z gwiazdką łapie też wyłączone kopie w rodzaju `xxxkey.properties`
+**/*key.properties
+/pliki/heymaya/android/build/
+/pliki/heymaya/android/app/build/
+/pliki/heymaya/android/.gradle/
+/pliki/heymaya/packages/vosk_flutter_service/ios/Frameworks/
+/pliki/heymaya/packages/vosk_flutter_service/macos/Frameworks/
+/pliki/heymaya/packages/vosk_flutter_service/linux/libs/
+/pliki/heymaya/packages/vosk_flutter_service/windows/libs/
+/pliki/heymaya/packages/vosk_flutter_service/android/.gradle/
+/pliki/heymaya/packages/vosk_flutter_service/android/build/

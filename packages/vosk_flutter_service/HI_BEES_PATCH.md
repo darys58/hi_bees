@@ -28,11 +28,18 @@ dart run vosk_flutter_service install -t ios   # → packages/vosk_flutter_servi
 cd ios && pod install && cd ..
 ```
 
+**Android nie potrzebuje tego kroku.** `libvosk.so` (arm64-v8a, armeabi-v7a,
+x86, x86_64) przychodzi w paczce `com.alphacephei:vosk-android:0.3.75@aar`,
+którą Gradle ściąga z `mavenCentral()`. Repozytorium autora
+(`https://alphacephei.com/maven/`) zostało w `build.gradle` jako zapas, ale na
+sierpień 2026 zwraca 404 na wszystkie wersje — działającym źródłem jest
+mavenCentral.
+
 Instalator pobiera `vosk-ios-0.3.45.zip` z releases v0.0.6 repo autora.
 **Nie dodawać `publish_to: none` do `pubspec.yaml` tego pakietu** —
 `shouldSkipInstall()` w `lib/src/cli/vosk_cli.dart` wtedy pomija pobieranie.
 
-## Zmiany względem oryginału
+## Zmiany względem oryginału — iOS
 
 Wszystkie w jednym pliku:
 `ios/vosk_flutter_service/Classes/VoskFlutterPlugin.swift`
@@ -91,13 +98,64 @@ skali int16 i częstotliwości zadanej przy tworzeniu recognizera — brakuje
 `initSpeechService()` jest w hi_bees nieużywany: audio zbiera pakiet `record`,
 a my karmimy `recognizer.acceptWaveform`.
 
+## Zmiany względem oryginału — Android (13.08.2026)
+
+Dwa pliki: `android/src/main/java/.../VoskFlutterPlugin.java`
+i `android/build.gradle` (+ nowy `android/consumer-rules.pro`).
+Pełne uzasadnienie w nagłówku klasy Javy i w komentarzach `build.gradle`.
+
+### 1. Praca recognizera zeszła z wątku UI — TA SAMA POPRAWKA CO NA iOS
+
+Oryginał wołał `acceptWaveForm`, `get*Result`, `reset`, `close` **oraz budowę
+recognizera** wprost w `onMethodCall`, czyli na głównym wątku Androida (na
+`TaskRunner` schodziło tylko ładowanie modelu). Przy naszym użyciu to nie jest
+kwestia płynności, tylko działania:
+
+- `new Recognizer(model, rate, grammar)` z gramatyką ~3,3 tys. fraz buduje graf
+  dekodowania przez sekundy → ANR przy wejściu na ekran sterowania głosem;
+- `acceptWaveForm` idzie 5 razy na sekundę (porcje 0,2 s), a przy dyktowaniu
+  notatki dwa razy tyle (recognizer notatki + detektor frazy kończącej).
+
+Teraz wszystko przechodzi przez `voskQueue` — kolejkę **szeregową**
+(jeden recognizer nie jest bezpieczny wielowątkowo), a na główny wątek wraca
+tylko gotowa wartość do `result(...)`. `recognizersMap` jest własnością tej
+kolejki; mapy modeli są współbieżne, bo sprzątanie przy odłączeniu silnika
+startuje z main.
+
+### 2. `result.error(..., details)` bez obiektu wyjątku
+
+Oryginał wkładał w `details` obiekt `Exception`, a `StandardMessageCodec` nie
+umie go zakodować — zamiast czytelnego błędu leciał wyjątek z kodeka. Teraz
+idzie tekstowy ślad stosu.
+
+### 3. `android/build.gradle`
+
+- usunięty własny blok `buildscript` z `com.android.tools.build:gradle:8.0.0` —
+  aplikacja ładuje AGP po swojemu, dwie wersje w jednym buildzie to konflikt
+  ładowania wtyczki;
+- usunięte `rootProject.allprojects { repositories }` (konfiguracja cudzego
+  projektu z podprojektu, w Gradle 8 przestarzała i wykonywana za późno);
+- `compileSdk` 33 → 35: `androidx.appcompat:appcompat:1.7.0` wymaga kompilacji
+  przy ≥ 34, więc oryginał **nie przechodził nawet konfiguracji**;
+- `consumerProguardFiles 'consumer-rules.pro'`.
+
+### 4. `consumer-rules.pro` (nowy plik)
+
+vosk-android woła bibliotekę natywną przez JNA po nazwach klas i metod. W
+buildzie release (`minifyEnabled true`) R8 to przemianowuje i sterowanie głosem
+pada na `UnsatisfiedLinkError` — czego **nie widać w debugu**. Reguły jadą
+z wtyczką, żeby aplikacja nie musiała o nich pamiętać.
+
+### Nietknięte po stronie Androida
+
+- `TaskRunner.java` — został w pakiecie, ale nie jest już używany (model wchodzi
+  na `voskQueue` razem z resztą).
+- `SpeechService` (wbudowany mikrofon wtyczki) — hi_bees go nie używa, audio
+  zbiera pakiet `record`. Zmieniło się tylko tyle, że inicjalizacja wyjmuje
+  recognizer z kolejki.
+
 ## Znane, świadomie nietknięte
 
-- **Android (`android/src/main/java/.../VoskFlutterPlugin.java`)** ma tę samą
-  wadę co iOS w punkcie 2: accept/result wołane wprost w `onMethodCall`, czyli
-  na wątku UI (na `TaskRunner` schodzi tylko ładowanie modelu). Nie ruszane —
-  objaw mierzyliśmy wyłącznie na iOS, a Javy nie ma tu jak skompilować.
-  Do zrobienia przy testach na Androidzie.
 - `recognizer.setPartialWords` jest no-opem (brak odpowiednika w C API).
 - Ścieżka `floats` w `recognizer.acceptWaveform` nie jest zaimplementowana.
 - **`Recognizer.setGrammar` NIE DZIAŁA na iOS i nie da się tego naprawić tutaj**
