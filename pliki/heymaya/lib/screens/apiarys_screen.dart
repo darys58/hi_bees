@@ -1,0 +1,2098 @@
+//import 'dart:ui';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
+//import 'package:in_app_purchase/in_app_purchase.dart'; //subskrypcja
+import 'package:heymaya/l10n/app_localizations.dart';
+import 'package:heymaya/screens/add_hive_screen.dart';
+import 'package:heymaya/screens/add_queen_screen.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+//import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:nfc_manager/nfc_manager.dart';
+import 'package:provider/provider.dart';
+import '../globals.dart' as globals;
+import '../main.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert'; //obsługa json'a
+import 'dart:typed_data';
+import 'dart:io';
+import '../helpers/db_helper.dart';
+import '../helpers/notification_helper.dart';
+import '../models/dodatki1.dart';
+import '../models/dodatki2.dart';
+import '../models/apiarys.dart';
+import '../models/frames.dart';
+import '../models/note.dart';
+import '../models/memory.dart';
+import '../models/weather.dart';
+import '../models/infos.dart';
+import '../widgets/apiarys_item.dart';
+import '../widgets/note_priorytet_item.dart';
+//import '../screens/subscription_screen.dart';
+import '../screens/settings_screen.dart';
+import '../screens/harvest_screen.dart';
+import '../screens/sale_screen.dart';
+import '../screens/purchase_screen.dart';
+import '../screens/note_screen.dart';
+import '../screens/queens_screen.dart';
+import '../screens/infos_screen.dart';
+import '../models/weathers.dart';
+import '../models/queen.dart';
+//import '../helpers/nfc_helper.dart';
+import '../widgets/nfc_hive_selection_dialog.dart';
+import '../screens/summary_screen.dart';
+import '../models/hives.dart';
+import '../screens/move_hive_screen.dart';
+//import '../screens/vosk_poc_screen.dart'; //POC Faza 0 - test Vosk-PL. Zaremowany
+//razem z ikoną POC niżej w actions (inaczej flutter analyze zgłasza unused_import).
+//Odkomentować oba naraz, jeżeli ekran POC ma znów być dostępny.
+import '../screens/voice_vosk_screen.dart'; //sterowanie głosem na Vosku
+//import '../models/apiarys.dart';
+
+//ekran startowy
+class ApiarysScreen extends StatefulWidget {
+  const ApiarysScreen({super.key});
+  static const routeName = '/screen-apiarys'; //nazwa trasy do tego ekranu
+  @override
+  State<ApiarysScreen> createState() => _ApiarysScreenState();
+}
+
+class _ApiarysScreenState extends State<ApiarysScreen> {
+  bool _isInit = true;
+  bool _isLoading = false;
+  final _formKey2 = GlobalKey<FormState>();
+//final wersja = ['1','0','0','2','22.05.2020','nic']; //major, minor - wersja(zmiana w bazie), kolejna wersja bo wymaga tego iOS, numer wydania
+  //1.0.1.1 30.03.2023 - start
+  //1.0.1.4 13.04.2023 - subskrypcja przetestowana w sandboxie w AppStoreConnect 79,99 zł
+  //1.1.0.5 01.06.2023 - wersja PL (picovoice_flutter 2.2.0), backup w chmurze, import, zmiana w bazie, nowa grafika w voice control
+  //1.2.0.6 23.06.2023 - zmiana w bazie - dane z ostatniego przeglądu widoczne na liście uli, edycja wpisów z przeglądów, android ok
+  //1.2.1.7 30.06.2023 - drobne błędy w wersji na iOSa, poprawki dla androida dotyczące dźwieków i plików picovoice
+  //1.2.2.8 13.07.2023 - versja picovoice_flutter 2.2.1, zapis i edycja zbiorów, poprawki wyświtlania belki uli
+  //1.2.3.9 11.08.2023 - zmiany w bazie - tabele sprzedaz, zakupy, zadania; statystyki w info; poprawki w rhuno
+  //1.2.4.10 11.08.2023 - zmiana w imporcie i eksporcie danych info - dodano pogoda, temp i czas
+  //1.2.5.11 12.08.2023 - poprawka z czasem delayed w pico, usunięcie if(mounted) w pico
+  //1.2.5.15 23.08.2023 - próba z picovoice_flutter: ^2.2.2 - nadal błąd dla Androida
+  //1.2.6.16 25.08.2023 - poprawka wyświetlania np. dokarmiania dla wszystkich uli (w belce ula), poprawki w ekranie parametryzacji i o aplikacji
+  //1.2.7.18 07.09.2023 - picovoice_flutter: ^2.2.3, Android działa, zablokowanie edycji numeru pasieki i ula w frame_edit_screen
+  //1.2.8.19 22.09.2023 - dodano sprzedaz, rhino aktualne dla pl i en
+  //1.2.9.20 24.10.2023 - dodano zakupy i notatki
+  //1.2.10.21 30.10.2023 - poprawki, wybór dat z kalendarza, komunikaty przy przesyłaniu danych
+  //1.2.11.22 03.11.2023 - poprawianie wyglądu, obliczanie zbiorów miodu dla parametryzacji
+  //1.2.12.23 12.11.2023 - link do Przewodnika, poprawki wyglądu
+  //1.3.0.24 28.11.2023 - picovoice_flutter: 3.0.1, zbiór pyłek w ml, zlikwidowano wszystkie konta na Picovoice !!!
+  //1.3.1.25 24.01.2024 - ręczne dodawanie uli (pasiek), przegladów i informacji, uporzadkowanie parametrów wpisów
+  //1.3.2.26 27.01.2024 - instalowanie nowej aplikacji bez klucza picovoice, klawiatury numeryczne z lub bez przecinków i kropek, poprawki komunikatów na ekranie powitalnym
+  //1.3.3.27 27.01.2024 - bez zmian - play.google - zmiana adresu strony www privacy-polisy
+  //1.3.4.28 29.01.2024 - ustawianie roku do statystyk, zmniejszenie ikon matki pod belkami
+  //1.3.5.29 11.02.2024 - prognoza pogody na 5 dni, automatyczne uzyskanie kodu aktywacyjnego
+  //1.3.5.30 11.02.2024 - wersja dla AppStore - bo było dwa razy wysyłane dlatego (30), uwaga zmienić SDK na 17
+  //1.3.6.31 12.02.2024 - wersja z testem dla App Store - kod aktywacyjny 00043210
+  //1.4.0.32 15.02.2024 - dodano 3 pola w tabeli memory (na zapas), ustawianie domyślnego języka na "en" (zmiany w main i Info.plist) jezeli jest nieobsługiwany język
+  //1.5.0.33 04.04.2024 - dodano pole w tabeli "ramka" ramkaNrPo, mozliwość pokazywania zasobów ramki przed i po przeglądzie, brak odpowiednich poprawek w voice_screen
+  //1.5.1.34 05.04.2024 - poprawka bo nie mozna było aktywować apki - w tym pliku brakowało ramkaNrPo
+  //1.5.2.36 06.04.2024 - dodawane zasobów ramek z pozycji widoku ramek w ulu, mozliwość dodawania kilku nowych ramek (z "ramkaNr" == 0) czyli dodanie do id ramek "ramkaNrPo", pamietanie daty w info_edit_screen
+  //1.6.0.37 28.04.2024 - numery ramek w widoku ula, nowy interfejs dodawania i edycji zasobów na ramkach, dodatkowe pola w tabeli "ule" (niewykorzystane jeszcze)
+  //1.6.1.38 02.05.2024 - poprawki działania nowego interfejsu dodawania zasobów na ramkach (przeglądy)
+  //1.6.2.39 17.05.2024 - rozbudowa dodawania/edycji zasobów dla wielu ramek jednoczesnie - numery wielu ramek przed i po, zasób na ramce "tylko ten" lub "wszystkie"
+  //1.6.3.40 20.05.2024 - mozliwość eksportu wybranych danych, poprawka wygladu edycji notatek, zakupów, zbiorów i sprzedazy, problem z podpisaniem a play.googlecom
+  //1.6.4.41 25.05.2024 - wersja na nowy XCode 15 (i nowy MacBook) poprawki - kolor tła elementów ListTail, padding w dataButton, sumaZasob itp.
+  //1.6.5.42 01.06.2024 - poprawki - dodanie isInit do skryptów edycyjnych, formatowanie pola data
+  //1.6.6.43 14.06.2024 - zmiana na iosDeviceInfo.name i androidDeviceInfo.device bo Id telefonów nie są niezmienne, zmiana nazwy tabel www - XXXX_ramka itd., ograniczenie komunikatów o braku internetu
+  //1.6.7.44 27.09.2024 - zapamietanie daty info w globals, pierwszy widok ramek - po przeglądzie, odświezanie belek: zasoby i matki (po imporcie danych i recznie) oraz dokarmianie lub leczenie, dodawanie info dla wszystkich uli przy dokarmianiu i leczeniu
+  //1.6.9.47 02.10.2024 - ununięto Picovoice bo błąd w XCode: obecny kod binarny w bibliotekach porcupino i rhuino, usunieto subskrypcję bo błedy przy kompilacji androida
+  //1.6.10.48 14.10.2024 - dodano statystyki zbioru miodu, pyłku i varrozy, poprawa statystyki dokarmiania ciastem, chyba poprawa wyświetlania szczegółów ramek przy zmianie daty przegladu
+  //1.6.11.49 27.10.2024 - dodano raporty zbiorów i raporty leczenia,
+  //zmiana MacBook Pro i przeniesienie aplikacji
+  //1.8.0.52 30.03.2025 - przywrócenie backupu z 24.10.2024. Zmiany tylko dla Androida. Dodanie "Zasoby na ramce +", zmiana domeny dla serwera danych z hibes.pl (bo wgasła) na heymaya.eu, zmiana nazwy, ikon i ekranu powitalnego na Hey Maya
+  //1.8.1.53 04.04.2025 - poprawka w dodawaniu zbiorów i notatce priorytetowej, adres strony ne ekranie aktywacji zmieniony na heymaya.eu, ikony z Mają powiększone
+  //1.8.2.54 06.04.2025 - usunięty błąd w statystykach przy braku wartości parametru (pole wartość puste), blokowanie wygaszania ekranów wszystkich oprócz startowego, oś pozioma raportów zbiorczych pokazuje numer ula a nie kolejny numer słupka
+  //1.8.3.55 05.05.2025 - wersja ujednolicona,taka sama jak dla iOS (1.8.6.59) ale bez vioce_screen i bez aktualizacji connectivity_plus: ^3.0.3 i wakelock: ^0.6.2
+  //1.8.4.56 11.05.2025 - przenoszenie ramek ręczne, błąd w statystykach zbiorów miodu z duzych ramek, likwidacja ula, poprawki tła appBar i dodanie kreski oddzielającej od body
+  //1.8.5.57 25.05.2025 - poprawka w przenoszeniu ramek - niezalezne daty przeglądów Z i Do, notatki w przegladach ramek, powiększanie widoku ramek ula
+  //1.8.6.58 17.06.2025 - zapisywanie info o przeglądzie do bazy tylko raz zeby zachować godzinę rozpoczecia przeglądu, zapisywanie notatki tylko w trybie edycji i bez mozliwośi zmiany daty zeby nie nadpisywać notatki
+  //1.8.6.58 17.06.2025 - poprawka pobierania temperatury z bazy po restarcie apki, dodano info o ostatnich zbiorach miodu a widoku wszystkich uli 
+
+  //1.8.7.60 08.10.2025 - nowa wersja dla SDK36 - Android 15
+  //1.8.8.61 09.10.2025 - jeszcze raz bo im się nie uruchamia
+  //1.8.9.62 10.10.2025 - małą poprawka db_helpers/getMem i wysłanie na testy wewnętrzne do PlayGoogle bo im się zawiesza
+  //1.8.10.63 11.10.2025 - poprawki w apiarys_screen w funkcji init
+  //1.8.11.64 03.11.2025 - miód w kg, stronicowanie raportów, typ i rodzaj ula, - nie chce działać w wersji do publikacji
+  //1.8.12.65 08.11.2025 - miód w kg, stronicowanie raportów, typ i rodzaj ula, - po poprawce Jacka
+  //1.9.0.68 11.17.2025 - dodano zarzadzanie matkami - nowa baza matki, likwidacja błędów pojawiających sie kiedy brak danych o przeglądach ramek, poprawa stylistyczna nazw niektórych info
+  //1.9.1.69 30.11.2025 - usunięty bład w raportach warrozy i błąd w voice_screen: "zamknij pomoc" wychodził z voice i bład - brak zawijania w uwagach o matce w Zarzadzaniu Matkami
+  //1.9.2.70 19.12.2025 - app_pl, app_en, queen_scerrn - widoki, queen.dart - kolory, add_hive_screen - ilość uli, globals,
+  //1.9.3.71 06.01.2026 - app_en i app_pl - "ramek",raport_screen i raport2_screen - rok w tytule, globals - rokMatki, info_edit_screen - dodano ID matki w tytule, queen_screen - dodatkowy rok "Wsztstkie", info_screen - w rodzina i matka ostatnie infa z wszystkich lat a nie z roku do statystyk, w Notes Zbiory Zakupy Sprzedaz - tylko lata z danymi
+  //1.9.4.73 31.01.2026 - zwiekszenie kafla pasieki i inne dostosowania do systemowego skalowania czcionki, ilość ramek miodu w zbiorach - zmiana z int na liczby dziesiętne, zbiór miodu zalezny od powierzchni ramki w dm2, obsługa tagów NFC, od API 24 (było od 29)
+  //1.9.5.74 01.02.2025 - błąd wyswietlania danych o matkach w hives_screen przy braku belek z zasobami
+  //1.9.6.75 07.02.2026 - raport_color_screen -> litry miodu w legendzie zbiorów (1l=1.45kg), legenda miodobrań w kolumnie, przycisk PDF przy wykresach zbiorów miodu i pyłku, summary_screen - Ostatnie informacje (zbiorcze) na dodatkowym ekranie + Notes, ustawianie obsługi przycisku NFC, usuniecie daty obowiązywania subskrypcji
+  //1.9.6.76 07.02.2026 - AppStore udrzucił wersję 1.9.6.75, zmieniłem share_plus: ^7.2.2 na share_plus: ^10.1.4
+  //1.9.7.77 10.02.2026 - "Data zadania" w Notesie + kolory zalezne od tej daty, likwidacja ula (info we wszystkich kategoriach + czarna ikona na ulu), Przenoszenie ramki - tez między pasiekami i tylko będąc w przeglądzie, Historia matki + PDF
+  //1.9.8.78 12.02.2026 - uproszczone logowanie - bez deviceId (jeden unikalny email w bazie = jeden kod), Kasowanie kopii zapasowej w chmurze - robienie kopii archiwalnej do późniejszego usunięcia
+  //1.9.9.79 17.02.2026 - ukrywanie przycisków Zakupy i Sprzedaz, historia ula, dm2 ramki - zmiana: z pola miara do pola pogoda w bazie, wyświetlanie tylko uli z zasobami w raport i raport2, PDFy w Zakupy, Sprzedaz i Zbiory, zdjęcia (800px) w inspection, archiwizacja zdjęć i kasowanie, wyświetlanie zdjęć na Androidzie
+  //1.9.10.80 22.02.2026 - apiarys_map_screen - mapa do lokalizacji, mapa lokalizacji wszystkich pasiek, progress bar w zarządzaniu danymi,
+  //1.9.11.81 23.02.2026 - poprawka - problem z aktualizacją na iPhone i z importem - blokada na zdjeciach
+  //1.9.12.82 23.02.2026 - poprawka kolejna -  catchError w bazie + Timeout 15s, kalendarz z zadaniami w Notesie, wyświetlanie zadań w summary_screen
+  //1.9.13.83 05.03.2026 - tłumaczenie na: de, es, fr, it, pt, przenoszenie i kasowanie ula, przypisanie notatki do wielu uli, kalkulatory kwasów, wychów matek
+  //1.9.14.84 09.03.2026 - przełacznik do testowania voice_scree2, inne dźwięki z regulacją głosności
+  //1.9.15.85 15.03.2026 - przenoszenie korpusów, szare tło likwidowanego ula, wyjście po przenoszeniu ramki, w frames_detail_item zaremowanie zmiany na szary napis "przegląd" bo zeruje datę (00:00)
+  //1.9.16.86 26.03.2026 - odejmownie zlikwidowanych uli od ogólnej ilości uli w pasiece (Pasieka - ilość uli), notatki bez wymuszania numeru pasieki, wiele kalendarzy wychowu matek, personalizacja ekranu Aktualności ula (summary), korekty wagi 1 dm2 dla kazdego Zbioru miodu, tłumaczenia Legendy w frames_scren.dart
+  //1.9.17.87 12.04.2026 - poprawki przy wprowadzaniu wagi 1dm2 w zbiorach miodu, import danych z wybranego roku, sprawdzanie po imporcie danych czy ul nie jest zlikwidowany, podgląd korpusu na zywo w voice_screen2,
+  //1.9.18.88 17.04.2026 - układ poziomy dla voice_screen, pliki głosowe mp3, wsparcie na patronite i suppi
+  //1.9.19.89 22.04.2026 - poprawki przy rysowaniu podglądu korpusu online w voice_scren2, Optymalizacja importu i odbudowy uli przy imporcie (SQL DISTINCT + batch SQLite), batch SQLite dla zapisu ramek i info (saveFramesToDb, saveInfosToDb), batch SQLite dla NFC, usunięcie martwych sub-progressów i sztucznych delayów, batch SQLite dla notatek, zakupów, sprzedaży, matek i zbiorów
+  //1.10.20.90 24.04.2026 - konfiguracja języków w XCode zeby poprawnie wyswietlały sie w AppStore, poprawki wyswietlania korpusu online w voice_screen2
+  //1.11.0.91 30.04.2026 - przygotowanie do upgrade Xcode 26: deployment target iOS 15, PrivacyInfo.xcprivacy, Dart 3 SDK constraint, Flutter 3.32+, checklist UPGRADE_XCODE_26.md
+  //1.11.1.92 15.06.2026 - fix wake-word - krótki beep zamiast słucham.mp3 (Rhino mylił mowę z głośnika z komendą), poprawki wprowadzania zasobów na ramkach i przenoszenia korpusów, swip przeglądów, odświezanie przy wprowadzaniu przeglądów
+  //1.11.2.93 04.07.2026 - zmiana dźwięku po "Hej Maja" (wake-word) z krótkiego beep na wyraźniejszy i głosniejszy, poprawka w voice_screen2 - odświezanie widoku korpusa po pierwszym zapisie zasobu do bazy
+  //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji, poddawanie matki z aktualna datą a nie z ostatnio ustawioną, Vosk - próba
+  //1.12.0.95 15.08.2026 - sterowanie głosem z modelem Vosk-PL przeniesione z wersji iOS: nowy ekran głosowy (żywy podgląd korpusu), notatki do przeglądu i do Notesu dyktowane głosem + nagranie WAV, cofanie zapisów "hej maja cofnij ostatni zapis", komenda "ustaw ule od X do Y", osobny ekran ustawień głosu; po stronie Androida: kolejka szeregowa w natywnej wtyczce Vosk (koniec zawieszania ekranu), reguły R8 dla JNA, źródło audio voiceRecognition, model 50 MB poza kopią zapasową
+
+
+  final wersja = '1.12.0.95'; //wersja aplikacji tylko na Androida !!!!! 
+  final dataWersji = '2026-08-15';
+  final now = DateTime.now();
+  late DateFormat formatter;
+  int aktywnosc = 0;
+  List<Weather>? pogoda;
+  String stopnie = '\u2103'; 
+  //String? _lastTag;
+
+  @override 
+  void initState() {
+    super.initState();
+    _startNfc(); // NFC uruchamiane automatycznie po starcie ekranu 
+  }
+
+  @override
+  void dispose() {
+    NfcManager.instance.stopSession();
+    super.dispose();
+  } 
+
+  @override
+  void didChangeDependencies() {
+    //print('apiarys_screen - didChangeDependencies');
+
+    //print('apiarys_screen - _isInit = $_isInit');
+    if (_isInit) {
+      setState(() {
+        _isLoading = true; //uruchomienie wskaznika ładowania danych
+      });
+
+      // Zabezpieczenie - timeout inicjalizacji (15 sekund)
+      Future.delayed(const Duration(seconds: 15), () {
+        if (mounted && _isLoading) {
+          debugPrint('TIMEOUT: Inicjalizacja trwa >15s - wymuszenie _isLoading = false');
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+
+//DBHelper.deleteBase().then((_) {
+      _getId().then((_) {
+        //pobranie Id telefonu i zapisanie w globals.deviceId - do identyfikacji uzytkownika apki - juz nie !!!!!
+        //pobranie z bazy lokalnej Memory dla tego smartfona (lub "test" dla sklepów) - juz nie !!!!!
+        //print('globals.deviceId = ${globals.deviceId}');
+        //pobranie z bazy Memory aktyalnego wpisu dla uzytkownika smartfona
+        Provider.of<Memory>(context, listen: false)
+            .fetchAndSetMemory2()
+            .then((_) {
+          
+          //memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT,dod TEXT, ddo TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT)');
+          //uzyskanie dostępu do danych
+          final memData = Provider.of<Memory>(context, listen: false);
+          final mem = memData.items;
+     
+          //odczytanie ustawień języka z bazy (memjezyk) - nadpisanie języka systemowego
+          if (mem.isNotEmpty && mem[0].memjezyk.isNotEmpty && mem[0].memjezyk != 'system') {
+            globals.memJezyk = mem[0].memjezyk;
+            MyApp.setLocale(mem[0].memjezyk);
+          }
+
+          //odczytanie widoczności kategorii w Aktualności ula (mem1)
+          if (mem.isNotEmpty && mem[0].mem1.isNotEmpty) {
+            globals.summaryVisibility = mem[0].mem1;
+          }
+
+          //odczytanie aktualnego języka (po ewentualnym nadpisaniu)
+          Locale myLocale = Localizations.localeOf(context);
+          globals.jezyk = myLocale.toString(); //zapamiętanie aktualnego języka (np. pl_PL, en_US, de_DE)
+
+          globals.wersja = wersja;
+
+          //uaktualnienie wersji apki na serwerze www po np. aktualizacji apki
+          if (mem.isNotEmpty && mem[0].wer != wersja) wyslijKod(mem[0].kod);
+
+          //jezeli jest wpis w bazie to znaczy ze była juz akywacja kiedyś (wpis moze być ale accessKey niekoniecznie!!!)
+          //dod - data od kiedy aktywacja (dokładniejsza data z czasem w polu be_data na www)
+          if (mem.isNotEmpty ) { 
+            globals.key = mem[0].key; //pobranie klucza
+            globals.keyMemory =  mem[0].key; //potrzebne gdyby była rezygnacja z aktywacji
+            globals.kod = mem[0].kod; //kod do aktywacji, kod tworzy nazwę tabeli do archiwizacji
+
+            //sprawdzenie czy w sklepie jest nowsza wersja apki (cicho, raz przy starcie) - patrz sprawdzNowaWersje()
+            sprawdzNowaWersje(mem[0].kod, mem[0].mem2);
+
+            //sprawdzenie daty do której apka jest aktywna - teraz bez znaczenia !!!!!
+            final data = DateTime.parse(mem[0].ddo);
+            aktywnosc = daysBetween(now, data); //ile dni wazności apki
+              
+            //Aplikacja jest aktywna 
+              //pobranie wszystkich pasiek z tabeli pasieki z bazy lokalnej
+              Provider.of<Apiarys>(context, listen: false)
+                  .fetchAndSetApiarys()
+                  .then((_) {
+                setState(() {
+                  _isLoading = false; //zatrzymanie wskaznika ładowania
+                });
+              });
+    //   }
+
+          } else {
+                  globals.key = '';
+          }
+      //DBHelper.deleteTable('dodatki2');
+          //DODATKI2 - ustawienia w aplikacji:
+          Provider.of<Dodatki2>(context, listen: false)
+              .fetchAndSetDodatki2()
+              .then((_) {
+            //uzyskanie dostępu do danych z tabeli dodatki1
+            final dod2Data = Provider.of<Dodatki2>(context, listen: false);
+            final dod2 = dod2Data.items;
+            //inicjacja tabeli dodatki2 jezeli jej nie było
+            //tabela Dodatki1: index,m,n,s,t,u,v,w,z,
+                            //  id; //id:1 
+                            //   m; //TYP A
+                            //   n; //własna nazwa ula
+                            //   s; //szerokość wewnętrzna ramka duza
+                            //   t; //wysokość wewnętrzna ramka duza
+                            //   u; //powierzchnia wnętrza duzej ramki w mm2 (plastra)
+                            //   v; //szerokość wewnętrzna ramka mała
+                            //   w; //wysokość wewnętrzna ramka mała
+                            //   z; //powierzchnia wnętrza małej ramki w mm2 (plastra)
+            
+            //jezeli nie ma tabeli dodatki2
+            if (dod2.length == 0) {
+              Dodatki2.insertDodatki2('1', 'TYP A', 'Wielkopolski A', '335', '235', '78725', '335', '105', '35175');
+              Dodatki2.insertDodatki2('2', 'TYP B', 'Wielkopolski B', '335', '235', '78725', '335', '105', '35175');
+              Dodatki2.insertDodatki2('3', 'TYP C', 'Wielkopolski C', '335', '235', '78725', '335', '105', '35175');
+              Dodatki2.insertDodatki2('4', 'TYP D', 'Wielkopolski D', '335', '235', '78725', '335', '105', '35175');
+            }
+          });
+
+          //DODATKI1 - ustawienia w aplikacji:
+          //a - 'true'/'false' - uatawienie przełącznika automatycznego eksportu danych
+          Provider.of<Dodatki1>(context, listen: false)
+              .fetchAndSetDodatki1()
+              .then((_) {
+            //uzyskanie dostępu do danych z tabeli dodatki1
+            final dod1Data = Provider.of<Dodatki1>(context, listen: false);
+            final dod1 = dod1Data.items;
+            //inicjacja tabeli dodatki1m jezeli jej nie było
+            //tabela Dodatki1: index,a,b,c,d,e,f,g,h
+                              //id-1
+                              //a-auto wysyłka danych z bazy do chmury,
+                              //b-średnia waga miodu na 1dm2 plastra, 
+                              //c-nfcCode, //NFC otwiera info albo summary
+                              //d-nic, 
+                              //e-waga miodu na duzej ramce, 
+                              //f-waga miodu na małej ramce, 
+                              //g-miarka do pyłku, 
+                              //h-ile uli na stronie raportów
+            
+            //jezeli nie ma tabeli dodatki1
+            // DBHelper.deleteTable('dodatki1');
+            if (dod1.length == 0) {
+              //jezeli nie ma tabeli dodatki1
+              Dodatki1.insertDodatki1('1', 'true', '260', '0', '0', '900', '1900', '100', '20');
+            } else {
+              //jezeli jest tabela dodatki1
+              globals.raportIleUliNaStronie = int.parse(dod1[0].h);
+              //odczytanie trybu NFC z bazy
+              if (dod1[0].c != '0' && dod1[0].c != '') {
+                globals.nfcMode = dod1[0].c;
+              }
+              //odczytanie ustawienia pokazywania przycisków Zakupy/Sprzedaż
+              globals.showZakupySprzedaz = dod1[0].d != 'false';
+              //przeplanowanie powiadomień lokalnych przy starcie aplikacji
+              try {
+              NotificationHelper.scheduleAllNotifications();
+              } catch (_) {
+                // Błąd planowania powiadomień - nie blokuje startu aplikacji
+              }
+              if (dod1[0].a == 'true') {
+                //ustawienie przłącznika eksportu danych - automatyczne wysłanie danych przy uruchamianiu apki
+                //BACKUP BAZY LOKALNEJ
+                //czy jest wpis w bazie memory dla tego deviceId? kod potrzebny do nazwy tabeli backupu
+                if (mem.isNotEmpty && mem[0].kod != '') {
+                  //BACKUP tabeli ramka - tylko wpisy z arch=0
+                  Provider.of<Frames>(context, listen: false)
+                      .fetchAndSetFramesToArch()
+                      .then((_) {
+                    final framesAllData =
+                        Provider.of<Frames>(context, listen: false);
+                    final ramki = framesAllData.items;
+                    //print('ilość wpisów w tabeli ramka');
+                    //print(ramki.length);
+                    //print(globals.kod);
+                    //final jsonData = jsonEncode(<String, String>{'aaa':'101', 'bbb':'1', 'ccc':'1'});
+                    //'{"ramki":[{"id": "aaa","pasieka":"1", "ul":"1"},{"id":"bbb", "pasieka":"1","ul":"2"}],"total":2}';
+
+                    if (ramki.length > 0) {
+                      String jsonData = '{"ramka":[';
+                      int i = 0;
+                      while (ramki.length > i) {
+                        jsonData += '{"id": "${ramki[i].id}",';
+                        jsonData += '"data": "${ramki[i].data}",';
+                        jsonData += '"pasiekaNr": ${ramki[i].pasiekaNr},';
+                        jsonData += '"ulNr": ${ramki[i].ulNr},';
+                        jsonData += '"korpusNr": ${ramki[i].korpusNr},';
+                        jsonData += '"typ": ${ramki[i].typ},';
+                        jsonData += '"ramkaNr": ${ramki[i].ramkaNr},';
+                        jsonData += '"ramkaNrPo": ${ramki[i].ramkaNrPo},';
+                        jsonData += '"rozmiar": ${ramki[i].rozmiar},';
+                        jsonData += '"strona": ${ramki[i].strona},';
+                        jsonData += '"zasob": ${ramki[i].zasob},';
+                        jsonData += '"wartosc": "${ramki[i].wartosc}",';
+                        jsonData += '"arch": ${ramki[i].arch}}';
+                        i++;
+                        if (ramki.length > i) jsonData += ',';
+                      }
+                      jsonData +=
+                          '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu XXXX_ramka
+
+                      //print(jsonData);
+                      _isInternet().then(
+                        (inter) {
+                          if (inter) {
+                            // print('$inter - jest internet');
+                            wyslijBackupRamka(jsonData); //jsonData
+                          } else {
+                            // print('braaaaaak internetu');
+                            //   _showAlertOK(
+                            //       context,
+                            //       AppLocalizations.of(context)!.alert,
+                            //       AppLocalizations.of(context)!.noInternet);
+                          }
+                        },
+                      );
+                    } //jeśli sa ramki do archiwizacji
+                  }); //od pobrania ramek
+
+                  //BACKUP tabeli info - tylko wpisy z arch=0
+                  Provider.of<Infos>(context, listen: false)
+                      .fetchAndSetInfosToArch()
+                      .then((_) {
+                    final infoArchData =
+                        Provider.of<Infos>(context, listen: false);
+                    final info = infoArchData.items;
+                    //print('ilość wpisów w tabeli info');
+                    //print(info.length);
+                    //print(globals.kod);
+                    //final jsonData = jsonEncode(<String, String>{'aaa':'101', 'bbb':'1', 'ccc':'1'});
+                    //'{"ramki":[{"id": "aaa","pasieka":"1", "ul":"1"},{"id":"bbb", "pasieka":"1","ul":"2"}],"total":2}';
+
+                    if (info.length > 0) {
+                      String jsonData = '{"info":[';
+                      int i = 0;
+                      while (info.length > i) {
+                        jsonData += '{"id": "${info[i].id}",';
+                        jsonData += '"data": "${info[i].data}",';
+                        jsonData += '"pasiekaNr": ${info[i].pasiekaNr},';
+                        jsonData += '"ulNr": ${info[i].ulNr},';
+                        jsonData += '"kategoria": "${info[i].kategoria}",';
+                        jsonData += '"parametr": "${info[i].parametr}",';
+                        jsonData += '"wartosc": "${info[i].wartosc}",';
+                        jsonData += '"miara": "${info[i].miara}",';
+                        jsonData += '"pogoda": "${info[i].pogoda}",';
+                        jsonData += '"temp": "${info[i].temp}",';
+                        jsonData += '"czas": "${info[i].czas}",';
+                        jsonData += '"uwagi": "${info[i].uwagi}",';
+                        jsonData += '"arch": ${info[i].arch}}';
+                        i++;
+                        if (info.length > i) jsonData += ',';
+                      }
+                      jsonData +=
+                          '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu XXXX_ramka
+
+                      //print(jsonData);
+                      _isInternet().then(
+                        (inter) {
+                          if (inter) {
+                            wyslijBackupInfo(jsonData); //jsonData
+                          } else {
+                            //print('braaaaaak internetu');
+                            //komunikat na dole ekranu
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    AppLocalizations.of(context)!.unablaToSend),
+                              ),
+                            );
+                            // _showAlertOK(
+                            //     context,
+                            //     AppLocalizations.of(context)!.alert,
+                            //     AppLocalizations.of(context)!.noInternet);
+                          }
+                        },
+                      );
+                    } //jeśli sa ramki do archiwizacji
+                  });
+
+                   //BACKUP tabeli matki - tylko wpisy z arch=0
+                  Provider.of<Queens>(context, listen: false)
+                      .fetchAndSetQueensToArch()
+                      .then((_) {
+                    final matkiArchData =
+                        Provider.of<Queens>(context, listen: false);
+                    final matki = matkiArchData.items;
+                    //print('ilość wpisów w tabeli info');
+                    //print(info.length);
+                    //print(globals.kod);
+                    //final jsonData = jsonEncode(<String, String>{'aaa':'101', 'bbb':'1', 'ccc':'1'});
+                    //'{"ramki":[{"id": "aaa","pasieka":"1", "ul":"1"},{"id":"bbb", "pasieka":"1","ul":"2"}],"total":2}';
+
+                    if (matki.length > 0) {
+                      String jsonData = '{"matki":[';
+                      int i = 0;
+                      while (matki.length > i) {
+                        jsonData += '{"id": "${matki[i].id}",';
+                        jsonData += '"data": "${matki[i].data}",';
+                        jsonData += '"zrodlo": "${matki[i].zrodlo}",';
+                        jsonData += '"rasa": "${matki[i].rasa}",';
+                        jsonData += '"linia": "${matki[i].linia}",';
+                        jsonData += '"znak": "${matki[i].znak}",';
+                        jsonData += '"napis": "${matki[i].napis}",';
+                        jsonData += '"uwagi": "${matki[i].uwagi}",';
+                        jsonData += '"pasieka": ${matki[i].pasieka},';
+                        jsonData += '"ul": ${matki[i].ul},';
+                        jsonData += '"dataStraty": "${matki[i].dataStraty}",';
+                        jsonData += '"a": "${matki[i].a}",';
+                        jsonData += '"b": "${matki[i].b}",';
+                        jsonData += '"c": "${matki[i].c}",';
+                        jsonData += '"arch": ${matki[i].arch}}';
+                        i++;
+                        if (matki.length > i) jsonData += ',';
+                      }
+                      jsonData +=
+                          '],"total":${matki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_matki"}'; //pierwsze cztery cyfry kodu XXXX_ramka
+
+                      //print(jsonData);
+                      _isInternet().then(
+                        (inter) {
+                          if (inter) {
+                            wyslijBackupMatki(jsonData); //jsonData
+                          } else {
+                            //print('braaaaaak internetu');
+                            //komunikat na dole ekranu
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    AppLocalizations.of(context)!.unablaToSend),
+                              ),
+                            );
+                            // _showAlertOK(
+                            //     context,
+                            //     AppLocalizations.of(context)!.alert,
+                            //     AppLocalizations.of(context)!.noInternet);
+                          }
+                        },
+                      );
+                    } //jeśli sa ramki do archiwizacji
+                  });
+
+                  
+
+                } //id ifa - czy jest kod?
+              } //ustawienie przłącznika eksportu danych
+            } //od jezeli jest tabela dodatki1 i a==true
+          });
+
+          //pobranie notatek bo wyswietlane sa na stronie startowej
+          Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
+
+          //pobranie danych o pogodzie dla pasieki
+          Provider.of<Weathers>(context, listen: false)
+              .fetchAndSetWeathers().then((_) {
+                 final pogodaData = Provider.of<Weathers>(context, listen: false);
+                  pogoda = pogodaData.items.where((ap) {
+                    return ap.id == (globals.pasiekaID.toString());
+                  }).toList();
+                  // setState(() {
+                  //jezeli są jakieś dane dla pasieki
+                  if (pogoda != null && pogoda!.isNotEmpty) {
+                    //print('apiarys_screen: temp pierwsza pobrana z bazy= ${pogoda![0].temp}');
+                    if((pogoda![0].temp).isNotEmpty) globals.aktualTemp = double.parse(pogoda![0].temp);
+                    switch (pogoda![0].units) {
+                      case 1:
+                        //units = 'metric';
+                        stopnie = "\u2103";
+                        break;
+                      case 2:
+                        //units = 'standard';
+                        stopnie = "\u212A";
+                        break;
+                      case 3:
+                       // units = 'imperial';
+                        stopnie = "\u2109";
+                        break;
+                      default:
+                        //units = 'metric';
+                        stopnie = "\u2103";
+                    }
+                    globals.stopnie = stopnie;
+                  } else {
+                    //print('Brak danych pogodowych dla pasieki');
+                    stopnie = "\u2103"; // Default to Celsius
+                    globals.stopnie = stopnie;
+                  }
+                
+              });
+
+          setState(() {
+            _isLoading = false; //zatrzymanie wskaznika ładowania danych
+          });
+//   }); //kasowanie bazy
+        }).catchError((error) {
+          debugPrint('Błąd inicjalizacji (fetchAndSetMemory2): $error');
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        }); //od pobrania danych z tabeli memory
+      }).catchError((error) {
+        debugPrint('Błąd inicjalizacji (_getId): $error');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+    }
+
+    _isInit = false;
+    // globals.isInit = false;
+    super.didChangeDependencies();
+  }
+
+  //sprawdzenie czy jest internet
+  // Future<bool> _isInternet() async {
+  //   var connectivityResult = await (Connectivity().checkConnectivity());
+  //   if (connectivityResult == ConnectivityResult.mobile) {
+  //     print("Connected to Mobile Network");
+  //     return true;
+  //   } else if (connectivityResult == ConnectivityResult.wifi) {
+  //     print("Connected to WiFi");
+  //     return true;
+  //   } else {
+  //     print("Unable to connect. Please Check Internet Connection");
+  //     return false;
+  //   }
+  // }
+
+  //obsługa czytania tagów NFC
+  void _startNfc() async {
+    final isAvailable = await NfcManager.instance.isAvailable();
+    //print('start funkcji startNfc, isAvailable = $isAvailable');
+    if (!isAvailable) {
+      _showNfcNotAvailableDialog(context);//komunikat jezeli NFC jest niedostępne
+      //print('NFC niedostępne');
+      return;
+    }
+    // print('globals.nfcMode = ${globals.nfcMode}');
+    // if(globals.nfcMode == 'off')NfcManager.instance.stopSession();
+    // if(globals.nfcMode != 'off'){ //jezeli NFC jest właczony w Obsłudze NFCh
+      NfcManager.instance.startSession(
+        pollingOptions: {NfcPollingOption.iso15693}, //bez tego wywala się bład
+        onDiscovered: (NfcTag tag) async {
+
+          try {
+              String? tagId = _extractTagId(tag); // Wyodrebnienie ID z tagu NFC
+
+              if (tagId == null) {
+                Navigator.of(context).pop(); // Zamknij dialog skanowania jezeli nie odczytano taga
+                _showErrorDialog(context, AppLocalizations.of(context)!.nfcTagReadError1);
+                NfcManager.instance.stopSession();
+                return;
+              }
+
+            // Navigator.of(context).pop(); // Zamknij dialog skanowania, potrzebne jazeli działa _showScanningDialog(context);1
+
+              // Szukanie ula przypisanego do tagu
+              final hiveData = await _findHiveByNfcTag(tagId);
+
+              if (hiveData != null) {
+                // Tag jest przypisany - nawiguj do ula
+
+                await _navigateToHive(context, hiveData);
+              } else {
+                // Tag nie jest przypisany - pokaz dialog wyboru ula
+                _showHiveSelectionDialog(context, tagId);
+              }
+        
+              //NfcManager.instance.stopSession();
+              //_startNfc();//uruchamia funkcje zeby czytać następnego taga ale ten soft powinien być w kodzie ekranu otwierającego się po odczytaniu taga
+            
+            } catch (e) {
+              Navigator.of(context).pop();
+              _showErrorDialog(context, AppLocalizations.of(context)!.nfcTagReadError2);
+              NfcManager.instance.stopSession();
+            }
+        },
+        // onError: (error) async {
+        //   print('Błąd NFC: $error');
+        // },
+      );
+   // }
+  }
+// Wyodrebnienie ID z tagu NFC
+  static String? _extractTagId(NfcTag tag) {
+    try {
+      // Probujemy rozne technologie NFC
+      final nfcA = tag.data['nfca'];
+      if (nfcA != null && nfcA['identifier'] != null) {
+        return _bytesToHex(Uint8List.fromList(List<int>.from(nfcA['identifier'])));
+      }
+
+      final nfcB = tag.data['nfcb'];
+      if (nfcB != null && nfcB['identifier'] != null) {
+        return _bytesToHex(Uint8List.fromList(List<int>.from(nfcB['identifier'])));
+      }
+
+      final nfcV = tag.data['nfcv'];
+      if (nfcV != null && nfcV['identifier'] != null) {
+        return _bytesToHex(Uint8List.fromList(List<int>.from(nfcV['identifier'])));
+      }
+
+      final miFare = tag.data['mifare'];
+      if (miFare != null && miFare['identifier'] != null) {
+        return _bytesToHex(Uint8List.fromList(List<int>.from(miFare['identifier'])));
+      }
+
+      final iso15693 = tag.data['iso15693'];
+      if (iso15693 != null && iso15693['identifier'] != null) {
+        return _bytesToHex(Uint8List.fromList(List<int>.from(iso15693['identifier'])));
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Konwersja bajtow na hex string
+  static String _bytesToHex(Uint8List bytes) {
+    return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join(':').toUpperCase();
+  }
+
+  // Wyszukanie ula po tagu NFC
+  static Future<Map<String, dynamic>?> _findHiveByNfcTag(String tagId) async {
+    final hives = await DBHelper.getHiveByH3(tagId);
+    if (hives.isNotEmpty) {
+      return hives.first;
+    }
+    return null;
+  }
+
+  // Nawigacja do ula
+  static Future<void> _navigateToHive(BuildContext context, Map<String, dynamic> hiveData) async {
+    globals.pasiekaID = hiveData['pasiekaNr'];
+    globals.ulID = hiveData['ulNr'];
+    globals.typUla = hiveData['h2'] ?? '0';
+    globals.dataAktualnegoPrzegladu = '';
+
+    // pushNamedAndRemoveUntil powoduje ze powrót strzałka jest zawsze od razu do strony startowej 
+    //if(globals.nfcMode != 'off'){ 
+      if (globals.nfcMode == 'summary') {
+
+      // Pobierz dane uli dla pasieki przed nawigacją do podsumowania
+      await Provider.of<Hives>(context, listen: false)
+          .fetchAndSetHives(hiveData['pasiekaNr']).then((_) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          SummaryScreen.routeName, ModalRoute.withName('/'),
+          arguments: <String, int>{'ulNr': hiveData['ulNr'] as int, 'pasiekaNr': hiveData['pasiekaNr'] as int},
+        );
+      });
+      } else {
+        Navigator.of(context).pushNamedAndRemoveUntil( 
+          InfoScreen.routeName, ModalRoute.withName('/'),
+          arguments: globals.ulID,
+        );
+      }
+  //  }
+  }
+
+  // Dialog podczas skanowania
+  // static void _showScanningDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: true,
+  //     builder: (context) => AlertDialog(
+  //       title: Text(AppLocalizations.of(context)!.nfcScanning),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           const CircularProgressIndicator(),
+  //           const SizedBox(height: 20),
+  //           Text(AppLocalizations.of(context)!.nfcHoldNearTag),
+  //         ],
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () {
+  //             NfcManager.instance.stopSession();
+  //             Navigator.of(context).pop();
+  //           },
+  //           child: Text(AppLocalizations.of(context)!.cancel),
+  //         ),
+  //       ],
+  //     ),
+  //   ).then((_) {
+  //     // Zatrzymaj sesje NFC jesli dialog zostal zamkniety
+  //     NfcManager.instance.stopSession();
+  //   });
+  // }
+
+  // Dialog NFC niedostepne
+  static void _showNfcNotAvailableDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.alert),
+        content: Text(AppLocalizations.of(context)!.nfcNotAvailable),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog bledu
+  static void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.error),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog wyboru ula dla nowego tagu
+  static void _showHiveSelectionDialog(BuildContext context, String tagId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => NfcHiveSelectionDialog(tagId: tagId),
+    );
+  }
+
+  
+  //sprawdzenie czy jest internet
+  Future<bool> _isInternet() async {
+      final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult.contains(ConnectivityResult.mobile)) {
+      // Mobile network available.
+      return true;
+    } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
+      // Wi-fi is available.
+      // Note for Android: When both mobile and Wi-Fi are turned on system will return Wi-Fi only as active network type
+      return true;
+    } else if (connectivityResult.contains(ConnectivityResult.bluetooth)) {
+      // Bluetooth connection available.
+      return true;
+    } else if (connectivityResult.contains(ConnectivityResult.other)) {
+      // Connected to a network which is not in the above mentioned networks.
+      return false;
+    } else if (connectivityResult.contains(ConnectivityResult.none)) {
+      // No available network types
+      return false;
+    }else return false;
+  }
+
+  //obliczanie róznicy miedzy dwoma datami
+  int daysBetween(DateTime from, DateTime to) {
+    from = DateTime(from.year, from.month, from.day);
+    to = DateTime(to.year, to.month, to.day);
+    return (to.difference(from).inHours / 24).round();
+  }
+
+  //pobieranie Id telefonu  - do identyfikacji apki jako uzytkownika
+  Future<void> _getId() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      IosDeviceInfo iosDeviceInfo = await deviceInfo.iosInfo;
+      globals.deviceId = 'ios_' + iosDeviceInfo.name;
+      //.identifierForVendor!; // + '_' + iosDeviceInfo.model; // +'_' + wersja[0] + wersja[1] + wersja[2] + wersja[3]; // + '_' + iosDeviceInfo.model
+      //return iosDeviceInfo.identifierForVendor; // unique ID on iOS
+    } else {
+      AndroidDeviceInfo androidDeviceInfo = await deviceInfo.androidInfo;
+      globals.deviceId = 'and_' + androidDeviceInfo.device; //androidId!; // + '_' + androidDeviceInfo.model;
+      //wersja[0] + wersja[1] + wersja[2] + wersja[3]; //androidDeviceInfo.model
+      //return androidDeviceInfo.androidId; // unique ID on Android
+    }
+  }
+
+  //wysyłanie backupu ramka
+  Future<void> wyslijBackupRamka(String jsonData1) async {
+    //String jsonData1
+    //print("z funkcji wysyłania");
+    final http.Response response = await http.post(
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonData1, //tabela ramka w postaci jsona
+    );
+    //print("response.body:");
+    //print(response.body);
+    if (response.statusCode >= 200 && response.statusCode <= 400) {
+      Map<String, dynamic> odpPost = json.decode(response.body);
+      if (odpPost['success'] == 'ok') {
+        // _showAlertOK(context, AppLocalizations.of(context)!.success,
+        //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
+        //zapis do bazy lokalnej
+        Provider.of<Frames>(context, listen: false)
+            .fetchAndSetFramesToArch()
+            .then((_) {
+          //dla tabeli RAMKI
+          final framesAllData = Provider.of<Frames>(context, listen: false);
+          final ramki = framesAllData.items;
+          //print('ilość potrzebnych wpisów arch = 1 w tabeli ramka');
+          //print(ramki.length);
+          int i = 0;
+          while (ramki.length > i) {
+            DBHelper.updateRamkaArch(ramki[i].id); //zapis arch = 1
+            i++;
+          }
+          //komunikat na dole ekranu
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.inspectionDataSend),
+            ),
+          );
+        });
+      } else {
+        // _showAlertOK(context, AppLocalizations.of(context)!.alert,
+        //    AppLocalizations.of(context)!.errorWhileActivating);
+       // print('niepowodzenie - $odpPost["success"]');
+      }
+    } else {
+      throw Exception('Failed to create OdpPost.');
+    }
+  }
+
+  //wysyłanie backupu info
+  Future<void> wyslijBackupInfo(String jsonData1) async {
+    //String jsonData1
+    final http.Response response = await http.post(
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonData1, //tabela ramka w postaci jsona
+    );
+    //print("response.body:");
+    //print(response.body);
+    if (response.statusCode >= 200 && response.statusCode <= 400) {
+      Map<String, dynamic> odpPost = json.decode(response.body);
+      if (odpPost['success'] == 'ok') {
+        // _showAlertOK(context, AppLocalizations.of(context)!.success,
+        //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
+        //zapis do bazy lokalnej
+        Provider.of<Infos>(context, listen: false)
+            .fetchAndSetInfosToArch()
+            .then((_) {
+          //dla tabeli RAMKI
+          final infoArchData = Provider.of<Infos>(context, listen: false);
+          final info = infoArchData.items;
+          //print('ilość potrzebnych wpisów arch = 1 w tabeli info');
+          //print(info.length);
+          int i = 0;
+          while (info.length > i) {
+            DBHelper.updateInfoArch(info[i].id); //zapis arch = 1
+            i++;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.infoDataSend),
+            ),
+          );
+        });
+      } else {
+        // _showAlertOK(context, AppLocalizations.of(context)!.alert,
+        //    AppLocalizations.of(context)!.errorWhileActivating);
+        //print('niepowodzenie - $odpPost["success"]');
+      }
+    } else {
+      throw Exception('Failed to create OdpPost.');
+    }
+  }
+
+  //wysyłanie backupu matki
+  Future<void> wyslijBackupMatki(String jsonData1) async {
+    //String jsonData1
+    final http.Response response = await http.post(
+      Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonData1, //tabela info w postaci jsona
+    );
+    //print("response.body:");
+    //print(response.body);
+    if (response.statusCode >= 200 && response.statusCode <= 400) {
+      Map<String, dynamic> odpPost = json.decode(response.body);
+      if (odpPost['success'] == 'ok') {
+        // _showAlertOK(context, AppLocalizations.of(context)!.success,
+        //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
+        //zapis do bazy lokalnej
+        Provider.of<Queens>(context, listen: false)
+            .fetchAndSetQueensToArch()
+            .then((_) {
+          //dla tabeli Matki
+          final matkiArchData = Provider.of<Queens>(context, listen: false);
+          final matki = matkiArchData.items;
+          //print('ilość potrzebnych wpisów arch = 1 w tabeli matki');
+          //print(matki.length);
+          int i = 0;
+          while (matki.length > i) {
+            DBHelper.updateMatkiArch(matki[i].id); //zapis arch = 1
+            i++;
+          }
+
+//Navigator.pop(context); //wyjscie z wskaźnika wysyłki
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.queenDataSend),
+            ),
+          );
+        });
+      } else {
+        // _showAlertOK(context, AppLocalizations.of(context)!.alert,
+        //    AppLocalizations.of(context)!.errorWhileActivating);
+        //print('niepowodzenie - $odpPost["success"]');
+      }
+    } else {
+      throw Exception('Failed to create OdpPost.');
+    }
+  }
+
+
+  //wysyłanie kodu
+  Future<void> wyslijKod(String kod) async {
+    final http.Response response = await http.post(
+      Uri.parse('https://darys.pl/cbt_hi_kod_v2.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        "kod_mobile": kod,
+        "deviceId": globals.deviceId,
+        "wersja": wersja,
+        "jezyk": globals.jezyk,
+      }),
+    );
+    //print('$kod ${globals.deviceId} $wersja ${globals.jezyk}');
+    //print(response.body);
+    if (response.statusCode >= 200 && response.statusCode <= 400) {
+      Map<String, dynamic> odpPost = json.decode(response.body);
+      if (odpPost['success'] == 'email') {
+        _showAlertOK(context, AppLocalizations.of(context)!.alert,
+            AppLocalizations.of(context)!.activationCodeWillBeSent);
+        // print('wysłano e-mail');
+      } else if (odpPost['success'] == 'brak_email') {
+        _showAlertOK(context, AppLocalizations.of(context)!.alert,
+            AppLocalizations.of(context)!.sendAgain);
+        // print('wysłano e-mail ale nie zapisał się');
+      } else if (odpPost['success'] == 'ok') {
+        _showAlertOK(context, AppLocalizations.of(context)!.success,
+            AppLocalizations.of(context)!.willBeActiveUntil );//+ odpPost['be_do']);
+        //zapis do bazy lokalnej z bazy www
+        DBHelper.deleteTable('memory').then((_) {
+          //kasowanie tabeli bo będzie nowy wpis
+          Memory.insertMemory(
+            odpPost['be_id'], //id
+            odpPost['be_email'],
+            //ponizej wstawone wartosci deviceId i wersja z apki, bo www nie zdązy ich zapisać i nie ma ich po pobraniu
+            //globals.deviceId, //
+            odpPost['be_dev'], //deviceId
+            //wersja, //
+            odpPost['be_wersja'], //wersja apki
+            odpPost['be_kod'], //kod
+            odpPost['be_key'], //accessKey
+            odpPost['be_od'], //data od
+            odpPost['be_do'], // do data
+            '', //globals.memJezyk, //memjezyk - język ustawiony w Ustawienia/Język apki
+            '', //zapas
+            '', //zapas
+          );
+        });
+      } else {
+        _showAlertOK(context, AppLocalizations.of(context)!.alert,
+            AppLocalizations.of(context)!.errorWhileActivating);
+        // print('brak danych dla tej apki');
+      }
+
+      //Navigator.of(context).pushNamed(OrderScreen.routeName);
+      //}
+    } else {
+      throw Exception('Failed to create OdpPost.');
+    }
+  }
+
+  //cicha weryfikacja czy w sklepie jest nowsza wersja apki (wołane raz przy starcie).
+  //Osobna funkcja, a NIE wyslijKod - wyslijKod pokazuje alerty aktywacyjne i jest wołane tylko po zmianie wersji.
+  //Backend cbt_hi_kod_v2.php zwraca dodatkowo pola: wersja_last, url_ios, url_android.
+  //ostatniaProponowana = mem2 z bazy - żeby nie pokazywać dialogu przy każdym starcie dla tej samej wersji.
+  Future<void> sprawdzNowaWersje(String kod, String ostatniaProponowana) async {
+    try {
+      final http.Response response = await http
+          .post(
+            Uri.parse('https://darys.pl/cbt_hi_kod_v2.php'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String, String>{
+              "kod_mobile": kod,
+              "deviceId": globals.deviceId,
+              "wersja": wersja,
+              "jezyk": globals.jezyk,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode < 200 || response.statusCode > 400) return;
+      final Map<String, dynamic> odp = json.decode(response.body);
+      final String wersjaLast = (odp['wersja_last'] ?? '').toString();
+      if (wersjaLast.isEmpty) return; //backend nie zwrócił wersji - nic nie robimy
+      if (!_nowszaWersja(wersjaLast, wersja)) return; //brak nowszej wersji
+      if (wersjaLast == ostatniaProponowana) return; //tę wersję już proponowaliśmy - nie spamujemy
+      //URL ze sklepu: preferuj podany przez backend, w razie braku użyj stałych zapasowych
+      final String urlSerwer =
+          (Platform.isAndroid ? odp['url_android'] : odp['url_ios'])
+                  ?.toString() ??
+              '';
+      final String url =
+          urlSerwer.isNotEmpty ? urlSerwer : _domyslnyUrlSklepu();
+      if (!mounted) return;
+      _showUpdateDialog(wersjaLast, url);
+    } catch (_) {
+      //brak sieci / timeout / błędny JSON - sprawdzenie wersji nie może blokować startu apki
+    }
+  }
+
+  //zapasowy link do sklepu (gdy backend nie zwróci url_ios/url_android)
+  String _domyslnyUrlSklepu() {
+    return Platform.isAndroid
+        ? 'https://play.google.com/store/apps/details?id=eu.darys.heymaya'
+        : 'https:/apps.apple.com/pl/app/hey-maya/id6447341365';
+  }
+
+  //porównanie wersji w formacie "1.11.2.93" segment po segmencie; zwraca true gdy a > b
+  bool _nowszaWersja(String a, String b) {
+    final List<int> pa =
+        a.split('.').map((s) => int.tryParse(s.trim()) ?? 0).toList();
+    final List<int> pb =
+        b.split('.').map((s) => int.tryParse(s.trim()) ?? 0).toList();
+    final int len = pa.length > pb.length ? pa.length : pb.length;
+    for (int i = 0; i < len; i++) {
+      final int va = i < pa.length ? pa[i] : 0;
+      final int vb = i < pb.length ? pb[i] : 0;
+      if (va != vb) return va > vb;
+    }
+    return false; //równe
+  }
+
+  //dialog opcjonalny - informacja o nowej wersji w sklepie (Aktualizuj / Później)
+  void _showUpdateDialog(String nowaWersja, String url) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.updateAvailable),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(AppLocalizations.of(context)!.updateAvailableMsg),
+            const SizedBox(height: 8),
+            Text(
+              'v$nowaWersja',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              //zapamiętanie zaproponowanej wersji - nie pokazuj ponownie dopóki nie pojawi się kolejna
+              DBHelper.updateMem2(globals.deviceId, nowaWersja);
+              Navigator.of(dialogCtx).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.lAter),
+          ),
+          TextButton(
+            onPressed: () async {
+              DBHelper.updateMem2(globals.deviceId, nowaWersja);
+              Navigator.of(dialogCtx).pop();
+              if (url.isNotEmpty) {
+                final Uri uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              }
+            },
+            child: Text(AppLocalizations.of(context)!.updateNow),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+    );
+  }
+
+  //okno dialogowe - Aktywuj lub Anuluj
+  // void _showAlert(BuildContext context, String nazwa, String text) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text(nazwa),
+  //       content: Column(
+  //         //zeby tekst był wyśrodkowany w poziomie
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: <Widget>[
+  //           Text(text),
+  //         ],
+  //       ),
+  //       actions: <Widget>[
+  //         TextButton(
+  //           onPressed: () {
+  //             DBHelper.updateActivate(globals.deviceId, '').then((_) {
+  //               Navigator.of(context).pushNamedAndRemoveUntil(
+  //                   ApiarysScreen.routeName,
+  //                   ModalRoute.withName(ApiarysScreen
+  //                       .routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
+  //             }); //'' do memory "od" - kasowanie
+  //           },
+  //           child: Text(AppLocalizations.of(context)!.activate),
+  //         ),
+  //         TextButton(
+  //           onPressed: () {
+  //             Navigator.of(context).pop();
+  //           },
+  //           child: Text(AppLocalizations.of(context)!.cancel),
+  //         ),
+  //       ],
+  //       elevation: 24.0,
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(15.0),
+  //       ),
+  //     ),
+  //     barrierDismissible:
+  //         false, //zeby zaciemnione tło było zablokowane na kliknięcia
+  //   );
+ // }
+
+  //dodawanie ula lub matki
+  void _showAlertAdd(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        //title: Text(AppLocalizations.of(context)!.selectEntryType),
+        content: Column(
+          //zeby tekst był wyśrodkowany w poziomie
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+//dodawanie ula      
+            TextButton(onPressed: (){
+              Navigator.of(dialogCtx).pop();
+              Navigator.of(context).pushNamed(AddHiveScreen.routeName);               
+            }, child: Text((AppLocalizations.of(context)!.aDdHive),style: TextStyle(fontSize: 18)) //zasoby
+            ), 
+          
+          
+            TextButton(onPressed: (){
+              Navigator.of(dialogCtx).pop();
+              Navigator.of(context).pushNamed(AddQueenScreen.routeName);  
+            }, child: Text((AppLocalizations.of(context)!.aDdQueen),style: TextStyle(fontSize: 18)) //zasoby +
+            ), 
+
+            TextButton(onPressed: (){
+              Navigator.of(dialogCtx).pop();
+               Navigator.of(context).pushNamed(
+                  QueenScreen.routeName, 
+                    arguments: {'idInfo': '',
+                              'kategoria': 'queen', 
+                              'parametr': AppLocalizations.of(context)!.queenIs, //Start
+                              'wartosc': AppLocalizations.of(context)!.freed, //wartość domyślna
+                              'idPasieki': 0, 
+                              'idUla':0,}, //przy wejściu z Apiary do ZARZADZANIA MATKAMI numer ula jest zerowany
+                  );
+            }, child: Text((AppLocalizations.of(context)!.aDdingQueen),style: TextStyle(fontSize: 18)) //zasoby +
+            ),  
+      
+            Divider(),
+
+//przenieś ul
+            TextButton(onPressed: (){
+              Navigator.of(dialogCtx).pop();
+              Navigator.of(context).pushNamed(MoveHiveScreen.routeName);
+            }, child: Text((AppLocalizations.of(context)!.moveHive),style: TextStyle(fontSize: 18))
+            ),
+
+//skasuj ul
+            TextButton(onPressed: (){
+              Navigator.of(dialogCtx).pop();
+              _showDeleteHiveDialog(context);
+            }, child: Text((AppLocalizations.of(context)!.deleteHive),style: TextStyle(fontSize: 18, color: Colors.red))
+            ),
+
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible:
+          false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
+  //dialog kasowania ula
+  void _showDeleteHiveDialog(BuildContext context) {
+    final apiarysData = Provider.of<Apiarys>(context, listen: false);
+    final apiaryList = apiarysData.items;
+
+    if (apiaryList.isEmpty) return;
+
+    int? selectedPasieka;
+    int? selectedUl;
+    List<int> hiveNumbers = [];
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final loc = AppLocalizations.of(dialogContext)!;
+          return AlertDialog(
+            title: Text(loc.deleteHive),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                //dropdown pasieki
+                DropdownButtonFormField<int>(
+                  decoration: InputDecoration(
+                    labelText: loc.selectApiary,
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedPasieka,
+                  items: apiaryList.map((a) => DropdownMenuItem<int>(
+                    value: a.pasiekaNr,
+                    child: Text('${loc.aPiary} ${a.pasiekaNr}'),
+                  )).toList(),
+                  onChanged: (val) async {
+                    if (val == null) return;
+                    //pobranie uli z wybranej pasieki
+                    await Provider.of<Hives>(dialogContext, listen: false).fetchAndSetHives(val);
+                    final hivesData = Provider.of<Hives>(dialogContext, listen: false);
+                    final hives = hivesData.items;
+                    setDialogState(() {
+                      selectedPasieka = val;
+                      selectedUl = null;
+                      hiveNumbers = hives.map((h) => h.ulNr).toList();
+                    });
+                  },
+                ),
+                SizedBox(height: 15),
+                //dropdown ula
+                DropdownButtonFormField<int>(
+                  decoration: InputDecoration(
+                    labelText: loc.selectHive,
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedUl,
+                  items: hiveNumbers.map((nr) => DropdownMenuItem<int>(
+                    value: nr,
+                    child: Text('${loc.hive} $nr'),
+                  )).toList(),
+                  onChanged: selectedPasieka == null ? null : (val) {
+                    setDialogState(() {
+                      selectedUl = val;
+                    });
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(loc.cancel),
+              ),
+              TextButton(
+                onPressed: (selectedPasieka == null || selectedUl == null)
+                    ? null
+                    : () {
+                        Navigator.of(dialogContext).pop();
+                        _confirmDeleteHive(context, selectedPasieka!, selectedUl!);
+                      },
+                child: Text(
+                  loc.deleteHive,
+                  style: TextStyle(color: (selectedPasieka != null && selectedUl != null) ? Colors.red : Colors.grey),
+                ),
+              ),
+            ],
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+          );
+        },
+      ),
+    );
+  }
+
+  //potwierdzenie kasowania ula
+  void _confirmDeleteHive(BuildContext context, int pasieka, int ul) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.deleteHive),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(AppLocalizations.of(context)!.deleteHiveConfirm(ul, pasieka)),
+            SizedBox(height: 10),
+            Text(
+              AppLocalizations.of(context)!.deleteHiveWarning,
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              //kaskadowe kasowanie
+              final photoPaths = await DBHelper.deleteHiveCascade(pasieka, ul);
+              //fizyczne usunięcie zdjęć
+              for (final path in photoPaths) {
+                try {
+                  final file = File(path);
+                  if (await file.exists()) {
+                    await file.delete();
+                  }
+                } catch (_) {}
+              }
+              //przeliczenie uli w pasiece
+              final hiveCount = await DBHelper.getHiveCount(pasieka);
+              if (hiveCount == 0) {
+                //pasieka pusta - kasujemy
+                await DBHelper.deletePasieki(pasieka);
+              } else {
+                await DBHelper.updateIleUli(pasieka, hiveCount);
+              }
+              //odświeżenie providerów
+              if (context.mounted) {
+                await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
+                if (hiveCount == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('${AppLocalizations.of(context)!.hiveDeleted}. ${AppLocalizations.of(context)!.emptyApiaryDeleted(pasieka)}'),
+                  ));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(AppLocalizations.of(context)!.hiveDeleted),
+                  ));
+                }
+              }
+            },
+            child: Text(
+              AppLocalizations.of(context)!.deleteHive,
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      ),
+    );
+  }
+
+  void _showAlertOK(BuildContext context, String nazwa, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nazwa),
+        content: Column(
+          //zeby tekst był wyśrodkowany w poziomie
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(text),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              //_setPrefers('reload',
+              //    'true'); //dane nieaktualne - trzeba przeładować dane z serwera
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                  ApiarysScreen.routeName,
+                  ModalRoute.withName(ApiarysScreen
+                      .routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
+            },
+            child: Text('OK'),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible:
+          false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
+  //wywoływanie przeglądarki stron www
+  Future<void> _launchInBrowser(Uri url) async {
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
+    formatter = locale == 'pl_PL'
+        ? DateFormat('EEEE, d MMMM', locale)
+        : DateFormat('EEEE, MMMM d', locale);
+
+    final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
+      side: BorderSide(color: Colors.grey),
+        backgroundColor:Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)));
+
+    final apiarysData = Provider.of<Apiarys>(context);
+    final apiarys = apiarysData.items; 
+
+    // for (var i = 0; i < apiarys.length; i++) {
+    //   print(
+    //       '${apiarys[i].id},${apiarys[i].pasiekaNr},${apiarys[i].ileUli},${apiarys[i].przeglad},${apiarys[i].ikona},${apiarys[i].opis}');
+    //   print('^^^^^');
+    // }
+    final memData1 = Provider.of<Memory>(context, listen: false);
+    final mem1 = memData1.items;
+
+    //pobranie wszystkich notatek
+    final notatkiData = Provider.of<Notes>(context);
+    List<Note> notatki = notatkiData.items.where((no) {
+      return no.priorytet.contains('true');
+    }).toList();
+    // Sortowanie: najpierw notatki z datą zadania (pole1) wg daty zadania ASC,
+    // potem notatki bez daty zadania wg daty notatki ASC
+    final notatkiZPole1 = notatki.where((no) => no.pole1.isNotEmpty).toList()
+      ..sort((a, b) => a.pole1.compareTo(b.pole1));
+    final notatkiBezPole1 = notatki.where((no) => no.pole1.isEmpty).toList()
+      ..sort((a, b) => a.data.compareTo(b.data));
+    final notatkiOdwrotnie = [...notatkiZPole1, ...notatkiBezPole1];
+
+
+    List<String> gridItems = [
+      'Notes',
+      AppLocalizations.of(context)!.hArvests,
+      if (globals.showZakupySprzedaz)
+      AppLocalizations.of(context)!.pUrchase,
+      if (globals.showZakupySprzedaz)
+      AppLocalizations.of(context)!.sAle,
+    ];
+
+    //double heightScreen = MediaQuery.of(context).size.height;
+    // print('wysokość ekranu');
+    // print(heightScreen);
+
+    final Uri toLaunchPl = Uri(
+        scheme: 'https', host: 'www.heymaya.eu', path: '/index.php/przewodnik');
+    final Uri toLaunchEn =
+        Uri(scheme: 'https', host: 'www.heymaya.eu', path: '/index.php/guide');
+
+
+    return Scaffold(
+
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
+        title: RichText(
+            text: TextSpan(
+              //style: TextStyle(color: Colors.black),
+              children: [
+                TextSpan(
+                  text: 'Hey Maya',
+                  style: TextStyle(fontSize: 20, color: Colors.black,),
+                ),
+                TextSpan(
+                  text: '\n${formatter.format(now)}',
+                        style: const TextStyle(fontSize: 12, color: Colors.black,)),
+              ])),
+        
+        backgroundColor: Color.fromARGB(
+            255, 255, 255, 255), //Color.fromARGB(255, 233, 140, 0),
+        actions: <Widget>[
+          
+          //POC Faza 0 - test Vosk-PL. Ikona ZAKOMENTOWANA 15.08.2026 (w `hi_bees`
+          //już od 11.08.2026): ekran jest narzędziem deweloperskim (surowy tekst
+          //z Vosk, tryby nasłuchu, panel diagnostyczny mikrofonu), nie ma czego
+          //szukać u użytkownika. Sam ekran i trasa zostają - żeby go włączyć,
+          //wystarczy odkomentować ten IconButton.
+          // IconButton(
+          //   icon: Icon(Icons.record_voice_over, color: Colors.deepPurple),
+          //   tooltip: 'POC Vosk-PL',
+          //   onPressed: () =>
+          //       Navigator.of(context).pushNamed(VoskPocScreen.routeName),
+          // ),
+
+//dodawanie ula (z pasieką) 
+          if(globals.key != '')
+            IconButton(
+              icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
+              onPressed: () =>
+                apiarys.length == 0 
+                  ? Navigator.of(context).pushNamed(AddHiveScreen.routeName)
+                  : _showAlertAdd(context),
+            ),
+          
+//pomoc w przeglądarce
+          IconButton(
+            icon: Icon(Icons.help_rounded, color: Color.fromARGB(255, 0, 0, 0)),
+            onPressed: () => globals.jezyk.startsWith('pl')
+                ? _isInternet().then((inter) {
+                    if (inter) {
+                      _launchInBrowser(toLaunchPl);
+                      //'https://www.cobytu.com/index.php?d=polityka&mobile=1');
+                      // Navigator.of(context).pushNamed(LanguagesScreen.routeName);
+                    } else {
+                      print('braaaaaak internetu');
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.noInternet);
+                    }
+                  })
+                : _isInternet().then((inter) {
+                    if (inter) { //inter != null && 
+                      _launchInBrowser(toLaunchEn);
+                    } else {
+                      print('braaaaaak internetu');
+                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                          AppLocalizations.of(context)!.noInternet);
+                    }
+                  }),
+          ),
+          
+//ustawienia
+          if(globals.key != '') 
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () => Navigator.of(context)
+                  .pushNamed(SettingsScreen.routeName).then((_) => setState(() {})), //arguments: {
+            )
+        ],
+        
+         bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.grey[300], // kolor linii
+            height: 1.0,
+          ),
+        ),
+      ),
+
+      body: _isLoading //jezeli dane są ładowane
+          ? Center(
+              child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.black)), //kółko ładowania danych
+            )
+          : globals.key == '' //jezeli nie ma accessKey to trzeba wysłać kod
+              //strona formularza aktywacji
+              ? Center(
+                  child: Column(children: <Widget>[
+                    Container(
+                        padding: const EdgeInsets.all(20),
+                        child: mem1.isEmpty
+                            ? Text(
+                            (AppLocalizations.of(context)!.enterYourActivationCode), //tekst wprowadzania kodu lub maila
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  //color: Colors.grey,
+                                ),
+                              )
+                            : Text(
+                                (AppLocalizations.of(context)!.enterYourActivationCode), //jezeli jest tylko bezpłatnie
+                                // (AppLocalizations.of(context)!
+                                //     .activationCodeAfterPaying), //jezeli będzie wersja płatna
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  //color: Colors.grey,
+                                ),
+                          )
+                    ),
+//formularz wprowadzenia kodu lub e-maila
+                    Form(
+                      key: _formKey2,
+                      child: Container(
+                        padding: EdgeInsets.only(left: 20, right: 20),
+                        child: TextFormField(
+                            //initialValue: globals.numer,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              labelText: (AppLocalizations.of(context)!.codeOrEmail),
+                              labelStyle: TextStyle(color: Colors.black),
+                              //hintText: allTranslations
+                              //.text('L_WPISZ_KOD_POLACZ'),
+                            ),
+                            validator: (value) {
+                              if (value!.isEmpty) {
+                                return (AppLocalizations.of(context)!.enterCodeOrEmail);
+                              }
+                              globals.kod = value;
+                              return null;
+                            }),
+                      ),
+                    ),
+                    //Przyciski
+                    Container(
+                      height: 90,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          
+                          //Aktywuj
+                          MaterialButton(
+                            height: 50,
+                            shape: const StadiumBorder(
+                              side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
+                              ),
+                            onPressed: () {
+                              if (_formKey2.currentState!.validate()) {
+                                //jezeli formularz wypełniony poprawnie
+                                _isInternet().then(
+                                  (inter) {
+                                    if (inter) {
+                                      wyslijKod(globals.kod);
+                                    } else {
+                                      print('braaaaaak internetu');
+                                      _showAlertOK(
+                                          context,
+                                          AppLocalizations.of(context)!.alert,
+                                          AppLocalizations.of(context)!
+                                              .noInternet);
+                                    }
+                                  },
+                                );
+                              }
+                              ;
+                              //Navigator.of(context).pushNamed(OrderScreen.routeName);
+                            },
+                            child: Text('   ' +
+                                (AppLocalizations.of(context)!.activate) +
+                                '   '), //AKTYWUJ===========================
+                            color: Theme.of(context).primaryColor,
+                            textColor: Colors.black,
+                            disabledColor: Colors.grey,
+                            disabledTextColor: Colors.white,
+                          ),
+                          SizedBox(width: 10),
+                        ],
+                      ),
+                    ),
+
+//Powrót bez zmian
+                    // if (aktywnosc < 30 &&
+                    //     aktywnosc >= 0 &&
+                    //     globals.keyMemory != '')
+                    //   Container(
+                    //     height: 90,
+                    //     child: Row(
+                    //       mainAxisAlignment: MainAxisAlignment.center,
+                    //       children: <Widget>[
+                    //         MaterialButton(
+                    //           height: 50,
+                    //           shape: const StadiumBorder(),
+                    //           onPressed: () {
+                    //             DBHelper.updateActivate(globals.deviceId,'${globals.keyMemory}'); //powtórne zapisanie key
+                    //             Navigator.of(context).pushNamedAndRemoveUntil(
+                    //                 ApiarysScreen.routeName,
+                    //                 ModalRoute.withName(ApiarysScreen.routeName)); //przejście z usunięciem wszystkich wczesniejszych tras i ekranów
+                    //           },
+                    //           child: Text('   ' +
+                    //               (AppLocalizations.of(context)!
+                    //                   .powrotBezZmian) +
+                    //               '   '), //Bez zmian========================
+                    //           color: Theme.of(context).primaryColor,
+                    //           textColor: Colors.white,
+                    //           disabledColor: Colors.grey,
+                    //           disabledTextColor: Colors.white,
+                    //         ),
+                    //       ],
+                    //     ),
+                    //   ),
+                  ]),
+                )
+
+//jezeli jest accessKey to STRONA STARTOWA
+              //brak pasiek
+              : apiarys.length == 0
+                  ? SingleChildScrollView(
+                      child: Column(
+                        children: <Widget>[
+                          Container(
+                            padding: const EdgeInsets.only(
+                                top: 30, left: 20, right: 20),
+                            child: RichText(
+                              text: TextSpan(
+                                  style: TextStyle(color: Colors.black),
+                                  children: [
+                                    TextSpan(
+                                      text: (AppLocalizations.of(context)!
+                                          .noApiaries), //brak pasiek
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey),
+                                    ),
+                                    TextSpan(
+                                      text: (AppLocalizations.of(context)!
+                                          .introA),
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          //fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 0, 0, 0)),
+                                    ),
+                                    // TextSpan(
+                                    //   text:(AppLocalizations.of(context)!.introB),
+                                    //   style: TextStyle(
+                                    //       fontSize: 16,
+                                    //       //fontWeight: FontWeight.bold,
+                                    //       color: Color.fromARGB(255, 0, 0, 0)),
+                                    // ),
+                                    // TextSpan(
+                                    //   text: (AppLocalizations.of(context)!.introC),
+                                    //   style: TextStyle(
+                                    //       fontSize: 16,
+                                    //       //fontWeight: FontWeight.bold,
+                                    //       color: Color.fromARGB(255, 0, 0, 0)),
+                                    // ),
+                                  ]),
+                            ),
+
+                          ),
+                          const SizedBox(
+                            height: 100,
+                          ),
+                        ],
+                      ),
+                    )
+//jezeli są pasieki
+                  : SingleChildScrollView(
+                      child: Column(children: <Widget>[
+//przyciski Zbiory, Zakupy, Sprzedaz, Notes
+                      Container(
+                          height: globals.showZakupySprzedaz
+                              ? ((MediaQuery.of(context).size.width + 30) / 5) *
+                                  2
+                              : ((MediaQuery.of(context).size.width + 30) / 5), //wysokość siatki przycisków
+                          child: Column(children: [
+                            Expanded(
+                              child: GridView.count(
+                                physics: NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                padding: const EdgeInsets.all(15.0),
+                                //shrinkWrap: true,
+                                crossAxisCount: 2, //ilość kolumn
+                                childAspectRatio:
+                                    (5 / 2), //proporcje boków kafli
+                                crossAxisSpacing: 20,
+                                mainAxisSpacing: 10,
+                                children: gridItems
+                                    .map((data) => InkWell(
+                                        onTap: () {
+                                          if (data == 'Notes')
+                                            Navigator.of(context).pushNamed(
+                                                NoteScreen.routeName);
+
+                                          if (data ==
+                                              AppLocalizations.of(context)!
+                                                  .hArvests)
+                                            Navigator.of(context).pushNamed(
+                                                HarvestScreen.routeName);
+
+                                          if (data ==
+                                              AppLocalizations.of(context)!
+                                                  .sAle)
+                                            Navigator.of(context).pushNamed(
+                                                SaleScreen.routeName);
+
+                                          if (data ==
+                                              AppLocalizations.of(context)!
+                                                  .pUrchase)
+                                            Navigator.of(context).pushNamed(
+                                                PurchaseScreen.routeName);
+
+                                          //getGridViewSelectedItem(context, data);
+                                        },
+                                        splashColor:
+                                            Theme.of(context).primaryColor,
+                                        borderRadius: BorderRadius.circular(15),
+                                        child: Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.grey,
+                                                width: 1, //      
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Color.fromARGB(255, 119, 87, 87)
+                                                      .withValues(alpha:0.5),
+                                                  spreadRadius: 1,
+                                                  blurRadius: 4,
+                                                  offset: const Offset(1,
+                                                      3), // changes position of shadow
+                                                ),
+                                              ],
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  Theme.of(context)
+                                                      .primaryColor
+                                                      .withValues(alpha:0.7),
+                                                  Theme.of(context)
+                                                      .primaryColor,
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              //color: Theme.of(context).primaryColor,
+                                              // borderRadius: BorderRadius.only(
+                                              //   topLeft: Radius.circular(20),
+                                              //   topRight: Radius.circular(20),
+                                              //   bottomLeft: Radius.circular(20),
+                                              //   bottomRight: Radius.circular(20),
+                                              // ),
+                                            ),
+                                            //margin:EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+                                            //color: Theme.of(context).primaryColor,
+                                            child: Center(
+                                                child: Text(data,
+                                                    style: TextStyle(
+                                                        //fontWeight: FontWeight.bold,
+                                                        fontSize: 20,
+                                                        color: Color.fromARGB(
+                                                            255, 0, 0, 0)),
+                                                    textAlign:
+                                                        TextAlign.center)))))
+                                    .toList(),
+                              ),
+                            ),
+                          ])),
+
+//pasieki
+                      Container(
+                          //height: 170 * ((apiarys.length ~/ 2) + (apiarys.length % 2)),//1  dla 1 i 2 pasiek, 2 dla 3 i 4 pasiek, itd
+                          height: 160,
+                          child: GridView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.only(
+                                left: 15, right: 15, top: 20, bottom: 15),
+                            itemCount: apiarys.length,
+                            itemBuilder: (ctx, i) =>
+                                ChangeNotifierProvider.value(
+                              value: apiarys[i],
+                              child: ApiarysItem(),
+                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                              mainAxisExtent: 180, //długośc kafelka
+                              maxCrossAxisExtent: 200,
+                              childAspectRatio: 7 / 5,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                            ),
+                          )),
+
+                      //wiadomosci priorytetowe
+                      //SizedBox(height: 10),
+
+          // Container(
+          //   child: Text(
+          //       'Status: ${globals.status}',
+          //       style: const TextStyle(fontSize: 16),
+          //     ),
+          // ),
+
+//Notatki priorytetowe
+                      Padding(
+                        padding: EdgeInsets.only(top: 5),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(), //zeby sie nie przewijał
+                          itemCount: notatkiOdwrotnie.length,
+                          itemBuilder: (ctx, i) => ChangeNotifierProvider.value(
+                            value: notatkiOdwrotnie[i],
+                            child: NotePriorytetItem(),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 100),
+                    ])),
+      //=== stopka
+      //W tej (androidowej) wersji stopka ma JEDEN przycisk: sterowanie głosem.
+      //Przycisku NFC tu nie ma, bo Android czyta tagi sam - sesja NFC startuje
+      //w initState tego ekranu (_startNfc), a nie po naciśnięciu przycisku jak
+      //na iOS. Gdy przycisk głosu odpada, chowamy cały pasek - inaczej zostaje
+      //pusty biały pas 100 px.
+      //
+      //Sterowanie głosem = Vosk (jedyny silnik od 03.08.2026, ekrany Picovoice
+      //usunięte). Dwie bramki:
+      //1. klucz aktywacyjny ('' = ekran Aktywacji, "bez_klucza" = apka bez głosu),
+      //2. JĘZYK - vosk_engine.dart pobiera wyłącznie model polski
+      //   (vosk-model-small-pl-0.22), a gramatyka assets/grammar/pol_vosk.yml
+      //   jest polska. Dla pozostałych języków przycisk nie ma czego uruchomić.
+      bottomSheet: (globals.key == '' ||
+              globals.key == 'bez_klucza' ||
+              globals.jezyk != 'pl_PL')
+          ? null
+          : Container(
+              height: 100,
+              color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(
+                      width: 220,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: buttonStyle,
+                        onPressed: () {
+                          Navigator.of(context).pushNamed(
+                            VoiceVoskScreen.routeName,
+                          );
+                        },
+                        child: Text(
+                            AppLocalizations.of(context)!.voiceControl,
+                            style: TextStyle(
+                                height: 1.0,
+                                fontSize: 14,
+                                color: Color.fromARGB(255, 0, 0, 0))),
+                      )),
+                ],
+              ),
+            ),
+      // //=== stopka (stara, z przyciskiem NFC - zostaje jako ślad po iOS)
+      // bottomSheet:
+      // // globals.key == '' || globals.key == "bez_klucza"
+      // //     ? null
+      // //     : 
+      //     Container(
+      //         //margin:  EdgeInsets.only(bottom:15),
+      //         height: 100,
+      //         color: Colors.white,
+      //         //width: MediaQuery.of(context).size.width,
+      //         child: Row(
+      //           mainAxisAlignment: MainAxisAlignment.center,
+      //           children: <Widget>[
+      //             Row(
+      //               children: <Widget>[
+      //                 // ElevatedButton(
+      //                 //   child: Text('English'),
+      //                 //   onPressed: () => _changeLanguage(Locale('en')),
+      //                 // ),
+      //                 // ElevatedButton(
+      //                 //   child: Text('Polski'),
+      //                 //   onPressed: () => _changeLanguage(Locale('pl')),
+      //                 // ),
+      //                 const SizedBox(
+      //                   width: 9,
+      //                 ),
+      //                 // SizedBox(
+      //                 //     width: 220,
+      //                 //     height: 50,
+      //                 //     child: ElevatedButton(
+      //                 //       style: buttonStyle,
+      //                 //       onPressed: () {
+      //                 //         globals.key == '' || globals.key == "bez_klucza"//jezeli brak accessKey
+      //                 //             ? null
+      //                 //             : {
+      //                 //                 //_isInit = true,
+      //                 //                 Navigator.of(context).pushNamed(
+      //                 //                   VoiceScreen.routeName,
+      //                 //                 ),
+      //                 //               };
+      //                 //       },
+      //                 //       child: Text(
+      //                 //           AppLocalizations.of(context)!.voiceControl,
+      //                 //           style: TextStyle(
+      //                 //               height: 1.0,
+      //                 //               fontSize: 14,
+      //                 //               color: Color.fromARGB(255, 0, 0, 0))),
+      //                 //     )),
+      //                 // const SizedBox(
+      //                 //   width: 10,
+      //                 // ),
+      //                 // // Przycisk NFC
+      //                 SizedBox(
+      //                     width: 100,
+      //                     height: 50,
+      //                     child: ElevatedButton(
+      //                       style: buttonStyle,
+      //                       onPressed: () {
+      //                        // globals.key == '' || globals.key == "bez_klucza"
+      //                            // ? null
+      //                             // : 
+      //                             _showScanningDialog(context);
+      //                            // NfcHelper.handleNfcScan(context);
+      //                       },
+      //                       child: Text(
+      //                           AppLocalizations.of(context)!.nfcButton,
+      //                           style: TextStyle(
+      //                               height: 1.0,
+      //                               fontSize: 14,
+      //                               color: Color.fromARGB(255, 0, 0, 0))),
+      //                     )),
+      //                 const SizedBox(
+      //                   width: 9,
+      //                 ), //interpolacja ciągu znaków
+      //               ],
+      //             )
+      //           ],
+      //         ),
+      //       ),
+    );
+  }
+}

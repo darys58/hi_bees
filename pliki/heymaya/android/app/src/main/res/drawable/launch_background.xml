@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Kolor tła -->
+    <item android:drawable="@android:color/white" />
+
+    <!-- Obrazek splash, dopasowany do szerokości ekranu -->
+    <item>
+        <bitmap
+            android:src="@drawable/splash_image"
+            android:tileMode="disabled"
+            android:gravity="fill" />
+    </item>
+   
+   
+    <!--<item>
+        <bitmap android:gravity="fill" android:src="@drawable/background"/>
+    </item>
+    <item>
+        <bitmap android:gravity="center" android:src="@drawable/splash"/>
+    </item> -->
+</layer-list>

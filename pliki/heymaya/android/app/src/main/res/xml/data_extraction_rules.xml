@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  To samo co backup_rules.xml, ale dla Androida 12+ (API 31), gdzie auto-backup
+  rozdzielono na kopię w chmurze i przenoszenie na nowe urządzenie. Oba muszą
+  pomijać model Vosk (~50 MB) i nagrania dyktowanych notatek - inaczej kopia
+  całej aplikacji, razem z bazą pasiek, przestaje się wykonywać.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="vosk_models" />
+        <exclude domain="root" path="app_flutter/nagrania" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="vosk_models" />
+        <exclude domain="root" path="app_flutter/nagrania" />
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,65 @@
+group 'org.vosk.vosk_flutter'
+version '1.0'
+
+// KOPIA ZWENDOROWANA (hi_bees) - zmiany względem pakietu z pub.dev,
+// pełny opis w HI_BEES_PATCH.md:
+//
+// 1. USUNIĘTY blok `buildscript` z własnym `com.android.tools.build:gradle`.
+//    Wtyczka deklarowała AGP 8.0.0, a aplikacja ładuje swoją wersję z
+//    android/build.gradle. Dwie różne wersje AGP w jednym buildzie to
+//    klasyczne "plugin was loaded multiple times" - wtyczka bierze teraz AGP
+//    z projektu głównego, tak jak robią to dzisiejsze wtyczki Fluttera.
+//
+// 2. USUNIĘTY `rootProject.allprojects { repositories { ... } }` - konfiguracja
+//    cudzego projektu z podprojektu jest w Gradle 8 przestarzała i wykonuje się
+//    ZA PÓŹNO, gdy repozytoria projektu głównego zostały już zamrożone.
+//    Repozytoria deklarujemy dla siebie, niżej.
+//
+// 3. compileSdk 33 -> 35. `androidx.appcompat:appcompat:1.7.0` wymaga
+//    kompilacji przy compileSdk >= 34 (metadane AAR), więc oryginał w ogóle nie
+//    przechodził konfiguracji. 35, bo tyle mają dziś wtyczki `jni`/
+//    `permission_handler_android`, od których zależy aplikacja.
+//
+//    UWAGA: to JEDYNA liczba w tym pliku zależna od środowiska. 35 wymaga
+//    AGP >= 8.6. Jeżeli projekt androidowy (osobna kopia repo na drugim
+//    komputerze - patrz ANDROID_GLOS.md) stoi na starszym AGP, zejdź do 34 -
+//    niżej się nie da przez appcompat 1.7.0.
+//
+// 4. Dodane `consumerProguardFiles` - vosk-android woła natywne API przez JNA
+//    (`Native.register`), więc R8 w buildzie release usunąłby te klasy razem z
+//    całym sterowaniem głosem. Reguły jadą z wtyczką, żeby aplikacja nie
+//    musiała o nich pamiętać.
+
+apply plugin: 'com.android.library'
+
+repositories {
+    google()
+    mavenCentral()
+    // Repozytorium autora Vosk. Trzymane jako zapas - na sierpień 2026
+    // `com.alphacephei:vosk-android` schodzi z mavenCentral(), a to zwraca 404.
+    maven {
+        url 'https://alphacephei.com/maven/'
+    }
+}
+
+android {
+    namespace 'org.vosk.vosk_flutter'
+
+    compileSdk 35
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'net.java.dev.jna:jna:5.15.0@aar'
+    implementation 'com.alphacephei:vosk-android:0.3.75@aar'
+}

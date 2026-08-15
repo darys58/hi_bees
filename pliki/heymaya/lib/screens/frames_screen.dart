@@ -1,0 +1,2633 @@
+import 'dart:async';
+//import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:heymaya/models/hive.dart';
+import 'package:provider/provider.dart';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+//import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:heymaya/l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
+import '../globals.dart' as globals;
+import '../helpers/db_helper.dart';
+import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
+import '../widgets/recording_player.dart'; //odtwarzacz nagrania notatki
+import '../models/frames.dart';
+import '../models/frame.dart';
+import '../models/hives.dart';
+import '../models/infos.dart';
+import '../models/info.dart';
+import '../screens/frames_detail_screen.dart';
+import '../screens/frame_edit_screen.dart';
+import '../screens/frame_edit_screen2.dart';
+import '../screens/frame_move_screen.dart';
+import '../screens/infos_edit_screen.dart';
+
+class FramesScreen extends StatefulWidget {
+  static const routeName = '/screen-frames'; //nazwa trasy do tego ekranu
+
+  @override
+  _FramesScreenState createState() => _FramesScreenState();
+}
+
+class _FramesScreenState extends State<FramesScreen> {
+  bool _isInit = true;
+  var now = new DateTime.now();
+  DateTime dt1 = DateTime.now(); //data do porównania dla ustawiania przełącznika przed i po pod widokiem ula
+  DateTime dt2 = DateTime.now(); //jw.
+  var formatter = new DateFormat('yyyy-MM-dd');
+  List<Frames> frame = []; //wszystkie ramki z wybranego ula dla wszystkich dat przeglądów
+  List<Frame> _daty = []; //unikalne daty
+  String wybranaData = '';
+  List<Frame> _korpusy = []; //unikalne korpusy
+  double _dragDx = 0; //skumulowany dystans poziomego przeciągnięcia po rysunku ula (Listener - działa też na symulatorze)
+  double _dragDy = 0; //skumulowany dystans pionowy - by odróżnić swipe poziomy od przewijania w pionie
+  int przedpo = 2; //wyświetlanie ramek przed (1) albo po (2) przeglądzie
+  List<bool> _selectedPrzedPo = <bool>[false, true];
+  double luPa = globals.lupaRamek; //powiększenie widoku ula
+  List<bool> _selectedLupa = <bool>[true, false, false]; // lewa|obie|prawa
+
+  // ScrollController dla listy dat
+  final ScrollController _dateScrollController = ScrollController();
+
+  bool readyApiary = false; //ustalony numer pasieki
+  bool readyHive = false; //ustalony numer ula
+  bool readyBody = false; //ustalony numer korpusu
+  bool readyFrame = false; //ustalony numer ramki
+
+  //intents
+  String intention = '';
+
+  //slots
+  String apiaryState = 'close'; //stan pasieki
+  int nrXXOfApiary = 0; //numer pasieki
+  int nrXXOfApairyTemp = 0;
+  String hiveState = 'close';
+  int nrXXOfHive = 0;
+  int nrXXOfHiveTemp = 0; //tymczasowy numer ula potrzebny przy resecie bo inna kolejność pól w slocie
+
+  String bodyState = 'close';
+  int nrXOfBody = 0;
+  int nrXOfBodyTemp = 0;
+  int nrXOfHalfBody = 0;
+  int nrXOfHalfBodyTemp = 0;
+  String frameState = 'close';
+  int nrXXFrame = 0;
+  int nrXXFrameTemp = 0;
+  String siteOfFrame = 'both'; //whole, cała
+  
+  //store
+  int honey = 0;
+  int honeySeald = 0;
+  int pollen = 0;
+  int brood = 0;
+  int larvae = 0;
+  int eggs = 0;
+  int wax = 0;
+  int earwax = 0;
+  int queen = 0;
+  int queenCells = 0;
+  int delQCells = 0;
+  int drone = 0;
+  String porpouseOfFrame = '';
+  String actionOnFrame = '';
+  
+  @override
+  void initState() {
+    super.initState();
+   // WakelockPlus.enable(); //blokada wyłaczania ekranu
+  }
+
+  @override
+  void dispose() {
+    _dateScrollController.dispose();
+    super.dispose();
+  }
+
+  // Stała szerokość karty z datą (używana w ListView i obliczeniach scroll)
+  static const double _dateCardWidth = 130.0;
+
+  // Przewija listę dat do wybranej daty (na środek ekranu)
+  void _scrollToSelectedDate({int attempt = 0}) {
+    if (_daty.isEmpty || wybranaData.isEmpty) return;
+
+    // Znajdź indeks wybranej daty
+    int selectedIndex = _daty.indexWhere((d) => d.data == wybranaData);
+    if (selectedIndex < 0) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_dateScrollController.hasClients) {
+        // Pobierz rzeczywistą szerokość ekranu
+        double screenWidth = MediaQuery.of(context).size.width;
+
+        // Oblicz pozycję środka wybranej karty
+        double cardCenterPosition = (selectedIndex * _dateCardWidth) + (_dateCardWidth / 2);
+
+        // Oblicz offset tak, żeby środek karty był na środku ekranu
+        double offset = cardCenterPosition - (screenWidth / 2);
+
+        // Ogranicz offset do dozwolonego zakresu
+        double maxScroll = _dateScrollController.position.maxScrollExtent;
+
+        // Przy pierwszym wejściu maxScrollExtent może być jeszcze 0 - spróbuj ponownie
+        if (maxScroll == 0 && _daty.length > 1 && attempt < 3) {
+          Future.delayed(Duration(milliseconds: 100), () {
+            _scrollToSelectedDate(attempt: attempt + 1);
+          });
+          return;
+        }
+
+        if (offset < 0) offset = 0;
+        if (offset > maxScroll) offset = maxScroll;
+
+        _dateScrollController.animateTo(
+          offset,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    // print('frames_screen - didChangeDependencies');
+    // print('frames_screen - _isInit = $_isInit');
+
+    apiaryState = AppLocalizations.of(context)!.close;
+    hiveState = AppLocalizations.of(context)!.close;
+    bodyState = AppLocalizations.of(context)!.close;
+    frameState = AppLocalizations.of(context)!.close;
+    siteOfFrame = AppLocalizations.of(context)!.both;
+
+    if (_isInit) {
+      _loadView();
+
+      // //ustawienie wielkosci widoku ula
+      luPa == 1.0 ? _selectedLupa[0] = true : _selectedLupa[0] = false;
+      luPa == 1.2 ? _selectedLupa[1] = true : _selectedLupa[1] = false;
+      luPa == 1.4 ? _selectedLupa[2] = true : _selectedLupa[2] = false;
+
+    }
+    _isInit = false;
+    //Provider.of<Rests>(context, listen: false).fetchAndSetRests(); //dostawca restauracji
+    super.didChangeDependencies();
+  }
+
+  //przeładowanie widoku: daty (_daty), korpusy (_korpusy), ramki i info z bazy.
+  //Wywoływane na starcie ORAZ po powrocie z ekranów dodawania/edycji, żeby od razu było
+  //widać nowy korpus z ramką i datę nowego przeglądu bez wychodzenia i wchodzenia do widoku.
+  void _loadView() {
+    //parametr przeglądu bierzemy z lokalizacji TU, bo getDaty jest asynchroniczne
+    //i nie ma jak sięgnąć po context po zakończeniu zapytania do bazy
+    final String parametrPrzegladu = AppLocalizations.of(context)!.inspection;
+    getDaty(globals.pasiekaID, globals.ulID, parametrPrzegladu).then((_) async {
+      //pobranie dat z bazy
+      if (globals.dataInspekcji != '') {
+        wybranaData = globals.dataInspekcji; //data z elementu listy info
+      } else {
+        if (_daty.isNotEmpty) {
+          globals.dataInspekcji = _daty[0].data;
+          wybranaData = _daty[0].data;
+        } //najwcześniejsza data pobrana z bazy
+      }
+
+      getKorpusy(globals.pasiekaID, globals.ulID, wybranaData).then((_) {
+        Provider.of<Frames>(context, listen: false)
+            .fetchAndSetFramesForHive(globals.pasiekaID, globals.ulID)
+            .then((_) {
+          Provider.of<Infos>(context, listen: false)
+              .fetchAndSetInfosForHive(globals.pasiekaID, globals.ulID)
+              .then((_) {
+            //setState dopiero po załadowaniu infos, żeby nie było race condition
+            if (mounted) {
+              setState(() {});
+              _scrollToSelectedDate();
+            }
+          });
+        });
+      });
+
+      if (mounted) setState(() {});
+    });
+  }
+
+  //wybór przeglądu o danym indeksie z listy _daty (wspólne dla kliknięcia w datę i gestu swipe).
+  //_daty są posortowane DESC: index 0 = najnowsza, wyższy index = starsza.
+  void _selectDate(int index) {
+    if (index < 0 || index >= _daty.length) return; //poza zakresem
+    if (_daty[index].data == wybranaData) return; //ta sama data - nic nie rób
+    dt1 = DateTime.parse(wybranaData);
+    dt2 = DateTime.parse(_daty[index].data);
+    getKorpusy(globals.pasiekaID, globals.ulID, _daty[index].data).then((_) {
+      if (!mounted) return;
+      setState(() {
+        //przed/po w zależności czy nowa data jest wcześniejsza czy późniejsza od poprzedniej
+        if (dt1.compareTo(dt2) < 0) {
+          _selectedPrzedPo = [true, false];
+          przedpo = 1;
+        } else {
+          _selectedPrzedPo = [false, true];
+          przedpo = 2;
+        }
+        globals.dataInspekcji = _daty[index].data;
+        wybranaData = _daty[index].data; //dla filtrowania po dacie
+      });
+      _scrollToSelectedDate();
+    });
+  }
+
+  //pobranie listy dat przeglądów dla wybranego ula i pasieki z bazy lokalnej.
+  //
+  //Daty biorą się z DWÓCH źródeł: z tabeli "ramka" (zwykły przegląd z zasobami)
+  //ORAZ z rekordów "info" kategorii "inspection" (przegląd założony samą notatką -
+  //podyktowaną głosem albo dopisaną z okna "notatka do przeglądu"). Bez drugiego
+  //źródła taka notatka zapisywała się do bazy, ale nie było jak jej otworzyć:
+  //ekran mówił "Nie ma jeszcze żadnych przeglądów" (zgłoszone 04.08.2026).
+  //
+  //Filtrujemy po parametrze "przegląd", bo kategoria "inspection" obejmuje też
+  //likwidację i przeniesienie ula - te mają własne wpisy na liście info i nie są
+  //przeglądami z ramkami.
+  Future<List<Frame>> getDaty(pasieka, ul, String parametrPrzegladu) async {
+    final dataList = await DBHelper.getDate(pasieka, ul); //daty z ramek
+    final infoList = await DBHelper.getDateInfo(
+        pasieka, ul, 'inspection', parametrPrzegladu); //daty samych przeglądów
+    final Set<String> unikalneDaty = <String>{
+      for (final item in dataList) '${item['data']}',
+      for (final item in infoList) '${item['data']}',
+    };
+    //sortowanie DESC (najnowsza pierwsza) - tak samo jak dotąd robił to SQL
+    final List<String> posortowane = unikalneDaty.toList()
+      ..sort((a, b) => b.compareTo(a));
+    //print('getDaty: pasieka $pasieka ul $ul');
+    _daty = posortowane
+        .map(
+          (data) => Frame(
+            id: '0', //data bo jak id to problem !!!
+            data: data,
+            pasiekaNr: 0,
+            ulNr: 0,
+            korpusNr: 0,
+            typ: 0,
+            ramkaNr: 0,
+            ramkaNrPo: 0,
+            rozmiar: 0,
+            strona: 0,
+            zasob: 0,
+            wartosc: '0',
+            arch: 0,
+          ),
+        )
+        .toList();
+    //print('daty = $_daty');
+    return _daty;
+  }
+
+  //pobranie listy ramek z unikalnymi korpusami dla wybranego ula i pasieki z bazy lokalnej
+  Future<List<Frame>> getKorpusy(pasieka, ul, data) async {
+    final dataList = await DBHelper.getKorpus(
+        pasieka, ul, data); //numer wybranego ula, pasieki i wybranej daty
+    _korpusy = dataList
+        .map(
+          (item) => Frame(
+            id: '0', //korpusNr bo jak id to problem !!!
+            data: '0',
+            pasiekaNr: 0,
+            ulNr: 0,
+            korpusNr: item['korpusNr'],
+            typ: item['typ'],
+            ramkaNr: 0,
+            ramkaNrPo: 0,
+            rozmiar: 0,
+            strona: 0,
+            zasob: 0,
+            wartosc: '0',
+            arch: 0,
+          ),
+        )
+        .toList();
+    return _korpusy;
+  }
+
+//okno legendy oznaczeń EN
+  Future<void> _dialogBuilderHelp(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.only(left: 15, right: 15),
+          content: Container(
+            child: SingleChildScrollView(
+              child: Column(children: <Widget>[
+                Container(
+                  color: Color.fromARGB(173, 173, 173, 173),
+                  child: CustomPaint(
+                    painter: MyHiveHelp(labels: [
+                      loc.legendWorkFrame,
+                      loc.legendToDelete,
+                      loc.legendToExtraction,
+                      loc.legendToInsulate,
+                      loc.legendQueen,
+                      loc.legendWaxFoundation,
+                      loc.legendWaxComb,
+                      loc.legendHoneySealed,
+                      loc.legendHoneyFood,
+                      loc.legendPollen,
+                      loc.legendEggs,
+                      loc.legendLarvae,
+                      loc.legendCoveredBrood,
+                      loc.legendDrone,
+                      loc.legendInserted,
+                      loc.legendDeleted,
+                      loc.legendMovedLeft,
+                      loc.legendMovedRight,
+                      loc.legendInsulated,
+                      loc.legendQueenCell,
+                      loc.legendDeleteQueenCell,
+                      loc.legendExcluder,
+                      loc.legendBodyNumber,
+                    ]),
+                    size: Size(200, 365),
+                  ),
+                  margin: EdgeInsets.all(15),
+                ),
+              ]),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(loc.disable),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  //poziomy pasek z datami przeglądów. Wydzielony, bo pokazujemy go w DWÓCH
+  //układach: przy przeglądzie z ramkami i przy przeglądzie z samą notatką -
+  //w obu trzeba móc przeskoczyć na inną datę.
+  Widget _paskDat() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 0.0, vertical: 1.0),
+      height: 46, //MediaQuery.of(context).size.height * 0.35,
+      child: ListView.builder(
+          controller: _dateScrollController,
+          scrollDirection: Axis.horizontal,
+          itemCount: _daty.length,
+          itemExtent: _dateCardWidth, // stała szerokość każdej karty
+          itemBuilder: (context, index) {
+            return SizedBox(
+              width: _dateCardWidth,
+              child: GestureDetector(
+                onTap: () => _selectDate(index),
+                child: wybranaData == _daty[index].data
+                    ? Card(//data czarna - wybrana
+                        color: Colors.white,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
+                          child: Center(
+                            child:
+                              Text('${zmienDate(_daty[index].data)}',
+                                    style: const TextStyle(color: Colors.black,fontSize: 17.0),
+                                  )),
+                        ),
+                      )
+                    : Card( //data szara
+                        color: Colors.white,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
+                          child: Center(
+                              child: Text('${zmienDate(_daty[index].data)}',
+                                    style: TextStyle(color: Colors.grey,fontSize: 17.0),
+                                  )),
+                        ),
+                      ),
+              ),
+            );
+          }),
+    );
+  }
+
+  //notatka przeglądu (pole "uwagi" rekordu info) jako przycisk otwierający edycję.
+  //Też wydzielona - pokazujemy ją i pod rysunkiem ula, i przy przeglądzie bez ramek.
+  Widget _notatkaPrzegladu(String notatka, String idNotatki, ButtonStyle styl) {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(AppLocalizations.of(context)!.nOte),
+          SizedBox(height: 5),
+          OutlinedButton(
+            style: styl,
+            onPressed: () {
+              Navigator.of(context).pushNamed(
+                InfosEditScreen.routeName,
+                arguments: {'idInfo': idNotatki},
+              ).then((_) { if (mounted) _loadView(); });
+            },
+            child: Text('$notatka',
+                style: const TextStyle(
+                    fontSize: 18, color: Color.fromARGB(255, 0, 0, 0))),
+          ),
+//nagranie podyktowanej notatki - taka sama ikonka jak na listach przeglądów i
+//notatek, tyle że wyśrodkowana pod przyciskiem, bo cała ta kolumna stoi na
+//środku ekranu. Bez nagrania RecordingRow nie zajmuje ani piksela.
+          RecordingRow(
+            zrodlo: RecordingHelper.zrodloPrzeglad,
+            powiazanieId: idNotatki,
+            male: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String zmienDate(String data) {
+    String rok = data.substring(0, 4);
+    String miesiac = data.substring(5, 7);
+    String dzien = data.substring(8);
+    return '$dzien.$miesiac.$rok';
+  }
+
+    
+  //okno dodawania zasobów ramek - wybór rodzaju wpisu: zasób, toDo lub isDone  
+    void _showAlert(BuildContext context, int pasieka, int ul) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.selectEntryType),
+        content: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          //zeby tekst był wyśrodkowany w poziomie
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+
+            // TextButton(onPressed: (){
+            //   Navigator.of(context).pop();
+            //   Navigator.of(context).pushNamed(
+            //       FrameEditScreen.routeName,
+            //       arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+            //     );
+            // }, child: Text((AppLocalizations.of(context)!.resourceOnFrame)+' new',style: TextStyle(fontSize: 18))
+            // ),
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameEditScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2},
+                ).then((_) { if (mounted) _loadView(); });
+            }, child: Text((AppLocalizations.of(context)!.resourceOnFrame),style: TextStyle(fontSize: 18)) //dodawanie zasobów
+            ),
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameEditScreen2.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'kierunek': 'plus'},
+                ).then((_) { if (mounted) _loadView(); });
+            }, child: Text((AppLocalizations.of(context)!.resourceOnFramePlus),style: TextStyle(fontSize: 18))// dodawanie zasobów +
+            ),
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameEditScreen2.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'kierunek': 'minus'},
+                ).then((_) { if (mounted) _loadView(); });
+            }, child: Text((AppLocalizations.of(context)!.resourceOnFrameMinus),style: TextStyle(fontSize: 18))// dodawanie zasobów -
+            ),
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameEditScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 13},
+                ).then((_) { if (mounted) _loadView(); });
+            }, child: Text((AppLocalizations.of(context)!.toDO),style: TextStyle(fontSize: 18)), //do zrobienia
+            ),
+            
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameEditScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 14},
+                ).then((_) { if (mounted) _loadView(); });
+            }, child: Text((AppLocalizations.of(context)!.itWasDone), //zostało zrobione
+            style: TextStyle(fontSize: 18)),
+            ),
+            
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameMoveScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData, 'tryb': 'ramka'},
+                ).then((_) { if (mounted) _loadView(); });
+            }, child: Text((AppLocalizations.of(context)!.mOvingFrame), //przenies ramkę
+            style: TextStyle(fontSize: 18)),
+            ),
+
+            TextButton(onPressed: (){
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  FrameMoveScreen.routeName,
+                  arguments: {'idPasieki': pasieka, 'idUla':ul, 'idZasobu': 2, 'idKorpusu': globals.nowyNrKorpusu, 'idRamki': globals.nowyNrRamki, 'idData': wybranaData, 'tryb': 'korpus'},
+                ).then((_) { if (mounted) _loadView(); });
+            }, child: Text((AppLocalizations.of(context)!.mOvingBody), //przenies korpus
+            style: TextStyle(fontSize: 18)),
+            ),
+          
+  
+            TextButton(onPressed: (){
+              globals.dataWpisu = wybranaData; //zeby notatka dotyczyła wybranego przegladu/daty
+              globals.dataInspekcji = wybranaData; //zeby notatka dotyczyła wybranego przegladu/daty ???????
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                  InfosEditScreen.routeName,
+                  arguments: {'idInfo': '',
+                              'kategoria': 'inspection', 
+                              'parametr': AppLocalizations.of(context)!.inspection, //przegląd - parametr wystarczy zeby zapisać uwagę/notatkę do przeglądu
+                              'wartosc': globals.ikonaInspekcji, //pobranie koloru ikony przeglądu zeby sie nie zmieniła przy dodawaniu notatki
+                              'idPasieki': pasieka,
+                              'idUla':ul,},
+                ).then((_) { if (mounted) _loadView(); });
+            }, child: Text((AppLocalizations.of(context)!.nOteForInspection), //notatka do przeglądu
+            style: TextStyle(fontSize: 18)),
+            ),
+          
+
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+        elevation: 24.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      barrierDismissible:
+          false, //zeby zaciemnione tło było zablokowane na kliknięcia
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    
+     final ButtonStyle buttonStyle = OutlinedButton.styleFrom(    
+      padding: const EdgeInsets.all(15.0),
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),//Theme.of(context).primaryColor, //Color.fromARGB(255, 233, 140, 0),
+      shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      side:BorderSide(color: Color.fromARGB(255, 162, 103, 0),width: 1,),
+      //fixedSize: Size(66.0, 35.0),
+      //textStyle: const TextStyle(color: Color.fromARGB(255, 162, 103, 0),)
+    );
+    //przekazanie hiveNr z hives_item za pomocą navigatora
+    final hiveNr = ModalRoute.of(context)!.settings.arguments as int;
+    //pobranie wszystkich ramek dla ula
+    final framesData = Provider.of<Frames>(context);
+    //ramki z wybranej daty dla ula
+    List<Frame> frames = framesData.items.where((fr) {
+      return fr.data == (wybranaData);
+    }).toList();
+
+    // ===== DEBUG TYMCZASOWY - diagnoza znikającej ramki przy przenoszeniu korpusów (USUNĄĆ po teście) =====
+    // ignore: avoid_print
+    // print('===== DEBUG RAMKI ula ${globals.ulID} pasieka ${globals.pasiekaID} | wybranaData=$wybranaData =====');
+    // final _dbg = [...framesData.items]..sort((a, b) {
+    //   final c = a.data.compareTo(b.data);
+    //   if (c != 0) return c;
+    //   final k = a.korpusNr.compareTo(b.korpusNr);
+    //   if (k != 0) return k;
+    //   final r = a.ramkaNr.compareTo(b.ramkaNr);
+    //   if (r != 0) return r;
+    //   return a.zasob.compareTo(b.zasob);
+    // });
+    // for (final fr in _dbg) {
+    //   // ignore: avoid_print
+    //   print('id=${fr.id} | data=${fr.data} | korpus=${fr.korpusNr} | typ=${fr.typ} | ramkaNr=${fr.ramkaNr} | ramkaNrPo=${fr.ramkaNrPo} | strona=${fr.strona} | zasob=${fr.zasob} | wartosc=${fr.wartosc}');
+    // }
+    // // ignore: avoid_print
+    // print('===== KONIEC DEBUG (${_dbg.length} rekordów) =====');
+    // // ===== KONIEC DEBUG TYMCZASOWY =====
+
+    // print(
+    //     'frames_screen - ilość stron ramek w pasiece ${globals.pasiekaID} ulu ${globals.ulID}');
+    // print(frames.length);
+
+    //var frame = Provider.of<Frames>(context);
+    // print(' frames_screen  - dane z bazy::::::::::::::::::::');
+    // for (var i = 0; i < frames.length; i++) {
+    //   print(
+    //       '${frames[i].id},${frames[i].data},${frames[i].pasiekaNr},${frames[i].ulNr},${frames[i].korpusNr},${frames[i].typ},${frames[i].ramkaNr},${frames[i].rozmiar}');
+    //   print('${frames[i].strona},${frames[i].zasob},${frames[i].wartosc}');
+    //   print('-----');
+    // }
+    String notatka = '';
+    String idNotatki = '';
+    int? ramekPrzegladu; //liczba ramek korpusu zapamiętana w tym przeglądzie (snapshot z pola "pogoda"); null = stary przegląd bez snapshotu
+    final infosData = Provider.of<Infos>(context);
+    List<Info> infos = infosData.items.where((inf) {
+      return inf.data == (wybranaData);
+    }).toList();
+
+    //print('infos dla wybranej daty = $wybranaData');
+    for (var i = 0; i < infos.length; i++) {
+      if ((infos[i].data == wybranaData) && (infos[i].parametr == AppLocalizations.of(context)!.inspection)){
+        idNotatki = infos[i].id;
+        notatka = infos[i].uwagi;
+        //odczyt zapamiętanej liczby ramek korpusu (rozmiar ula z momentu przeglądu)
+        ramekPrzegladu = int.tryParse(infos[i].pogoda);
+      //   print(
+      //       '${infos[i].id},${infos[i].data},${infos[i].pasiekaNr},${infos[i].ulNr},${infos[i].kategoria},${infos[i].parametr},${infos[i].wartosc},${infos[i].miara},${infos[i].uwagi}');
+      //   print('======='); 
+      // print('wybrana data = $wybranaData  , wartość = ${infos[i].parametr}');
+      // print('notatka = $notatka');
+      } 
+    }
+    
+    // //ustawienie wielkosci widoku ula
+    // luPa == 1.0 ? _selectedLupa[1] = true : _selectedLupa[1] = false;
+    // luPa == 1.2 ? _selectedLupa[0] = true : _selectedLupa[0] = false;
+    // luPa == 1.4 ? _selectedLupa[2] = true : _selectedLupa[2] = false;
+    
+    //ustawienie zmiennej "stronaRamki" w zalezności od ustawienia przełacznika lewa|obie|prawa
+    if(_selectedLupa[0] == true){ //[0]==true to 1.0; 
+      luPa = 1.0; globals.lupaRamek = 1.0;  
+    }
+    if(_selectedLupa[1] == true){ //[1]==true to 1.2
+      luPa = 1.2; globals.lupaRamek = 1.2;
+    }
+    
+    if(_selectedLupa[2] == true){//[2]==true to 1.4
+      luPa = 1.4; globals.lupaRamek = 1.4;
+    }
+    
+    //*********** obliczane wielkości płótna dla wszystkich korpusów w ulu ******
+    //zadanie 3: nie rysuj korpusu, który nie ma ramek w bieżącym widoku przed/po.
+    //Korpus dodany "po" przeglądzie (ramki wstawiane, ramkaNr=0) byłby pusty w widoku "przed".
+    //Odcinamy puste korpusy OD GÓRY (najwyższe numery) - painter wymaga ciągłości korpusów liczonej od dołu.
+    int maxKorpusZZawartoscia = 0;
+    for (var fr in frames) {
+      if (fr.zasob == 14) continue; //markery nie liczą się jako "zawartość" korpusu
+      final bool obecna = przedpo == 1 ? fr.ramkaNr > 0 : fr.ramkaNrPo > 0; //przed: ramkaNr>0, po: ramkaNrPo>0
+      if (obecna && fr.korpusNr > maxKorpusZZawartoscia) maxKorpusZZawartoscia = fr.korpusNr;
+    }
+    //jeśli nic nie ma zawartości w tym widoku - zostaw bez zmian (unikamy pustego paintera / crasha na ramki[0])
+    final List<Frame> korpusyWidoczne = maxKorpusZZawartoscia > 0
+        ? _korpusy.where((k) => k.korpusNr <= maxKorpusZZawartoscia).toList()
+        : _korpusy;
+    final List<Frame> ramkiWidoczne = maxKorpusZZawartoscia > 0
+        ? frames.where((fr) => fr.korpusNr <= maxKorpusZZawartoscia).toList()
+        : frames;
+
+    double widthCanvas = 0; //szerokość płótna
+    double highCanvas = 0; //wysokość płótna
+    for (var i = 0; i < korpusyWidoczne.length; i++) {
+      highCanvas += korpusyWidoczne[i].typ * 75 + 30; //wysokość półkorpusa + 2 po 15 na padding
+      // print('wysokość = $highCanvas');
+    }
+    final hivesData = Provider.of<Hives>(context);
+    //final hives = hivesData.items;
+    List<Hive> hive = hivesData.items.where((hv) {
+      return hv.ulNr == hiveNr; // jest ==  a było contain ale dla typu String
+    }).toList();
+
+    //liczba ramek korpusu: priorytet ma snapshot zapisany w przeglądzie (zachowuje rozmiar starego ula),
+    //fallback do aktualnego ula dla starych przeglądów bez snapshotu
+    final int iloscRamekKorpusu = ramekPrzegladu ?? hive[0].ramek;
+    globals.iloscRamek = iloscRamekKorpusu; //ilość ramek w korpusie
+    widthCanvas = iloscRamekKorpusu * 20 * luPa + 20; //po 20px na ramkę i 2 x 10px na padding
+    //print('hive= ${hive[0].ramek}');
+    // print('szerokość = $widthCanvas');
+    //*********** */
+    
+    return MaterialApp(
+        home: Scaffold(
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 255, 255, 255), //tło pola nawigacji
+        elevation: 0, // Brak cienia = brak zmiany koloru
+        //iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
+        title: Text(
+          AppLocalizations.of(context)!.inspectionHive + " $hiveNr",
+          style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+        ),
+       
+        // title: Text('Inspection hive $hiveNr'),
+        // backgroundColor: Color.fromARGB(255, 233, 140, 0),
+        //automaticallyImplyLeading: false, //usuwanie cofania
+        //przycisk cofania bo go nie było
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios,
+                color: Color.fromARGB(255, 0, 0, 0)),
+            onPressed: () => {
+                  //WakelockPlus.disable(), //usunięcie blokowania wygaszania ekranu
+                  Navigator.of(context).pop(),
+                }),
+        actions: <Widget>[
+          IconButton(//dodawanie zasobów ramek
+            icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
+            //numery bierzemy z globals, a NIE z frames[0]: przegląd założony samą
+            //notatką nie ma ani jednej ramki i lista byłaby pusta (wyjątek zamiast okna)
+            onPressed: () =>
+                _showAlert(context, globals.pasiekaID, globals.ulID)
+
+          ),
+          IconButton(
+            icon: Icon(Icons.help_center, color: Color.fromARGB(255, 0, 0, 0)),
+            onPressed: () => _dialogBuilderHelp(context),
+          ),
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () => Navigator.of(context)
+                .pushNamed(FramesDetailScreen.routeName, arguments: {
+              'ul': globals.ulID,
+              'data': wybranaData,
+            }).then((_) { if (mounted) _loadView(); }),
+          )
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.grey[300], // kolor linii
+            height: 1.0,
+          ),
+        ),
+      ),
+      body: frames.length == 0
+          //BRAK RAMEK to nie to samo co BRAK PRZEGLĄDÓW. Przegląd założony samą
+          //notatką (dyktowaną głosem albo dopisaną z okna "notatka do przeglądu")
+          //nie ma ani jednej ramki - do 04.08.2026 ekran zbywał go komunikatem
+          //"nie ma przeglądów" i notatki nie dało się w ogóle otworzyć.
+          ? _daty.isEmpty
+              ? Center(
+                  child: Column(
+                    children: <Widget>[
+                      Container(
+                        color:Colors.white,
+                        padding: const EdgeInsets.only(top: 50),
+                        child: Text(
+                          AppLocalizations.of(context)!.noInspectionYet,
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      _paskDat(), //inne daty tego ula są nadal w zasięgu ręki
+                      Container(
+                        padding: const EdgeInsets.only(top: 30, bottom: 10),
+                        child: Text(
+                          AppLocalizations.of(context)!.noFramesInInspection,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      ),
+                      if (notatka != '')
+                        _notatkaPrzegladu(notatka, idNotatki, buttonStyle),
+                    ],
+                  ),
+                )
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(0.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+//daty przeglądów
+                    _paskDat(),
+//rysunki uli
+                    SingleChildScrollView(
+                      child: Column(children: <Widget>[
+                      //for (var i = 0; i < frames.length; i++) {}
+                      //Text(frames[0].data),
+                      Listener(
+                        //przesunięcie palcem na rysunku ula = zmiana daty przeglądu (jak klik w datę).
+                        //Listener (surowe zdarzenia wskaźnika) zamiast GestureDetector - nie bierze udziału
+                        //w "gesture arena", więc gest poziomy działa też przy przeciąganiu myszą na symulatorze.
+                        onPointerDown: (_) {
+                          _dragDx = 0;
+                          _dragDy = 0;
+                        },
+                        onPointerMove: (event) {
+                          _dragDx += event.delta.dx;
+                          _dragDy += event.delta.dy;
+                        },
+                        onPointerUp: (_) {
+                          //gest musi być przeważnie poziomy (żeby nie kolidować z pionowym przewijaniem)
+                          if (_dragDx.abs() < 20 || _dragDx.abs() < _dragDy.abs()) return;
+                          final current = _daty.indexWhere((d) => d.data == wybranaData);
+                          if (current < 0) return;
+                          //swipe w PRAWO -> młodsza data (niższy index), w LEWO -> starsza (wyższy index)
+                          _selectDate(_dragDx > 0 ? current - 1 : current + 1);
+                        },
+                        child: Container(
+                        //szare body
+                        //alignment: Alignment.center,
+                        color: Color.fromARGB(173, 173, 173, 173),
+                        // ignore: sort_child_properties_last
+                        child: CustomPaint(
+                          painter: MyHive(
+                              ramki: ramkiWidoczne,
+                              korpusy: korpusyWidoczne,
+                              width: widthCanvas,
+                              high: highCanvas,
+                              informacje: infos,
+                              przedPo: przedpo,
+                              lupa: luPa),
+                          size: Size(widthCanvas, highCanvas),
+                        ),
+                        margin: EdgeInsets.all(20),
+                        //padding: EdgeInsets.all(10),
+                      ),
+                      ),
+                    ])),
+
+//przyciski
+                                           
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+//przed / po
+                                  
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      SizedBox(height: 10),
+                                      Text(AppLocalizations.of(context)!.aRrangementOfFrames),
+                                      ToggleButtons(
+                                        direction: Axis.horizontal, 
+                                        onPressed: (int index) {
+                                          setState(() {
+                                            // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
+                                            for (int i = 0; i < _selectedPrzedPo.length; i++) {
+                                              _selectedPrzedPo[i] = i == index;
+                                            }
+                                            _selectedPrzedPo[0] == true ? przedpo = 1 : przedpo = 2;
+                                          });
+                                        },
+                                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                        borderColor: Color.fromARGB(255, 162, 103, 0),
+                                        selectedBorderColor: Color.fromARGB(255, 162, 103, 0), //obramowanie wybranego przycisku
+                                        selectedColor: Color.fromARGB(255, 0, 0, 0), //napis wybranego
+                                        fillColor: Theme.of(context).primaryColor, //tło wybranego
+                                        color: Color.fromARGB(255, 78, 78, 78), //napis niewybranego
+                                        constraints: const BoxConstraints(
+                                          minHeight: 33.0,
+                                          minWidth: 130.0,
+                                        ),
+                                        isSelected: _selectedPrzedPo,
+                                        children: [ //napisy na przełącznikach
+                                          Text(' ${AppLocalizations.of(context)!.framesBefore} '),
+                                          Text(' ${AppLocalizations.of(context)!.framesAfter} '),
+                                        ],  //przed, po
+                                      ),
+
+                                      //lupa
+                                      ToggleButtons(
+                                        direction: Axis.horizontal, 
+                                        onPressed: (int index) {
+                                          setState(() {
+                                            // Dotknięty przycisk ma wartość „prawda”, a pozostałe – „fałsz”.
+                                            for (int i = 0; i < _selectedLupa.length; i++) {
+                                              _selectedLupa[i] = i == index;
+                                            }
+                                          });
+                                        },
+                                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                        borderColor: Color.fromARGB(255, 162, 103, 0),
+                                        selectedBorderColor: Color.fromARGB(255, 162, 103, 0), //obramowanie wybranego przycisku
+                                        selectedColor: Color.fromARGB(255, 0, 0, 0), //napis wybranego
+                                        fillColor: Theme.of(context).primaryColor, //tło wybranego
+                                        color: Color.fromARGB(255, 78, 78, 78), //napis niewybranego
+                                        constraints: const BoxConstraints(
+                                          minHeight: 33.0,
+                                          minWidth: 65.0,
+                                        ),
+                                        isSelected: _selectedLupa,
+                                        children: [ //napisy na przełącznikach
+                                          Icon(Icons.crop_square,size: 20,),
+                                          Icon(Icons.crop_square,size: 25,),
+                                          Icon(Icons.crop_square,size: 30,)
+                                        ],  //lewa, obie, prawa
+                                      ),  
+                                  ]),                           
+                              ]),  
+
+                      
+  //wyświetlenie notatki z pola uwagi
+                  if(notatka  != '')
+                       _notatkaPrzegladu(notatka, idNotatki, buttonStyle),
+                      
+                      
+                      // Container(
+                      //   padding: const EdgeInsets.only(
+                      //       top: 5, bottom: 5, left: 20, right: 20),
+                      //   alignment: Alignment.topCenter,
+                      //   decoration: BoxDecoration(
+                      //     border: Border.all(
+                      //         //color: Colors.black,
+                      //         width: 1.0,
+                      //         style: BorderStyle.solid),
+                      //     borderRadius: BorderRadius.circular(20),
+                      //     //color: Colors.yellowAccent,
+                      //   ),
+                      //   margin: EdgeInsets.all(20),
+                      //   child: Column(
+                      //     mainAxisAlignment: MainAxisAlignment.center,
+                      //     crossAxisAlignment: CrossAxisAlignment.center,
+                      //     children: [
+                      //       Center(
+                      //         child: Text('$notatka',
+                      //           style: TextStyle(
+                      //             //fontWeight: FontWeight.bold,
+                      //             fontSize: 20,
+                      //             color: Color.fromARGB(255, 0, 0, 0)),
+                      //           textAlign: TextAlign.center)),
+                      //     ],
+                      //   ),
+                      // )
+
+
+
+
+
+// //przed
+                       
+//                           TextButton.icon(
+//                               onPressed: () {
+//                                 setState(() {
+//                                   przedpo = 1;
+//                                 });
+//                               },
+//                               icon: Radio(
+//                                   value: 1,
+//                                   groupValue: przedpo,
+//                                   onChanged: (value) {
+//                                     setState(() {
+//                                       przedpo = value!;
+//                                       //globals.stronaRamki = przedpo;
+//                                     });
+//                                   }),
+//                               label: Text(AppLocalizations.of(context)!.framesBefore)),
+//    //po
+//                               TextButton.icon(
+//                                   onPressed: () {
+//                                     setState(() {
+//                                       przedpo = 2;
+//                                     });
+//                                   },
+//                                   icon: Radio(
+//                                       value: 2,
+//                                       groupValue: przedpo,
+//                                       onChanged: (value) {
+//                                         setState(() {
+//                                           przedpo = value!;
+//                                           //globals.stronaRamki = przedpo;
+//                                         });
+//                                       }),
+//                                   label: Text(AppLocalizations.of(context)!.framesAfter)),
+                            
+                          
+//                           ]),
+
+
+
+
+
+
+                  ],
+                ),
+              ),
+            ),
+    ));
+  }
+
+}
+
+//data, pasiekaNr,  ulNr,  korpusNr,  typ,  ramkaNr,  rozmiar,   strona,  zasob,  wartosc
+
+class MyHive extends CustomPainter {
+  List<Frame> ramki;
+  List<Frame> korpusy;
+  double width;
+  double high;
+  List<Info> informacje;
+  int przedPo;
+  double lupa;
+
+  MyHive({
+    required this.ramki,
+    required this.korpusy,
+    required this.width,
+    required this.high,
+    required this.informacje,
+    required this.przedPo,
+    required this.lupa,
+    // required this.sides, required this.radius, required this.radians
+  });
+
+  @override
+
+  void paint(Canvas canvas, Size size) {
+    int offP1a = 8; //elementy offSet lineDraw
+    int offP1b = 2; //elementy offSet lineDraw
+    double strW = 4; //szerokość słupka zasobu
+    int offStart = 10; //poczatek rysowania ramek w poziomie od krawędzi korpusa
+    int offMatA = 12; //elementu offSet dla matecznków
+    int offMatB = 8;  //elementu offSet dla matecznków
+    double sizMat = 3; //wielkość matki i mateczników
+    int izolA = 1; //element offSet dla izolacji
+    int izolB = 19;//element offSet dla izolacji
+    if(lupa == 1.0) {strW = 4; offStart = 10; offP1a = 8; offP1b = 2; offMatA = 12; offMatB = 8; sizMat = 3; izolA = 1; izolB = 19; };
+    if(lupa == 1.2) {strW = 5; offStart = 12; offP1a = 10; offP1b = 5; offMatA = 15; offMatB = 12; sizMat = 3.5; izolA = 0; izolB = 20; };
+    if(lupa == 1.4) {strW = 6; offStart = 14; offP1a = 12; offP1b = 8; offMatA = 18; offMatB = 17; sizMat = 4; izolA = -2; izolB = 22; };
+
+    Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
+    Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki krata odgrodowa
+    Paint obrysPaint = Paint()
+      ..strokeWidth = 1
+      ..color = Color.fromARGB(255, 122, 122, 122); //obrys
+    Paint honeyPaint = Paint()
+      ..strokeWidth = strW
+      ..color = Color.fromARGB(255, 222, 156,
+          1); //(1) honey / miód, nakrop 255, 252, 193, 104//,255, 206, 144, 1
+    Paint sealedPaint = Paint()
+      ..strokeWidth = strW
+      ..color =
+          Color.fromARGB(255, 131, 92, 0); //(2) sealed / zasklep, miód poszyty
+    Paint pollenPaint = Paint()
+      ..strokeWidth = strW
+      ..color = Color.fromARGB(255, 0, 197, 0); //(3) pollen / pierzga
+    Paint broodPaint = Paint()
+      ..strokeWidth = strW
+      ..color = Color.fromARGB(255, 255, 17, 0); //(4) brook / czerw
+    Paint larvaePaint = Paint()
+      ..strokeWidth = strW
+      ..color = Color.fromARGB(255, 253, 195, 192); //(5) larvae / larwy
+    Paint eggPaint = Paint()
+      ..strokeWidth = strW
+      ..color = Color.fromARGB(255, 255, 255, 255); //(6) eggs / jaja
+    Paint dronePaint = Paint()
+      ..strokeWidth = strW
+      ..color = Color.fromARGB(255, 114, 0, 0); //(7) drone / trut
+    Paint waxPaint = Paint()
+      ..strokeWidth = 1
+      ..color = Color.fromARGB(255, 255, 255, 0); //(8) wax / węza
+    Paint combPaint = Paint()
+      ..strokeWidth = strW
+      ..color = Color.fromARGB(
+          255, 255, 255, 0); //(9) comb, wax comb / susz, woszczyna
+    Paint matkaBlack = Paint()
+      ..color = Color.fromARGB(255, 0, 0, 0)
+      ..style = PaintingStyle.fill; //matka black
+    Paint matkaWhite = Paint()
+      ..color = Color.fromARGB(255, 255, 255, 255)
+      ..style = PaintingStyle.fill; //matkaWhite
+    Paint matkaYellow = Paint()
+      ..color = Color.fromARGB(255, 255, 255, 0)
+      ..style = PaintingStyle.fill; //matkaYellow
+    Paint matkaRed = Paint()
+      ..color = Color.fromARGB(255, 255, 0, 0)
+      ..style = PaintingStyle.fill; //matkaRed
+    Paint matkaGreen = Paint()
+      ..color = Color.fromARGB(255, 0, 255, 0)
+      ..style = PaintingStyle.fill; //matkaGreen
+    Paint matkaBlue = Paint()
+      ..color = Color.fromARGB(255, 0, 89, 255)
+      ..style = PaintingStyle.fill; //matkaBlue
+    Paint matkaOther = Paint()
+      ..color = Color.fromARGB(255, 125, 125, 125)
+      ..style = PaintingStyle.fill; //matkaOther
+    Paint matecznik = Paint()
+      ..color = Color.fromARGB(255, 255, 17, 0)
+      ..style = PaintingStyle.fill
+      ..strokeWidth = 1; //matecznik
+    Paint delMat = Paint()
+      ..color = Color.fromARGB(255, 153, 125, 125)
+      ..style = PaintingStyle.fill //stroke
+      ..strokeWidth = 1; //mateczniki usuniete
+
+    Paint paintStroke = Paint()
+      ..color = Color.fromARGB(255, 0, 0, 0)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke //fill
+      ..strokeCap = StrokeCap.round;
+    // Paint paintStroke = Paint()
+    //   ..color = Color.fromARGB(255, 0, 0, 0)
+    //   ..strokeWidth = 1
+    //   ..style = PaintingStyle.fill //stroke
+    //   ..strokeCap = StrokeCap.round;
+    double startNastZas = 0; //start następnego zasobu - do sprawdzania czy nowy zasób przekracza 100%
+    //wielokąty
+    double sides = 3;
+    double radius = 5;
+    double radians = 0; //kąt - początek rysowania
+    //3.14 - trójkąt w lewo, //1,57(/2) - w dół //(/6) - w górę, 0 - w prawo
+    //double wDol = math.pi/2; //1,57 - trójkąt w dół
+    var path = Path();
+  
+    //text
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 15,
+    );
+
+    //text numery ramek
+    final textStyle1 = TextStyle(
+      color: Color.fromARGB(255, 170, 170, 170),
+      fontSize: 12,
+    );
+
+    //======= obrysy korpusów =======
+    double obrysPoziomy = 0;
+    Map<int, double> obrys = {}; //key:nr korpusu, value:obrys poziomy (górny) - wysokość obrysu w px
+    Map<String, double> startyZasobow = {}; //key: korpusNr.ramkaNr.strona, value: start kolejnego zasobu (dla ramek i zasobów)
+    Map<String, double> startyMaxZasobow ={}; //key: korpusNr.ramkaNr.strona, value: start pierwszego zasobu (dla matek, mateczników)
+    Map<String, double> startyZasobowPo = {}; //key: korpusNr.ramkaNrPo.strona, value: start kolejnego zasobu (dla ramek i zasobów)
+    Map<String, double> startyMaxZasobowPo ={}; //key: korpusNr.ramkaNrPo.strona, value: start pierwszego zasobu (dla matek, mateczników)
+
+    //canvas.drawLine(Offset(0, 0), Offset(width, 0), obrysPaint); //obrys 0 (górna krawędz)
+    canvas.drawLine(Offset(0, high), Offset(width, high), obrysPaint); //obrys high (dolna krawędz)
+    canvas.drawLine(Offset(0, 0), Offset(0, high), obrysPaint); //obrys lewy
+    canvas.drawLine(Offset(width, 0), Offset(width, high), obrysPaint); //obrys prawy
+
+    //tworzenie mapy = [kolejny korpus]: obrys poziomy (górny)
+    for (var i = 0; i < korpusy.length; i++) { //dla kazdego korpusu
+      obrysPoziomy = korpusy[i].typ * 75 + 30; //typ korpusa * wysokość półkorpusa + 2x15 na padding
+      obrys[i + 1] = obrysPoziomy;
+      // print('obrys i=${(i + 1)} - $obrys');
+    }
+
+    //krata odgrodowa - jeśli załozona w wybranej dacie
+    String excluder = '0';
+    //print('informacje.length = ${informacje.length}');
+    //wszstkie info z wybranej daty
+    for (var i = 0; i < informacje.length; i++) {
+      //print('i = $i');
+      //print('excluder1 = $excluder');
+      //print('informacje[i].wartosc1 = ${informacje[i].wartosc} ');
+      if ((informacje[i].parametr == 'excluder') ||
+          (informacje[i].parametr == 'excluder -') ||
+          (informacje[i].parametr == 'krata odgrodowa') ||
+          (informacje[i].parametr == 'krata odgrodowa -')) {
+        excluder = informacje[i].miara; //zamiana pola "wartosc" z "miara" zeby poprawnie wyświetlać na listTail
+        //print('excluder2 = $excluder');
+        //print('informacje[i].wartosc2 = ${informacje[i].wartosc} ');
+      }
+    }
+    //print('excluder = $excluder');
+    
+    //rysowanie obrysów poziomych (górnych)
+    double temp = high; //maksymalna wysokość płótna
+    for (var i = 0; i < obrys.length; i++) {
+      // print('rysowanie obrysów i=$i');
+      temp -= obrys[i + 1]!; //odejmowanie od pełnej wysokości ula poszczególnych wysokości korpusów
+      canvas.drawLine(Offset(0, temp), Offset(width, temp), obrysPaint); //obrys górny korpusa
+      if ((excluder != '0') && (int.parse(excluder) == 1 + i)) {
+        canvas.drawLine(Offset(0, temp), Offset(width, temp), lineExcluder);//rysowanie kraty odgrodowej jesli jest
+      }
+      //numer korpusu
+      var textSpan = TextSpan(
+        text: '${korpusy[i].korpusNr}', //numer korpusu
+        style: textStyle,
+      );
+      var textPainter = TextPainter(
+        text: textSpan,
+        textDirection: ui.TextDirection.ltr,
+      );
+      textPainter.layout(
+        minWidth: 0,
+        maxWidth: 20,
+      );
+      final offset = Offset(3, temp + 1);
+      textPainter.paint(canvas, offset); //rysowanie numeru korpusa
+      // print('linia dla i=$i - ${temp}');
+    }
+
+    //numery ramek pod korpusem
+    for (var i = 0; i < globals.iloscRamek; i++) {
+      var textSpan = TextSpan(
+        text: '${i+1}', //numer ramki
+        style: textStyle1,
+      );
+      var textPainter = TextPainter(
+        text: textSpan,
+        textDirection: ui.TextDirection.ltr,
+      );
+      textPainter.layout(
+        minWidth: 0,
+        maxWidth: 20,
+      );
+      final offset = Offset(offStart + (i * 20 * lupa) + 6.toDouble(), high + 3);
+      textPainter.paint(canvas, offset); //rysowanie numeru ramek pod korpusem
+      final offset1 = Offset(offStart + (i * 20 * lupa) + 6.toDouble(),  -16);
+      textPainter.paint(canvas, offset1); //rysowanie numeru ramek nad korpusem
+    }
+    
+    
+    
+    
+    //starty zasobów to wartości w px początków rysowania zasobów dla kazdej strony kazdej ramki w kazdym korpusie
+    //utworzenie mapy startyZasobow = key:korpusNr.ramkaNr.strona, value: start kolejnego zasobu - wartości modyfikowane później
+    //i utworzenie mapy startyMaxZasobow dla matek i mateczników - wartości niemodyfikowane później
+    for (var i = 0; i < ramki.length; i++) {
+      double startMaxZasobu = ramki[i].rozmiar * 75; //wielkość ramki
+      startyZasobow['${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] = startMaxZasobu; //modyfikowane dla kolejnych zasobów
+      startyMaxZasobow['${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}'] = startMaxZasobu; //nie są modyfikowane, odniesienie dla pozycji matek, mateczników
+      startyZasobowPo['${ramki[i].korpusNr}.${ramki[i].ramkaNrPo}.${ramki[i].strona}'] = startMaxZasobu; //modyfikowane dla kolejnych zasobów
+      startyMaxZasobowPo['${ramki[i].korpusNr}.${ramki[i].ramkaNrPo}.${ramki[i].strona}'] = startMaxZasobu; //nie są modyfikowane, odniesienie dla pozycji matek, mateczników
+    }
+    // print('startyZasobow $startyZasobow');
+    // print('startyZasobowPo $startyZasobowPo');
+    // print('-----------------------------------');
+
+    int brakKorpusow = 0;
+    if (ramki[0].korpusNr == 1) {
+      brakKorpusow = 0;
+    }
+    if (ramki[0].korpusNr == 2) {
+      brakKorpusow = 1;
+    }
+    if (ramki[0].korpusNr == 3) {
+      brakKorpusow = 2;
+    }
+    if (ramki[0].korpusNr == 4) {
+      brakKorpusow = 3;
+    }
+    if (ramki[0].korpusNr == 5) {
+      brakKorpusow = 4;
+    }
+    if (ramki[0].korpusNr == 6) {
+      brakKorpusow = 5;
+    }
+    if (ramki[0].korpusNr == 7) {
+      brakKorpusow = 6;
+    }
+    if (ramki[0].korpusNr == 8) {
+      brakKorpusow = 7;
+    }
+    if (ramki[0].korpusNr == 9) {
+      brakKorpusow = 8;
+    }
+    if (ramki[0].korpusNr == 10) {
+      brakKorpusow = 9;
+    }
+    // print('korpusNr = ${ramki[0].korpusNr}');
+    // print('brakKorpusow = $brakKorpusow');
+    
+    //  ========= rysowanie ramek =========
+    for (var i = 0; i < ramki.length; i++) { //dla kazdego zasobyu z tabeli "ramka"
+      double start = high;
+
+      //ustalenie poziomu startu obliczania pozycji ramek w korpusie
+      // print('przed for - start = $start');
+      for (var j = 1; j <= ramki[i].korpusNr - brakKorpusow; j++) {
+        // print('for - $j <= ramki[$i].korpusNr = ${ramki[i].korpusNr}');
+        start = start - obrys[j]!; //odejmowany obrys korpusu nr "j"
+        // print('for - start = $start');
+        if (start == 0.0) break;
+      }
+//print('//  ========= rysowanie zasobu $i =========');
+//print('start $start');
+
+      //start zasobu ramki 'i' modyfikowany i odczytywany z mapy startyZasobow
+      double startZasobu = startyZasobow['${ramki[i].korpusNr}.${ramki[i].ramkaNr}.${ramki[i].strona}']!;
+      double startZasobuPo = startyZasobowPo['${ramki[i].korpusNr}.${ramki[i].ramkaNrPo}.${ramki[i].strona}']!;
+      //wartość zasobu
+      int wartoscInt = 0;
+      if (ramki[i].zasob < 13) {
+        wartoscInt = int.parse((ramki[i].wartosc.replaceAll(RegExp('%'), ''))); // bez '%'
+      }
+
+    
+    //rysowanie ramek przed 
+    double startZas = startZasobu;
+    Map<String,double>startyZas = startyZasobow;
+    Map<String,double>startyMaxZas = startyMaxZasobow;
+    int nrRamki = ramki[i].ramkaNr;
+    
+    //albo po przeglądzie
+    if(przedPo == 2){
+      startZas = startZasobuPo;
+      startyZas = startyZasobowPo;
+      startyMaxZas = startyMaxZasobowPo;
+      nrRamki = ramki[i].ramkaNrPo;
+      //marker usunięcia (zasob 14) zapisany jest jako X/0 (przed=X, po=0) - widoczny TYLKO w widoku "przed",
+      //gdzie ramka jeszcze istnieje. W widoku "po" ramka jest usunięta, więc nrRamki=ramkaNrPo=0 i marker
+      //(jak i pusty obrys z case 14) nie jest rysowany - to miejsce ma być puste.
+    }
+
+    // print('startZas $startZas');
+    // print('startyZas $startyZas');
+    // print('startyMaxZas $startyMaxZas');
+    // print('nrRamki ********** $nrRamki');
+    
+    if(nrRamki > 0) //dla ramek przed przeglądem bez ramek nowych i po przegladzie bez ramek usunietych czyli z numerem innym niz 0  
+      switch (ramki[i].zasob) { //rysowanie poszczególnych zasobów
+        case 1:
+          //print('case 1');
+          //print('start dla ramki ${ramki[i].ramkaNr} = $start');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                dronePaint); //zasob 1 - drone // dla strony lewej i prawej
+
+            //print('${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}');
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+          }
+          break;
+        case 2:
+          //print('case 2');
+          //print('start dla ramki ${nrRamki} = $start');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                broodPaint); //zasob 2 - brook // dla strony lewej i prawej
+
+            //print('${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}');
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+          }
+          break;
+        case 3:
+          //print('case 3 larwy');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                larvaePaint); //zasob 3 - larvae // dla strony lewej i prawej
+      //print('startNastZas $startNastZas');
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+            //  print('startyZas ${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}');       
+            //  print(startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']);
+            //  print('koniec rysowania larwy zasób $i');
+            //  print('***********************************');
+          }
+
+          break;
+        case 4:
+          //print('case 4');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                 ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                eggPaint); //zasob 4 - egg // dla strony lewej i prawej
+
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas[
+                    '${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas[
+                        '${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+          }
+          break;
+        case 5:
+          //print('case 5');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                pollenPaint); //zasob 5 - pollen // dla strony lewej i prawej
+
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+          }
+          break;
+        case 6:
+          //print('case 6');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas = startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                honeyPaint); //zasob 6 - miód // dla strony lewej i prawej
+
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+          }
+          break;
+        case 7:
+          //print('case 7');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas =  startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                sealedPaint); //zasob 7 - zasklep // dla strony lewej i prawej
+
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+          }
+          break;
+        case 8:
+          //print('case 9');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                waxPaint); //zasob 9 - węza // dla strony lewej i prawej
+
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+          }
+          break;
+        case 9:
+          //print('case 8');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          //kontrola czy zasób nie przekracza łącznie 100%
+          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+            canvas.drawLine(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
+                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                combPaint); //zasob 8 - susz // dla strony lewej i prawej
+
+            //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
+            startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
+                (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
+                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+          }
+          break;
+        case 10:
+          //print('case 10');
+          //canvas.drawCircle(Offset(100, 100), 3, matka);
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          switch (ramki[i].wartosc) {
+            case '1':
+              canvas.drawCircle(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaBlack);
+              break;
+            case '2':
+              canvas.drawCircle(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaYellow);
+              break;
+            case '3':
+              canvas.drawCircle(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaRed);
+              break;
+            case '4':
+              canvas.drawCircle(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaGreen);
+              break;
+            case '5':
+              canvas.drawCircle(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaBlue);
+              break;
+            case '6':
+              canvas.drawCircle(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaWhite);
+              break;
+            case '7':
+              canvas.drawCircle(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), sizMat, matkaOther);
+              break;
+            default:
+              canvas.drawCircle(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + 20), 4, matkaBlack);
+          }
+          break;
+        case 11:
+          //print('case 11');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          double temp = startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! + 5;
+          for (var a = 0; a < int.parse(ramki[i].wartosc); a++) {
+            canvas.drawCircle(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + temp), sizMat, matecznik);
+            temp = temp - 10;
+          }
+          break;
+        case 12:
+          //print('case 12');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          double temp = startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! + 5;
+          for (var a = 0; a < int.parse(ramki[i].wartosc); a++) {
+            canvas.drawCircle(
+                Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offMatA) - offMatB, start + temp), sizMat, delMat);
+            temp = temp - 10;
+          }
+          break;
+        case 13: //to Do
+          //print('case 13');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          switch (ramki[i].wartosc) {
+            case 'work frame': //ramka pracy
+            case 'Arbeitsrahmen': // DE
+            case 'cuadro de trabajo': // ES
+            case 'cadre de travail': // FR
+            case 'telaino di lavoro': // IT
+            case 'quadro de trabalho': // PT
+              var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
+              radians = math.pi / 4;
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 6);
+              Offset startPoint = Offset( radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'to delete': //do wycofania
+            case 'muss entfernt werden': // DE
+            case 'para eliminar': // ES
+            case 'à supprimer': // FR
+            case 'da rimuovere': // IT
+            case 'para remover': // PT
+              sides = 3;
+              radians = math.pi / 6;
+              var angle = (math.pi * 2) / sides; //kąt
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 7);
+              Offset startPoint = Offset( radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'to extraction': //do wirowania
+            case 'muss geschleudert werden': // DE
+            case 'para extraer': // ES
+            case 'à extraire': // FR
+            case 'da smelare': // IT
+            case 'para centrifugar': // PT
+              double radiusEx = 4;
+              sides = 6;
+              radians = 0;
+              var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 6);
+              Offset startPoint = Offset( radiusEx * math.cos(radians), radiusEx * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radiusEx * math.cos(radians + angle * i) + center.dx;
+                double y = radiusEx * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'to insulate': //ramka dobra do zaizolowania na niej matki
+            case 'kann isoliert werden': // DE
+            case 'para aislar': // ES
+            case 'à isoler': // FR
+            case 'da isolare': // IT
+            case 'para isolar': // PT
+              sides = 4;
+              radians = math.pi / 4;
+              //var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 9),
+                  linePaint); // - (kreska pozioma) dla poszczególnych ramek
+
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 3),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 10),
+                  linePaint); // | (kreska pionowa lewa)
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 3),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 10),
+                  linePaint); // | (kreska pionowa prawa)
+              break;
+            case 'ramka pracy': //ramka pracy
+              var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
+              radians = math.pi / 4;
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 6);
+              Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'trzeba usunąć': //do wycofania
+              sides = 3;
+              radians = math.pi / 6;
+              var angle = (math.pi * 2) / sides; //kąt
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 7);
+              Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'trzeba wirować': //do wirowania
+              double radiusEx = 4;
+              sides = 6;
+              radians = 0;
+              var angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 6);
+              Offset startPoint = Offset( radiusEx * math.cos(radians), radiusEx * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radiusEx * math.cos(radians + angle * i) + center.dx;
+                double y = radiusEx * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'można izolować': //ramka dobra do zaizolowania na niej matki - PL handled by 'to insulate' group above
+              sides = 4;
+              radians = math.pi / 4;
+
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 9),
+                  linePaint);
+
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 3),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 6, start + 10),
+                  linePaint);
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 3),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + 14, start + 10),
+                  linePaint);
+              break;
+          }
+          break;
+        case 14: //is Done
+          //print('case 14');
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 4, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 16, start + 13),
+              linePaint); // - (kreska pozioma) dla poszczególnych ramek
+
+          canvas.drawLine(
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
+              Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
+              linePaint); // | (kreska pionowa) dla poszczególnych ramek
+
+          switch (ramki[i].wartosc) {
+            case 'moved left': //przesunieto w lewo
+            case 'nach links schieben': // DE
+            case 'mover a la izquierda': // ES
+            case 'déplacer à gauche': // FR
+            case 'sposta a sinistra': // IT
+            case 'mover à esquerda': // PT
+              sides = 3;
+              radians = math.pi; //w lewo
+              var angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10 - 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
+              Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'moved right': //przesunięto w prawo
+            case 'nach rechts schieben': // DE
+            case 'mover a la derecha': // ES
+            case 'déplacer à droite': // FR
+            case 'sposta a destra': // IT
+            case 'mover à direita': // PT
+              sides = 3;
+              radians = 0; //w prawo
+              var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10 + 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
+              Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'inserted': //wstawiono
+            case 'Rahmen einfügen': // DE
+            case 'insertar cuadro': // ES
+            case 'insérer cadre': // FR
+            case 'inserisci telaino': // IT
+            case 'inserir quadro': // PT
+              sides = 3;
+              radians = math.pi / 6; //w górę
+              var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 10 + 13);
+              Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'deleted': //wycofano, usunieto
+            case 'Rahmen entfernen': // DE
+            case 'eliminar cuadro': // ES
+            case 'supprimer cadre': // FR
+            case 'rimuovi telaino': // IT
+            case 'remover quadro': // PT
+              sides = 3;
+              radians = math.pi / 2; //w dół
+              var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 10 + 11);
+              Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'insulated': //zaizolowano - załoono izolator
+            case 'Isolation': // DE
+            case 'aislamiento': // ES
+            case 'isolation': // FR
+            case 'isolamento': // IT + PT
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),
+                  linePaint); // - (kreska pozioma) dla poszczególnych ramek
+
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
+                  linePaint); // | (kreska pionowa lewa)
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),
+                  linePaint); // | (kreska pionowa prawa)
+              break;
+            case 'izolacja': //zaizolowano - załoono izolator
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),
+                  linePaint); // - (kreska pozioma) dla poszczególnych ramek
+
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolA, start + (75 * ramki[i].rozmiar) + 20),
+                  linePaint); // | (kreska pionowa lewa)
+              canvas.drawLine(
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + 9),
+                  Offset(offStart + (nrRamki - 1) * 20 * lupa + izolB, start + (75 * ramki[i].rozmiar) + 20),
+                  linePaint); // | (kreska pionowa prawa)
+              break;
+            case 'usuń ramka': //wycofano, usunieto
+              sides = 3;
+              radians = math.pi / 2; //w dół
+              var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 10 + 11);
+              Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'wstaw ramka': //wstawiono
+              sides = 3;
+              radians = math.pi / 6; //w górę
+              var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 10 + 13);
+              Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'przesuń w prawo': //przesunięto w prawo
+              sides = 3;
+              radians = 0; //w prawo
+              var angle = (math.pi * 2) / sides; //kąt (3- trójkąt)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10 + 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
+              Offset startPoint = Offset( radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+            case 'przesuń w lewo': //przesunieto w lewo
+              sides = 3;
+              radians = math.pi; //w lewo
+              var angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
+
+              Offset center = Offset(offStart + (nrRamki - 1) * 20 * lupa + 10 - 2, start + (75 * ramki[i].rozmiar) + 10 + 12);
+              Offset startPoint = Offset( radius * math.cos(radians), radius * math.sin(radians));
+
+              path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+              for (int i = 1; i <= sides; i++) {
+                double x = radius * math.cos(radians + angle * i) + center.dx;
+                double y = radius * math.sin(radians + angle * i) + center.dy;
+                path.lineTo(x, y);
+              }
+              path.close();
+              canvas.drawPath(path, paintStroke);
+              break;
+          }
+          break;
+      }
+      //print(startyZasobow);
+      //print(ramki[i].wartosc);
+    }
+  }
+
+
+  @override
+  bool shouldRepaint(CustomPainter old) {
+    //throw UnimplementedError();
+    return true;
+  }
+}
+
+class MyHiveHelp extends CustomPainter {
+  final List<String> labels;
+  MyHiveHelp({required this.labels});
+  // labels[0]=workFrame, [1]=toDelete, [2]=toExtraction, [3]=toInsulate,
+  // [4]=queen, [5]=waxFoundation, [6]=waxComb, [7]=honeySealed,
+  // [8]=honeyFood, [9]=pollen, [10]=eggs, [11]=larvae,
+  // [12]=coveredBrood, [13]=drone, [14]=inserted, [15]=deleted,
+  // [16]=movedLeft, [17]=movedRight, [18]=insulated, [19]=queenCell,
+  // [20]=deleteQueenCell, [21]=excluder, [22]=bodyNumber
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint linePaint = Paint()..strokeWidth = 1; //linia ramki
+    Paint lineExcluder = Paint()..strokeWidth = 3; //linia ramki
+    // Paint obrysPaint = Paint()
+    //   ..strokeWidth = 1
+    //   ..color = Color.fromARGB(255, 122, 122, 122); //obrys
+    Paint honeyPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 222, 156,
+          1); //(1) honey / miód, nakrop 255, 252, 193, 104//,255, 206, 144, 1
+    Paint sealedPaint = Paint()
+      ..strokeWidth = 4
+      ..color =
+          Color.fromARGB(255, 131, 92, 0); //(2) sealed / zasklep, miód poszyty
+    Paint pollenPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 0, 197, 0); //(3) pollen / pierzga
+    Paint broodPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 255, 17, 0); //(4) brook / czerw
+    Paint larvaePaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 253, 195, 192); //(5) larvae / larwy
+    Paint eggPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 255, 255, 255); //(6) eggs / jaja
+    Paint dronePaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(255, 114, 0, 0); //(7) drone / trut
+    Paint waxPaint = Paint()
+      ..strokeWidth = 1
+      ..color = Color.fromARGB(255, 255, 255, 0); //(8) wax / węza
+    Paint combPaint = Paint()
+      ..strokeWidth = 4
+      ..color = Color.fromARGB(
+          255, 255, 255, 0); //(9) comb, wax comb / susz, woszczyna
+    Paint matka = Paint()
+      ..color = Color.fromARGB(255, 59, 59, 59)
+      ..style = PaintingStyle.fill; //matka
+    Paint matecznik = Paint()
+      ..color = Color.fromARGB(255, 255, 17, 0)
+      ..style = PaintingStyle.fill
+      ..strokeWidth = 1; //matecznik
+    Paint delMat = Paint()
+      ..color = Color.fromARGB(255, 153, 125, 125)
+      ..style = PaintingStyle.fill //stroke
+      ..strokeWidth = 1; //mateczniki usuniete
+
+    Paint paintStroke = Paint()
+      ..color = Color.fromARGB(255, 0, 0, 0)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke //fill
+      ..strokeCap = StrokeCap.round;
+    // Paint paintStroke = Paint()
+    //   ..color = Color.fromARGB(255, 0, 0, 0)
+    //   ..strokeWidth = 1
+    //   ..style = PaintingStyle.fill //stroke
+    //   ..strokeCap = StrokeCap.round;
+
+    //wielokąty
+    double sides = 3;
+    double radius = 5;
+    double radians = 0; //kąt - początek rysowania
+    //3.14 - trójkąt w lewo, //1,57(/2) - w dół //(/6) - w górę, 0 - w prawo
+    //double wDol = math.pi/2; //1,57 - trójkąt w dół
+    var path = Path();
+
+    //text
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 15,
+    );
+//ramka pracy
+    var angle = (math.pi * 2) / 4; //kąt (4 - kwadrat)
+    radians = math.pi / 4;
+
+    Offset center = Offset(10, 20);
+    Offset startPoint = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint.dx + center.dx, startPoint.dy + center.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center.dx;
+      double y = radius * math.sin(radians + angle * i) + center.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    var opisSpan = TextSpan(
+      text: '- ${labels[0]}',
+      style: textStyle,
+    );
+    var textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 10));
+//to delete
+    sides = 3;
+    radians = math.pi / 6;
+    angle = (math.pi * 2) / sides; //kąt
+
+    Offset center1 = Offset(10, 35);
+    Offset startPoint1 = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint1.dx + center1.dx, startPoint1.dy + center1.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center1.dx;
+      double y = radius * math.sin(radians + angle * i) + center1.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- ${labels[1]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 25));
+//to extraction
+    double radiusEx = 4;
+    sides = 6;
+    radians = 0;
+    angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+
+    Offset center2 = Offset(10, 50);
+    Offset startPoint2 = Offset(radiusEx * math.cos(radians), radiusEx * math.sin(radians));
+
+    path.moveTo(startPoint2.dx + center2.dx, startPoint2.dy + center2.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radiusEx * math.cos(radians + angle * i) + center2.dx;
+      double y = radiusEx * math.sin(radians + angle * i) + center2.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- ${labels[2]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 40));
+//to insutate
+    sides = 4;
+    radians = math.pi / 4;
+    angle = (math.pi * 2) / sides; //kąt (6 - sześciobok)
+
+    canvas.drawLine(Offset(7, 68), Offset(13, 68), linePaint); // - (kreska pozioma)
+    canvas.drawLine(Offset(7, 62), Offset(7, 68), linePaint); // | (kreska pionowa lewa)
+    canvas.drawLine(Offset(13, 62), Offset(13, 68), linePaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[3]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 55));
+//queen
+    canvas.drawCircle(Offset(10, 80), 3, matka);
+    opisSpan = TextSpan(
+      text: '- ${labels[4]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 70));
+//comb
+    canvas.drawLine(Offset(10, 105), Offset(10, 115), combPaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[6]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 100));
+//wax
+    canvas.drawLine(Offset(10, 90), Offset(10, 100), waxPaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[5]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 85));
+//sealed
+    canvas.drawLine(Offset(10, 135), Offset(10, 145), sealedPaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[7]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 130));
+//honey
+    canvas.drawLine(Offset(10, 120), Offset(10, 130), honeyPaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[8]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 115));
+
+//pollen
+    canvas.drawLine(Offset(10, 150), Offset(10, 160), pollenPaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[9]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 145));
+//eggs
+    canvas.drawLine(Offset(10, 165), Offset(10, 175), eggPaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[10]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 160));
+//larvae
+    canvas.drawLine(Offset(10, 180), Offset(10, 190), larvaePaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[11]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 175));
+//brood
+    canvas.drawLine(Offset(10, 195), Offset(10, 205), broodPaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[12]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 190));
+//drone
+    canvas.drawLine(Offset(10, 210), Offset(10, 220), dronePaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[13]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 205));
+//inserted
+    sides = 3;
+    radians = math.pi / 6;
+    angle = (math.pi * 2) / sides; //kąt
+
+    Offset center3 = Offset(10, 232);
+    Offset startPoint3 = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint3.dx + center3.dx, startPoint3.dy + center3.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center3.dx;
+      double y = radius * math.sin(radians + angle * i) + center3.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- ${labels[14]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 220));
+//deleted
+    sides = 3;
+    radians = math.pi / 2;
+    angle = (math.pi * 2) / sides; //kąt
+
+    Offset center4 = Offset(10, 243);
+    Offset startPoint4 = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint4.dx + center4.dx, startPoint4.dy + center4.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center4.dx;
+      double y = radius * math.sin(radians + angle * i) + center4.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- ${labels[15]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 235));
+//moved left
+    sides = 3;
+    radians = math.pi; //w lewo
+    angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
+
+    Offset center5 = Offset(12, 259);
+    Offset startPoint5 = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint5.dx + center5.dx, startPoint5.dy + center5.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center5.dx;
+      double y = radius * math.sin(radians + angle * i) + center5.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- ${labels[16]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 250));
+//moved right
+    sides = 3;
+    radians = 0; //w lewo
+    angle = (math.pi * 2) / 3; //kąt (3- trójkąt)
+
+    Offset center6 = Offset(10, 274);
+    Offset startPoint6 = Offset(radius * math.cos(radians), radius * math.sin(radians));
+
+    path.moveTo(startPoint6.dx + center6.dx, startPoint6.dy + center6.dy);
+
+    for (int i = 1; i <= sides; i++) {
+      double x = radius * math.cos(radians + angle * i) + center6.dx;
+      double y = radius * math.sin(radians + angle * i) + center6.dy;
+      path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paintStroke);
+    opisSpan = TextSpan(
+      text: '- ${labels[17]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 265));
+//insulated
+    canvas.drawLine(Offset(4, 293), Offset(16, 293), linePaint); // - (kreska pozioma)
+    canvas.drawLine(Offset(4, 285), Offset(4, 293), linePaint); // | (kreska pionowa lewa)
+    canvas.drawLine(Offset(16, 285), Offset(16, 293), linePaint);
+    opisSpan = TextSpan(
+      text: '- ${labels[18]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 280));
+//queen cell
+    canvas.drawCircle(Offset(10, 305), 3, matecznik);
+    opisSpan = TextSpan(
+      text: '- ${labels[19]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 295));
+//delete queen cell
+    canvas.drawCircle(Offset(10, 320), 3, delMat);
+    opisSpan = TextSpan(
+      text: '- ${labels[20]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 310));
+//iexcluder
+    canvas.drawLine(
+        Offset(4, 335), Offset(16, 335), lineExcluder); // - (kreska pozioma)
+    opisSpan = TextSpan(
+      text: '- ${labels[21]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(20, 325));
+//nr body
+    opisSpan = TextSpan(
+      text: '1 - ${labels[22]}',
+      style: textStyle,
+    );
+    textOpis = TextPainter(
+      text: opisSpan,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textOpis.layout(
+      minWidth: 0,
+      maxWidth: 200,
+    );
+    textOpis.paint(canvas, Offset(6, 340));
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter old) {
+    //throw UnimplementedError();
+    return true;
+  }
+}

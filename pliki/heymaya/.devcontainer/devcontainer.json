@@ -1,0 +1,11 @@
+{
+  "name": "Claude Code Environment",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    }
+  },
+  "postCreateCommand": "npm install -g @anthropic-ai/claude-code",
+  "remoteUser": "vscode"
+}

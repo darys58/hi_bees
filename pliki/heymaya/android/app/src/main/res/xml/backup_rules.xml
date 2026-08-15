@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Auto-backup Androida (Android 11 i starsze) obejmuje katalog files/ i ma limit
+  25 MB NA APLIKACJĘ. Model Vosk waży ~50 MB i ląduje w files/vosk_models
+  (getApplicationSupportDirectory() = context.getFilesDir()). Po przekroczeniu
+  limitu system przestaje robić kopię CAŁEJ aplikacji - razem z bazą pasiek.
+  Dlatego model i nagrania dyktowanych notatek są z kopii wyłączone.
+
+  app_flutter/nagrania to nagrania notatek (getApplicationDocumentsDirectory()
+  na Androidzie to getDir("flutter")). Kasują się po 7 dniach, ale przy
+  intensywnym dyktowaniu to dziesiątki MB - i tak są odtwarzalne tylko na tym
+  telefonie, więc do kopii nie wnoszą nic.
+-->
+<full-backup-content>
+    <exclude domain="file" path="vosk_models" />
+    <exclude domain="root" path="app_flutter/nagrania" />
+</full-backup-content>
