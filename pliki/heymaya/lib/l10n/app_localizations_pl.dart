@@ -2584,7 +2584,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get soundListening => 'Powrót do nasłuchu';
 
   @override
-  String get soundSuccess => 'Zapis do bazy';
+  String get soundSuccess => 'Zapis notatki';
 
   @override
   String get soundOpen => 'Otworzenie';
@@ -2593,7 +2593,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get soundClose => 'Zamknięcie';
 
   @override
-  String get soundError => 'Błąd';
+  String get soundError => 'Błąd zapisu notatki';
 
   @override
   String get soundNieRozumiem => 'Nie rozumiem';

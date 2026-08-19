@@ -5104,7 +5104,7 @@ abstract class AppLocalizations {
   /// No description provided for @soundSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Saved to database'**
+  /// **'Note saved'**
   String get soundSuccess;
 
   /// No description provided for @soundOpen.
@@ -5122,7 +5122,7 @@ abstract class AppLocalizations {
   /// No description provided for @soundError.
   ///
   /// In en, this message translates to:
-  /// **'Error'**
+  /// **'Note save error'**
   String get soundError;
 
   /// No description provided for @soundNieRozumiem.

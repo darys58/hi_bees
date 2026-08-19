@@ -2589,7 +2589,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get soundListening => 'Zurück zum Zuhören';
 
   @override
-  String get soundSuccess => 'In Datenbank gespeichert';
+  String get soundSuccess => 'Notiz gespeichert';
 
   @override
   String get soundOpen => 'Öffnung';
@@ -2598,7 +2598,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get soundClose => 'Schließen';
 
   @override
-  String get soundError => 'Fehler';
+  String get soundError => 'Fehler beim Speichern der Notiz';
 
   @override
   String get soundNieRozumiem => 'Nicht verstanden';

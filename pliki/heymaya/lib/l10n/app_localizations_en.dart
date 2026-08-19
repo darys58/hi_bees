@@ -2576,7 +2576,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soundListening => 'Back to listening';
 
   @override
-  String get soundSuccess => 'Saved to database';
+  String get soundSuccess => 'Note saved';
 
   @override
   String get soundOpen => 'Opening';
@@ -2585,7 +2585,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soundClose => 'Close';
 
   @override
-  String get soundError => 'Error';
+  String get soundError => 'Note save error';
 
   @override
   String get soundNieRozumiem => 'Don\'t understand';

@@ -71,12 +71,22 @@ class SoundHelper {
   String ostatniSygnal = 'jeszcze nie grał';
 
   /// Nazwy dźwięków (publiczne - do iteracji w UI).
+  ///
+  /// Lista buduje suwaki głośności na ekranie „Sterowanie głosem" i decyduje,
+  /// co [init] wczytuje do pamięci.
+  ///
+  /// 'open' (okej.mp3) SCHOWANY 19.08.2026: potwierdzenie przyjęcia polecenia
+  /// gra od 14.08.2026 sygnałem systemowym (`beep('open')` ustawia tylko flagę
+  /// `_pendingOpenBeep`, a `_flushPendingOpenBeep` woła [beep]), więc suwak nie
+  /// wpływał na nic. Plik, jego wpis w [_soundFiles], głośność w [volumes]
+  /// i etykieta `soundOpen` zostają - powrót do odzywki to odkomentowanie
+  /// jednej linii poniżej i przywrócenie `_zagraj('open')` w `_playSuccess()`.
   static const List<String> soundNames = [
     'wake_word',
     'start',
     'listening',
     'success',
-    'open',
+    //'open',
     'close',
     'error',
     'nie_rozumiem',

@@ -2587,7 +2587,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get soundListening => 'Voltar a escutar';
 
   @override
-  String get soundSuccess => 'Guardado na base de dados';
+  String get soundSuccess => 'Nota guardada';
 
   @override
   String get soundOpen => 'Abertura';
@@ -2596,7 +2596,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get soundClose => 'Fechar';
 
   @override
-  String get soundError => 'Erro';
+  String get soundError => 'Erro ao guardar a nota';
 
   @override
   String get soundNieRozumiem => 'Não entendo';

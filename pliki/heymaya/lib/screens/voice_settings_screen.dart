@@ -54,6 +54,9 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
       case 'start': return l.soundStart;
       case 'listening': return l.soundListening;
       case 'success': return l.soundSuccess;
+      //'open' nie trafia już tutaj - pozycja jest schowana w
+      //SoundHelper.soundNames (19.08.2026). Case i klucz `soundOpen` zostają,
+      //żeby powrót suwaka nie wymagał dopisywania tłumaczeń w 7 językach.
       case 'open': return l.soundOpen;
       case 'close': return l.soundClose;
       case 'error': return l.soundError;
