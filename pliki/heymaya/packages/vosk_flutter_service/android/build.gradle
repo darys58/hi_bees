@@ -60,6 +60,14 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'net.java.dev.jna:jna:5.15.0@aar'
+    // JNA 5.15.0 -> 5.18.1 (19.08.2026). Google Play odrzuca aplikacje, ktore
+    // nie obsluguja stron pamieci 16 KB. W 5.15.0 `jni/x86_64/libjnidispatch.so`
+    // ma segmenty LOAD wyrownane do 4 KB (0x1000), a arm64 do 64 KB - czyli
+    // 64-bitowy x86 lamie wymog. Od 5.17.0 wszystkie ABI sa wyrownane do
+    // 16 KB (0x4000). 5.18.1 to dokladnie ta wersja, ktorej zada pom
+    // `com.alphacephei:vosk-android:0.3.75`, wiec para jest zgodna.
+    // Sprawdzenie: readelf -lW libjnidispatch.so | awk '$1=="LOAD"{print $NF}'
+    implementation 'net.java.dev.jna:jna:5.18.1@aar'
+    // libvosk.so z 0.3.75 jest juz wyrownany do 16 KB na arm64-v8a i x86_64.
     implementation 'com.alphacephei:vosk-android:0.3.75@aar'
 }

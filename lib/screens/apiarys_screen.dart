@@ -147,8 +147,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji, poddawanie matki z aktualna datą a nie z ostatnio ustawioną,
   //1.12.0 95 13.08.2026 - nowe sterowanie głosem z modelem Vosk-PL, Picovoice usunięty, notatki do przeglądów i do Notatnika wprowadzane głosem + nagrywany dźwięk, słowne cofanie (do 5 razy) zapisów "hej maja cofnij ostatni zapis", komenda głosowa "ustaw ule od X do Y" , naprawa znikającego typu ula w belce, sekcja Sterowanie głosem w Parametryzacji, modyfikacja pomocy
   //1.12.1.96 19.08.2026 - w "Ostatnich informacjach" pozycja "o dokarmianiu lub leczeniu" rozdzielona na "o dokarmianiu" i "o leczeniu", naprawa błędnej daty ostatniego miodobrania na belce ula (sekwencyjne odświezanie belek zamiast równoległego), ujednolicone nazewnictwo "polecenia" w tekstach sterowania głosem, schowany nieuzywany suwak głośności "Otworzenie", doprecyzowane etykiety dźwięków notatek
+  //1.12.1.97 19.08.2026 - obsługa stron pamięci 16 KB wymagana przez Google Play: wtyczka Vosk pobiera JNA 5.18.1 zamiast 5.15.0 (w 5.15.0 biblioteka natywna dla x86_64 była wyrównana do 4 KB) - zmiana dotyczy wyłącznie buildu Androida
 
-  final wersja = '1.12.1.96'; //wersja aplikacji na iOS
+  final wersja = '1.12.1.97'; //wersja aplikacji na iOS
   final dataWersji = '2026-08-19';
   final now = DateTime.now();
   late DateFormat formatter;
