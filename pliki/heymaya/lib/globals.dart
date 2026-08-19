@@ -66,6 +66,7 @@ double lupaRamek = 1.0; //powiększanie widoku ula
 
 bool odswiezBelkiUli = false;//czy odswiezyć belki po imporcie danych lub ręcznie ikoną odswiezania
 bool odswiezBelkiUliDL = false;//czy odswiezyć ręcznie ikoną odswiezania
+String belkiDLKategoria = ''; //co ma trafić na belkę przy odświezaniu DL: '' - dokarmianie lub leczenie, 'feeding' - tylko dokarmianie, 'treatment' - tylko leczenie
 bool odswiezBelkiUliZ = false;//czy odswiezyć ręcznie ikoną odswiezania
 
 String wykresZbiory = 'miod'; //wyświetlany wykres "miod" lub "pylek"

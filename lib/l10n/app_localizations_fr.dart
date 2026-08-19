@@ -1707,8 +1707,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get oZasobachMatkach => 'sur les ressources et les reines';
 
-  @override
-  String get oDL => 'sur le nourrissement ou le traitement';
 
   @override
   String get oZ => 'sur la récolte de miel';

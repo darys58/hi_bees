@@ -677,7 +677,7 @@ class _VoskPocScreenState extends State<VoskPocScreen> {
       _running = true;
       _partial = '';
       _status = _zrodlo == Zrodlo.strumien
-          ? 'Słucham na żywo (strumień). Mów — komendy pojawią się poniżej.'
+          ? 'Słucham na żywo (strumień). Mów — polecenia pojawią się poniżej.'
           : 'Słucham na żywo (plik, rotacja co $_rotateSec s).';
     });
   }
@@ -1044,7 +1044,7 @@ class _VoskPocScreenState extends State<VoskPocScreen> {
       powod = 'niska pewność (${minConf.toStringAsFixed(2)})';
     } else if (!nakrop && !_anchorWords.contains(tokeny.first)) {
       przyjeta = false;
-      powod = 'nie zaczyna się od słowa otwierającego komendę '
+      powod = 'nie zaczyna się od słowa otwierającego polecenie '
           '(„${tokeny.first}")';
     } else if (nakrop) {
       powod = 'przechodzi bramkę (alias „nakrop")';
@@ -1366,7 +1366,7 @@ class _VoskPocScreenState extends State<VoskPocScreen> {
         report.writeln('(pomijam rozpoznanie — model nie jest wczytany)');
       } else {
         final String text = await _recognizeBytes(wav.pcm);
-        report.writeln('Vosk (${_useGrammar ? 'tryb komend' : 'słownik ogólny'}'
+        report.writeln('Vosk (${_useGrammar ? 'tryb poleceń' : 'słownik ogólny'}'
             '): ${text.isEmpty ? '(nic)' : text}');
       }
 
@@ -1632,13 +1632,13 @@ class _VoskPocScreenState extends State<VoskPocScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Komendy wyłuskane z ciągłej mowy (bez „Hej Maja")',
+            const Text('Polecenia wyłuskane z ciągłej mowy (bez „Hej Maja")',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Text(
               'Bramka odrzuca frazę, gdy: zawiera [unk] (coś spoza gramatyki), '
               'najsłabiej rozpoznane słowo ma pewność poniżej progu, albo fraza '
-              'nie zaczyna się od słowa mogącego otwierać komendę. To jeszcze '
+              'nie zaczyna się od słowa mogącego otwierać polecenie. To jeszcze '
               'nie parser .yml — mierzymy, ile fałszywych trafień przechodzi.',
               style: TextStyle(fontSize: 11, color: Colors.grey[700]),
             ),
@@ -2115,7 +2115,7 @@ class _VoskPocScreenState extends State<VoskPocScreen> {
             else ...[
               Text(
                 'Ikona lupy rozpoznaje nagranie PONOWNIE, bieżącym trybem '
-                'słownika — tak porównasz tryb komend z ogólnym na tym samym '
+                'słownika — tak porównasz tryb poleceń z ogólnym na tym samym '
                 'dźwięku.',
                 style: TextStyle(fontSize: 11, color: Colors.grey[600]),
               ),
@@ -2291,7 +2291,7 @@ class _VoskPocScreenState extends State<VoskPocScreen> {
           SwitchListTile(
             dense: true,
             contentPadding: EdgeInsets.zero,
-            title: const Text('Tryb komend (gramatyka pasieki)',
+            title: const Text('Tryb poleceń (gramatyka pasieki)',
                 style: TextStyle(fontSize: 13)),
             subtitle: Text(
                 _useGrammar

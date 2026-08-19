@@ -34,7 +34,7 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
   bool _soundReady = false;
 
   //opis ostatniego sygnału potwierdzenia; null = jeszcze nie sprawdzano.
-  //Pod komentarzem razem z pozycją "Sygnał potwierdzenia komendy" (15.08.2026,
+  //Pod komentarzem razem z pozycją "Sygnał potwierdzenia polecenia" (15.08.2026,
   //po zamknięciu testów androidowych) - patrz komentarz przy tamtym Card.
   // String? _opisSygnalu;
 
@@ -174,7 +174,7 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           //   ),
           // ),
 
-          // SYGNAŁ POTWIERDZENIA KOMENDY - dźwięk systemowy (ToneGenerator na
+          // SYGNAŁ POTWIERDZENIA POLECENIA - dźwięk systemowy (ToneGenerator na
           // Androidzie, AudioServicesPlaySystemSound na iOS), a dopiero gdy
           // system odmówi - plik z assetów. Sygnał NIE MA suwaka: to znak
           // techniczny, a nie odzywka Mai, i ma być zawsze słyszalny.
@@ -193,7 +193,7 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           // wystarczy odkomentować ten Card i pole [_opisSygnalu].
           // Card(
           //   child: ListTile(
-          //     title: const Text('Sygnał potwierdzenia komendy'),
+          //     title: const Text('Sygnał potwierdzenia polecenia'),
           //     subtitle: Text(_opisSygnalu ??
           //         'Naciśnij dzwonek po prawej - powinien zabrzmieć krótki '
           //             'dźwięk systemowy. Pod spodem pokaże się, czym zagrał.'),

@@ -631,9 +631,16 @@ class DBHelper {
   }
 
   //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii feeding lub treatment - dla hives_screen
-  static Future<List<Map<String, dynamic>>> getDateInfoDL(int pasieka, int ul) async {
+  //kategoria: '' - dokarmianie LUB leczenie (razem), 'feeding' - tylko dokarmianie, 'treatment' - tylko leczenie
+  static Future<List<Map<String, dynamic>>> getDateInfoDL(int pasieka, int ul,
+      {String kategoria = ''}) async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie dat infoDL dla ula nr $ul');
+    if (kategoria.isNotEmpty) {
+      return db.rawQuery(
+          'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? ORDER BY data DESC',
+          [pasieka, ul, kategoria]);
+    }
     return db.rawQuery(
         'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and (kategoria = ? or kategoria = ?) ORDER BY data DESC',
         [pasieka, ul,'feeding','treatment']);

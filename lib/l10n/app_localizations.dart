@@ -3414,11 +3414,6 @@ abstract class AppLocalizations {
   /// **'about resources and mothers'**
   String get oZasobachMatkach;
 
-  /// No description provided for @oDL.
-  ///
-  /// In en, this message translates to:
-  /// **'about feeding or treatment'**
-  String get oDL;
 
   /// No description provided for @oZ.
   ///

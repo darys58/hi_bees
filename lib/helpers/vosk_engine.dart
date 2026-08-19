@@ -602,7 +602,7 @@ class VoskEngine {
   String _opisTrybu(TrybNasluchu t) {
     switch (t) {
       case TrybNasluchu.komendy:
-        return 'Słucham komend.';
+        return 'Słucham poleceń.';
       case TrybNasluchu.dyktowanie:
         return 'Dyktuj notatkę. Zakończ słowami „Hej Maja".';
       case TrybNasluchu.czuwanie:
@@ -624,7 +624,7 @@ class VoskEngine {
       return false;
     }
     if (_tryb != TrybNasluchu.komendy) {
-      _powodOdmowyDyktowania = 'tryb ${_tryb.name}, nie komendy';
+      _powodOdmowyDyktowania = 'tryb ${_tryb.name}, nie polecenia';
       return false;
     }
     // Druga szansa: recognizer bez gramatyki powstaje natychmiast (nie ma grafu
@@ -896,7 +896,7 @@ class VoskEngine {
     await _zwolnijRecognizery();
     if (_model == null) return;
     _recCzuwanie = await _nowyRecognizer(TrybNasluchu.czuwanie);
-    _stan('Buduję gramatykę komend...');
+    _stan('Buduję gramatykę poleceń...');
     // Czas budowy grafu ma tu wartość diagnostyczną: jest pierwszym sygnałem,
     // czy urządzenie w ogóle udźwignie gramatykę komend. Na wolnym telefonie
     // długa budowa i wolne dekodowanie chodzą w parze.
@@ -1364,7 +1364,7 @@ class VoskEngine {
       powod = 'poza gramatyką ($unk × [unk])';
     } else if (inf.isUnderstood != true) {
       przyjeta = false;
-      powod = 'nie pasuje do żadnej komendy';
+      powod = 'nie pasuje do żadnego polecenia';
       // Może to być pierwsza połowa rozciętej komendy - przytrzymaj na okno.
       _ogon = doParsowania;
       _ogonOCzasie = DateTime.now();

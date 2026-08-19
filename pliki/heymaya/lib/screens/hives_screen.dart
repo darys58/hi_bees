@@ -136,16 +136,20 @@ class _HivesScreenState extends State<HivesScreen> {
         
         //ODŚWIEZANIE DOKARMIANIA LUB LECZENIA
         if(globals.odswiezBelkiUliDL == true){ //tylko ręcznie z ikony odświezania
+          //czy odświezamy dokarmianie, leczenie, czy jedno i drugie (ustawiane w _showAlertOdswiez;
+          //pusty ciąg zostaje dla wywołań spoza dialogu - NFC i zapisu info)
+          final String filtrDL = globals.belkiDLKategoria;
           List<int> items = []; 
           for (var i = 0; i < hivesAll.length; i++) { 
             items.add(hivesAll[i].ulNr); //utworzenie listy numerów wszystkich uli - dla pętli for asynchronicznej
           }
 
           for (var item in items) {
-            await OdswiezBelkiDL(item); //tworzenie w belkach info o dokarmianiu lub leczeniu
+            await OdswiezBelkiDL(item, filtrKategorii: filtrDL); //tworzenie w belkach info o dokarmianiu lub leczeniu
             //print('odswiezam ul nr = $item');
           }
           globals.odswiezBelkiUliDL = false;
+          globals.belkiDLKategoria = ''; //powrót do trybu domyślnego (dokarmianie lub leczenie)
         }
 
          //ODŚWIEZANIE ZBIOROW
@@ -588,7 +592,9 @@ class _HivesScreenState extends State<HivesScreen> {
   
   
   //odświezanie belek (dokarmianie lub leczenie)
-  OdswiezBelkiDL(int numerUla){
+  //filtrKategorii: '' - ostatni wpis o dokarmianiu LUB leczeniu (zachowanie domyślne),
+  //'feeding' - tylko dokarmianie, 'treatment' - tylko leczenie
+  OdswiezBelkiDL(int numerUla, {String filtrKategorii = ''}){
     //pobranie wszystkich info dla wybranego ula
     Provider.of<Infos>(context, listen: false)
       .fetchAndSetInfosForHive(globals.pasiekaID, numerUla)
@@ -597,7 +603,7 @@ class _HivesScreenState extends State<HivesScreen> {
       final hivesInfo = infosUla.items; //przypisanie tutaj bo inaczej nie działa tworzenie list: np List<Info> infosIleRamek = hivesInfo.where a nie List<Info> infosIleRamek = infosUla.items.where
 
       //DOKARMIANIE  lub LECZENIE //lista dat info ula zeby uzyskac datę ostatniego wpisu o dokarmianiu lub leczeniu
-      getDatyInfoDL(globals.pasiekaID, numerUla).then((_) async {
+      getDatyInfoDL(globals.pasiekaID, numerUla, kategoria: filtrKategorii).then((_) async {
         //print('numer ula = $numerUla');
         //final tempDataDL = _datyInfoDL[0].data; //data oststniego wpisu dokarmiania lub leczenia
         //print(' OdswiezBelkiDL _____________ ile dat  = ${_datyInfoDL.length}');
@@ -605,7 +611,9 @@ class _HivesScreenState extends State<HivesScreen> {
         //final tempDataDL = _datyInfoDL[0].data; //data oststniego wpisu dokarmiania lub leczenia
           //pobranie info dla ula i dla daty ostatniego wpisu o dokarmianiu lub leczeniu
           List<Info> infosDL = hivesInfo.where((inf) {
-              return  inf.data == _datyInfoDL[0].data && (inf.kategoria == 'feeding' || inf.kategoria == 'treatment') ; 
+              return  inf.data == _datyInfoDL[0].data && (filtrKategorii.isEmpty
+                  ? (inf.kategoria == 'feeding' || inf.kategoria == 'treatment')
+                  : inf.kategoria == filtrKategorii) ; 
             }).toList();
 
         //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli (belka)
@@ -1274,8 +1282,8 @@ class _HivesScreenState extends State<HivesScreen> {
 
 
    //pobranie listy info z unikalnymi datami dla wybranego ula, pasieki dla kategorii feeding i treatment z bazy lokalnej
-  Future<List<Info>> getDatyInfoDL(pasieka, ul) async {
-    final dataList = await DBHelper.getDateInfoDL(pasieka, ul); //numer wybranego ula
+  Future<List<Info>> getDatyInfoDL(pasieka, ul, {String kategoria = ''}) async {
+    final dataList = await DBHelper.getDateInfoDL(pasieka, ul, kategoria: kategoria); //numer wybranego ula
     //print('getDatyInfoDL: pasieka=$pasieka ul=$ul');
     _datyInfoDL = dataList
         .map(
@@ -1553,11 +1561,24 @@ class _HivesScreenState extends State<HivesScreen> {
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
                 globals.odswiezBelkiUliDL = true;
+                globals.belkiDLKategoria = 'feeding'; //na belce ma być tylko ta kategoria
                 Navigator.of(context).pushNamed(
                     HivesScreen.routeName,
                     arguments: {'numerPasieki': globals.pasiekaID },
                   );
-              }, child: Text((AppLocalizations.of(context)!.oDL),style: TextStyle(fontSize: 18))
+              }, child: Text((AppLocalizations.of(context)!.oDokarmianiu),style: TextStyle(fontSize: 18))
+              ),
+
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                globals.odswiezBelkiUliDL = true;
+                globals.belkiDLKategoria = 'treatment'; //na belce ma być tylko ta kategoria
+                Navigator.of(context).pushNamed(
+                    HivesScreen.routeName,
+                    arguments: {'numerPasieki': globals.pasiekaID },
+                  );
+              }, child: Text((AppLocalizations.of(context)!.oLeczeniu),style: TextStyle(fontSize: 18))
               ),
 
               TextButton(onPressed: (){

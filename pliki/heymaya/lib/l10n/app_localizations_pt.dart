@@ -1702,8 +1702,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get oZasobachMatkach => 'sobre recursos e rainhas';
 
-  @override
-  String get oDL => 'sobre alimentação ou tratamento';
 
   @override
   String get oZ => 'sobre colheita de mel';

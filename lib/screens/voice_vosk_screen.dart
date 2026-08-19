@@ -782,7 +782,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       }
       _powiedzONotatce(''); //nowa notatka - stary komunikat traci ważność
       _inferenceTimer?.cancel();
-      _slad('komenda przyjęta');
+      _slad('polecenie przyjęte');
       //"słucham" PRZED wejściem w dyktowanie, nigdy po: w dyktowaniu mikrofon
       //przyjmuje wszystko, więc odzywka Mai wpisałaby się w treść notatki.
       //Odzywka jest jednak DODATKIEM, nie warunkiem - gdy odtwarzacz padnie,
@@ -7131,7 +7131,7 @@ print('openDialog = $openDialog');
                   : ((isError || _mikrofonMilczy)
                       ? 'Mikrofon niedostępny — dotknij, by spróbować ponownie'
                       : (isProcessing
-                          ? 'Słucham komend — „Hej Maja stop"'
+                          ? 'Słucham poleceń — „Hej Maja stop"'
                           : 'Czuwam — „Hej Maja start"')),
               //lambda, nie referencja: obie gałęzie muszą mieć ten sam typ
               //void Function(), inaczej wnioskowanie nie da VoidCallback?
@@ -8570,7 +8570,7 @@ print('openDialog = $openDialog');
   Widget _ostrzezenieOGramatyce() => Padding(
         padding: const EdgeInsets.only(top: 6),
         child: Text(
-          'UWAGA: wczytana gramatyka nie zna komendy notatki albo cofania - w '
+          'UWAGA: wczytana gramatyka nie zna polecenia notatki albo cofania - w '
           'pakiecie apki jest stary plik assets/grammar/pol_vosk.yml. Zbuduj '
           'apkę od nowa (pełny restart, nie hot reload).',
           textAlign: TextAlign.center,

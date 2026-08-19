@@ -1218,7 +1218,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get introB =>
-      '\n\nPrzykład:\n1. Wybierz \"STEROWANIE GŁOSEM\" - nasłuch włącza się sam.\n2. Powiedz \"Hej Maja start\" (od tej chwili komendy mówisz bez żadnego wstępu; \"Hej Maja stop\" kończy nasłuch).\n3. Powiedz \"Ustaw pasieka numer jeden\".\n4. Powiedz \"Ustaw ul numer jeden\".\n5. Powiedz \"Ustaw korpus numer jeden\".\n6. Powiedz \"Ustaw ramka numer jeden\".\n7. Powiedz \"Ustaw jajka, dwadzieścia procent, z lewej strony\".';
+      '\n\nPrzykład:\n1. Wybierz \"STEROWANIE GŁOSEM\" - nasłuch włącza się sam.\n2. Powiedz \"Hej Maja start\" (od tej chwili polecenia mówisz bez żadnego wstępu; \"Hej Maja stop\" kończy nasłuch).\n3. Powiedz \"Ustaw pasieka numer jeden\".\n4. Powiedz \"Ustaw ul numer jeden\".\n5. Powiedz \"Ustaw korpus numer jeden\".\n6. Powiedz \"Ustaw ramka numer jeden\".\n7. Powiedz \"Ustaw jajka, dwadzieścia procent, z lewej strony\".';
 
   @override
   String get introC =>
@@ -1700,8 +1700,6 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get oZasobachMatkach => 'o zasobach i matkach';
 
-  @override
-  String get oDL => 'o dokarmianiu lub leczeniu';
 
   @override
   String get oZ => 'o zbiorach miodu';
