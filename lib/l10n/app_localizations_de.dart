@@ -1703,7 +1703,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get oZasobachMatkach => 'über Vorräte und Königinnen';
 
-
   @override
   String get oZ => 'über die Honigernte';
 

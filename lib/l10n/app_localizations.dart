@@ -3414,7 +3414,6 @@ abstract class AppLocalizations {
   /// **'about resources and mothers'**
   String get oZasobachMatkach;
 
-
   /// No description provided for @oZ.
   ///
   /// In en, this message translates to:

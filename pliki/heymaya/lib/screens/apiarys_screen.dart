@@ -146,10 +146,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.11.2.93 04.07.2026 - zmiana dźwięku po "Hej Maja" (wake-word) z krótkiego beep na wyraźniejszy i głosniejszy, poprawka w voice_screen2 - odświezanie widoku korpusa po pierwszym zapisie zasobu do bazy
   //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji, poddawanie matki z aktualna datą a nie z ostatnio ustawioną, Vosk - próba
   //1.12.0.95 15.08.2026 - sterowanie głosem z modelem Vosk-PL przeniesione z wersji iOS: nowy ekran głosowy (żywy podgląd korpusu), notatki do przeglądu i do Notesu dyktowane głosem + nagranie WAV, cofanie zapisów "hej maja cofnij ostatni zapis", komenda "ustaw ule od X do Y", osobny ekran ustawień głosu; po stronie Androida: kolejka szeregowa w natywnej wtyczce Vosk (koniec zawieszania ekranu), reguły R8 dla JNA, źródło audio voiceRecognition, model 50 MB poza kopią zapasową
+  //1.12.1.96 19.08.2026 - w "Ostatnich informacjach" pozycja "o dokarmianiu lub leczeniu" rozdzielona na "o dokarmianiu" i "o leczeniu", naprawa błędnej daty ostatniego miodobrania na belce ula (sekwencyjne odświezanie belek zamiast równoległego), ujednolicone nazewnictwo "polecenia" w tekstach sterowania głosem, schowany nieuzywany suwak głośności "Otworzenie", doprecyzowane etykiety dźwięków notatek
 
 
-  final wersja = '1.12.0.95'; //wersja aplikacji tylko na Androida !!!!! 
-  final dataWersji = '2026-08-15';
+  final wersja = '1.12.1.96'; //wersja aplikacji tylko na Androida !!!!! 
+  final dataWersji = '2026-08-19';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;

@@ -166,8 +166,17 @@ class _HivesScreenState extends State<HivesScreen> {
             //print('wywołanie zbiorów dla ula = $item');
               listaDatZkg = {}; //zerowanie listy/mapy dat w kg
               listaDatZmr = {}; //zerowanie listy/mapy 
-              await OdswiezBelkiZ(item); //tworzenie w belkach info o zbiorach
-          
+              //OdswiezBelkiZ zwraca teraz swój łańcuch .then (19.08.2026), więc to
+              //`await` NAPRAWDĘ czeka i ule liczą się po kolei. Wcześniej wszystkie
+              //szły równolegle, dzieląc jeden provider Infos i pola _datyInfoZ*,
+              //tempDataZ*, dataZbioru - wygrywał ostatni zapis i pojedynczy ul
+              //dostawał dzisiejszą datę zbioru (belka pokazywała "0 dni").
+              //try/catch, bo od teraz wyjątek w jednym ulu przerwałby całą pętlę.
+              try {
+                await OdswiezBelkiZ(item); //tworzenie w belkach info o zbiorach
+              } catch (err) {
+                debugPrint('OdswiezBelkiZ: ul $item pominięty - $err');
+              }
             //print('odswiezam ul nr = $item');
           }
           globals.odswiezBelkiUliZ = false;
@@ -194,7 +203,7 @@ class _HivesScreenState extends State<HivesScreen> {
     final dod1Data = Provider.of<Dodatki1>(context, listen: false);
     final dod1 = dod1Data.items;
     //pobranie wszystkich info dla wybranego ula
-    Provider.of<Infos>(context, listen: false)
+    return Provider.of<Infos>(context, listen: false)
       .fetchAndSetInfosForHive(globals.pasiekaID, numerUla)
       .then((_) async { 
       final infosUla = Provider.of<Infos>(context, listen: false);   
@@ -202,7 +211,7 @@ class _HivesScreenState extends State<HivesScreen> {
                  
         //ZBIORY //lista dat info ula zeby uzyskac datę ostatniego wpisu o zbiorach w kg
         //lista jest tworzona od razu dla wszystkich uli i później porównywana z datami dla duzych ramek
-          getDatyInfoZkg(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey + " = ")
+          return getDatyInfoZkg(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey + " = ")
             .then((_) {
             //print('');
             if(_datyInfoZkg.isNotEmpty){
@@ -214,7 +223,7 @@ class _HivesScreenState extends State<HivesScreen> {
       
           //ZBIORY //lista dat info ula zeby uzyskac datę ostatniego wpisu o zbiorach z małej ramki
           //lista jest tworzona od razu dla wszystkich uli i później porównywana z datami dla duzych ramek
-            getDatyInfoZmr(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey +
+            return getDatyInfoZmr(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey +
                                   " = " +
                                   AppLocalizations.of(context)!.small +
                                   " " +
@@ -229,7 +238,7 @@ class _HivesScreenState extends State<HivesScreen> {
                 //print('listaDatZmr $listaDatZmr');
             
                 //ZBIORY //lista dat info ula zeby uzyskac datę ostatniego wpisu o zbiorach z duzej ramki
-               getDatyInfoZdr(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey +
+               return getDatyInfoZdr(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey +
                                     " = " +
                                     AppLocalizations.of(context)!.big +
                                     " " +
@@ -420,7 +429,7 @@ class _HivesScreenState extends State<HivesScreen> {
               dataZbioru = DateTime.now().toString().substring(0, 10);
             
             //ZAPIS DANYCH O ULU              
-            Hives.insertHive(
+            return Hives.insertHive(
               '${globals.pasiekaID}.${numerUla}',
               globals.pasiekaID, //pasieka nr
               numerUla, //ul nr
@@ -456,7 +465,7 @@ class _HivesScreenState extends State<HivesScreen> {
               0, //aktualne zasoby
             ).then((_) {
               //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
-              Provider.of<Hives>(context, listen: false).fetchAndSetHives(globals.pasiekaID)
+              return Provider.of<Hives>(context, listen: false).fetchAndSetHives(globals.pasiekaID)
               .then((_) {
                 final hivesData = Provider.of<Hives>(context, listen: false);
                 final hives1 = hivesData.items;
@@ -470,7 +479,7 @@ class _HivesScreenState extends State<HivesScreen> {
                       });
                 //print('hiveZlikwidowane = ${hiveZlikwidowane.length}');
                 //zapis do tabeli "pasieki"
-                Apiarys.insertApiary(
+                return Apiarys.insertApiary(
                   '${globals.pasiekaID}',
                   globals.pasiekaID, //pasieka nr
                   ileUli - hiveZlikwidowane.length, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive - hiveZlikwidowane
@@ -478,7 +487,7 @@ class _HivesScreenState extends State<HivesScreen> {
                   globals.ikonaPasieki, //ikona
                   '??', //opis
                 ).then((_) {
-                  Provider.of<Apiarys>(context, listen: false)
+                  return Provider.of<Apiarys>(context, listen: false)
                       .fetchAndSetApiarys()
                       .then((_) {
                     //print( 'hives_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy po odświezeniu zbiorów');
@@ -518,7 +527,7 @@ class _HivesScreenState extends State<HivesScreen> {
             
             //print('!!!!!!!!!!!!!!!!! do belki  = $kategoria $parametr $wartosc $wartosc'); 
             //ZAPIS DANYCH O ULU              
-            Hives.insertHive(
+            return Hives.insertHive(
               '${globals.pasiekaID}.${numerUla}',
               globals.pasiekaID, //pasieka nr
               numerUla, //ul nr
@@ -554,7 +563,7 @@ class _HivesScreenState extends State<HivesScreen> {
               0, //aktualne zasoby
             ).then((_) {
               //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
-              Provider.of<Hives>(context, listen: false).fetchAndSetHives(globals.pasiekaID)
+              return Provider.of<Hives>(context, listen: false).fetchAndSetHives(globals.pasiekaID)
               .then((_) {
                 final hivesData = Provider.of<Hives>(context, listen: false);
                 final hives1 = hivesData.items;
@@ -565,7 +574,7 @@ class _HivesScreenState extends State<HivesScreen> {
                         return element.ikona == ('black');
                       });       
                 //zapis do tabeli "pasieki"
-                Apiarys.insertApiary(
+                return Apiarys.insertApiary(
                   '${globals.pasiekaID}',
                   globals.pasiekaID, //pasieka nr
                   ileUli - hiveZlikwidowane.length, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
@@ -573,7 +582,7 @@ class _HivesScreenState extends State<HivesScreen> {
                   globals.ikonaPasieki, //ikona
                   '??', //opis
                 ).then((_) {
-                  Provider.of<Apiarys>(context, listen: false)
+                  return Provider.of<Apiarys>(context, listen: false)
                       .fetchAndSetApiarys()
                       .then((_) {
                      //print('hive_screen: aktualizacja Apiarys_items z tabeli "pasieki" po odś∑. ');

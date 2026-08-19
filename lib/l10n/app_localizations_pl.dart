@@ -1700,7 +1700,6 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get oZasobachMatkach => 'o zasobach i matkach';
 
-
   @override
   String get oZ => 'o zbiorach miodu';
 

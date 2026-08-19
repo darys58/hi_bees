@@ -1702,7 +1702,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get oZasobachMatkach => 'su risorse e regine';
 
-
   @override
   String get oZ => 'sulla raccolta del miele';
 

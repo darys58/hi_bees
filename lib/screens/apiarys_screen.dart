@@ -146,9 +146,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.11.2.93 04.07.2026 - zmiana dźwięku po "Hej Maja" (wake-word) z krótkiego beep na wyraźniejszy i głosniejszy, poprawka w voice_screen2 - odświezanie widoku korpusa po pierwszym zapisie zasobu do bazy
   //1.11.3.94 06.07.2026 - automatyczne informowanie uzytkownika o nowej wersji apki i mozliwośc przejścia do jej aktualizacji, poddawanie matki z aktualna datą a nie z ostatnio ustawioną,
   //1.12.0 95 13.08.2026 - nowe sterowanie głosem z modelem Vosk-PL, Picovoice usunięty, notatki do przeglądów i do Notatnika wprowadzane głosem + nagrywany dźwięk, słowne cofanie (do 5 razy) zapisów "hej maja cofnij ostatni zapis", komenda głosowa "ustaw ule od X do Y" , naprawa znikającego typu ula w belce, sekcja Sterowanie głosem w Parametryzacji, modyfikacja pomocy
+  //1.12.1.96 19.08.2026 - w "Ostatnich informacjach" pozycja "o dokarmianiu lub leczeniu" rozdzielona na "o dokarmianiu" i "o leczeniu", naprawa błędnej daty ostatniego miodobrania na belce ula (sekwencyjne odświezanie belek zamiast równoległego), ujednolicone nazewnictwo "polecenia" w tekstach sterowania głosem, schowany nieuzywany suwak głośności "Otworzenie", doprecyzowane etykiety dźwięków notatek
 
-  final wersja = '1.12.0.95'; //wersja aplikacji na iOS
-  final dataWersji = '2026-08-13';
+  final wersja = '1.12.1.96'; //wersja aplikacji na iOS
+  final dataWersji = '2026-08-19';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;

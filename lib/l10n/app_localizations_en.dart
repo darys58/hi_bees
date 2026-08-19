@@ -1694,7 +1694,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get oZasobachMatkach => 'about resources and mothers';
 
-
   @override
   String get oZ => 'about honey harvest';
 
