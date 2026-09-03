@@ -1784,12 +1784,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //UWAGA - to NIE jest pełny audyt jak ten z 04.08.2026 dla polskiego (patrz
   //komentarze na końcu pol_vosk.yml): sprawdzone tylko wartości SLOTÓW z tej
   //metody, NIE każde miejsce w kodzie, które porównuje te stringi dalej.
-  //Znaleziony przy okazji I NAPRAWIONY: voice_vosk_screen.dart ~6636 oczekiwał
-  //surowego "virgin" - dopisane "virgine" (patrz komentarz tam). NIE
-  //naprawiony: slot queenMark ma wartość "gone" bez odpowiadającego
-  //`case 'gone':` w switchu belki matki (jest tylko dla "missing"/"nie ma"/
-  //"brak") - do naprawy razem z resztą audytu (pamięć sesji
-  //"voice_english_scoping").
+  //Znalezione przy okazji I NAPRAWIONE: voice_vosk_screen.dart ~6636 oczekiwał
+  //surowego "virgin" - dopisane "virgine" (patrz komentarz tam); brak
+  //`case 'gone':` w switchu belki matki (był tylko dla "missing"/"nie ma"/
+  //"brak") - dopisany; literówka "marker other" zamiast "marked other" w tym
+  //samym switchu - dopisany poprawny case obok (stary zostawiony).
   Map<String, Map<String, String>> _mapowanieSlotowEn(AppLocalizations l10n) => {
         'queenState': {
           'virgin': l10n.virgine, //app_en.arb: "virgine" (literówka w ARB)
@@ -6597,6 +6596,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                 break;
               case 'marker other': matka2 = 'inny ' + miar; //kolor + numer matki
                 break;
+              // 'marked other' (nie 'marker other') to prawdziwa wartość slotu
+              // queenMark w eng_vosk.yml - literówka wyżej nigdy by się nie
+              // trafiła. Dopisane 03.09.2026, 'marker other' zostaje na wypadek,
+              // gdyby coś innego jej używało.
+              case 'marked other': matka2 = 'inny ' + miar; //kolor + numer matki
+                break;
               case 'ma biały znak': matka2 = 'biał ' + miar; //kolor + numer matki
                 break;
               case 'marker white': matka2 = 'biał ' + miar; //kolor + numer matki
@@ -6622,6 +6627,15 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                 // globals.ikonaPasieki = 'red';
                 break;
               case 'missing': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
+                ikona = 'red';
+                // globals.ikonaPasieki = 'red';
+                break;
+              // Trzeci angielski synonim "braku matki" obok "missing" - lustro
+              // polskich "nie ma"/"brak" (dwa synonimy poza mapowanym "nie ma
+              // znaku"). Brak tego case'a to znaleziony 03.09.2026 przy audycie
+              // _ujednolicWartosciSlotow błąd: "gone" było rozpoznawane przez
+              // gramatykę, ale nie robiło nic w tym switchu.
+              case 'gone': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
                 ikona = 'red';
                 // globals.ikonaPasieki = 'red';
                 break;
