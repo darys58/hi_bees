@@ -1,15 +1,11 @@
 # Gramatyka sterowania głosowego (angielski) dla silnika na Vosku.
 #
-# STATUS: SZKIC, 03.09.2026, zaktualizowany 03.09.2026 (naprawiony bloker
-# liczebników). Gramatyka napisana i funkcjonalnie testowalna SILNIKIEM
-# (VoskGrammar.zTekstu(..., jezyk: 'en')), ale wciąż NIEPODŁĄCZONA do apki i
-# NIEPRZETESTOWANA na głosie:
-#   - vosk_engine.dart pobiera na sztywno model POLSKI (vosk-model-small-pl-0.22),
-#     ten plik nie jest jeszcze nigdzie ładowany,
-#   - pubspec.yaml NIE MA go w assets - trzeba dopisać, żeby w ogóle wszedł do apki,
-#   - żadna linia tego pliku nie przeszła testu na nagraniu głosu (dla polskiego
-#     jest pliki/vosk_0801-..._STRUM.wav - dla angielskiego NIE MA odpowiednika).
-#   Pełna lista braków → pamięć sesji Claude "voice_english_scoping".
+# STATUS: PODŁĄCZONE I DZIAŁAJĄCE NA URZĄDZENIU (potwierdzone przez usera
+# 03.09.2026, po podłączeniu modelu/gramatyki/bramy językowej). Nie oczekuj
+# perfekcji - to pierwsza wersja, drobne braki we frazowaniu wychodzą i są
+# naprawiane na bieżąco w miarę zgłoszeń z testów (patrz "POPRAWKI PO TEŚCIE
+# NA URZĄDZENIU" na końcu pliku). Pełna lista tego, co jeszcze zostało →
+# pamięć sesji Claude "voice_english_scoping" i sekcja NIEZROBIONE niżej.
 #
 # BLOKER LICZEBNIKÓW - NAPRAWIONY 03.09.2026 (lib/helpers/vosk_grammar.dart).
 #   $pv.TwoDigitInteger / $pv.SingleDigitInteger / $pv.Percent / $pv.SingleDigitOrdinal
@@ -405,11 +401,20 @@ context:
       - very strong
       - strong
     # POPRAWKA wobec eng1.yml: dodane "okay" jako synonim "ok" (jak wyżej).
+    # POPRAWKA 03.09.2026 (zgłoszenie z testu na urządzeniu): "colony is mood"
+    # i "colony is swarming" nie działały - dwuwyrazowe "swarming mood" trzeba
+    # było wypowiedzieć w CAŁOŚCI, w tej kolejności (sloty dopasowują dokładny
+    # ciąg słów, nie pojedyncze słowa z frazy). Dodane samo "swarming" - to
+    # naturalne, samodzielne słowo pszczelarskie (opisuje ZACHOWANIE rodziny,
+    # nie wymaga "mood" żeby coś znaczyć). "mood" NIE dodane samo - bez
+    # kontekstu nic nie mówi (czyj/jaki nastrój). "swarming mood" zostaje jako
+    # pełna forma dla tych, którzy tak wolą powiedzieć - obie są teraz ważne.
     colonyState:
       - dead
       - ok
       - okay
       - swarming mood
+      - swarming
       - in a cluster
       - gentle
       - aggressive
@@ -478,22 +483,38 @@ context:
 #     od zera: voiceStart, voiceStop, voiceNote, voiceNotepad, voiceUndo,
 #     setHivesRange, setChange, setMoveBody.
 #
+# STATUS 03.09.2026 - PODŁĄCZONE I TESTOWANE NA URZĄDZENIU. ZROBIONE od
+# poprzedniej wersji tego nagłówka: angielski pakiet liczebników
+# ([_PakietLiczb] w vosk_grammar.dart, `jezyk: 'en'`), model+ścieżka gramatyki
+# wg globals.jezyk (vosk_engine.dart/voice_vosk_screen.dart), wpis w
+# pubspec.yaml, brama językowa w apiarys_screen.dart (en_US), angielska
+# gałąź _ujednolicWartosciSlotow. User potwierdził: sterowanie głosem
+# PO ANGIELSKU DZIAŁA, z drobnymi niedociągnięciami zgłaszanymi i naprawianymi
+# na bieżąco (patrz "POPRAWKI PO TEŚCIE NA URZĄDZENIU" niżej).
+#
 # NIEZROBIONE (świadomie, poza zakresem tego pliku):
-#   - ZROBIONE 03.09.2026: vosk_grammar.dart, angielski pakiet liczebników
-#     ([_PakietLiczb], `jezyk: 'en'`) - patrz "BLOKER LICZEBNIKÓW" wyżej.
-#   - voice_vosk_screen.dart: angielska gałąź _ujednolicWartosciSlotow oraz
-#     wszystkie miejsca porównujące sloty wprost z polskimi stringami
-#     (np. siteOfFrame == 'lewej'/'prawej' - grep "'prawej'\|'lewej'" w tym
-#     pliku pokazuje więcej takich miejsc niż tylko _ujednolicWartosciSlotow).
-#   - vosk_engine.dart: model EN, ścieżka gramatyki wg języka (wywołanie
-#     VoskGrammar.zAssetu ma już parametr `jezyk`, ale nikt go jeszcze stąd
-#     nie ustawia na 'en').
-#   - pubspec.yaml: dopisanie tego pliku do assets.
-#   - apiarys_screen.dart: rozszerzenie bramy językowej.
-#   - 8 nagrań głosu Mai po angielsku.
-#   - żadna weryfikacja na prawdziwym nagraniu głosu (jak
+#   - voice_vosk_screen.dart: inne miejsca porównujące sloty wprost ze
+#     stringami mogą mieć podobne braki jak te już znalezione i naprawione
+#     (queenState "virgin"/"virgine", queenMark "gone", literówka "marker
+#     other") - to NIE był pełny audyt jak polski z 04.08.2026, tylko punktowe
+#     naprawy tam, gdzie akurat patrzyłem albo user zgłosił.
+#   - 8 nagrań głosu Mai po angielsku - Maja milczy/mówi po polsku.
+#   - teksty statusu na ekranie (poza ARB) - dalej po polsku niezależnie od
+#     języka rozpoznawania.
+#   - pomoc "notes" (sesja/dyktowanie/cofanie) rozpoznawana, ale okno się nie
+#     otwiera - twardy strażnik na `pl_PL` w voice_help_dialogs.dart.
+#   - żadna SYSTEMATYCZNA weryfikacja na wielu nagraniach głosu (jak
 #     pliki/vosk_0801-..._STRUM.wav dla polskiego) - wybory typu "required vs
-#     optional" są PRZENIESIONE ze struktury polskiej, nie potwierdzone dla
-#     angielskiej fonetyki. test/vosk_grammar_english_test.dart sprawdza
-#     WYŁĄCZNIE silnik-parser w izolacji (tokeny tekstowe), nie prawdziwe
-#     rozpoznawanie mowy.
+#     optional" były PRZENIESIONE ze struktury polskiej jako punkt wyjścia;
+#     realne poprawki fonetyki/frazowania przychodzą teraz z testów na
+#     urządzeniu, pojedynczo, w miarę zgłoszeń.
+#
+# POPRAWKI PO TEŚCIE NA URZĄDZENIU (zgłoszenia usera, po kolei):
+#   - 03.09.2026: "colony is mood" i "colony is swarming" nie rozpoznawane -
+#     dwuwyrazowe "swarming mood" trzeba było wypowiedzieć w CAŁOŚCI (slot
+#     dopasowuje dokładny ciąg słów). Dodane samo "swarming" jako osobna
+#     wartość slotu $colonyState - naturalne, samodzielne słowo pszczelarskie.
+#     "mood" NIE dodane samo (bez kontekstu nic nie znaczy). "swarming mood"
+#     zostaje jako pełna forma. Sprawdzone symulacją: "colony is swarming"
+#     teraz rozpoznawane (setColony, colonyState="swarming"), "colony is
+#     mood" nadal celowo nie (za mało informacji w samym słowie).

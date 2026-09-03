@@ -164,6 +164,7 @@ class _PakietLiczb {
     required this.ordinaly,
     required this.procentSlowa,
     required this.procentKotwica,
+    this.lacznikZakresu,
   });
 
   final Map<String, int> jednostki;
@@ -187,6 +188,19 @@ class _PakietLiczb {
   /// Kanoniczne słowo wstawiane jako kotwica bigramu w gramatyce recognizera
   /// (patrz [VoskGrammar._rozetnij], [VoskGrammar.frazy]).
   final String procentKotwica;
+
+  /// Słowo łączące dwie liczby w wyrażeniach zakresu ("ramka od X DO Y",
+  /// "frame from X TO Y" - setFrames, setHivesRange). Zgłoszone z urządzenia
+  /// 03.09.2026: "set frame from X to Y" działało tylko dla niektórych X.
+  /// Przyczyna jak przy "procent" - wyrażenie jest ROZCINANE na typach
+  /// wbudowanych (VoskGrammar._rozetnij), więc słowo między dwoma $pv trafia
+  /// do gramatyki recognizera jako SAMOTNA, jednowyrazowa fraza ("to") bez
+  /// żadnego bigramu do sąsiednich liczebników - model języka prawie nie ma
+  /// szans go poprawnie usłyszeć w kontekście. Null tam, gdzie żadne
+  /// wyrażenie tego nie potrzebuje (na razie: polski - "od...do" nie było
+  /// zgłoszone jako zepsute, więc NIE ruszane, żeby nie zmieniać liczby fraz
+  /// w istniejących testach polskich).
+  final String? lacznikZakresu;
 
   Set<String> get wszystkieSlowa => {
         ...jednostki.keys,
@@ -252,6 +266,7 @@ const _pakietLiczbEn = _PakietLiczb(
   },
   procentSlowa: {'percent'},
   procentKotwica: 'percent',
+  lacznikZakresu: 'to',
 );
 
 const Map<String, _PakietLiczb> _pakietyLiczb = {
@@ -690,6 +705,19 @@ class VoskGrammar {
       // percent" = 100%), bo "hundred" samo w sobie nie jest w [setki].
       if (_liczby.slowoSetek != null) {
         wynik.add('${_liczby.slowoSetek} ${_liczby.procentKotwica}');
+      }
+      // Ten sam mostek dla łącznika zakresu ("X to Y" - setFrames,
+      // setHivesRange). Bez tego "to" wchodzi do gramatyki jako samotna
+      // fraza (patrz komentarz przy [_PakietLiczb.lacznikZakresu]) - obie
+      // strony ("liczba to" i "to liczba"), bo liczba po łączniku ma ten sam
+      // problem co liczba przed nim.
+      if (_liczby.lacznikZakresu != null) {
+        final lacznik = _liczby.lacznikZakresu!;
+        for (final liczba in {..._liczby.jednostki.keys, ..._liczby.nastki.keys,
+          ..._liczby.dziesiatki.keys}) {
+          wynik.add('$liczba $lacznik');
+          wynik.add('$lacznik $liczba');
+        }
       }
     }
     wynik.remove('');

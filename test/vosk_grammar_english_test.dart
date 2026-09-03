@@ -123,6 +123,20 @@ void main() {
       expect(frazy, contains('hundred percent'),
           reason: 'mostek dla setek złożonych z dwóch słów');
     });
+
+    test('gramatyka recognizera wiąże łącznik zakresu "to" bigramami', () {
+      // Zgłoszenie z urządzenia 03.09.2026: "set frame from X to Y" działało
+      // tylko dla niektórych X - "to" wchodziło do gramatyki jako samotna,
+      // jednowyrazowa fraza (setFrames/setHivesRange rozcinają wyrażenie na
+      // dwóch $pv.TwoDigitInteger). Mostek w obie strony, bo liczba PO "to"
+      // ma ten sam problem co liczba PRZED nim.
+      final frazy = silnik.frazy();
+      expect(frazy, contains('two to'), reason: '"two"/"to" to homofony - ten '
+          'przypadek zgłoszony jako najbardziej zawodny');
+      expect(frazy, contains('to two'));
+      expect(frazy, contains('three to'));
+      expect(frazy, contains('to five'));
+    });
   });
 
   group('excluder - jedyne brakujące słowo, łata [excluder,grid,grate]', () {
