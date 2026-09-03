@@ -1825,7 +1825,13 @@ class _HivesScreenState extends State<HivesScreen> {
     return Scaffold(
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
-          title: RichText(
+          title: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            // Na wąskich ekranach (iPhone SE) "Pasieka X" + miasto pogody nie
+            // mieściły się obok czterech ikon akcji i tytuł się ucinał -
+            // FittedBox skaluje w dół tylko wtedy, gdy naprawdę trzeba.
+            child: RichText(
             text: TextSpan(
               //style: TextStyle(color: Colors.black),
               children: [
@@ -1845,8 +1851,9 @@ class _HivesScreenState extends State<HivesScreen> {
                           color: Colors.black,
                         ))
                   : TextSpan( text:(''),)
-         
+
               ])),
+          ),
                                   
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
           //   title: Text('Apiary $numerPasieki'),

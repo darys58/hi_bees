@@ -317,6 +317,12 @@ class VoskEngine {
 
   DateTime? _ostatniaPorcja;
   bool _wznawianie = false;
+
+  // Diagnoza "Mikrofon zamilkł" (iPhone SE, 03.09.2026): true od uzbrojenia
+  // watchdoga w [wznow] do pierwszej realnej porcji w [_porcja] - jedno
+  // logowanie na cykl, żeby zmierzyć realny czas rozruchu strumienia zamiast
+  // zgadywać. Wyjąć razem z [_sladDiagnostyczny], gdy przyczyna się znajdzie.
+  bool _czekamNaPierwszaPorcje = false;
   int _proboWznowienia = 0;
   Timer? _timerPonowienia;
   bool _brakZgody = false; // jedyna przyczyna, która nie minie sama
@@ -412,10 +418,14 @@ class VoskEngine {
   // Wyłącznik zostaje w kodzie - to samo pytanie wróci przy każdej nowej
   // platformie. false = ani jednej linii w logu.
   //
-  // WYŁĄCZONY 15.08.2026, przed publikacją (temat Androida zamknięty). Ślad
-  // idzie przez [debugPrint], więc w buildzie release i tak nie ma go gdzie
-  // czytać - ale liczenie porcji i sklejanie napisów działo się mimo to, na
-  // ścieżce wołanej co 0,2 s nasłuchu.
+  // WYŁĄCZONY 15.08.2026, przed publikacją (temat Androida zamknięty).
+  // 03.09.2026: diagnoza "Mikrofon zamilkł"/crasza na iPhone SE ZAMKNIĘTA -
+  // przyczyna znaleziona (tap AVAudioEngine w `record_ios` milknie po ok. 4 s
+  // z powodu wyścigu formatu sprzętu, github.com/llfbandit/record/issues/622;
+  // przerwa w [_probujWznowic] usuwa crasza, ale nie samą niestabilność).
+  // User zdecydował: czekamy na poprawkę wtyczki, nie gonimy tego dalej po
+  // stronie apki. Z powrotem WYŁĄCZONY - włączyć przy kolejnej rundzie
+  // diagnozy. → [[ios_record_hwformat_crash]]
   static const bool _sladDiagnostyczny = false;
 
   static void _log(String tekst) {
@@ -499,6 +509,9 @@ class VoskEngine {
     // fizycznie odebrany dźwięk (patrz _porcja).
     _watchdog?.cancel();
     _watchdog = Timer.periodic(const Duration(seconds: 1), (_) => _sprawdzMikrofon());
+    _czekamNaPierwszaPorcje = true;
+    _log('wznow: watchdog uzbrojony t=${_zegar.elapsedMilliseconds} ms, '
+        'czekam na pierwszą porcję (limit ciszy ${_limitCiszy.inSeconds} s)');
     _stan('Czuwam. Powiedz „Hej Maja start", żeby zacząć.');
     return true;
   }
@@ -529,6 +542,7 @@ class VoskEngine {
     if (!_nagrywa) return;
     _watchdog?.cancel();
     _watchdog = null;
+    _czekamNaPierwszaPorcje = false;
     await _audioSub?.cancel();
     _audioSub = null;
     _nagrywa = false;
@@ -1107,6 +1121,11 @@ class VoskEngine {
   }
 
   void _porcja(Uint8List chunk) {
+    if (_czekamNaPierwszaPorcje) {
+      _czekamNaPierwszaPorcje = false;
+      _log('_porcja: PIERWSZA porcja po uzbrojeniu, t=${_zegar.elapsedMilliseconds} ms, '
+          '${chunk.length} bajtów');
+    }
     _ostatniaPorcja = DateTime.now();
     _proboWznowienia = 0; // dźwięk realnie dociera - mikrofon odzyskany
     // Odzywka Mai albo przebudowa gramatyki - porcji nie karmimy.
@@ -1451,6 +1470,17 @@ class VoskEngine {
     try {
       await wstrzymaj(); // zatrzymuje też watchdoga i zaplanowane ponowienie
       if (_brakZgody) return;
+      // Zdiagnozowane 03.09.2026 na iPhone SE: start() zaraz po stop() potrafi
+      // trafić w oknie rekonfiguracji AVAudioSession na STARY hwFormat w
+      // `record_ios` - installTap dostaje nieaktualny sample rate i rzuca
+      // NSException, którego Dart nie łapie (SIGABRT, cała apka pada). To
+      // otwarty błąd wtyczki (github.com/llfbandit/record/issues/622, bez
+      // wydanej poprawki), więc same to nie usuwa wyścigu, ale krótka
+      // przerwa daje systemowi czas na ustabilizowanie formatu i w naszych
+      // logach dokładnie start-zaraz-po-stopie poprzedzał crasza.
+      if (Platform.isIOS) {
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      }
       if (_proboWznowienia >= _probDoKomunikatu) {
         // Użytkownik ma prawo wiedzieć, że nie słuchamy - ale to NIE jest koniec
         // prób. Najczęstsza przyczyna (rozmowa telefoniczna) mija sama i wtedy
