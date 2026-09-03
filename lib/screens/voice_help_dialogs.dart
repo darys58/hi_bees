@@ -240,7 +240,20 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     _punktor,
     TextSpan(text: l.sEt + ' ', style: _opcjonalny),
-    TextSpan(text: ' ' + l.leftRightBoth),
+    // Zgłoszenie z urządzenia 03.09.2026: help pokazywał "on the" ("Set on
+    // the left/right/both side"), ale eng_vosk.yml dla TEJ komendy (goły
+    // $siteOfFrame, bez wartości procentowej) NIE MA "(on) (the)" jako
+    // opcjonalnych słów - w przeciwieństwie do pozostałych komend na tej
+    // liście (food/queen/queenCells), które je mają. l.leftRightBoth ("on
+    // the left/right/both") jest więc poprawne wszędzie indziej na tej
+    // liście, ale nie tutaj - stąd goła wersja tylko dla angielskiego.
+    // Polski ma "z" jako OPCJONALNE w tej samej komendzie, więc
+    // l.leftRightBoth ("z lewej/prawej/obu") zostaje poprawne bez zmian.
+    TextSpan(
+        text: ' ' +
+            (globals.jezyk == 'en_US'
+                ? l.left + '/' + l.right + '/' + l.both
+                : l.leftRightBoth)),
     TextSpan(text: '  ' + l.site, style: _wymagany),
     TextSpan(text: '.\n'),
     //do zrobienia / zostało zrobione

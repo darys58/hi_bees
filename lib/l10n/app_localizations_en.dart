@@ -271,7 +271,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get frameOn => 'frame on';
 
   @override
-  String get site => 'site';
+  String get site => 'side';
 
   @override
   String get save => 'Save';
