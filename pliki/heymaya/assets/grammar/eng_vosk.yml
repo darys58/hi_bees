@@ -1,0 +1,499 @@
+# Gramatyka sterowania głosowego (angielski) dla silnika na Vosku.
+#
+# STATUS: SZKIC, 03.09.2026, zaktualizowany 03.09.2026 (naprawiony bloker
+# liczebników). Gramatyka napisana i funkcjonalnie testowalna SILNIKIEM
+# (VoskGrammar.zTekstu(..., jezyk: 'en')), ale wciąż NIEPODŁĄCZONA do apki i
+# NIEPRZETESTOWANA na głosie:
+#   - vosk_engine.dart pobiera na sztywno model POLSKI (vosk-model-small-pl-0.22),
+#     ten plik nie jest jeszcze nigdzie ładowany,
+#   - pubspec.yaml NIE MA go w assets - trzeba dopisać, żeby w ogóle wszedł do apki,
+#   - żadna linia tego pliku nie przeszła testu na nagraniu głosu (dla polskiego
+#     jest pliki/vosk_0801-..._STRUM.wav - dla angielskiego NIE MA odpowiednika).
+#   Pełna lista braków → pamięć sesji Claude "voice_english_scoping".
+#
+# BLOKER LICZEBNIKÓW - NAPRAWIONY 03.09.2026 (lib/helpers/vosk_grammar.dart).
+#   $pv.TwoDigitInteger / $pv.SingleDigitInteger / $pv.Percent / $pv.SingleDigitOrdinal
+#   to NIE są typy Vosk - to WŁASNY parser liczebników w lib/helpers/vosk_grammar.dart
+#   (komentarz tam: "typy wbudowane, których Vosk, w przeciwieństwie do Rhino, nie ma").
+#   Był NA SZTYWNO POLSKI - teraz parser dostaje komplet słów jako [_PakietLiczb]
+#   wybrany parametrem `jezyk` (`VoskGrammar.zTekstu(tekst, jezyk: 'en')`).
+#   Angielska setka to DWA słowa ("one" + "hundred"), nie jedno jak polskie "sto" -
+#   dlatego pakiet ma OSOBNO [_PakietLiczb.setki] (dla języków z pojedynczym
+#   słowem) i [_PakietLiczb.slowoSetek] (mnożnik, dla języków złożonych).
+#   Sprawdzone testami: test/vosk_grammar_english_test.dart (m.in. "one hundred
+#   percent" = 100%, "one hundred twenty" rozdzielone między $hundred i
+#   $pv.TwoDigitInteger - dokładny odpowiednik polskiego testu "sto dwadzieścia").
+#   Domyślny `jezyk` w VoskGrammar.zTekstu/zAssetu zostaje 'pl' - stare
+#   wywołania (w tym cała reszta apki) działają bez zmian.
+#
+# ŹRÓDŁA:
+#   - pliki/gramatyka_rhino/eng1.yml - szkic angielski SPRZED migracji na Vosk,
+#     w składni silnika Rhino/Picovoice. Ta sama składnia zadziałała tu prawie
+#     bez zmian (patrz nagłówek pol_vosk.yml: "Składnia odziedziczona po Rhino"),
+#     ALE plik pokrywa tylko 16 z 24 obecnych intencji (brakuje voiceStart,
+#     voiceStop, voiceNote, voiceNotepad, voiceUndo, setHivesRange, setChange,
+#     setMoveBody - dodane już PO migracji) i ma kilka błędów/naleciałości z
+#     Rhino, poprawionych tutaj (patrz "POPRAWKI WOBEC eng1.yml" na końcu pliku).
+#   - assets/grammar/pol_vosk.yml - źródło STRUKTURY (kolejność opcjonalności,
+#     które słowo jest wymagane/opcjonalne) i 8 intencji, których w eng1.yml
+#     nie ma. UWAGA: część polskich decyzji o wymagalności słów wynikała z
+#     UDOKUMENTOWANYCH obserwacji na nagraniach (np. przyimek "z" i słowo
+#     "procent" znikają w wymowie - patrz komentarze pol_vosk.yml na końcu).
+#     Te konkretne obserwacje fonetyczne NIE zostały zweryfikowane dla
+#     angielskiego - struktura jest przeniesiona jako rozsądny punkt wyjścia,
+#     NIE jako potwierdzony fakt.
+#
+# SŁOWNIK: każde literalne słowo tego pliku sprawdzone 03.09.2026 wobec
+#   pliki/vosk_slownik_eng.txt (152 211 słów, zrzucone z modelu
+#   vosk-model-small-en-us-0.15 tym samym narzędziem co dla polskiego -
+#   pliki/vosk_slownik_dump.py). JEDNO słowo z eng1.yml nie istniało w
+#   słowniku - "excluder" (kratka odgrodowa) - i tutaj wszędzie zastąpione
+#   wymaganą alternatywą [excluder,grid,grate]: samo "excluder" zostaje jako
+#   PIERWSZA, najbardziej oczywista opcja (Vosk go po cichu pominie przy
+#   budowaniu gramatyki, więc w praktyce nie zadziała - zostaje z dokumentacyjnych
+#   względów, gdyby model kiedyś się zmienił), a "grid"/"grate" to PRAWDZIWE,
+#   potoczne angielskie nazwy tego samego sprzętu ("queen excluder grid/grate"),
+#   nie sztuczny alias fonetyczny jak polskie "pierzcha"/"węża".
+#
+# Po każdej zmianie tego pliku uruchom (w kontenerze, bez telefonu):
+#   python3 -c "
+#   import re
+#   words=set()
+#   for l in open('assets/grammar/eng_vosk.yml', encoding='utf8'):
+#       l=re.sub(r'#.*','',l)
+#       l=re.sub(r'\$[A-Za-z0-9_.]+(:[A-Za-z0-9_]+)?',' ',l)
+#       words.update(w.lower() for w in re.findall(r\"[a-zA-Z']+\", l))
+#   dic=set(w.strip().lower() for w in open('pliki/vosk_slownik_eng.txt', encoding='utf8'))
+#   print(sorted(w for w in words if w not in dic and w not in
+#       {'context','expressions','slots','macros'}))
+#   "
+#   (docelowo: dopisać obsługę --lang en do pliki/vosk_gramatyka_test.py, na razie
+#   ten plik nie jest sparametryzowany i sprawdza tylko pol_vosk.yml/vosk_slownik_pl.txt)
+#
+# Składnia (ta sama co pol_vosk.yml, odziedziczona po Rhino):
+#   word           required
+#   (word)         optional
+#   (a,b)          optional alternative
+#   [a,b]          REQUIRED alternative
+#   $slot:key      dictionary slot; returns the CANONICAL value from `slots:`
+#   $pv.Type:key   built-in numeral: Percent -> "NN%", TwoDigitInteger -> "NN",
+#                  SingleDigitInteger -> "N"
+#
+# UWAGA: słowa "percent" NIE MA i nie może być w wyrażeniach - tak samo jak
+# polskie "procent", należy do typu $pv.Percent i (docelowo, po aktualizacji
+# vosk_grammar.dart) ma je zjadać parser, nie wzorzec.
+#
+# UWAGA: wyrażenia zaczynające się od "[" MUSZĄ być w cudzysłowie - inaczej
+# YAML/testownia Pythona czyta je jako listę i plik nie parsuje się w ogóle
+# (ten sam problem opisany w nagłówku pol_vosk.yml).
+#
+# Nazwy intencji i slotów (setApiary, setHive, siteOfFrame...) są identycznymi
+# identyfikatorami kodu jak w pol_vosk.yml - voice_vosk_screen.dart (switch po
+# intencji) NIE wymaga żadnej zmiany, żeby obsłużyć ten plik.
+
+context:
+  expressions:
+    # --- session control -----------------------------------------------------
+    # Odpowiednik polskiego "hej maja [start,zaczynamy,startujemy]" /
+    # "[stop,kończymy,koniec]". NIE ma odpowiednika w eng1.yml (Rhino miał
+    # osobny silnik wake-word, Porcupine) - to jedna z 8 intencji dodanych po
+    # migracji, przetłumaczona wprost z pol_vosk.yml.
+    voiceStart:
+      - hey maya [start,begin]
+    voiceStop:
+      - hey maya [stop,done,finished]
+    # --- note dictation --------------------------------------------------------
+    # Odpowiednik polskiego voiceNote/voiceNotepad (patrz pol_vosk.yml - dwa
+    # ujścia, dwie intencje: voiceNote -> uwagi przeglądu, voiceNotepad -> nowy
+    # wpis w Notesie). Brak w eng1.yml (dodane po migracji).
+    voiceNote:
+      - note
+      - hey maya note
+      - write note
+      - hey maya write note
+      - hey maya note for inspection
+    voiceNotepad:
+      - hey maya note for notepad
+    # --- undo last save ---------------------------------------------------------
+    # Odpowiednik polskiego voiceUndo. Pełne wywołanie "hey maya" wymagane z
+    # tego samego powodu co w polskiej wersji: to komenda ZMIENIAJĄCA BAZĘ, więc
+    # nie może dać się wywołać przypadkiem w zwykłej rozmowie przy ulu.
+    voiceUndo:
+      - hey maya undo last save
+      - hey maya undo last entry
+    setApiary:
+      - $state:apiaryState apiary (number) $pv.TwoDigitInteger:nrXXOfApiary
+    setHive:
+      - $state:hiveState hive (number) ($hundred:nrXXOfHiveH) (and)
+        ($pv.TwoDigitInteger:nrXXOfHive)
+    setBody:
+      - $state:bodyState [box,body] (number) $pv.SingleDigitInteger:nrXOfBody
+    # POPRAWKA wobec eng1.yml: "site" -> "side" (chodzi o STRONĘ ramki, nie
+    # "site" w znaczeniu lokalizacji/miejsca - najwyraźniej pomyłka w oryginale,
+    # powtórzona konsekwentnie w całym pliku Rhino; poprawiona tutaj wszędzie).
+    setFrame:
+      - ($state:frameState)($sizeOfFrame:sizeOfFrame) frame (number)
+        $pv.TwoDigitInteger:nrXXOfFrame (on) (the) ($siteOfFrame:siteOfFrame)
+        (side)
+    # setStore - najbardziej rozbudowana intencja, przeniesiona z eng1.yml
+    # (był to najbardziej dopracowany fragment oryginału) z dwiema poprawkami:
+    #   - "(indoor, covered) brood" -> "(capped, sealed) brood": prawdziwe
+    #     pszczelarskie słowo to "capped brood", nie "indoor/covered"; "capped"
+    #     jest w słowniku modelu.
+    #   - siteOfFrame ma teraz tylko 3 wartości (left/right/both) zamiast
+    #     polskich 8 form przypadka - angielski nie odmienia, więc nie trzeba.
+    setStore:
+      - food $pv.Percent:food (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) honey $pv.Percent:honey (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) (honey) sealed $pv.Percent:honeySealed (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) pollen $pv.Percent:pollen (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) (capped, sealed) brood $pv.Percent:brood (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) larvae $pv.Percent:larvae (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) eggs $pv.Percent:eggs (on) (the) ($siteOfFrame:siteOfFrame)
+      - (set) wax (foundation) $pv.Percent:wax (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) (wax) comb $pv.Percent:waxComb (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) $pv.SingleDigitInteger:queenCells queen cells (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) $queen:queen queen (on) (the) $siteOfFrame:siteOfFrame
+      - "(set) [delete, cancel] $pv.SingleDigitInteger:delQCells queen cells (on)
+        (the) ($siteOfFrame:siteOfFrame)"
+      - (set) drone (brood) $pv.Percent:drone (on) (the)
+        ($siteOfFrame:siteOfFrame)
+      - (set) $toDo:toDo
+      - (set) $isDone:isDone
+      - (set) $siteOfFrame:siteOfFrame side
+    setHalfBody:
+      - $state:halfBodyState half [box,body] (number)
+        $pv.SingleDigitInteger:nrXOfHalfBody
+    setAllHives:
+      - $state:allHivesState all hives
+    # setHivesRange - brak w eng1.yml (dodane po migracji). Wzorzec słowny
+    # wzięty z setFrames ("from X to Y"), semantyka jak polskie setHivesRange:
+    # ZAWĘŻENIE trybu "wszystkie ule", nie osobny tryb - patrz pol_vosk.yml.
+    setHivesRange:
+      - $state:hivesRangeState hives from $pv.TwoDigitInteger:nrXXOdHive to
+        $pv.TwoDigitInteger:nrXXDoHive
+    setFeeding:
+      - syrup one to one $pv.SingleDigitInteger:syrup1to1I (point)
+        ($pv.TwoDigitInteger:syrup1to1D) [liter, liters]
+      - syrup three to two $pv.SingleDigitInteger:syrup3to2I (point)
+        ($pv.TwoDigitInteger:syrup3to2D) [liter, liters]
+      - (bee) candy $pv.SingleDigitInteger:candyI (point)
+        ($pv.TwoDigitInteger:candyD) [kilo, kilogram]
+      - invert $pv.TwoDigitInteger:invertI (point) ($pv.TwoDigitInteger:invertD)
+        [liter, liters]
+      - remove food $pv.Percent:removedFood
+      - left food $pv.Percent:leftFood
+    # setTreatment - POPRAWKA wobec eng1.yml: usunięte fonetyczne "zapisy" z
+    # czasów Rhino ("up e var all"/"bee o var" - próby wymuszenia na silniku
+    # Rhino rozpoznania słów "apivarol"/"biovar" jako oddzielnych fałszywych
+    # słów). Polska gramatyka w ogóle nie wypowiada tych nazw produktów -
+    # mówi ogólnie "chemia"/"paski" - więc angielska wersja robi to samo
+    # ("chemistry"/"strips"), zgodnie ze strukturą pol_vosk.yml. Nazwy pól
+    # (apivarol, biovar, biovarBelts) zostają identyczne jak w obu źródłach.
+    setTreatment:
+      - acid ($hundred:acidH) (and) ($pv.TwoDigitInteger:acid) (milliliter,
+        milliliters)
+      - chemistry [portion, dose] number $pv.SingleDigitInteger:apivarol
+      - $state:biovar [strip, strips] $pv.SingleDigitInteger:biovarBelts
+        [unit, units]
+      - varroa ($hundred:varroaH) (and) ($pv.TwoDigitInteger:varroa) [mite,
+        mites]
+    # setEquipment - "excluder" wszędzie jako alternatywa [excluder,grid,grate]
+    # (patrz nagłówek pliku - słowa "excluder" nie ma w słowniku modelu EN).
+    setEquipment:
+      - $deleted:excluderDel [excluder, grid, grate]
+      - bottom board (is) $quality:bottomBoard
+      - bee pollen trap (is) $state:beePolenTrap
+      - "[excluder, grid, grate] (on) body (number)
+        ($pv.SingleDigitInteger:excluder)"
+      - (set) number of frames in body (is) $pv.TwoDigitInteger:numberOfFrame
+    setQueen:
+      - queen (was) born (in) $pv.TwoDigitInteger:queenBorn
+      - queen (is) $queenState:queenState
+      - queen (is) $queenStart:queenStart
+      - queen (is) $queenMark:queenMark (number)
+        ($pv.TwoDigitInteger:queenNumber)
+      - queen (is) $queenQuality:queenQuality
+    setHelp:
+      - $help:help
+      - $helpMe:helpMe help me
+    # POPRAWKA wobec eng1.yml: "mouth" -> "month" (literówka w oryginale -
+    # "set other mouth" nie ma sensu). Kolejność ujednolicona z pol_vosk.yml
+    # (dzień, miesiąc, rok).
+    setDate:
+      - set $date:currentDate date
+      - set other day $pv.TwoDigitInteger:dateDay
+      - set other month $pv.TwoDigitInteger:dateMonth
+      - set other year $pv.TwoDigitInteger:dateYear
+    setColony:
+      - dead (bees) ($hundred:deadBeeHML) (and) ($pv.TwoDigitInteger:deadBeeML)
+        (milliliter, milliliters)
+      - colony (is) $colonyState:colonyState
+      - colony (is) $colonyForce:colonyForce
+    # POPRAWKA wobec eng1.yml: literówka pola "beePlllenHarvestD" (potrójne l)
+    # naprawiona na "beePollenHarvestD" - inaczej dane lądowałyby pod niespójną
+    # nazwą pola.
+    setHarvest:
+      - bee pollen harvest ($hundred:beePollenHarvestHML) (and)
+        ($pv.TwoDigitInteger:beePollenHarvestML) (milliliter,milliliters)
+      - bee pollen harvest $pv.SingleDigitInteger:beePollenHarvestI (point)
+        ($pv.TwoDigitInteger:beePollenHarvestD) [liter, liters]
+      - honey harvest $pv.TwoDigitInteger:honeyBigHarvest big frames
+      - honey harvest $pv.TwoDigitInteger:honeySmallHarvest small frames
+      - bee pollen harvest $pv.TwoDigitInteger:beePollenHarvest portion
+    setFrames:
+      - ($state:framesState) frames from $pv.TwoDigitInteger:nrXXOdFrame to
+        $pv.TwoDigitInteger:nrXXDoFrame
+    # setChange - brak w eng1.yml (dodane po migracji). Prosty przekład
+    # polskiego "ramka (numer) X po przeglądzie (numer) Y".
+    setChange:
+      - frame (number) $pv.TwoDigitInteger:nrXXOfFrame after inspection
+        (number) $pv.TwoDigitInteger:nrXXOfFramePo
+    # setMoveBody - brak w eng1.yml (dodane po migracji). Dwa warianty jak w
+    # pol_vosk.yml: przenoszenie ramki między półkorpusami albo korpusami.
+    # Nazwy pól (nrTempHive, nrTempHalfBody/nrTempBody, nrTempFrame) identyczne
+    # jak w polskiej wersji.
+    setMoveBody:
+      - "move (to) (hive) (number) ($pv.TwoDigitInteger:nrTempHive) [half box,
+        half body] (number) $pv.SingleDigitInteger:nrTempHalfBody frame
+        (number) $pv.TwoDigitInteger:nrTempFrame"
+      - "move (to) (hive) (number) ($pv.TwoDigitInteger:nrTempHive) [box, body]
+        (number) $pv.SingleDigitInteger:nrTempBody frame (number)
+        $pv.TwoDigitInteger:nrTempFrame"
+  slots:
+    # POPRAWKA wobec eng1.yml: 9 słów (z duplikatami "insert"/"put on" i
+    # "delete"/"remove") skrócone do 7 - dokładnie po jednym angielskim słowie
+    # na każdą polską koncepcję z pol_vosk.yml (wstaw/usuń/załącz/wyłącz/
+    # otwórz/zamknij/ustaw), zgodnie z tym samym powodem, dla którego polska
+    # wersja usunęła "załóż"/"zabierz" 06.08.2026: $state wchodzi do OŚMIU
+    # wyrażeń, więc każde dodatkowe słowo mnoży się przez nie w gramatyce
+    # frazowej.
+    state:
+      - insert
+      - remove
+      - on
+      - off
+      - open
+      - close
+      - set
+    # POPRAWKA wobec eng1.yml: 3 wartości (left/right/both) zamiast 4 - "whole"
+    # usunięte, bo nie ma odpowiednika w pol_vosk.yml i nie wiadomo, na jaką
+    # kanoniczną wartość miałoby się docelowo przeliczać w voice_vosk_screen.dart
+    # (siteOfFrame porównywane jest tam wprost ze stringami typu 'lewej'/'prawej'
+    # - dla angielskiego trzeba będzie dopisać analogiczne porównania z 'left'/
+    # 'right'/'both', i to jest już zadanie kodowe, nie tego pliku).
+    siteOfFrame:
+      - left
+      - right
+      - both
+    toDo:
+      - work frame
+      - to remove
+      - to extract
+      - to insulate
+    # UWAGA DLA KOLEJNEGO KROKU: te wartości MUSZĄ pasować znak w znak do tego,
+    # co zwraca app_en.arb (patrz voice_vosk_screen.dart, metoda
+    # _ujednolicWartosciSlotow - tam polskie formy mapowane są na l10n.deleted/
+    # l10n.inserted itd.; dla angielskiego "deleted"/"inserted" są JUŻ dokładnie
+    # tym, co zwraca ARB, więc mapowanie wychodzi na tożsamość - miła
+    # niespodzianka, ale i tak trzeba dopisać angielską gałąź tej metody, bo na
+    # razie ona rozpoznaje wyłącznie polskie klucze).
+    isDone:
+      - deleted
+      - inserted
+      - insulated
+      - moved left
+      - moved right
+    sizeOfFrame:
+      - big
+      - small
+    # POPRAWKA wobec eng1.yml: dodane "other" - odpowiednik polskiego "inna"
+    # (dopisanego do pol_vosk.yml 04.08.2026, już po powstaniu eng1.yml).
+    # Kanoniczna wartość ARB to "otherColor" = "other".
+    queen:
+      - black
+      - blue
+      - green
+      - red
+      - yellow
+      - white
+      - other
+    # POPRAWKA wobec eng1.yml: dodane "okay" jako synonim "ok" (ta sama
+    # zapobiegawcza logika co przy polskim "ok"/"okej" - model może inaczej
+    # rozumieć "ok" wymówione jako dwie litery vs "okay" jako jedno słowo;
+    # NIEPOTWIERDZONE dla angielskiego, ale tanie ubezpieczenie) i "cleaned"
+    # obok "clean" (odpowiednik polskiego "czysta"/"wyczyszczona" - oba mapują
+    # na tę samą kanoniczną wartość l10n.clean).
+    quality:
+      - ok
+      - okay
+      - dirty
+      - clean
+      - cleaned
+    queenState:
+      - virgin
+      - artificially inseminated
+      - naturally mated
+    queenStart:
+      - in a cage
+      - in the insulator
+      - freed
+    # POPRAWKA wobec eng1.yml: dodane "marked other" - odpowiednik polskiego
+    # "ma inny znak" (dopisanego do pol_vosk.yml 04.08.2026, już po powstaniu
+    # eng1.yml). Kanoniczna wartość ARB to markedOther = "marked other".
+    queenMark:
+      - gone
+      - marked blue
+      - marked green
+      - marked red
+      - marked yellow
+      - marked white
+      - marked other
+      - missing
+      - unmarked
+    # POPRAWKA wobec eng1.yml: "canceled" (nazwa KLUCZA w kodzie, l10n.canceled)
+    # pomyłkowo trafiło do oryginału jako słowo DO WYPOWIEDZENIA - to błąd,
+    # nikt nie mówi "canceled" o jakości matki. Zastąpione przez "old"
+    # (odpowiednik polskiego "stara", które w oryginale w ogóle nie
+    # występowało). Dodane "okay" jako synonim "ok" (jak w slocie quality).
+    # "to exchange" zostaje - to prawidłowy odpowiednik polskiego "do wymiany"
+    # (kanoniczna wartość ARB: l10n.canceled = "to replace" - inne słowo niż
+    # to, co się MÓWI, dokładnie tak samo jak polskie "do wymiany" mapuje się
+    # na inny tekst wyświetlany).
+    queenQuality:
+      - ok
+      - okay
+      - small
+      - big
+      - to exchange
+      - old
+      - good
+      - very good
+      - weak
+    helpMe:
+      # POPRAWKA wobec eng1.yml: dodane "notes" (odpowiednik polskiego
+      # "notatki" - jedyna pozycja pomocy bez odpowiednika w czasach Rhino,
+      # bo dyktowanie/cofanie powstały dopiero przy Vosku, patrz pol_vosk.yml)
+      # i "hive after" jako drugi synonim obok "hive later" (w pol_vosk.yml są
+      # DWIE pary synonimów - ul po/ul później i ul przed/ul wcześniej;
+      # eng1.yml miał tylko jedną parę).
+      - notes
+      - location
+      - hive before
+      - hive after
+      - hive later
+      - hive
+      - harvest
+      - colony
+      - date
+      - treatment
+      - feeding
+      - queen
+      - equipment
+      - inspection
+    date:
+      - current
+    colonyForce:
+      - normal
+      - very weak
+      - weak
+      - very strong
+      - strong
+    # POPRAWKA wobec eng1.yml: dodane "okay" jako synonim "ok" (jak wyżej).
+    colonyState:
+      - dead
+      - ok
+      - okay
+      - swarming mood
+      - in a cluster
+      - gentle
+      - aggressive
+    help:
+      - close help
+      - help me
+    hundred:
+      - nine hundred
+      - eight hundred
+      - seven hundred
+      - six hundred
+      - five hundred
+      - four hundred
+      - three hundred
+      - two hundred
+      - one hundred
+    # POPRAWKA wobec eng1.yml: usunięte "deleted" (czas przeszły nie pasuje
+    # jako słowo-rozkaz w pozycji "$deleted:excluderDel [excluder,grid,grate]"
+    # - nikt nie mówi "deleted excluder" jako komendy). Zostają dwa czasowniki
+    # rozkazujące, tak jak w polskim slocie `deleted` (zabierz/usuń).
+    deleted:
+      - remove
+      - delete
+  macros: {}
+
+# =============================================================================
+# POPRAWKI WOBEC eng1.yml (03.09.2026) - pełna lista zmian względem oryginału
+# =============================================================================
+# 1. "site" -> "side" wszędzie (setFrame, setStore) - pomyłka w oryginale,
+#    chodzi o stronę ramki, nie lokalizację.
+# 2. setTreatment: usunięte fonetyczne zapisy "up e var all"/"bee o var" z
+#    czasów Rhino (próby wymuszenia rozpoznania "apivarol"/"biovar" jako
+#    fałszywych osobnych słów) - zastąpione ogólnymi słowami "chemistry"/
+#    (samym $state:biovar bez zbędnego słowa przed nim), zgodnie ze strukturą
+#    pol_vosk.yml, która też nie wypowiada nazw produktów. Usunięte też
+#    zdublowane warianty (ordinal + integer + odwrócona kolejność słów) -
+#    zostaje jedna forma na wzór pol_vosk.yml.
+# 3. setDate: literówka "mouth" -> "month".
+# 4. setHarvest: literówka pola "beePlllenHarvestD" -> "beePollenHarvestD".
+# 5. setEquipment/setStore: "excluder" jako WYMAGANA alternatywa
+#    [excluder,grid,grate] - słowa "excluder" nie ma w słowniku modelu EN
+#    (jedyne brakujące słowo z całego eng1.yml, sprawdzone 03.09.2026).
+# 6. setStore: "(indoor, covered) brood" -> "(capped, sealed) brood" -
+#    poprawny termin pszczelarski, oba słowa w słowniku modelu.
+# 7. slot `state`: 9 słów z duplikatami -> 7, po jednym na koncepcję z
+#    pol_vosk.yml (ta sama logika co polskie usunięcie "załóż"/"zabierz"
+#    06.08.2026 - $state mnoży się przez 8 wyrażeń).
+# 8. slot `siteOfFrame`: 4 wartości -> 3 (usunięte "whole", nie ma odpowiednika
+#    w polskiej gramatyce i nie wiadomo, na co miałoby się przeliczać w kodzie).
+# 9. slot `queen` (kolor): dodane "other" (odpowiednik polskiego "inna",
+#    dopisanego do pol_vosk.yml już PO powstaniu eng1.yml).
+# 10. slot `queenMark`: dodane "marked other" (jak wyżej, dopisane do
+#     pol_vosk.yml 04.08.2026).
+# 11. slot `queenQuality`: "canceled" (błędnie wzięte z nazwy klucza kodu)
+#     zastąpione przez "old" (odpowiednik polskiego "stara", którego w ogóle
+#     nie było w oryginale).
+# 12. slot `deleted`: usunięte "deleted" (czas przeszły nie pasuje jako
+#     rozkaz), zostają "remove"/"delete".
+# 13. sloty `quality`, `colonyState`, `queenQuality`: dodane "okay" obok "ok" -
+#     ta sama zapobiegawcza logika co polskie "ok"/"okej" (NIEPOTWIERDZONE
+#     empirycznie dla angielskiego, tania rezerwa).
+# 14. slot `helpMe`: dodane "notes" (brak odpowiednika w czasach Rhino) i
+#     "hive after" jako drugi synonim (pol_vosk.yml ma dwie pary synonimów,
+#     eng1.yml miał jedną).
+# 15. 8 intencji BEZ odpowiednika w eng1.yml, przetłumaczone z pol_vosk.yml
+#     od zera: voiceStart, voiceStop, voiceNote, voiceNotepad, voiceUndo,
+#     setHivesRange, setChange, setMoveBody.
+#
+# NIEZROBIONE (świadomie, poza zakresem tego pliku):
+#   - ZROBIONE 03.09.2026: vosk_grammar.dart, angielski pakiet liczebników
+#     ([_PakietLiczb], `jezyk: 'en'`) - patrz "BLOKER LICZEBNIKÓW" wyżej.
+#   - voice_vosk_screen.dart: angielska gałąź _ujednolicWartosciSlotow oraz
+#     wszystkie miejsca porównujące sloty wprost z polskimi stringami
+#     (np. siteOfFrame == 'lewej'/'prawej' - grep "'prawej'\|'lewej'" w tym
+#     pliku pokazuje więcej takich miejsc niż tylko _ujednolicWartosciSlotow).
+#   - vosk_engine.dart: model EN, ścieżka gramatyki wg języka (wywołanie
+#     VoskGrammar.zAssetu ma już parametr `jezyk`, ale nikt go jeszcze stąd
+#     nie ustawia na 'en').
+#   - pubspec.yaml: dopisanie tego pliku do assets.
+#   - apiarys_screen.dart: rozszerzenie bramy językowej.
+#   - 8 nagrań głosu Mai po angielsku.
+#   - żadna weryfikacja na prawdziwym nagraniu głosu (jak
+#     pliki/vosk_0801-..._STRUM.wav dla polskiego) - wybory typu "required vs
+#     optional" są PRZENIESIONE ze struktury polskiej, nie potwierdzone dla
+#     angielskiej fonetyki. test/vosk_grammar_english_test.dart sprawdza
+#     WYŁĄCZNIE silnik-parser w izolacji (tokeny tekstowe), nie prawdziwe
+#     rozpoznawanie mowy.

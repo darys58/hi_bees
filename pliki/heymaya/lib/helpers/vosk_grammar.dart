@@ -144,37 +144,129 @@ class BladGramatyki implements Exception {
 // ---------------------------------------------------------------------------
 // Liczebniki - typy wbudowane, których Vosk (w przeciwieństwie do Rhino) nie ma
 // ---------------------------------------------------------------------------
+//
+// JĘZYK. Każdy obsługiwany język gramatyki ma WŁASNY komplet słów liczebników
+// - [_PakietLiczb] niżej. Polski i angielski liczą inaczej: polski ma jedno
+// słowo na każdą setkę ("sto" = 100), angielski składa setkę z DWÓCH słów
+// ("one" + "hundred") - stąd [_PakietLiczb.setki] (pojedyncze słowo, może być
+// pusta) OSOBNO od [_PakietLiczb.slowoSetek] (słowo-mnożnik, może być null).
+// [VoskGrammar.zTekstu] wybiera pakiet parametrem `jezyk` (domyślnie 'pl',
+// więc stare wywołania - w tym wszystkie testy - działają bez zmian).
 
-const Map<String, int> _jednostki = {
-  'zero': 0, 'jeden': 1, 'jedna': 1, 'jedną': 1, 'jednego': 1,
-  'dwa': 2, 'dwie': 2, 'dwóch': 2, 'trzy': 3, 'cztery': 4, 'pięć': 5,
-  'sześć': 6, 'siedem': 7, 'osiem': 8, 'dziewięć': 9,
+/// Jeden komplet słów liczebnikowych dla jednego języka gramatyki.
+class _PakietLiczb {
+  const _PakietLiczb({
+    required this.jednostki,
+    required this.nastki,
+    required this.dziesiatki,
+    required this.setki,
+    this.slowoSetek,
+    required this.ordinaly,
+    required this.procentSlowa,
+    required this.procentKotwica,
+  });
+
+  final Map<String, int> jednostki;
+  final Map<String, int> nastki;
+  final Map<String, int> dziesiatki;
+
+  /// Setki jako POJEDYNCZE słowo na wartość (polski: "sto" = 100). Pusta
+  /// mapa tam, gdzie setka to więcej niż jedno słowo - patrz [slowoSetek].
+  final Map<String, int> setki;
+
+  /// Słowo-mnożnik dla setek złożonych z dwóch słów (angielski: "hundred" w
+  /// "one hundred"). Null tam, gdzie wystarcza [setki].
+  final String? slowoSetek;
+
+  final Map<String, int> ordinaly;
+
+  /// Słowa akceptowane PO liczbie jako odpowiednik "procent" (polski się
+  /// odmienia: procent/procenta/procentów, angielski nie - samo "percent").
+  final Set<String> procentSlowa;
+
+  /// Kanoniczne słowo wstawiane jako kotwica bigramu w gramatyce recognizera
+  /// (patrz [VoskGrammar._rozetnij], [VoskGrammar.frazy]).
+  final String procentKotwica;
+
+  Set<String> get wszystkieSlowa => {
+        ...jednostki.keys,
+        ...nastki.keys,
+        ...dziesiatki.keys,
+        ...setki.keys,
+        if (slowoSetek != null) slowoSetek!,
+        ...ordinaly.keys,
+        ...procentSlowa,
+      };
+}
+
+const _pakietLiczbPl = _PakietLiczb(
+  jednostki: {
+    'zero': 0, 'jeden': 1, 'jedna': 1, 'jedną': 1, 'jednego': 1,
+    'dwa': 2, 'dwie': 2, 'dwóch': 2, 'trzy': 3, 'cztery': 4, 'pięć': 5,
+    'sześć': 6, 'siedem': 7, 'osiem': 8, 'dziewięć': 9,
+  },
+  nastki: {
+    'dziesięć': 10, 'jedenaście': 11, 'dwanaście': 12, 'trzynaście': 13,
+    'czternaście': 14, 'piętnaście': 15, 'szesnaście': 16, 'siedemnaście': 17,
+    'osiemnaście': 18, 'dziewiętnaście': 19,
+  },
+  dziesiatki: {
+    'dwadzieścia': 20, 'trzydzieści': 30, 'czterdzieści': 40,
+    'pięćdziesiąt': 50, 'sześćdziesiąt': 60, 'siedemdziesiąt': 70,
+    'osiemdziesiąt': 80, 'dziewięćdziesiąt': 90,
+  },
+  setki: {
+    'sto': 100, 'dwieście': 200, 'trzysta': 300, 'czterysta': 400,
+    'pięćset': 500, 'sześćset': 600, 'siedemset': 700, 'osiemset': 800,
+    'dziewięćset': 900,
+  },
+  ordinaly: {
+    'pierwszy': 1, 'drugi': 2, 'trzeci': 3, 'czwarty': 4, 'piąty': 5,
+    'szósty': 6, 'siódmy': 7, 'ósmy': 8, 'dziewiąty': 9,
+  },
+  procentSlowa: {'procent', 'procenta', 'procentów'},
+  procentKotwica: 'procent',
+);
+
+// Sprawdzone 03.09.2026 wobec słownika modelu vosk-model-small-en-us-0.15
+// (pliki/vosk_slownik_eng.txt) - wszystkie słowa poniżej tam są.
+const _pakietLiczbEn = _PakietLiczb(
+  jednostki: {
+    'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
+  },
+  nastki: {
+    'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14,
+    'fifteen': 15, 'sixteen': 16, 'seventeen': 17, 'eighteen': 18,
+    'nineteen': 19,
+  },
+  dziesiatki: {
+    'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60,
+    'seventy': 70, 'eighty': 80, 'ninety': 90,
+  },
+  setki: {},
+  slowoSetek: 'hundred',
+  ordinaly: {
+    'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
+    'sixth': 6, 'seventh': 7, 'eighth': 8, 'ninth': 9,
+  },
+  procentSlowa: {'percent'},
+  procentKotwica: 'percent',
+);
+
+const Map<String, _PakietLiczb> _pakietyLiczb = {
+  'pl': _pakietLiczbPl,
+  'en': _pakietLiczbEn,
 };
 
-const Map<String, int> _nastki = {
-  'dziesięć': 10, 'jedenaście': 11, 'dwanaście': 12, 'trzynaście': 13,
-  'czternaście': 14, 'piętnaście': 15, 'szesnaście': 16, 'siedemnaście': 17,
-  'osiemnaście': 18, 'dziewiętnaście': 19,
-};
-
-const Map<String, int> _dziesiatki = {
-  'dwadzieścia': 20, 'trzydzieści': 30, 'czterdzieści': 40,
-  'pięćdziesiąt': 50, 'sześćdziesiąt': 60, 'siedemdziesiąt': 70,
-  'osiemdziesiąt': 80, 'dziewięćdziesiąt': 90,
-};
-
-const Map<String, int> _setki = {
-  'sto': 100, 'dwieście': 200, 'trzysta': 300, 'czterysta': 400,
-  'pięćset': 500, 'sześćset': 600, 'siedemset': 700, 'osiemset': 800,
-  'dziewięćset': 900,
-};
-
-const Map<String, int> _ordinaly = {
-  'pierwszy': 1, 'drugi': 2, 'trzeci': 3, 'czwarty': 4, 'piąty': 5,
-  'szósty': 6, 'siódmy': 7, 'ósmy': 8, 'dziewiąty': 9,
-};
-
-const Set<String> _procent = {'procent', 'procenta', 'procentów'};
+_PakietLiczb _pakietDlaJezyka(String jezyk) {
+  final pakiet = _pakietyLiczb[jezyk];
+  if (pakiet == null) {
+    throw BladGramatyki('brak pakietu liczebników dla języka "$jezyk" - '
+        'znane: ${_pakietyLiczb.keys.join(", ")}');
+  }
+  return pakiet;
+}
 
 const Map<String, List<int>> _zakresy = {
   'SingleDigitInteger': [0, 9],
@@ -183,34 +275,45 @@ const Map<String, List<int>> _zakresy = {
   'SingleDigitOrdinal': [1, 9],
 };
 
-/// Wszystkie sensowne odczyty liczebnika od pozycji [poz], od NAJDŁUŻSZEGO.
+/// Wszystkie sensowne odczyty liczebnika od pozycji [poz], od NAJDŁUŻSZEGO,
+/// wg słów [pakiet] wybranego dla języka gramatyki.
 ///
 /// Nie „najdłuższy wygrywa" na siłę, bo krótszy odczyt bywa poprawny: w
 /// wyrażeniu ($hundred:nrXXOfHiveH) ($pv.TwoDigitInteger:nrXXOfHive) dla
 /// „sto dwadzieścia" slot setek zabiera „sto", a dwucyfrowy „dwadzieścia".
 /// Gdy matcher pominie opcjonalny slot setek, dwucyfrowy odczyta 120, odrzuci
 /// to przez zakres i nawrotem wróci do wariantu ze setkami.
-List<List<int>> _kandydaciLiczby(List<String> tokeny, int poz) {
+List<List<int>> _kandydaciLiczby(
+    List<String> tokeny, int poz, _PakietLiczb pakiet) {
   final wyniki = <List<int>>[];
   var i = poz;
   var wartosc = 0;
-  if (i < tokeny.length && _setki.containsKey(tokeny[i])) {
-    wartosc += _setki[tokeny[i]]!;
+  if (i < tokeny.length && pakiet.setki.containsKey(tokeny[i])) {
+    // Setka jako pojedyncze słowo (polski: "sto").
+    wartosc += pakiet.setki[tokeny[i]]!;
     i++;
     wyniki.add([wartosc, i - poz]);
+  } else if (pakiet.slowoSetek != null &&
+      i + 1 < tokeny.length &&
+      pakiet.jednostki.containsKey(tokeny[i]) &&
+      tokeny[i + 1] == pakiet.slowoSetek) {
+    // Setka złożona z dwóch słów (angielski: "one" + "hundred").
+    wartosc += pakiet.jednostki[tokeny[i]]! * 100;
+    i += 2;
+    wyniki.add([wartosc, i - poz]);
   }
-  if (i < tokeny.length && _nastki.containsKey(tokeny[i])) {
-    wartosc += _nastki[tokeny[i]]!;
+  if (i < tokeny.length && pakiet.nastki.containsKey(tokeny[i])) {
+    wartosc += pakiet.nastki[tokeny[i]]!;
     i++;
     wyniki.add([wartosc, i - poz]);
   } else {
-    if (i < tokeny.length && _dziesiatki.containsKey(tokeny[i])) {
-      wartosc += _dziesiatki[tokeny[i]]!;
+    if (i < tokeny.length && pakiet.dziesiatki.containsKey(tokeny[i])) {
+      wartosc += pakiet.dziesiatki[tokeny[i]]!;
       i++;
       wyniki.add([wartosc, i - poz]);
     }
-    if (i < tokeny.length && _jednostki.containsKey(tokeny[i])) {
-      wartosc += _jednostki[tokeny[i]]!;
+    if (i < tokeny.length && pakiet.jednostki.containsKey(tokeny[i])) {
+      wartosc += pakiet.jednostki[tokeny[i]]!;
       i++;
       wyniki.add([wartosc, i - poz]);
     }
@@ -223,14 +326,21 @@ List<List<int>> _kandydaciLiczby(List<String> tokeny, int poz) {
 // ---------------------------------------------------------------------------
 
 class VoskGrammar {
-  VoskGrammar._(this._wyrazenia, this._slotyDef);
+  VoskGrammar._(this._wyrazenia, this._slotyDef, this._liczby);
 
   final List<_Wyrazenie> _wyrazenia;
   final Map<String, List<String>> _slotyDef;
 
+  /// Komplet słów liczebnikowych wybrany dla [jezyk] tej gramatyki - patrz
+  /// [_PakietLiczb] przy definicji, kawałek wyżej.
+  final _PakietLiczb _liczby;
+
   /// Buduje silnik z treści pliku .yml. Czysty Dart - nadaje się do testów
-  /// jednostkowych bez uruchamiania aplikacji.
-  factory VoskGrammar.zTekstu(String yml) {
+  /// jednostkowych bez uruchamiania aplikacji. [jezyk] wybiera pakiet słów
+  /// liczebników ('pl' domyślnie - stare wywołania działają bez zmian);
+  /// nieznany kod języka wywala się od razu, tak samo jak zła gramatyka.
+  factory VoskGrammar.zTekstu(String yml, {String jezyk = 'pl'}) {
+    final liczby = _pakietDlaJezyka(jezyk);
     final czytnik = _CzytnikYml(yml);
     czytnik.wczytaj();
     if (czytnik.wyrazenia.isEmpty) {
@@ -245,14 +355,15 @@ class VoskGrammar {
         wyrazenia.add(_Wyrazenie(intent, tekst, _ParserWyrazenia(tekst).parsuj()));
       }
     });
-    final silnik = VoskGrammar._(wyrazenia, slotyDef);
+    final silnik = VoskGrammar._(wyrazenia, slotyDef, liczby);
     silnik._sprawdzReferencje();
     return silnik;
   }
 
-  /// Wygodne ładowanie z assetu (pubspec: assets/grammar/pol_vosk.yml).
-  static Future<VoskGrammar> zAssetu(String sciezka) async =>
-      VoskGrammar.zTekstu(await rootBundle.loadString(sciezka));
+  /// Wygodne ładowanie z assetu (pubspec: assets/grammar/pol_vosk.yml albo
+  /// assets/grammar/eng_vosk.yml - dobierz [jezyk] zgodnie ze ścieżką).
+  static Future<VoskGrammar> zAssetu(String sciezka, {String jezyk = 'pl'}) async =>
+      VoskGrammar.zTekstu(await rootBundle.loadString(sciezka), jezyk: jezyk);
 
   /// Slot użyty w wyrażeniu, którego nie ma w sekcji slots, to cicha awaria:
   /// komenda po prostu nigdy nie zadziała. Lepiej wywalić się od razu.
@@ -394,10 +505,12 @@ class VoskGrammar {
       _Wbudowany element, List<String> tokeny, _Stan stan) {
     final poz = stan.poz;
     if (element.typ == 'SingleDigitOrdinal') {
-      if (poz < tokeny.length && _ordinaly.containsKey(tokeny[poz])) {
+      if (poz < tokeny.length && _liczby.ordinaly.containsKey(tokeny[poz])) {
         return [
-          _Stan(poz + 1,
-              _zSlotem(stan.sloty, element.klucz, '${_ordinaly[tokeny[poz]]}'),
+          _Stan(
+              poz + 1,
+              _zSlotem(
+                  stan.sloty, element.klucz, '${_liczby.ordinaly[tokeny[poz]]}'),
               stan.kara)
         ];
       }
@@ -405,14 +518,14 @@ class VoskGrammar {
     }
     final zakres = _zakresy[element.typ]!;
     final out = <_Stan>[];
-    for (final kandydat in _kandydaciLiczby(tokeny, poz)) {
+    for (final kandydat in _kandydaciLiczby(tokeny, poz, _liczby)) {
       final wartosc = kandydat[0];
       final koniec = poz + kandydat[1];
       if (wartosc < zakres[0] || wartosc > zakres[1]) continue;
       if (element.typ == 'Percent') {
-        // W Rhino słowo "procent" należy do typu wbudowanego, nie do
-        // wyrażenia - w .yml po $pv.Percent nie ma literalnego "procent".
-        if (koniec < tokeny.length && _procent.contains(tokeny[koniec])) {
+        // W Rhino słowo "procent"/"percent" należy do typu wbudowanego, nie
+        // do wyrażenia - w .yml po $pv.Percent nie ma literalnego słowa.
+        if (koniec < tokeny.length && _liczby.procentSlowa.contains(tokeny[koniec])) {
           out.add(_Stan(koniec + 1,
               _zSlotem(stan.sloty, element.klucz, '$wartosc%'), stan.kara));
         } else {
@@ -489,14 +602,7 @@ class VoskGrammar {
     return out;
   }
 
-  Set<String> liczebniki() => {
-        ..._jednostki.keys,
-        ..._nastki.keys,
-        ..._dziesiatki.keys,
-        ..._setki.keys,
-        ..._ordinaly.keys,
-        ..._procent,
-      };
+  Set<String> liczebniki() => _liczby.wszystkieSlowa;
 
   /// Pierwsze słowa wyrażeń - do bramki „komenda musi się tak zaczynać".
   Set<String> slowaOtwierajace() {
@@ -571,13 +677,19 @@ class VoskGrammar {
     }
     if (intencje == null || uzytoLiczebnikow) {
       wynik.addAll(liczebniki());
-      // Druga połowa mostka dla "procent": bigram liczebnik -> procent.
-      // Liczebniki są w gramatyce pojedynczymi frazami, więc przejście
-      // "dziesięć" -> "procent" biegło przez granicę fraz, czyli po najdroższej
-      // ścieżce. Tanie: ~50 pozycji na 3000.
-      for (final liczba in {..._jednostki.keys, ..._nastki.keys,
-        ..._dziesiatki.keys, ..._setki.keys}) {
-        wynik.add('$liczba procent');
+      // Druga połowa mostka dla "procent"/"percent": bigram liczebnik ->
+      // procent. Liczebniki są w gramatyce pojedynczymi frazami, więc
+      // przejście "dziesięć" -> "procent" biegło przez granicę fraz, czyli po
+      // najdroższej ścieżce. Tanie: ~50 pozycji na 3000.
+      for (final liczba in {..._liczby.jednostki.keys, ..._liczby.nastki.keys,
+        ..._liczby.dziesiatki.keys, ..._liczby.setki.keys}) {
+        wynik.add('$liczba ${_liczby.procentKotwica}');
+      }
+      // Języki, w których setka to DWA słowa (angielskie "one" + "hundred") -
+      // ten sam mostek dla przejścia "hundred" -> "percent" ("one hundred
+      // percent" = 100%), bo "hundred" samo w sobie nie jest w [setki].
+      if (_liczby.slowoSetek != null) {
+        wynik.add('${_liczby.slowoSetek} ${_liczby.procentKotwica}');
       }
     }
     wynik.remove('');
@@ -602,14 +714,15 @@ class VoskGrammar {
     for (final e in seq) {
       if (e is _Wbudowany) {
         if (biezacy.isNotEmpty) kawalki.add(biezacy);
-        // Po $pv.Percent zaczynamy nowy kawałek OD SŁOWA "procent". Bez tego
-        // "procent" trafiał do gramatyki wyłącznie jako samotna, jednowyrazowa
-        // fraza - model języka nie miał żadnego bigramu wiążącego go z dalszym
-        // ciągiem komendy, więc pominięcie go kosztowało prawie nic. Zmierzone
-        // na pliki/vosk_0801-124040_...wav: pewność słowa "procent" rośnie
-        // z 0,91 do 1,00, tekst bez zmian.
+        // Po $pv.Percent zaczynamy nowy kawałek OD SŁOWA "procent"/"percent".
+        // Bez tego to słowo trafiało do gramatyki wyłącznie jako samotna,
+        // jednowyrazowa fraza - model języka nie miał żadnego bigramu
+        // wiążącego je z dalszym ciągiem komendy, więc pominięcie go
+        // kosztowało prawie nic. Dla polskiego zmierzone na
+        // pliki/vosk_0801-124040_...wav: pewność słowa "procent" rośnie
+        // z 0,91 do 1,00, tekst bez zmian; dla angielskiego NIEZMIERZONE.
         biezacy = e.typ == 'Percent'
-            ? <_Element>[_Slowo('procent')]
+            ? <_Element>[_Slowo(_liczby.procentKotwica)]
             : <_Element>[];
       } else {
         biezacy.add(e);

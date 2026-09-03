@@ -104,6 +104,7 @@ flutter:
   assets:
     # gramatyka dla silnika-parsera Vosk (lib/helpers/vosk_grammar.dart)
     - assets/grammar/pol_vosk.yml
+    - assets/grammar/eng_vosk.yml
     - assets/image/matka1.png
     - assets/image/matka11.png
     - assets/image/matka12.png

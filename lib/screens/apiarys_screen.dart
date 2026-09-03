@@ -1770,14 +1770,14 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
                       //Sterowanie głosem = Vosk (jedyny silnik od 03.08.2026,
                       //ekrany Picovoice usunięte). Dwie bramki:
                       //1. klucz aktywacyjny ("bez_klucza" = apka bez sterowania),
-                      //2. JĘZYK - vosk_engine.dart pobiera wyłącznie model polski
-                      //   (vosk-model-small-pl-0.22), a gramatyka
-                      //   assets/grammar/pol_vosk.yml jest polska. Dla pozostałych
-                      //   języków przycisk nie ma czego uruchomić - Picovoice miał
-                      //   assety en_US, Vosk ich nie ma.
+                      //2. JĘZYK - vosk_engine.dart/voice_vosk_screen.dart mają
+                      //   model+gramatykę tylko dla 'pl_PL' i 'en_US' (03.09.2026,
+                      //   patrz assets/grammar/eng_vosk.yml). Dla pozostałych
+                      //   języków przycisk nie ma czego uruchomić.
                       if (globals.key != '' &&
                           globals.key != "bez_klucza" &&
-                          globals.jezyk == 'pl_PL')
+                          (globals.jezyk == 'pl_PL' ||
+                              globals.jezyk == 'en_US'))
                         SizedBox(
                           width: 220,
                           height: 50,

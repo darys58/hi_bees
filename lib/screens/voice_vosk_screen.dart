@@ -535,9 +535,19 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       _stanNasluchu = 'Przygotowuję rozpoznawanie mowy...';
     });
 
+    // Wybór języka silnika - NIEZALEŻNY kod od globals.jezyk (locale, np.
+    // 'pl_PL'/'en_US'), bo VoskGrammar/VoskEngine znają tylko dwa krótkie
+    // kody i mają się nie rozjechać przy kolejnych językach UI. Bramka w
+    // apiarys_screen.dart na razie i tak wpuszcza tu tylko 'pl_PL'/'en_US'.
+    final String jezykSilnika = globals.jezyk == 'en_US' ? 'en' : 'pl';
+    final String sciezkaGramatyki = jezykSilnika == 'en'
+        ? 'assets/grammar/eng_vosk.yml'
+        : 'assets/grammar/pol_vosk.yml';
+
     try {
       //ta sama gramatyka generuje słownik dla recognizera i parsuje wynik
-      _gramatyka = await VoskGrammar.zAssetu('assets/grammar/pol_vosk.yml');
+      _gramatyka =
+          await VoskGrammar.zAssetu(sciezkaGramatyki, jezyk: jezykSilnika);
     } catch (e) {
       _bladSilnika('Błąd gramatyki poleceń:\n$e');
       return;
@@ -563,6 +573,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
     _engine = VoskEngine(
       gramatyka: _gramatyka!,
+      jezyk: jezykSilnika,
       //okno na sklejenie komendy rozciętej przez Vosk = ta sama zwłoka,
       //którą ekran daje sobie na dokończenie przetwarzania komendy
       oknoSklejania: Duration(milliseconds: zwloka),
@@ -1695,69 +1706,106 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //cokolwiek je zobaczy. Gramatyka zostaje przy formach, które naprawdę padają
   //przy ulu i są w słowniku modelu (pliki/vosk_slownik_pl.txt).
   //
-  //DOPISUJĄC WARTOŚĆ DO SLOTU w pol_vosk.yml sprawdź, czy taki string jest w
-  //app_pl.arb. Jeśli nie ma - dopisz przeliczenie tutaj.
+  //DOPISUJĄC WARTOŚĆ DO SLOTU w pol_vosk.yml/eng_vosk.yml sprawdź, czy taki
+  //string jest w app_pl.arb/app_en.arb. Jeśli nie ma - dopisz przeliczenie
+  //tutaj, w mapowaniu dla właściwego języka.
   void _ujednolicWartosciSlotow(VoskInference inference) {
     final sloty = inference.slots;
     if (sloty == null || sloty.isEmpty) return;
     final l10n = AppLocalizations.of(context)!;
 
-    //klucz slotu -> {forma z gramatyki: forma kanoniczna (ARB)}
-    final Map<String, Map<String, String>> mapowanie = {
-      //trójkąt pod ramką + zmiana numeru ramki po przeglądzie (painter ~11570,
-      //warunki ~1926 / ~5527 / ~5554, frames_screen ~1997)
-      'isDone': {
-        'usuń ramkę': l10n.deleted, //"usuń ramka"
-        'wstaw ramkę': l10n.inserted, //"wstaw ramka"
-      },
-      //_rozmiar ramki w zapisDoBazy (~5354) - bez tego "otwórz MAŁĄ ramkę"
-      //zapisywało ramkę dużą
-      'sizeOfFrame': {
-        'małą': l10n.small,
-        'dużą': l10n.big,
-      },
-      //ikona matki: matka3 = nieunasienniona (~6211), hives_screen ~871,
-      //infos_screen ~504, queen_history_screen ~269
-      'queenState': {
-        'dziewicza': l10n.virgine, //"dziewica"
-      },
-      //ikona matki: matka2 = niez (switch ~6168), hives_screen ~946,
-      //queen_helpers.dart _allMarkTranslations
-      'queenMark': {
-        'nie ma znaku': l10n.unmarked, //"nie ma znak"
-      },
-      //ikona matki: matka1 = zła (~6149). "do wymiany" jest teraz OSOBNĄ pozycją listy
-      //(l10n.canceled - dawna "zła"), więc głos zapisuje dokładnie to, co da się
-      //wybrać ręcznie; wcześniej podmienialiśmy je na "stara"
-      'queenQuality': {
-        'do wymiany': l10n.canceled, //"do wymiany"
-        'okej': 'ok',
-      },
-      //infos_screen ~931 tłumaczy zapis na etykietę - ręczna edycja zapisuje
-      //"norma", więc głos też musi
-      'colonyForce': {
-        'normalna': l10n.normal, //"norma"
-      },
-      //infos_screen ~946; "zawiązała kłąb" zostaje w gramatyce, bo słowa
-      //"kłębie" NIE MA w słowniku modelu - kanoniczne jest "w kłębie"
-      'colonyState': {
-        'agresywna': l10n.aggressive, //"zła"
-        'zawiązała kłąb': l10n.inCluster, //"w kłębie"
-        'okej': 'ok',
-      },
-      //dennica - wartość idzie do info jako tekst, ale ma brzmieć tak samo jak
-      //z ręcznej edycji
-      'bottomBoard': {
-        'wyczyszczona': l10n.clean, //"czysta"
-        'okej': 'ok',
-      },
-    };
+    final Map<String, Map<String, String>> mapowanie =
+        globals.jezyk == 'en_US' ? _mapowanieSlotowEn(l10n) : _mapowanieSlotowPl(l10n);
 
     for (final klucz in sloty.keys.toList()) {
       final kanon = mapowanie[klucz]?[sloty[klucz]];
       if (kanon != null) sloty[klucz] = kanon;
     }
   }
+
+  //klucz slotu -> {forma z gramatyki: forma kanoniczna (ARB)}
+  Map<String, Map<String, String>> _mapowanieSlotowPl(AppLocalizations l10n) => {
+        //trójkąt pod ramką + zmiana numeru ramki po przeglądzie (painter ~11570,
+        //warunki ~1926 / ~5527 / ~5554, frames_screen ~1997)
+        'isDone': {
+          'usuń ramkę': l10n.deleted, //"usuń ramka"
+          'wstaw ramkę': l10n.inserted, //"wstaw ramka"
+        },
+        //_rozmiar ramki w zapisDoBazy (~5354) - bez tego "otwórz MAŁĄ ramkę"
+        //zapisywało ramkę dużą
+        'sizeOfFrame': {
+          'małą': l10n.small,
+          'dużą': l10n.big,
+        },
+        //ikona matki: matka3 = nieunasienniona (~6211), hives_screen ~871,
+        //infos_screen ~504, queen_history_screen ~269
+        'queenState': {
+          'dziewicza': l10n.virgine, //"dziewica"
+        },
+        //ikona matki: matka2 = niez (switch ~6168), hives_screen ~946,
+        //queen_helpers.dart _allMarkTranslations
+        'queenMark': {
+          'nie ma znaku': l10n.unmarked, //"nie ma znak"
+        },
+        //ikona matki: matka1 = zła (~6149). "do wymiany" jest teraz OSOBNĄ pozycją listy
+        //(l10n.canceled - dawna "zła"), więc głos zapisuje dokładnie to, co da się
+        //wybrać ręcznie; wcześniej podmienialiśmy je na "stara"
+        'queenQuality': {
+          'do wymiany': l10n.canceled, //"do wymiany"
+          'okej': 'ok',
+        },
+        //infos_screen ~931 tłumaczy zapis na etykietę - ręczna edycja zapisuje
+        //"norma", więc głos też musi
+        'colonyForce': {
+          'normalna': l10n.normal, //"norma"
+        },
+        //infos_screen ~946; "zawiązała kłąb" zostaje w gramatyce, bo słowa
+        //"kłębie" NIE MA w słowniku modelu - kanoniczne jest "w kłębie"
+        'colonyState': {
+          'agresywna': l10n.aggressive, //"zła"
+          'zawiązała kłąb': l10n.inCluster, //"w kłębie"
+          'okej': 'ok',
+        },
+        //dennica - wartość idzie do info jako tekst, ale ma brzmieć tak samo jak
+        //z ręcznej edycji
+        'bottomBoard': {
+          'wyczyszczona': l10n.clean, //"czysta"
+          'okej': 'ok',
+        },
+      };
+
+  //Dopisane 03.09.2026 razem z eng_vosk.yml - dużo krótsza niż polska tabela
+  //wyżej. Powód: słowa w eng_vosk.yml były DOBIERANE tak, żeby już równać się
+  //kanonicznej wartości z app_en.arb (patrz komentarze w eng_vosk.yml), więc
+  //większość slotów (isDone, sizeOfFrame, queenMark, colonyForce) w ogóle nie
+  //potrzebuje przeliczenia - "deleted"=="deleted", "small"=="small" itd. Każda
+  //pozycja niżej sprawdzona znak w znak wobec app_en.arb.
+  //
+  //UWAGA - to NIE jest pełny audyt jak ten z 04.08.2026 dla polskiego (patrz
+  //komentarze na końcu pol_vosk.yml): sprawdzone tylko wartości SLOTÓW z tej
+  //metody, NIE każde miejsce w kodzie, które porównuje te stringi dalej.
+  //Znaleziony przy okazji I NAPRAWIONY: voice_vosk_screen.dart ~6636 oczekiwał
+  //surowego "virgin" - dopisane "virgine" (patrz komentarz tam). NIE
+  //naprawiony: slot queenMark ma wartość "gone" bez odpowiadającego
+  //`case 'gone':` w switchu belki matki (jest tylko dla "missing"/"nie ma"/
+  //"brak") - do naprawy razem z resztą audytu (pamięć sesji
+  //"voice_english_scoping").
+  Map<String, Map<String, String>> _mapowanieSlotowEn(AppLocalizations l10n) => {
+        'queenState': {
+          'virgin': l10n.virgine, //app_en.arb: "virgine" (literówka w ARB)
+        },
+        'queenQuality': {
+          'to exchange': l10n.canceled, //app_en.arb canceled = "to replace"
+          'okay': 'ok',
+        },
+        'colonyState': {
+          'okay': 'ok',
+        },
+        'bottomBoard': {
+          'cleaned': l10n.clean, //app_en.arb clean = "clean"
+          'okay': 'ok',
+        },
+      };
 
   String prettyPrintInference(VoskInference inference) {
     _pendingOpenBeep = false; //reset przed każdą nową inferencją - zabezpieczenie przed stanem z poprzedniej komendy
@@ -6584,7 +6632,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
             }
           }
           if (param == AppLocalizations.of(context)!.queen + " -") //State
-            if (wart == 'dziewica' || wart == 'virgin') {
+            // 'virgine' dopisane 03.09.2026: _ujednolicWartosciSlotow zapisuje
+            // teraz dla angielskiego l10n.virgine ("virgine", literówka w ARB),
+            // nie surowe "virgin" - to porównanie musi znać obie formy.
+            if (wart == 'dziewica' || wart == 'virgin' || wart == 'virgine') {
               matka3 = 'nieunasienniona';
               if (ikona == 'red') { //bo był brak matki
                 ikona = 'orange';

@@ -131,6 +131,7 @@ class VoskFraza {
 class VoskEngine {
   VoskEngine({
     required this.gramatyka,
+    this.jezyk = 'pl',
     this.onFraza,
     this.onPartial,
     this.onStan,
@@ -145,6 +146,11 @@ class VoskEngine {
   /// Silnik-parser .yml. Ten sam obiekt generuje gramatykę dla recognizera
   /// i parsuje wynik - jedno źródło prawdy.
   final VoskGrammar gramatyka;
+
+  /// Język modelu Vosk do pobrania ('pl'/'en') - MUSI być tym samym językiem,
+  /// dla którego zbudowano [gramatyka] (VoskGrammar.zAssetu(..., jezyk:)) -
+  /// silnik tego nie sprawdza, to obowiązek wołającego (voice_vosk_screen.dart).
+  final String jezyk;
 
   /// Domknięta fraza (także odrzucona przez bramkę - ekran sam decyduje).
   final void Function(VoskFraza fraza)? onFraza;
@@ -184,9 +190,31 @@ class VoskEngine {
   // Intencje sterujące sesją - w czuwaniu recognizer dostaje tylko je.
   static const Set<String> intencjeSesji = {'voiceStart', 'voiceStop'};
 
-  // Mały model polski (~50 MB), pobierany raz i cache'owany na urządzeniu.
-  static const String _modelUrl =
-      'https://alphacephei.com/vosk/models/vosk-model-small-pl-0.22.zip';
+  // Mały model per język, pobierany raz i cache'owany na urządzeniu.
+  // Dodane 03.09.2026 razem z [jezyk] - dotąd był tylko polski, na sztywno.
+  // "Vosk nie ma modeli EN" (stary komentarz w apiarys_screen.dart) był
+  // błędny - model angielski istnieje pod tym samym adresem co polski.
+  static const Map<String, String> _modeleUrl = {
+    'pl': 'https://alphacephei.com/vosk/models/vosk-model-small-pl-0.22.zip',
+    'en': 'https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip',
+  };
+
+  // Nazwa języka do komunikatu "Pobieram model..." (patrz [uruchom]) - te
+  // komunikaty zostają po polsku niezależnie od języka rozpoznawania, tak
+  // jak reszta paska stanu silnika.
+  static const Map<String, String> _nazwaJezyka = {
+    'pl': 'polskiego (~50 MB)',
+    'en': 'angielskiego (~40 MB)',
+  };
+
+  String get _modelUrl {
+    final url = _modeleUrl[jezyk];
+    if (url == null) {
+      throw ArgumentError('brak modelu Vosk dla języka "$jezyk" - znane: '
+          '${_modeleUrl.keys.join(", ")}');
+    }
+    return url;
+  }
 
   // 16 kHz - standard modeli Vosk. Porcja podawana do recognizera = 0,2 s.
   static const int _rate = 16000;
@@ -462,7 +490,8 @@ class VoskEngine {
       final String storage = await _katalogModelu();
       final ModelLoader loader = ModelLoader(modelStorage: storage);
       // Pobranie tylko za pierwszym razem - potem ModelLoader widzi katalog.
-      _stan('Pobieram model języka polskiego (~50 MB, tylko raz)...');
+      final String nazwa = _nazwaJezyka[jezyk] ?? jezyk;
+      _stan('Pobieram model języka $nazwa, tylko raz...');
       final String sciezka = await loader.loadFromNetwork(_modelUrl);
 
       _stan('Ładuję model...');
