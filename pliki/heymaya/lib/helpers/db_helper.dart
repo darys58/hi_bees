@@ -396,6 +396,18 @@ class DBHelper {
   // print('db_helpers: update matka2 - id=$id, matka2 = $wartosc');
     db.update('ule', {'matka2': wartosc}, where: 'id = ?', whereArgs: [id]);
   }
+
+  //update ula w tabeli ule - liczba ramek korpusu (voice_vosk_screen,
+  //setEquipment "number of frames in body"). Dopisane 03.09.2026: komenda
+  //głosowa zapisywała wpis "info" (widoczny w historii), ale samo pole
+  //ule.ramek nigdy się nie zmieniało - zapisDoBazy() w voice_vosk_screen.dart,
+  //jedyne miejsce, które je stosowało, jest wołane WYŁĄCZNIE przy zapisie
+  //zasobu ramki (setStore), a nie przy tej komendzie. Ręczna edycja
+  //(infos_edit_screen) aktualizuje ule.ramek bezpośrednio, stąd różnica.
+  static Future<void> updateUleRamek(String id, int wartosc) async {
+    final db = await DBHelper.database();
+    db.update('ule', {'ramek': wartosc}, where: 'id = ?', whereArgs: [id]);
+  }
   
   //update ula w tabeli ule - info o matce3 - dla hives_screen
   static Future<void> updateUleMatka3(String id, String wartosc) async {

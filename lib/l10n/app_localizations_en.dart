@@ -445,7 +445,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workFrameToExtraction =>
-      'work frame/to extraction/to delete/to insulate';
+      'work frame/to extract/to remove/to insulate';
 
   @override
   String get tOdo => 'to do';

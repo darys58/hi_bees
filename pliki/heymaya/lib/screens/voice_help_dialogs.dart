@@ -257,6 +257,10 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
     TextSpan(text: '  ' + l.site, style: _wymagany),
     TextSpan(text: '.\n'),
     //do zrobienia / zostało zrobione
+    // Zgłoszenie z urządzenia 03.09.2026: "to extraction"/"to delete" (stary
+    // tekst app_en.arb, z czasów eng1.yml) nie działały - eng_vosk.yml ma
+    // "to extract"/"to remove" (POPRAWKA z KROK 2). ARB poprawiony, żeby
+    // help mówił to, co gramatyka naprawdę rozumie.
     _punktor,
     TextSpan(text: l.workFrameToExtraction + '.', style: _wymagany),
     TextSpan(text: ' - ' + l.tOdo + '\n', style: _komentarz),

@@ -3335,6 +3335,35 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                         "\n" + AppLocalizations.of(context)!.numberOfFrame + " =";
                     printText1 += " ${slots[key]}";
                     _nowaIloscRamek  = int.parse('${slots[key]}');
+                    // NAPRAWA 03.09.2026 (zgłoszenie z urządzenia): samo
+                    // ustawienie _nowaIloscRamek nic nie zapisywało - to pole
+                    // konsumuje WYŁĄCZNIE zapisDoBazy() (osobna metoda,
+                    // wołana tylko przy zapisie ZASOBU ramki - setStore), a ta
+                    // komenda jej nie woła (nie ma tu zasobu ramki, tylko
+                    // liczba ramek korpusu). Efekt: wpis "info" się zapisywał
+                    // (widoczny w historii - stąd wyglądał na poprawny), ale
+                    // pole ule.ramek nigdy się nie zmieniało, więc korpus
+                    // dalej pokazywał starą liczbę ramek. Ręczna edycja
+                    // (infos_edit_screen) aktualizuje ule.ramek wprost, stąd
+                    // różnica między "z ręki" a głosem. Zapis TUTAJ, wprost,
+                    // bo to jedyne miejsce, które zna nową wartość razem z
+                    // kontekstem (apiary + konkretny ul / wszystkie ule).
+                    if (readyAllHives) {
+                      Provider.of<Hives>(context, listen: false)
+                          .fetchAndSetHives(nrXXOfApiary)
+                          .then((_) {
+                        final hivesData =
+                            Provider.of<Hives>(context, listen: false);
+                        for (final h in _uleObjeteZapisem(hivesData.items)) {
+                          DBHelper.updateUleRamek(
+                              '$nrXXOfApiary.${h.ulNr}', _nowaIloscRamek);
+                        }
+                      });
+                    } else {
+                      DBHelper.updateUleRamek(
+                          '$nrXXOfApiary.$nrXXOfHive', _nowaIloscRamek);
+                      ramek = _nowaIloscRamek;
+                    }
                     zapis = AppLocalizations.of(context)!.numberOfFrame +
                         " = ${slots[key]}";
                     readyInfo = true;
