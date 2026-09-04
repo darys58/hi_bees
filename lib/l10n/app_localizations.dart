@@ -489,7 +489,7 @@ abstract class AppLocalizations {
   /// No description provided for @eXclud.
   ///
   /// In en, this message translates to:
-  /// **'Excluder'**
+  /// **'Grid/grate'**
   String get eXclud;
 
   /// No description provided for @excludNo.
@@ -633,7 +633,7 @@ abstract class AppLocalizations {
   /// No description provided for @site.
   ///
   /// In en, this message translates to:
-  /// **'site'**
+  /// **'side'**
   String get site;
 
   /// No description provided for @save.
@@ -951,7 +951,7 @@ abstract class AppLocalizations {
   /// No description provided for @larvaeEggsPollenHoneySealdWaxComb.
   ///
   /// In en, this message translates to:
-  /// **'larvae/eggs/pollen/honey/food/seald/wax/comb'**
+  /// **'larvae/eggs/pollen/honey/food/sealed/wax/comb'**
   String get larvaeEggsPollenHoneySealdWaxComb;
 
   /// No description provided for @dElete.
@@ -963,7 +963,7 @@ abstract class AppLocalizations {
   /// No description provided for @workFrameToExtraction.
   ///
   /// In en, this message translates to:
-  /// **'work frame/to extraction/to delete/to insulate'**
+  /// **'work frame/to extract/to remove/to insulate'**
   String get workFrameToExtraction;
 
   /// No description provided for @tOdo.
@@ -1053,7 +1053,7 @@ abstract class AppLocalizations {
   /// No description provided for @isVirgine.
   ///
   /// In en, this message translates to:
-  /// **'is virgine/artificially inseminated/naturally mated'**
+  /// **'is virgin/artificially inseminated/naturally mated'**
   String get isVirgine;
 
   /// No description provided for @isFreed.
@@ -1065,7 +1065,7 @@ abstract class AppLocalizations {
   /// No description provided for @isVeryGoodCanceled.
   ///
   /// In en, this message translates to:
-  /// **'is very good/good/ok/big/small/weak/to replace/old'**
+  /// **'is very good/good/ok/big/small/weak/to exchange/old'**
   String get isVeryGoodCanceled;
 
   /// No description provided for @isMarked.
@@ -1149,13 +1149,13 @@ abstract class AppLocalizations {
   /// No description provided for @apivarolChemistry.
   ///
   /// In en, this message translates to:
-  /// **'Apivarol/chemistry'**
+  /// **'Chemistry'**
   String get apivarolChemistry;
 
   /// No description provided for @dosePortionPart.
   ///
   /// In en, this message translates to:
-  /// **'dose/portion/part'**
+  /// **'dose/portion'**
   String get dosePortionPart;
 
   /// No description provided for @first.
@@ -1569,7 +1569,7 @@ abstract class AppLocalizations {
   /// No description provided for @covered.
   ///
   /// In en, this message translates to:
-  /// **'covered'**
+  /// **'capped/sealed'**
   String get covered;
 
   /// No description provided for @bRood.
@@ -2187,7 +2187,7 @@ abstract class AppLocalizations {
   /// No description provided for @rem.
   ///
   /// In en, this message translates to:
-  /// **'put on/insert/remove/delete'**
+  /// **'insert/remove'**
   String get rem;
 
   /// No description provided for @value.

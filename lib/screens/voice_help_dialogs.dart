@@ -185,7 +185,11 @@ List<TextSpan> _sekcjaLokacja(BuildContext context) {
     //ustaw ramkę od do - biernik (frameAcc), bo setFrames ma [ramkę,ramki]
     _punktor,
     TextSpan(text: l.sEt, style: _wymagany),
-    TextSpan(text: ' ' + l.frameAcc + ' ' + l.from, style: _wymagany),
+    //l.frames, NIE l.frameAcc: setFrames ma w gramatyce liczbę MNOGĄ
+    //("frames from X to Y" / "[ramkę,ramki] od X do Y"). frameAcc daje po
+    //angielsku "frame" (l.poj.), więc podpowiadał komendę, której silnik nie
+    //zna - zgłoszone z urządzenia 04.09.2026. PL "ramki" też jest w gramatyce.
+    TextSpan(text: ' ' + l.frames + ' ' + l.from, style: _wymagany),
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: ' ' + l.to, style: _wymagany),
     TextSpan(text: ' 9', style: _wartosc),
@@ -199,10 +203,20 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
   return [
     TextSpan(text: '\n' + l.inspectionSay + '\n', style: _naglowek),
     TextSpan(text: l.whenTheApiary + '\n\n', style: _komentarz),
-    //czerw trut - "trut" to forma wymawiana, gramatyka ma homofon "trud"
+    //czerw trut - "trut" to forma wymawiana, gramatyka ma homofon "trud".
+    //Szyk jak przy czerwiu krytym niżej: PL ma przymiotnik PO rzeczowniku
+    //("czerw trut"), EN przed ("drone brood" - gramatyka: drone (brood)).
+    //Bez tego rozdzielenia pomoc EN uczyła "brood drone", czyli odwrotnie
+    //niż rozumie silnik (zgłoszone przy audycie pomocy 04.09.2026).
     _punktor,
-    TextSpan(text: l.bRood, style: _opcjonalny),
-    TextSpan(text: ' ' + l.trut, style: _wymagany),
+    if (globals.jezyk == 'pl_PL')
+      TextSpan(text: l.bRood, style: _opcjonalny)
+    else
+      TextSpan(text: l.trut, style: _wymagany),
+    if (globals.jezyk == 'pl_PL')
+      TextSpan(text: ' ' + l.trut, style: _wymagany)
+    else
+      TextSpan(text: ' ' + l.bRood, style: _opcjonalny),
     TextSpan(text: ' 10%', style: _wartosc),
     TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
     //czerw kryty - w PL przymiotnik idzie po rzeczowniku, w EN odwrotnie
@@ -291,7 +305,13 @@ List<TextSpan> _sekcjaWyposazenie(BuildContext context) {
     TextSpan(text: ' 1', style: _wartosc),
     TextSpan(text: '.\n\n'),
     _punktor,
-    TextSpan(text: l.dElete + ' ' + l.exclud + '.\n\n', style: _wymagany),
+    //l.exclud ("excluder") jest też etykietą przycisku w infos_screen, więc
+    //zostaje - ale słowa "excluder" NIE MA w słowniku modelu EN (patrz nagłówek
+    //eng_vosk.yml), więc po angielsku pomoc pokazuje działające synonimy.
+    if (globals.jezyk == 'en_US')
+      TextSpan(text: l.dElete + ' grid/grate.\n\n', style: _wymagany)
+    else
+      TextSpan(text: l.dElete + ' ' + l.exclud + '.\n\n', style: _wymagany),
     //podłoga
     _punktor,
     TextSpan(text: l.bOttomBoard, style: _wymagany),
@@ -307,7 +327,9 @@ List<TextSpan> _sekcjaWyposazenie(BuildContext context) {
     if (globals.jezyk == 'pl_PL')
       TextSpan(text: ' zbieracz pyłku.\n\n', style: _wymagany)
     else
-      TextSpan(text: ' is on/off/open/close/activated/eliminated.\n\n'),
+      //lista MUSI pochodzić ze slotu $state w eng_vosk.yml (insert/remove/
+      //on/off/open/close/set) - "activated"/"eliminated" nigdy tam nie było
+      TextSpan(text: ' is on/off/open/close/set.\n\n'),
   ];
 }
 
@@ -429,14 +451,21 @@ List<TextSpan> _sekcjaLeczenie(BuildContext context) {
     //Słowa "Biovar" w gramatyce NIE MA, a czasownik stoi PRZED "paski".
     _punktor,
     TextSpan(text: l.rem, style: _wymagany),
-    TextSpan(text: ' ' + l.belts, style: _wymagany),
+    //l.belts ("belts") i l.mites ("mites") to wartości zapisywane do BAZY
+    //(voice_vosk_screen, infos_edit_screen) - nie wolno ich zmieniać. Gramatyka
+    //angielska mówi jednak [strip,strips] i [unit,units], więc pomoc musi
+    //pokazać te słowa. Polski ma tu ten sam wyjątek niżej ("sztuki").
+    if (globals.jezyk == 'en_US')
+      TextSpan(text: ' strips', style: _wymagany)
+    else
+      TextSpan(text: ' ' + l.belts, style: _wymagany),
     TextSpan(text: ' 3', style: _wartosc),
     //klucz `mites` to "sztuk" (pasuje do "218 sztuk" przy roztoczach), ale przy
     //trójce po polsku jest "3 sztuki" - gramatyka bierze [sztuk,sztuka,sztuki]
     if (globals.jezyk == 'pl_PL')
       TextSpan(text: ' sztuki.\n\n')
     else
-      TextSpan(text: ' ' + l.mites + '.\n\n'),
+      TextSpan(text: ' units.\n\n'),
     _punktor,
     TextSpan(text: l.aCid, style: _wymagany),
     TextSpan(text: ' 40', style: _wartosc),

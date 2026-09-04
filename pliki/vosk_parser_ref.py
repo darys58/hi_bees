@@ -48,7 +48,7 @@ YML = os.path.join(os.path.dirname(HERE), 'assets', 'grammar', 'pol_vosk.yml')
 # wzorcu, ale ZWRÓĆ kanoniczną wartość slotu z .yml. Dzięki temu tekst
 # "przesuń prawo" daje isDone = "przesuń w prawo", czyli dokładnie ten string,
 # którego szuka voice_screen2.dart (case 'przesuń w prawo', linia ~10300).
-POMIJALNE = {'z', 'w'}
+POMIJALNE = {'z', 'w'}   # nadpisywane przez ustaw_jezyk()
 
 # ---------------------------------------------------------------------------
 # 1. Wczytanie .yml
@@ -213,27 +213,84 @@ def parsuj_wyrazenie(tekst):
 # ---------------------------------------------------------------------------
 # 3. Liczebniki (typy wbudowane Rhino, których Vosk nie ma)
 # ---------------------------------------------------------------------------
-JEDNOSTKI = {
-    'zero': 0, 'jeden': 1, 'jedna': 1, 'jedną': 1, 'jednego': 1,
-    'dwa': 2, 'dwie': 2, 'dwóch': 2, 'trzy': 3, 'cztery': 4, 'pięć': 5,
-    'sześć': 6, 'siedem': 7, 'osiem': 8, 'dziewięć': 9,
+# JĘZYK. Odpowiednik klasy [_PakietLiczb] z lib/helpers/vosk_grammar.dart -
+# obie implementacje MUSZĄ liczyć tak samo (kontrakt z nagłówka tego pliku).
+# Angielska setka to DWA słowa ("one hundred"), polska jedno ("sto"), stąd
+# SLOWO_SETEK osobno od SETKI. Dopisane 04.09.2026 przy audycie pomocy EN.
+_PAKIETY = {
+    'pl': dict(
+        jednostki={
+            'zero': 0, 'jeden': 1, 'jedna': 1, 'jedną': 1, 'jednego': 1,
+            'dwa': 2, 'dwie': 2, 'dwóch': 2, 'trzy': 3, 'cztery': 4, 'pięć': 5,
+            'sześć': 6, 'siedem': 7, 'osiem': 8, 'dziewięć': 9,
+        },
+        nastki={
+            'dziesięć': 10, 'jedenaście': 11, 'dwanaście': 12, 'trzynaście': 13,
+            'czternaście': 14, 'piętnaście': 15, 'szesnaście': 16,
+            'siedemnaście': 17, 'osiemnaście': 18, 'dziewiętnaście': 19,
+        },
+        dziesiatki={
+            'dwadzieścia': 20, 'trzydzieści': 30, 'czterdzieści': 40,
+            'pięćdziesiąt': 50, 'sześćdziesiąt': 60, 'siedemdziesiąt': 70,
+            'osiemdziesiąt': 80, 'dziewięćdziesiąt': 90,
+        },
+        setki={
+            'sto': 100, 'dwieście': 200, 'trzysta': 300, 'czterysta': 400,
+            'pięćset': 500, 'sześćset': 600, 'siedemset': 700, 'osiemset': 800,
+            'dziewięćset': 900,
+        },
+        slowo_setek=None,
+        procent={'procent', 'procenta', 'procentów'},
+        ordinaly={
+            'pierwszy': 1, 'drugi': 2, 'trzeci': 3, 'czwarty': 4, 'piąty': 5,
+            'szósty': 6, 'siódmy': 7, 'ósmy': 8, 'dziewiąty': 9,
+        },
+        pomijalne={'z', 'w'},
+    ),
+    'en': dict(
+        jednostki={
+            'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+            'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
+        },
+        nastki={
+            'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13,
+            'fourteen': 14, 'fifteen': 15, 'sixteen': 16, 'seventeen': 17,
+            'eighteen': 18, 'nineteen': 19,
+        },
+        dziesiatki={
+            'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60,
+            'seventy': 70, 'eighty': 80, 'ninety': 90,
+        },
+        setki={},
+        slowo_setek='hundred',
+        procent={'percent'},
+        ordinaly={
+            'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
+            'sixth': 6, 'seventh': 7, 'eighth': 8, 'ninth': 9,
+        },
+        # angielski nie gubi przyimków tak jak polskie "z"/"w" - w gramatyce
+        # stoją jako (on) (the), czyli opcjonalne już na poziomie wyrażenia
+        pomijalne=set(),
+    ),
 }
-NASTKI = {
-    'dziesięć': 10, 'jedenaście': 11, 'dwanaście': 12, 'trzynaście': 13,
-    'czternaście': 14, 'piętnaście': 15, 'szesnaście': 16, 'siedemnaście': 17,
-    'osiemnaście': 18, 'dziewiętnaście': 19,
-}
-DZIESIATKI = {
-    'dwadzieścia': 20, 'trzydzieści': 30, 'czterdzieści': 40, 'pięćdziesiąt': 50,
-    'sześćdziesiąt': 60, 'siedemdziesiąt': 70, 'osiemdziesiąt': 80,
-    'dziewięćdziesiąt': 90,
-}
-SETKI = {
-    'sto': 100, 'dwieście': 200, 'trzysta': 300, 'czterysta': 400,
-    'pięćset': 500, 'sześćset': 600, 'siedemset': 700, 'osiemset': 800,
-    'dziewięćset': 900,
-}
-PROCENT = {'procent', 'procenta', 'procentów'}
+
+JEDNOSTKI = NASTKI = DZIESIATKI = SETKI = ORDINALY = None
+SLOWO_SETEK = None
+PROCENT = None
+
+
+def ustaw_jezyk(kod):
+    """Przestawia tabele liczebników na dany język ('pl'/'en')."""
+    global JEDNOSTKI, NASTKI, DZIESIATKI, SETKI, SLOWO_SETEK, PROCENT
+    global ORDINALY, POMIJALNE
+    p = _PAKIETY.get(kod)
+    if p is None:
+        raise SystemExit('nieznany język "%s" (znane: %s)'
+                         % (kod, ', '.join(_PAKIETY)))
+    JEDNOSTKI, NASTKI = p['jednostki'], p['nastki']
+    DZIESIATKI, SETKI = p['dziesiatki'], p['setki']
+    SLOWO_SETEK, PROCENT = p['slowo_setek'], p['procent']
+    ORDINALY, POMIJALNE = p['ordinaly'], p['pomijalne']
 
 
 def kandydaci_liczby(tokeny, poz):
@@ -249,8 +306,13 @@ def kandydaci_liczby(tokeny, poz):
     wyniki = []
     i, wartosc = poz, 0
     if i < len(tokeny) and tokeny[i] in SETKI:
-        wartosc += SETKI[tokeny[i]]
+        wartosc += SETKI[tokeny[i]]          # polskie "sto" - jedno słowo
         i += 1
+        wyniki.append((wartosc, i - poz))
+    elif (SLOWO_SETEK is not None and i + 1 < len(tokeny)
+          and tokeny[i] in JEDNOSTKI and tokeny[i + 1] == SLOWO_SETEK):
+        wartosc += JEDNOSTKI[tokeny[i]] * 100   # angielskie "one" + "hundred"
+        i += 2
         wyniki.append((wartosc, i - poz))
     if i < len(tokeny) and tokeny[i] in NASTKI:
         wartosc += NASTKI[tokeny[i]]
@@ -275,17 +337,21 @@ ZAKRESY = {
     'Percent': (0, 100),
     'SingleDigitOrdinal': (1, 9),
 }
-ORDINALY = {
-    'pierwszy': 1, 'drugi': 2, 'trzeci': 3, 'czwarty': 4, 'piąty': 5,
-    'szósty': 6, 'siódmy': 7, 'ósmy': 8, 'dziewiąty': 9,
-}
+# ORDINALY - patrz _PAKIETY/ustaw_jezyk wyżej
 
 
 def dopasuj_wbudowany(typ, tokeny, poz):
-    """Zwraca listę (sformatowana_wartosc, nowa_pozycja)."""
+    """Zwraca listę (sformatowana_wartosc, nowa_pozycja, dodatkowa_kara)."""
     if typ == 'SingleDigitOrdinal':
         if poz < len(tokeny) and tokeny[poz] in ORDINALY:
-            return [(str(ORDINALY[tokeny[poz]]), poz + 1)]
+            # Trzeci element (kara) dopisany 04.09.2026: ta gałąź zwracała
+            # krotkę 2-elementową, gdy wołający rozpakowuje 3 - czyli
+            # ValueError przy KAŻDYM użyciu $pv.SingleDigitOrdinal. Nie wyszło
+            # wcześniej, bo pol_vosk.yml nie używa tego typu ani razu; wyszło
+            # dopiero, gdy eng_vosk.yml dostał "chemistry first dose".
+            # Dart (vosk_grammar.dart, _dopasujWbudowany) był od początku
+            # poprawny - to był błąd wyłącznie tej referencji.
+            return [(str(ORDINALY[tokeny[poz]]), poz + 1, 0)]
         return []
     lo, hi = ZAKRESY.get(typ, (0, 999))
     out = []
@@ -404,7 +470,9 @@ class Wynik:
 
 
 class SilnikGramatyki:
-    def __init__(self, path=YML):
+    def __init__(self, path=YML, jezyk='pl'):
+        ustaw_jezyk(jezyk)
+        self.jezyk = jezyk
         wyrazenia, sloty = wczytaj_yml(path)
         self.sloty_def = {k: [_odcytuj(v) for v in vs] for k, vs in sloty.items()}
         self.wyrazenia = []          # (intent, tekst, sekwencja)

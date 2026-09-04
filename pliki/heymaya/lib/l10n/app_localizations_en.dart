@@ -199,7 +199,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exclud => 'excluder';
 
   @override
-  String get eXclud => 'Excluder';
+  String get eXclud => 'Grid/grate';
 
   @override
   String get excludNo => 'no excluder';
@@ -438,7 +438,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get larvaeEggsPollenHoneySealdWaxComb =>
-      'larvae/eggs/pollen/honey/food/seald/wax/comb';
+      'larvae/eggs/pollen/honey/food/sealed/wax/comb';
 
   @override
   String get dElete => 'Delete';
@@ -492,14 +492,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bornIn => 'born in';
 
   @override
-  String get isVirgine => 'is virgine/artificially inseminated/naturally mated';
+  String get isVirgine => 'is virgin/artificially inseminated/naturally mated';
 
   @override
   String get isFreed => 'is freed/in a cage/in the insulator';
 
   @override
   String get isVeryGoodCanceled =>
-      'is very good/good/ok/big/small/weak/to replace/old';
+      'is very good/good/ok/big/small/weak/to exchange/old';
 
   @override
   String get isMarked =>
@@ -543,10 +543,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treatmentSay => 'Treatment:';
 
   @override
-  String get apivarolChemistry => 'Apivarol/chemistry';
+  String get apivarolChemistry => 'Chemistry';
 
   @override
-  String get dosePortionPart => 'dose/portion/part';
+  String get dosePortionPart => 'dose/portion';
 
   @override
   String get first => '1st';
@@ -757,7 +757,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trut => 'drone';
 
   @override
-  String get covered => 'covered';
+  String get covered => 'capped/sealed';
 
   @override
   String get bRood => 'brood';
@@ -1075,7 +1075,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paramEdition => 'Parameter edition';
 
   @override
-  String get rem => 'put on/insert/remove/delete';
+  String get rem => 'insert/remove';
 
   @override
   String get value => 'value';

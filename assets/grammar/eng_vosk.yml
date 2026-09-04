@@ -195,6 +195,13 @@ context:
       - acid ($hundred:acidH) (and) ($pv.TwoDigitInteger:acid) (milliliter,
         milliliters)
       - chemistry [portion, dose] number $pv.SingleDigitInteger:apivarol
+      # Wariant z liczebnikiem PORZĄDKOWYM ("chemistry first dose") - naturalny
+      # po angielsku i był w eng1.yml; zgubiony przy sprzątaniu setTreatment
+      # w KROK 2, a pomoc dalej go pokazywała. Wykryte przez
+      # pliki/vosk_pomoc_test_en.py przy audycie 04.09.2026. Polska gramatyka
+      # takiej formy NIE MA (liczba idzie na końcu) - stąd wiersz pomocy jest
+      # od początku tylko dla en_US.
+      - chemistry $pv.SingleDigitOrdinal:apivarol [portion, dose]
       - $state:biovar [strip, strips] $pv.SingleDigitInteger:biovarBelts
         [unit, units]
       - varroa ($hundred:varroaH) (and) ($pv.TwoDigitInteger:varroa) [mite,
@@ -207,7 +214,12 @@ context:
       - bee pollen trap (is) $state:beePolenTrap
       - "[excluder, grid, grate] (on) body (number)
         ($pv.SingleDigitInteger:excluder)"
-      - (set) number of frames in body (is) $pv.TwoDigitInteger:numberOfFrame
+      # [frame,frames]: klucz ARB `numberOfFrame` (EN "number of frame") jest
+      # PARAMETREM ZAPISYWANYM DO BAZY (nośnik rodzaju/typu ula - patrz pamięć
+      # "hive_type_shortcut_disappearing"), więc NIE WOLNO go zmienić pod
+      # gramatykę. Zamiast tego gramatyka przyjmuje obie formy - pomoc pokazuje
+      # l.p., wypowiedzieć można dowolną. Dopisane 04.09.2026 przy audycie pomocy.
+      - (set) number of [frame,frames] in body (is) $pv.TwoDigitInteger:numberOfFrame
     setQueen:
       - queen (was) born (in) $pv.TwoDigitInteger:queenBorn
       - queen (is) $queenState:queenState
@@ -239,8 +251,11 @@ context:
         ($pv.TwoDigitInteger:beePollenHarvestML) (milliliter,milliliters)
       - bee pollen harvest $pv.SingleDigitInteger:beePollenHarvestI (point)
         ($pv.TwoDigitInteger:beePollenHarvestD) [liter, liters]
-      - honey harvest $pv.TwoDigitInteger:honeyBigHarvest big frames
-      - honey harvest $pv.TwoDigitInteger:honeySmallHarvest small frames
+      # [frame,frames] z tego samego powodu co przy numberOfFrame: pomoc bierze
+      # tu klucz `frame` (l.poj.), używany też w setFrame/setMoveBody, gdzie
+      # liczba pojedyncza jest poprawna. Obie formy działają.
+      - honey harvest $pv.TwoDigitInteger:honeyBigHarvest big [frame,frames]
+      - honey harvest $pv.TwoDigitInteger:honeySmallHarvest small [frame,frames]
       - bee pollen harvest $pv.TwoDigitInteger:beePollenHarvest portion
     setFrames:
       - ($state:framesState) frames from $pv.TwoDigitInteger:nrXXOdFrame to
