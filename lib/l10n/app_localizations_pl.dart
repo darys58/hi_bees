@@ -2815,4 +2815,72 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get voiceSetSignal => 'Sygnał potwierdzenia polecenia';
+
+  @override
+  String get voiceNotUnderstood => 'Nie zrozumiałam polecenia.';
+
+  @override
+  String get voiceEngineNoResponse => 'silnik nie odpowiedział w 5 s';
+
+  @override
+  String get voiceUnknownReason => 'nieznany powód';
+
+  @override
+  String get voiceNoteWord => 'notatkę';
+
+  @override
+  String get voiceNoteAtInspection => 'przy przeglądzie';
+
+  @override
+  String get voiceNoteInNotepad => 'notatkę w notesie';
+
+  @override
+  String get voiceNoteWhereNotepad => 'w Notesie';
+
+  @override
+  String get voiceNoteSavedPrefix => 'Zapisałam';
+
+  @override
+  String get voiceNoteWithRecording => 'razem z nagraniem';
+
+  @override
+  String get voiceNoteLimitReached => '(osiągnięty limit długości)';
+
+  @override
+  String get voiceNoteRecordedOnly =>
+      'Nie rozpoznałam słów, ale nagranie zapisałam - odsłuchaj je';
+
+  @override
+  String get voiceNoteNoWords => '(nagranie - nie rozpoznałam słów)';
+
+  @override
+  String get voiceTipDictating => 'Dyktuję notatkę — dotknij, by zakończyć';
+
+  @override
+  String get voiceTipMicUnavailable =>
+      'Mikrofon niedostępny — dotknij, by spróbować ponownie';
+
+  @override
+  String get voiceTipListening => 'Słucham poleceń — „Hej Maja stop\"';
+
+  @override
+  String get voiceTipStandby => 'Czuwam — „Hej Maja start\"';
+
+  @override
+  String get voiceNoteHeaderNotepad =>
+      'Notatka do notesu - zakończ słowami „Hej Maja\"';
+
+  @override
+  String get voiceNoteHeaderInspection =>
+      'Notatka do przeglądu - zakończ słowami „Hej Maja\"';
+
+  @override
+  String get voiceListeningDots => 'słucham...';
+
+  @override
+  String get voiceNoteHint => 'Notatka - mów, zakończ słowami „Hej Maja\"';
+
+  @override
+  String get voiceGrammarOutdated =>
+      'UWAGA: wczytana gramatyka nie zna polecenia notatki albo cofania - w pakiecie apki jest stary plik gramatyki. Zbuduj apkę od nowa (pełny restart, nie hot reload).';
 }

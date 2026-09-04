@@ -5549,6 +5549,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Command confirmation signal'**
   String get voiceSetSignal;
+
+  /// No description provided for @voiceNotUnderstood.
+  ///
+  /// In en, this message translates to:
+  /// **'I did not understand the command.'**
+  String get voiceNotUnderstood;
+
+  /// No description provided for @voiceEngineNoResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'the engine did not respond within 5 s'**
+  String get voiceEngineNoResponse;
+
+  /// No description provided for @voiceUnknownReason.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown reason'**
+  String get voiceUnknownReason;
+
+  /// No description provided for @voiceNoteWord.
+  ///
+  /// In en, this message translates to:
+  /// **'the note'**
+  String get voiceNoteWord;
+
+  /// No description provided for @voiceNoteAtInspection.
+  ///
+  /// In en, this message translates to:
+  /// **'in the inspection'**
+  String get voiceNoteAtInspection;
+
+  /// No description provided for @voiceNoteInNotepad.
+  ///
+  /// In en, this message translates to:
+  /// **'the note in the notepad'**
+  String get voiceNoteInNotepad;
+
+  /// No description provided for @voiceNoteWhereNotepad.
+  ///
+  /// In en, this message translates to:
+  /// **'in the Notepad'**
+  String get voiceNoteWhereNotepad;
+
+  /// No description provided for @voiceNoteSavedPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get voiceNoteSavedPrefix;
+
+  /// No description provided for @voiceNoteWithRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'together with the recording'**
+  String get voiceNoteWithRecording;
+
+  /// No description provided for @voiceNoteLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'(length limit reached)'**
+  String get voiceNoteLimitReached;
+
+  /// No description provided for @voiceNoteRecordedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'I did not recognise any words, but the recording was saved - listen to it'**
+  String get voiceNoteRecordedOnly;
+
+  /// No description provided for @voiceNoteNoWords.
+  ///
+  /// In en, this message translates to:
+  /// **'(recording - no words recognised)'**
+  String get voiceNoteNoWords;
+
+  /// No description provided for @voiceTipDictating.
+  ///
+  /// In en, this message translates to:
+  /// **'Dictating a note — tap to finish'**
+  String get voiceTipDictating;
+
+  /// No description provided for @voiceTipMicUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone unavailable — tap to try again'**
+  String get voiceTipMicUnavailable;
+
+  /// No description provided for @voiceTipListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening for commands — \"Hey Maya stop\"'**
+  String get voiceTipListening;
+
+  /// No description provided for @voiceTipStandby.
+  ///
+  /// In en, this message translates to:
+  /// **'Standing by — \"Hey Maya start\"'**
+  String get voiceTipStandby;
+
+  /// No description provided for @voiceNoteHeaderNotepad.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for the notepad - finish by saying \"Hey Maya\"'**
+  String get voiceNoteHeaderNotepad;
+
+  /// No description provided for @voiceNoteHeaderInspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for the inspection - finish by saying \"Hey Maya\"'**
+  String get voiceNoteHeaderInspection;
+
+  /// No description provided for @voiceListeningDots.
+  ///
+  /// In en, this message translates to:
+  /// **'listening...'**
+  String get voiceListeningDots;
+
+  /// No description provided for @voiceNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Note - speak, finish by saying \"Hey Maya\"'**
+  String get voiceNoteHint;
+
+  /// No description provided for @voiceGrammarOutdated.
+  ///
+  /// In en, this message translates to:
+  /// **'WARNING: the loaded grammar does not know the note or undo command - the app bundle contains an outdated grammar file. Rebuild the app (full restart, not hot reload).'**
+  String get voiceGrammarOutdated;
 }
 
 class _AppLocalizationsDelegate

@@ -2811,4 +2811,67 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceSetSignal => 'Command confirmation signal';
+
+  @override
+  String get voiceNotUnderstood => 'I did not understand the command.';
+
+  @override
+  String get voiceEngineNoResponse => 'the engine did not respond within 5 s';
+
+  @override
+  String get voiceUnknownReason => 'unknown reason';
+
+  @override
+  String get voiceNoteWord => 'the note';
+
+  @override
+  String get voiceNoteAtInspection => 'in the inspection';
+
+  @override
+  String get voiceNoteInNotepad => 'the note in the notepad';
+
+  @override
+  String get voiceNoteWhereNotepad => 'in the Notepad';
+
+  @override
+  String get voiceNoteSavedPrefix => 'Saved';
+
+  @override
+  String get voiceNoteWithRecording => 'together with the recording';
+
+  @override
+  String get voiceNoteLimitReached => '(length limit reached)';
+
+  @override
+  String get voiceNoteRecordedOnly => 'I did not recognise any words, but the recording was saved - listen to it';
+
+  @override
+  String get voiceNoteNoWords => '(recording - no words recognised)';
+
+  @override
+  String get voiceTipDictating => 'Dictating a note — tap to finish';
+
+  @override
+  String get voiceTipMicUnavailable => 'Microphone unavailable — tap to try again';
+
+  @override
+  String get voiceTipListening => 'Listening for commands — "Hey Maya stop"';
+
+  @override
+  String get voiceTipStandby => 'Standing by — "Hey Maya start"';
+
+  @override
+  String get voiceNoteHeaderNotepad => 'Note for the notepad - finish by saying "Hey Maya"';
+
+  @override
+  String get voiceNoteHeaderInspection => 'Note for the inspection - finish by saying "Hey Maya"';
+
+  @override
+  String get voiceListeningDots => 'listening...';
+
+  @override
+  String get voiceNoteHint => 'Note - speak, finish by saying "Hey Maya"';
+
+  @override
+  String get voiceGrammarOutdated => 'WARNING: the loaded grammar does not know the note or undo command - the app bundle contains an outdated grammar file. Rebuild the app (full restart, not hot reload).';
 }

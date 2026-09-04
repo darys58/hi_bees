@@ -241,6 +241,10 @@ _PAKIETY = {
         },
         slowo_setek=None,
         procent={'procent', 'procenta', 'procentów'},
+        procent_kotwica='procent',
+        mostek_po_liczebniku=False,
+        lacznik_zakresu=None,   # polskie "od X do Y" nie było zgłaszane jako
+                                # zepsute - patrz vosk_grammar.dart
         ordinaly={
             'pierwszy': 1, 'drugi': 2, 'trzeci': 3, 'czwarty': 4, 'piąty': 5,
             'szósty': 6, 'siódmy': 7, 'ósmy': 8, 'dziewiąty': 9,
@@ -264,6 +268,9 @@ _PAKIETY = {
         setki={},
         slowo_setek='hundred',
         procent={'percent'},
+        procent_kotwica='percent',
+        mostek_po_liczebniku=True,
+        lacznik_zakresu='to',
         ordinaly={
             'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
             'sixth': 6, 'seventh': 7, 'eighth': 8, 'ninth': 9,
@@ -277,6 +284,9 @@ _PAKIETY = {
 JEDNOSTKI = NASTKI = DZIESIATKI = SETKI = ORDINALY = None
 SLOWO_SETEK = None
 PROCENT = None
+PROCENT_KOTWICA = None     # kanoniczne slowo do mostka bigramowego
+MOSTEK_PO_LICZEBNIKU = False
+LACZNIK_ZAKRESU = None     # "do"/"to" miedzy dwiema liczbami
 
 
 def ustaw_jezyk(kod):
@@ -291,6 +301,11 @@ def ustaw_jezyk(kod):
     DZIESIATKI, SETKI = p['dziesiatki'], p['setki']
     SLOWO_SETEK, PROCENT = p['slowo_setek'], p['procent']
     ORDINALY, POMIJALNE = p['ordinaly'], p['pomijalne']
+    global PROCENT_KOTWICA, LACZNIK_ZAKRESU
+    global MOSTEK_PO_LICZEBNIKU
+    PROCENT_KOTWICA = p['procent_kotwica']
+    MOSTEK_PO_LICZEBNIKU = p['mostek_po_liczebniku']
+    LACZNIK_ZAKRESU = p['lacznik_zakresu']
 
 
 def kandydaci_liczby(tokeny, poz):
@@ -616,9 +631,34 @@ class SilnikGramatyki:
                     frazy.add(v.lower())
         if intencje is None or uzyto_liczebnikow:
             frazy.update(self.liczebniki())
-            # Druga połowa mostka: bigram liczebnik -> procent (~50 pozycji).
-            for liczba in list(JEDNOSTKI) + list(NASTKI) + list(DZIESIATKI) + list(SETKI):
-                frazy.add('%s procent' % liczba)
+            slowa_liczb = (list(JEDNOSTKI) + list(NASTKI) + list(DZIESIATKI)
+                           + list(SETKI))
+            # Mostek: bigram liczebnik -> procent (~50 pozycji).
+            for liczba in slowa_liczb:
+                frazy.add('%s %s' % (liczba, PROCENT_KOTWICA))
+            # Setka z DWÓCH słów (angielskie "one hundred") - przejście
+            # "hundred" -> "percent".
+            if SLOWO_SETEK is not None:
+                frazy.add('%s %s' % (SLOWO_SETEK, PROCENT_KOTWICA))
+            # Mostek dla łącznika zakresu ("X to Y"), w obie strony.
+            if LACZNIK_ZAKRESU is not None:
+                for liczba in list(JEDNOSTKI) + list(NASTKI) + list(DZIESIATKI):
+                    frazy.add('%s %s' % (liczba, LACZNIK_ZAKRESU))
+                    frazy.add('%s %s' % (LACZNIK_ZAKRESU, liczba))
+            # Mostek dla frazy KOŃCZĄCEJ SIĘ LICZEBNIKIEM, po której pada
+            # liczba ("syrup three to two" + "two liters") - patrz komentarz
+            # w vosk_grammar.dart, frazy().
+            for fraza in (list(frazy) if MOSTEK_PO_LICZEBNIKU else []):
+                slowa = fraza.split(' ')
+                # TYLKO frazy wielowyrazowe - inaczej petla bierze pojedyncze
+                # liczebniki i tworzy iloczyn liczba x liczba (dla polskiego
+                # +1764 fraz zamiast ~140).
+                if len(slowa) < 2:
+                    continue
+                ostatnie = slowa[-1]
+                if ostatnie in slowa_liczb:
+                    for l in slowa_liczb:
+                        frazy.add('%s %s' % (ostatnie, l))
         frazy.discard('')
         return sorted(frazy)
 

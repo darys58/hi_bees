@@ -710,7 +710,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
     //tu użytkownik naprawdę mówił do aplikacji: albo komenda nie pasowała do
     //żadnego wzorca, albo przepadła na progu pewności
-    return 'Nie zrozumiałam polecenia.';
+    return AppLocalizations.of(context)!.voiceNotUnderstood;
   }
 
   //otwarcie sesji: "Hej Maja start" zastąpiło przycisk START
@@ -825,7 +825,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         ok = await e.zacznijDyktowanie().timeout(
           const Duration(seconds: 5),
           onTimeout: () {
-            awaria = 'silnik nie odpowiedział w 5 s';
+            awaria = AppLocalizations.of(context)!.voiceEngineNoResponse;
             return false;
           },
         );
@@ -849,7 +849,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       //zdiagnozować po teście na urządzeniu, a to jedyna informacja, jaka do
       //nas wraca
       if (!mounted) return;
-      final String powod = awaria ?? e.powodOdmowyDyktowania ?? 'nieznany powód';
+      final String powod =
+          awaria ?? e.powodOdmowyDyktowania ?? AppLocalizations.of(context)!.voiceUnknownReason;
       debugPrint('Notatka: dyktowanie nie ruszyło - $powod');
       setState(() => _dyktuje = false);
       _slad('odmowa: $powod');
@@ -1004,8 +1005,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       powod,
       ratujemyNagranie: ratujemyNagranie,
       zapisaneNagranie: zapisaneNagranie,
-      co: 'notatkę',
-      gdzie: 'przy przeglądzie',
+      co: AppLocalizations.of(context)!.voiceNoteWord,
+      gdzie: AppLocalizations.of(context)!.voiceNoteAtInspection,
     ));
     //odzywka MOWĄ, nie sygnałem: notatka to rzadka, świadoma czynność i
     //użytkownik musi wiedzieć, że tekst wylądował w bazie. Przy komendach
@@ -1016,7 +1017,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //Treść zastępcza wpisu, z którego Vosk nie wyciągnął ani jednego słowa, a w
   //nagraniu coś słychać. Bez niej nagranie nie miałoby do czego być przypięte,
   //a użytkownik nie miałby czego szukać w Notesie ani w przeglądzie.
-  static const String _trescBezTekstu = '(nagranie - nie rozpoznałam słów)';
+  //NIE static const: od 04.09.2026 zależy od języka interfejsu.
+  String get _trescBezTekstu => AppLocalizations.of(context)!.voiceNoteNoWords;
 
   //Zapis pliku WAV plus wpis w tabeli "nagrania". Zwraca true, gdy nagranie
   //jest na dysku. NIE RZUCA - notatka jest w tym momencie już zapisana, więc
@@ -1067,14 +1069,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     required String gdzie,
   }) {
     if (ratujemyNagranie) {
-      return 'Nie rozpoznałam słów, ale nagranie zapisałam - odsłuchaj je '
-          '$gdzie.';
+      return '${AppLocalizations.of(context)!.voiceNoteRecordedOnly} $gdzie.';
     }
     final String limit = powod == PowodKoncaDyktowania.limitCzasu
-        ? ' (osiągnięty limit długości)'
+        ? ' ${AppLocalizations.of(context)!.voiceNoteLimitReached}'
         : '';
-    final String dzwiek = zapisaneNagranie ? ' razem z nagraniem' : '';
-    return 'Zapisałam $co$dzwiek$limit.';
+    final String dzwiek =
+        zapisaneNagranie ? ' ${AppLocalizations.of(context)!.voiceNoteWithRecording}' : '';
+    return '${AppLocalizations.of(context)!.voiceNoteSavedPrefix} $co$dzwiek$limit.';
   }
 
   //NOTATKA DO NOTESU - drugie ujście dyktowania ("Hej Maja notatka do notesu").
@@ -1136,8 +1138,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       powod,
       ratujemyNagranie: rozpoznane.isEmpty,
       zapisaneNagranie: zapisaneNagranie,
-      co: 'notatkę w notesie',
-      gdzie: 'w Notesie',
+      co: AppLocalizations.of(context)!.voiceNoteInNotepad,
+      gdzie: AppLocalizations.of(context)!.voiceNoteWhereNotepad,
     ));
     await _zagraj(rozpoznane.isEmpty ? 'nie_rozumiem' : 'success');
   }
@@ -3495,6 +3497,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                     printText1 +=
                         "\n" + AppLocalizations.of(context)!.syrup + " 1:1 =";
                     printText1 += "  ${slots[key]} l";
+                    //ZERUJEMY CZĘŚĆ DZIESIĘTNĄ. Pola przeżywają między poleceniami
+                    //(resetInfo() nie jest tu wołane), więc po „3 point 5 liters"
+                    //kolejne „4 liters" - bez części po kropce - dawało 4,5 zamiast
+                    //4,0. Slot części dziesiętnej przychodzi PO całkowitej i i tak
+                    //nadpisze zapis (ten sam id wpisu, ConflictAlgorithm.replace),
+                    //więc wersje z kropką działają dalej poprawnie.
+                    //Zgłoszone z urządzenia 04.09.2026; błąd NIEZALEŻNY OD JĘZYKA.
+                    syrup1to1D = '0';
                     syrup1to1I = '${slots[key]}';
                     zapis = AppLocalizations.of(context)!.syrup +
                         " 1:1 = $syrup1to1I" +
@@ -3533,6 +3543,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                     printText1 +=
                         "\n" + AppLocalizations.of(context)!.syrup + " 3:2 =";
                     printText1 += "  ${slots[key]} l";
+                    //ZERUJEMY CZĘŚĆ DZIESIĘTNĄ. Pola przeżywają między poleceniami
+                    //(resetInfo() nie jest tu wołane), więc po „3 point 5 liters"
+                    //kolejne „4 liters" - bez części po kropce - dawało 4,5 zamiast
+                    //4,0. Slot części dziesiętnej przychodzi PO całkowitej i i tak
+                    //nadpisze zapis (ten sam id wpisu, ConflictAlgorithm.replace),
+                    //więc wersje z kropką działają dalej poprawnie.
+                    //Zgłoszone z urządzenia 04.09.2026; błąd NIEZALEŻNY OD JĘZYKA.
+                    syrup3to2D = '0';
                     syrup3to2I = '${slots[key]}';
                     zapis = AppLocalizations.of(context)!.syrup +
                         " 3:2 = $syrup3to2I" +
@@ -3570,6 +3588,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                       (readyHive == true || readyAllHives == true)) {
                     printText1 += "\n" + AppLocalizations.of(context)!.candy + " =";
                     printText1 += "  ${slots[key]} kg";
+                    //ZERUJEMY CZĘŚĆ DZIESIĘTNĄ. Pola przeżywają między poleceniami
+                    //(resetInfo() nie jest tu wołane), więc po „3 point 5 liters"
+                    //kolejne „4 liters" - bez części po kropce - dawało 4,5 zamiast
+                    //4,0. Slot części dziesiętnej przychodzi PO całkowitej i i tak
+                    //nadpisze zapis (ten sam id wpisu, ConflictAlgorithm.replace),
+                    //więc wersje z kropką działają dalej poprawnie.
+                    //Zgłoszone z urządzenia 04.09.2026; błąd NIEZALEŻNY OD JĘZYKA.
+                    candyD = '0';
                     candyI = '${slots[key]}';
                     zapis = AppLocalizations.of(context)!.candy +
                         " = $candyI" +
@@ -3601,6 +3627,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                     printText1 +=
                         "\n" + AppLocalizations.of(context)!.invert + " =";
                     printText1 += "  ${slots[key]}";
+                    //ZERUJEMY CZĘŚĆ DZIESIĘTNĄ. Pola przeżywają między poleceniami
+                    //(resetInfo() nie jest tu wołane), więc po „3 point 5 liters"
+                    //kolejne „4 liters" - bez części po kropce - dawało 4,5 zamiast
+                    //4,0. Slot części dziesiętnej przychodzi PO całkowitej i i tak
+                    //nadpisze zapis (ten sam id wpisu, ConflictAlgorithm.replace),
+                    //więc wersje z kropką działają dalej poprawnie.
+                    //Zgłoszone z urządzenia 04.09.2026; błąd NIEZALEŻNY OD JĘZYKA.
+                    invertD = '0';
                     invertI = '${slots[key]}';
                     zapis = AppLocalizations.of(context)!.invert +
                         " = $invertI" +
@@ -7251,12 +7285,12 @@ print('openDialog = $openDialog');
                 size: 30,
               ),
               tooltip: _dyktuje
-                  ? 'Dyktuję notatkę — dotknij, by zakończyć'
+                  ? AppLocalizations.of(context)!.voiceTipDictating
                   : ((isError || _mikrofonMilczy)
-                      ? 'Mikrofon niedostępny — dotknij, by spróbować ponownie'
+                      ? AppLocalizations.of(context)!.voiceTipMicUnavailable
                       : (isProcessing
-                          ? 'Słucham poleceń — „Hej Maja stop"'
-                          : 'Czuwam — „Hej Maja start"')),
+                          ? AppLocalizations.of(context)!.voiceTipListening
+                          : AppLocalizations.of(context)!.voiceTipStandby)),
               //lambda, nie referencja: obie gałęzie muszą mieć ten sam typ
               //void Function(), inaczej wnioskowanie nie da VoidCallback?
               onPressed: (isError || _mikrofonMilczy)
@@ -8580,8 +8614,8 @@ print('openDialog = $openDialog');
                           //„notatka do przeglądu" a „notatka do notesu" ekran
                           //wygląda identycznie, a tekst ląduje gdzie indziej
                           _ujscieNotatki == UjscieNotatki.notes
-                              ? 'Notatka do notesu - zakończ słowami „Hej Maja"'
-                              : 'Notatka do przeglądu - zakończ słowami „Hej Maja"',
+                              ? AppLocalizations.of(context)!.voiceNoteHeaderNotepad
+                              : AppLocalizations.of(context)!.voiceNoteHeaderInspection,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color: Color.fromARGB(255, 120, 120, 120),
@@ -8591,7 +8625,7 @@ print('openDialog = $openDialog');
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             podgladNotatki.isEmpty
-                                ? 'słucham...'
+                                ? AppLocalizations.of(context)!.voiceListeningDots
                                 : podgladNotatki,
                             textAlign: TextAlign.center,
                             maxLines: 4,
@@ -8614,7 +8648,7 @@ print('openDialog = $openDialog');
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      globals.voiceDiagnostyka ? _partial : 'słucham...',
+                      globals.voiceDiagnostyka ? _partial : AppLocalizations.of(context)!.voiceListeningDots,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: Color.fromARGB(255, 130, 130, 130),
@@ -8694,9 +8728,7 @@ print('openDialog = $openDialog');
   Widget _ostrzezenieOGramatyce() => Padding(
         padding: const EdgeInsets.only(top: 6),
         child: Text(
-          'UWAGA: wczytana gramatyka nie zna polecenia notatki albo cofania - w '
-          'pakiecie apki jest stary plik assets/grammar/pol_vosk.yml. Zbuduj '
-          'apkę od nowa (pełny restart, nie hot reload).',
+          AppLocalizations.of(context)!.voiceGrammarOutdated,
           textAlign: TextAlign.center,
           style: TextStyle(
               color: Color.fromARGB(255, 200, 0, 0), fontSize: 12),
@@ -8964,7 +8996,7 @@ print('openDialog = $openDialog');
                 Flexible(
                   child: Text(
                     podglad.isEmpty
-                        ? 'Notatka - mów, zakończ słowami „Hej Maja"'
+                        ? AppLocalizations.of(context)!.voiceNoteHint
                         : podglad,
                     textAlign: TextAlign.center,
                     maxLines: 2,

@@ -165,6 +165,7 @@ class _PakietLiczb {
     required this.procentSlowa,
     required this.procentKotwica,
     this.lacznikZakresu,
+    this.mostekPoLiczebniku = false,
   });
 
   final Map<String, int> jednostki;
@@ -188,6 +189,12 @@ class _PakietLiczb {
   /// Kanoniczne słowo wstawiane jako kotwica bigramu w gramatyce recognizera
   /// (patrz [VoskGrammar._rozetnij], [VoskGrammar.frazy]).
   final String procentKotwica;
+
+  /// Czy dokładać mostek bigramowy dla frazy KOŃCZĄCEJ SIĘ LICZEBNIKIEM,
+  /// po której pada liczba ("syrup three to two" + "two liters", "otwórz ul
+  /// sto" + "dwadzieścia"). Kosztuje kilkaset fraz, więc włączane tam, gdzie
+  /// problem realnie zgłoszono - patrz [_pakietLiczbPl].
+  final bool mostekPoLiczebniku;
 
   /// Słowo łączące dwie liczby w wyrażeniach zakresu ("ramka od X DO Y",
   /// "frame from X TO Y" - setFrames, setHivesRange). Zgłoszone z urządzenia
@@ -240,6 +247,12 @@ const _pakietLiczbPl = _PakietLiczb(
   },
   procentSlowa: {'procent', 'procenta', 'procentów'},
   procentKotwica: 'procent',
+  // mostekPoLiczebniku CELOWO wyłączony. Ten sam mechanizm co przy
+  // [lacznikZakresu]: polski działa w terenie od miesięcy i nikt nie zgłosił,
+  // żeby "otwórz ul sto dwadzieścia" albo "syrop trzy do dwóch dwa litry" nie
+  // wchodziło. Włączenie dołożyłoby ~504 frazy do sprawdzonej konfiguracji
+  // i zmieniło liczby w test/vosk_grammar_test.dart. Gdyby problem wypłynął
+  // po polsku - wystarczy tu `mostekPoLiczebniku: true`.
 );
 
 // Sprawdzone 03.09.2026 wobec słownika modelu vosk-model-small-en-us-0.15
@@ -267,6 +280,7 @@ const _pakietLiczbEn = _PakietLiczb(
   procentSlowa: {'percent'},
   procentKotwica: 'percent',
   lacznikZakresu: 'to',
+  mostekPoLiczebniku: true,
 );
 
 const Map<String, _PakietLiczb> _pakietyLiczb = {
@@ -705,6 +719,34 @@ class VoskGrammar {
       // percent" = 100%), bo "hundred" samo w sobie nie jest w [setki].
       if (_liczby.slowoSetek != null) {
         wynik.add('${_liczby.slowoSetek} ${_liczby.procentKotwica}');
+      }
+      // TRZECI mostek tej samej rodziny: fraza, która sama KOŃCZY SIĘ
+      // LICZEBNIKIEM, a zaraz po niej wypowiadana jest liczba ("syrup three
+      // to two" + "two liters", "syrop jeden do jednego" + "dwa litry").
+      // Rozcięcie na $pv stawia tu granicę fraz dokładnie między dwoma
+      // liczebnikami, a przy powtórzeniu tego samego słowa ("two two")
+      // model języka praktycznie nie ma jak przejść - polecenie wypada jako
+      // nierozpoznane. Zgłoszone z urządzenia 04.09.2026 dla "syrup three to
+      // two two liters"; parser sam frazę przyjmuje, gubi ją dopiero Vosk.
+      if (_liczby.mostekPoLiczebniku) {
+        final Set<String> slowaLiczb = {
+          ..._liczby.jednostki.keys,
+          ..._liczby.nastki.keys,
+          ..._liczby.dziesiatki.keys,
+          ..._liczby.setki.keys,
+        };
+        for (final fraza in wynik.toList()) {
+          final List<String> slowa = fraza.split(' ');
+          //TYLKO frazy WIELOWYRAZOWE. Bez tego warunku pętla brałaby też
+          //pojedyncze liczebniki (dodane wyżej przez liczebniki()) i tworzyła
+          //iloczyn liczba x liczba - dla polskiego +1764 fraz zamiast ~500.
+          if (slowa.length < 2) continue;
+          final String ostatnie = slowa.last;
+          if (!slowaLiczb.contains(ostatnie)) continue;
+          for (final String l in slowaLiczb) {
+            wynik.add('$ostatnie $l');
+          }
+        }
       }
       // Ten sam mostek dla łącznika zakresu ("X to Y" - setFrames,
       // setHivesRange). Bez tego "to" wchodzi do gramatyki jako samotna
