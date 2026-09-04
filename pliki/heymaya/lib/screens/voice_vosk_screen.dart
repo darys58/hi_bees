@@ -532,7 +532,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     if (!mounted) return;
     setState(() {
       isButtonDisabled = true;
-      _stanNasluchu = 'Przygotowuję rozpoznawanie mowy...';
+      _stanNasluchu = AppLocalizations.of(context)!.voicePreparing;
     });
 
     // Wybór języka silnika - NIEZALEŻNY kod od globals.jezyk (locale, np.
@@ -549,7 +549,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       _gramatyka =
           await VoskGrammar.zAssetu(sciezkaGramatyki, jezyk: jezykSilnika);
     } catch (e) {
-      _bladSilnika('Błąd gramatyki poleceń:\n$e');
+      _bladSilnika('${AppLocalizations.of(context)!.voiceErrGrammar}\n$e');
       return;
     }
 
@@ -574,6 +574,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _engine = VoskEngine(
       gramatyka: _gramatyka!,
       jezyk: jezykSilnika,
+      //silnik nie ma BuildContext - komunikaty paska stanu dostaje stąd
+      teksty: AppLocalizations.of(context)!,
       //okno na sklejenie komendy rozciętej przez Vosk = ta sama zwłoka,
       //którą ekran daje sobie na dokończenie przetwarzania komendy
       oknoSklejania: Duration(milliseconds: zwloka),
@@ -785,9 +787,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       if (ujscie == UjscieNotatki.przeglad &&
           (nrXXOfApiary == 0 || nrXXOfHive == 0)) {
         _slad('brak pasieki albo ula');
-        _powiedzONotatce('Notatka do przeglądu: najpierw powiedz, która pasieka '
-            'i który ul (np. „pasieka jeden", „ul siedem"). Notatkę do notesu '
-            'możesz dyktować od razu.');
+        _powiedzONotatce(AppLocalizations.of(context)!.voiceNoteNeedPlace);
         await _zagraj('nie_rozumiem');
         return;
       }
@@ -853,7 +853,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       debugPrint('Notatka: dyktowanie nie ruszyło - $powod');
       setState(() => _dyktuje = false);
       _slad('odmowa: $powod');
-      _powiedzONotatce('Notatka niedostępna: $powod');
+      _powiedzONotatce('${AppLocalizations.of(context)!.voiceNoteUnavailable} $powod');
       await _zagraj('nie_rozumiem');
     } catch (err, stos) {
       //Ostatnia deska ratunku. Bez niej awaria dowolnego kroku wygląda z
@@ -913,7 +913,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     final bool ratujemyNagranie =
         rozpoznane.isEmpty && nagranie != null && nagranieZDzwiekiem;
     if (rozpoznane.isEmpty && !ratujemyNagranie) {
-      _powiedzONotatce('Nie usłyszałam notatki - nic nie zapisałam.');
+      _powiedzONotatce(AppLocalizations.of(context)!.voiceNoteNothingHeard);
       await _zagraj('nie_rozumiem');
       return;
     }
@@ -981,7 +981,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     } catch (err) {
       debugPrint('Notatka: zapis nie powiódł się - $err');
       if (!mounted) return;
-      _powiedzONotatce('Notatki NIE udało się zapisać ($err). Treść: „$tresc"');
+      _powiedzONotatce('${AppLocalizations.of(context)!.voiceNoteSaveFailed} ($err). ${AppLocalizations.of(context)!.voiceNoteContent} „$tresc"');
       await _zagraj('error');
       return;
     }
@@ -1120,7 +1120,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     } catch (err) {
       debugPrint('Notatka do notesu: zapis nie powiódł się - $err');
       if (!mounted) return;
-      _powiedzONotatce('Notatki NIE udało się zapisać ($err). Treść: „$tresc"');
+      _powiedzONotatce('${AppLocalizations.of(context)!.voiceNoteSaveFailed} ($err). ${AppLocalizations.of(context)!.voiceNoteContent} „$tresc"');
       await _zagraj('error');
       return;
     }
@@ -1336,7 +1336,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       await _uruchomVosk(); //silnik w ogóle nie wstał - spróbuj od początku
       return;
     }
-    setState(() => _stanNasluchu = 'Próbuję odzyskać mikrofon...');
+    setState(() => _stanNasluchu = AppLocalizations.of(context)!.voiceMicRecovering);
     //gotowy = model i recognizery żyją, brakuje tylko strumienia. Jeśli padło
     //wcześniej (model), wracamy do pełnego startu NA TYM SAMYM silniku - nowy
     //obiekt zostawiłby stary rekorder i dwa recognizery w pamięci.
@@ -1345,7 +1345,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     setState(() {
       _silnikGotowy = e.gotowy;
       isButtonDisabled = !e.gotowy;
-      if (!ok) _stanNasluchu = 'Mikrofon nadal zajęty. Próbuję dalej...';
+      if (!ok) _stanNasluchu = AppLocalizations.of(context)!.voiceMicStillBusy;
     });
   }
 

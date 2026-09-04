@@ -2695,4 +2695,120 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get undoFailed => 'Não foi possível desfazer';
+
+  @override
+  String get voicePreparing => 'Preparing speech recognition...';
+
+  @override
+  String voiceDownloadingModel(String size) {
+    return 'Downloading the language model ($size), once only...';
+  }
+
+  @override
+  String get voiceLoadingModel => 'Loading the model...';
+
+  @override
+  String get voiceBuildingGrammar => 'Building the command grammar...';
+
+  @override
+  String get voiceErrInit => 'Could not prepare speech recognition.';
+
+  @override
+  String get voiceErrRecognizer => 'Could not create the Vosk recognizer.';
+
+  @override
+  String get voiceErrMicStart => 'Could not start the microphone.';
+
+  @override
+  String get voiceErrModeSwitch => 'Could not switch listening to mode';
+
+  @override
+  String get voiceErrAudioStream => 'Audio stream error:';
+
+  @override
+  String get voiceErrAudioProcess => 'Audio processing error:';
+
+  @override
+  String get voiceErrGrammar => 'Command grammar error:';
+
+  @override
+  String get voiceNoMicPermission => 'No microphone permission.';
+
+  @override
+  String get voiceMicPermAndroid => 'Android: Settings → Apps → Hi Bees → Permissions → Microphone.';
+
+  @override
+  String get voiceMicPermIos => 'iOS: Settings → Hi Bees → Microphone.';
+
+  @override
+  String get voiceMicBusy => 'Microphone busy.';
+
+  @override
+  String get voiceMicBusyRetrying => 'Microphone busy. Still trying...';
+
+  @override
+  String get voiceMicBusyWillReturn => 'The microphone is busy. Still trying - I will come back when it is free.';
+
+  @override
+  String get voiceMicSilentAndroid => 'The microphone went silent (a call, the assistant or an alarm).';
+
+  @override
+  String get voiceMicSilentIos => 'The microphone went silent (a call, Siri or an alarm).';
+
+  @override
+  String get voiceAudioClosed => 'Audio stream closed by the system.';
+
+  @override
+  String get voiceResuming => 'Resuming listening...';
+
+  @override
+  String get voicePaused => 'Listening paused.';
+
+  @override
+  String get voiceStandby => 'Standing by. Say "Hey Maya start" to begin.';
+
+  @override
+  String get voiceListening => 'Listening for commands.';
+
+  @override
+  String get voiceDictate => 'Dictate the note. Finish by saying "Hey Maya".';
+
+  @override
+  String get voiceMicRecovering => 'Trying to recover the microphone...';
+
+  @override
+  String get voiceMicStillBusy => 'Microphone still busy. Still trying...';
+
+  @override
+  String get voiceNoteNeedPlace => 'Note for the inspection: first say which apiary and which hive (e.g. "apiary one", "hive seven"). A note for the notepad can be dictated right away.';
+
+  @override
+  String get voiceNoteUnavailable => 'Note unavailable:';
+
+  @override
+  String get voiceNoteNothingHeard => 'I did not hear a note - nothing was saved.';
+
+  @override
+  String get voiceNoteSaveFailed => 'The note could NOT be saved';
+
+  @override
+  String get voiceNoteContent => 'Content:';
+
+  @override
+  String get voiceSetLivePreview => 'Live body preview during commands';
+
+  @override
+  String get voiceSetDiagnostics => 'Voice diagnostics';
+
+  @override
+  String get voiceSetRecording => 'Note recording';
+
+  @override
+  String get voiceSetLandscape => 'Voice 2 - landscape layout';
+
+  @override
+  String get voiceSetLandscapeSub => 'Force landscape layout for the live body preview (regardless of device orientation)';
+
+  @override
+  String get voiceSetSignal => 'Command confirmation signal';
 }

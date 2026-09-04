@@ -45,6 +45,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:heymaya/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:vosk_flutter_service/vosk_flutter_service.dart';
@@ -131,6 +132,7 @@ class VoskFraza {
 class VoskEngine {
   VoskEngine({
     required this.gramatyka,
+    required this.teksty,
     this.jezyk = 'pl',
     this.onFraza,
     this.onPartial,
@@ -146,6 +148,12 @@ class VoskEngine {
   /// Silnik-parser .yml. Ten sam obiekt generuje gramatykę dla recognizera
   /// i parsuje wynik - jedno źródło prawdy.
   final VoskGrammar gramatyka;
+
+  /// Komunikaty paska stanu i błędów. Silnik jest czystym helperem bez
+  /// BuildContext, więc dostaje gotowy obiekt tłumaczeń od ekranu, który go
+  /// tworzy. Dodane 04.09.2026 - wcześniej wszystkie te teksty były wpisane
+  /// po polsku na sztywno, także dla angielskiego.
+  final AppLocalizations teksty;
 
   /// Język modelu Vosk do pobrania ('pl'/'en') - MUSI być tym samym językiem,
   /// dla którego zbudowano [gramatyka] (VoskGrammar.zAssetu(..., jezyk:)) -
@@ -199,12 +207,13 @@ class VoskEngine {
     'en': 'https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip',
   };
 
-  // Nazwa języka do komunikatu "Pobieram model..." (patrz [uruchom]) - te
-  // komunikaty zostają po polsku niezależnie od języka rozpoznawania, tak
-  // jak reszta paska stanu silnika.
-  static const Map<String, String> _nazwaJezyka = {
-    'pl': 'polskiego (~50 MB)',
-    'en': 'angielskiego (~40 MB)',
+  // Rozmiar modelu do komunikatu "Pobieram model..." (patrz [uruchom]).
+  // Sam ROZMIAR, nie nazwa języka: nazwa musiałaby być odmieniona w każdym
+  // języku interfejsu ("model języka polskiego"/"angielskiego"...), a i tak
+  // nic nie wnosi - użytkownik przed chwilą sam ten język wybrał.
+  static const Map<String, String> _rozmiarModelu = {
+    'pl': '~50 MB',
+    'en': '~40 MB',
   };
 
   String get _modelUrl {
@@ -499,24 +508,23 @@ class VoskEngine {
   Future<bool> uruchom() async {
     if (_gotowy) return _nagrywa;
     try {
-      _stan('Przygotowuję rozpoznawanie mowy...');
+      _stan(teksty.voicePreparing);
       final String storage = await _katalogModelu();
       final ModelLoader loader = ModelLoader(modelStorage: storage);
       // Pobranie tylko za pierwszym razem - potem ModelLoader widzi katalog.
-      final String nazwa = _nazwaJezyka[jezyk] ?? jezyk;
-      _stan('Pobieram model języka $nazwa, tylko raz...');
+      _stan(teksty.voiceDownloadingModel(_rozmiarModelu[jezyk] ?? ''));
       final String sciezka = await loader.loadFromNetwork(_modelUrl);
 
-      _stan('Ładuję model...');
+      _stan(teksty.voiceLoadingModel);
       _model = await _vosk.createModel(sciezka);
       await _utworzRecognizery();
       _gotowy = _recCzuwanie != null && _recKomendy != null;
     } catch (e) {
-      _blad('Nie udało się przygotować rozpoznawania mowy.\n$e');
+      _blad('${teksty.voiceErrInit}\n$e');
       return false;
     }
     if (!_gotowy) {
-      _blad('Nie udało się utworzyć recognizera Vosk.');
+      _blad(teksty.voiceErrRecognizer);
       return false;
     }
     return wznow();
@@ -533,7 +541,7 @@ class VoskEngine {
       // To jedyna naprawdę terminalna przyczyna - sama nie minie, więc jako
       // jedyna wyłącza automatyczne ponawianie.
       _brakZgody = true;
-      _blad('Brak zgody na mikrofon.\n${_gdzieZgodaNaMikrofon()}');
+      _blad('${teksty.voiceNoMicPermission}\n${_gdzieZgodaNaMikrofon()}');
       return false;
     }
     _brakZgody = false;
@@ -542,9 +550,9 @@ class VoskEngine {
       await _startStrumienia();
     } catch (e) {
       if (cicho) {
-        _stan('Mikrofon zajęty. Próbuję dalej...');
+        _stan(teksty.voiceMicBusyRetrying);
       } else {
-        _blad('Nie udało się uruchomić mikrofonu.\n$e');
+        _blad('${teksty.voiceErrMicStart}\n$e');
       }
       return false;
     }
@@ -560,7 +568,7 @@ class VoskEngine {
     _czekamNaPierwszaPorcje = true;
     _log('wznow: watchdog uzbrojony t=${_zegar.elapsedMilliseconds} ms, '
         'czekam na pierwszą porcję (limit ciszy ${_limitCiszy.inSeconds} s)');
-    _stan('Czuwam. Powiedz „Hej Maja start", żeby zacząć.');
+    _stan(teksty.voiceStandby);
     return true;
   }
 
@@ -578,7 +586,7 @@ class VoskEngine {
       // Nie udało się TERAZ - ale mikrofon zwolni się sam, gdy skończy się
       // rozmowa. Bez tego ręczna próba byłaby jednorazowa.
       _proboWznowienia = 1;
-      _zaplanujPonowienie('Mikrofon zajęty.');
+      _zaplanujPonowienie(teksty.voiceMicBusy);
     }
     return ok;
   }
@@ -615,7 +623,7 @@ class VoskEngine {
       await _recognizer?.reset();
     } catch (_) {}
     _tryb = TrybNasluchu.wylaczony;
-    _stan('Nasłuch wstrzymany.');
+    _stan(teksty.voicePaused);
   }
 
   /// Zwalnia wszystko. Po tym silnik nadaje się już tylko do wyrzucenia.
@@ -653,7 +661,7 @@ class VoskEngine {
     // (_startSesji w voice_vosk_screen), więc kłamstwo w tym miejscu kosztuje
     // całą sesję: „czekam na polecenia" pada, a mikrofon zna dalej sześć fraz.
     if (!await _przelaczGramatyke(nowy)) {
-      _blad('Nie udało się przełączyć nasłuchu w tryb „${nowy.name}".');
+      _blad('${teksty.voiceErrModeSwitch} „${nowy.name}".');
       return;
     }
     _tryb = nowy;
@@ -664,12 +672,12 @@ class VoskEngine {
   String _opisTrybu(TrybNasluchu t) {
     switch (t) {
       case TrybNasluchu.komendy:
-        return 'Słucham poleceń.';
+        return teksty.voiceListening;
       case TrybNasluchu.dyktowanie:
-        return 'Dyktuj notatkę. Zakończ słowami „Hej Maja".';
+        return teksty.voiceDictate;
       case TrybNasluchu.czuwanie:
       case TrybNasluchu.wylaczony:
-        return 'Czuwam. Powiedz „Hej Maja start", żeby zacząć.';
+        return teksty.voiceStandby;
     }
   }
 
@@ -958,7 +966,7 @@ class VoskEngine {
     await _zwolnijRecognizery();
     if (_model == null) return;
     _recCzuwanie = await _nowyRecognizer(TrybNasluchu.czuwanie);
-    _stan('Buduję gramatykę poleceń...');
+    _stan(teksty.voiceBuildingGrammar);
     // Czas budowy grafu ma tu wartość diagnostyczną: jest pierwszym sygnałem,
     // czy urządzenie w ogóle udźwignie gramatykę komend. Na wolnym telefonie
     // długa budowa i wolne dekodowanie chodzą w parze.
@@ -1159,11 +1167,11 @@ class VoskEngine {
     );
     _audioSub = stream.listen(
       _porcja,
-      onError: (Object e) => _blad('Błąd strumienia audio:\n$e'),
+      onError: (Object e) => _blad('${teksty.voiceErrAudioStream}\n$e'),
       onDone: () {
         // Strumień zamknięty przez system (przerwanie sesji audio). Watchdog
         // i tak by to złapał, ale tu wiemy o tym natychmiast.
-        if (_nagrywa) _utraconoMikrofon('Strumień audio zamknięty przez system.');
+        if (_nagrywa) _utraconoMikrofon(teksty.voiceAudioClosed);
       },
     );
   }
@@ -1231,7 +1239,7 @@ class VoskEngine {
         _zmierzTempo(_zegar.elapsedMilliseconds - start);
       }
     } catch (e) {
-      _blad('Błąd przetwarzania audio:\n$e');
+      _blad('${teksty.voiceErrAudioProcess}\n$e');
     } finally {
       _karmienie = false;
     }
@@ -1487,8 +1495,8 @@ class VoskEngine {
     if (ostatnia == null) return;
     if (DateTime.now().difference(ostatnia) <= _limitCiszy) return;
     await _utraconoMikrofon(Platform.isAndroid
-        ? 'Mikrofon zamilkł (rozmowa, asystent albo alarm).'
-        : 'Mikrofon zamilkł (rozmowa, Siri albo alarm).');
+        ? teksty.voiceMicSilentAndroid
+        : teksty.voiceMicSilentIos);
   }
 
   /// Reakcja watchdoga na ciszę. Pierwsze próby robimy NATYCHMIAST (krótkie
@@ -1534,10 +1542,9 @@ class VoskEngine {
         // Użytkownik ma prawo wiedzieć, że nie słuchamy - ale to NIE jest koniec
         // prób. Najczęstsza przyczyna (rozmowa telefoniczna) mija sama i wtedy
         // mikrofon wraca bez udziału użytkownika.
-        _stan('$opis\nMikrofon jest zajęty. Próbuję dalej - wrócę sam, '
-            'gdy się zwolni.');
+        _stan('$opis\n${teksty.voiceMicBusyWillReturn}');
       } else {
-        _stan('$opis Wznawiam nasłuch...');
+        _stan('$opis ${teksty.voiceResuming}');
       }
       // Po przerwaniu WRACAMY DO CZUWANIA, nigdy do trybu komend: użytkownik
       // ma świadomie powiedzieć „hej maja start", żeby apka znów przyjmowała
@@ -1585,8 +1592,8 @@ class VoskEngine {
   // "Hey Maya" (android:label w AndroidManifest / applicationId eu.darys.heymaya),
   // a nie "Hi Bees" jak w kopii dla App Store.
   static String _gdzieZgodaNaMikrofon() => Platform.isAndroid
-      ? 'Android: Ustawienia → Aplikacje → Hey Maya → Uprawnienia → Mikrofon.'
-      : 'iOS: Ustawienia → Hey Maya → Mikrofon.';
+      ? teksty.voiceMicPermAndroid
+      : teksty.voiceMicPermIos;
 
   void _stan(String opis) => onStan?.call(opis, _tryb);
 

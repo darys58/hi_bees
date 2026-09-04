@@ -5322,6 +5322,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Undo failed'**
   String get undoFailed;
+
+  /// No description provided for @voicePreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing speech recognition...'**
+  String get voicePreparing;
+
+  /// No description provided for @voiceDownloadingModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading the language model ({size}), once only...'**
+  String voiceDownloadingModel(String size);
+
+  /// No description provided for @voiceLoadingModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading the model...'**
+  String get voiceLoadingModel;
+
+  /// No description provided for @voiceBuildingGrammar.
+  ///
+  /// In en, this message translates to:
+  /// **'Building the command grammar...'**
+  String get voiceBuildingGrammar;
+
+  /// No description provided for @voiceErrInit.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not prepare speech recognition.'**
+  String get voiceErrInit;
+
+  /// No description provided for @voiceErrRecognizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the Vosk recognizer.'**
+  String get voiceErrRecognizer;
+
+  /// No description provided for @voiceErrMicStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the microphone.'**
+  String get voiceErrMicStart;
+
+  /// No description provided for @voiceErrModeSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not switch listening to mode'**
+  String get voiceErrModeSwitch;
+
+  /// No description provided for @voiceErrAudioStream.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio stream error:'**
+  String get voiceErrAudioStream;
+
+  /// No description provided for @voiceErrAudioProcess.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio processing error:'**
+  String get voiceErrAudioProcess;
+
+  /// No description provided for @voiceErrGrammar.
+  ///
+  /// In en, this message translates to:
+  /// **'Command grammar error:'**
+  String get voiceErrGrammar;
+
+  /// No description provided for @voiceNoMicPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphone permission.'**
+  String get voiceNoMicPermission;
+
+  /// No description provided for @voiceMicPermAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'Android: Settings → Apps → Hey Maya → Permissions → Microphone.'**
+  String get voiceMicPermAndroid;
+
+  /// No description provided for @voiceMicPermIos.
+  ///
+  /// In en, this message translates to:
+  /// **'iOS: Settings → Hey Maya → Microphone.'**
+  String get voiceMicPermIos;
+
+  /// No description provided for @voiceMicBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone busy.'**
+  String get voiceMicBusy;
+
+  /// No description provided for @voiceMicBusyRetrying.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone busy. Still trying...'**
+  String get voiceMicBusyRetrying;
+
+  /// No description provided for @voiceMicBusyWillReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone is busy. Still trying - I will come back when it is free.'**
+  String get voiceMicBusyWillReturn;
+
+  /// No description provided for @voiceMicSilentAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone went silent (a call, the assistant or an alarm).'**
+  String get voiceMicSilentAndroid;
+
+  /// No description provided for @voiceMicSilentIos.
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone went silent (a call, Siri or an alarm).'**
+  String get voiceMicSilentIos;
+
+  /// No description provided for @voiceAudioClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio stream closed by the system.'**
+  String get voiceAudioClosed;
+
+  /// No description provided for @voiceResuming.
+  ///
+  /// In en, this message translates to:
+  /// **'Resuming listening...'**
+  String get voiceResuming;
+
+  /// No description provided for @voicePaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening paused.'**
+  String get voicePaused;
+
+  /// No description provided for @voiceStandby.
+  ///
+  /// In en, this message translates to:
+  /// **'Standing by. Say "Hey Maya start" to begin.'**
+  String get voiceStandby;
+
+  /// No description provided for @voiceListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening for commands.'**
+  String get voiceListening;
+
+  /// No description provided for @voiceDictate.
+  ///
+  /// In en, this message translates to:
+  /// **'Dictate the note. Finish by saying "Hey Maya".'**
+  String get voiceDictate;
+
+  /// No description provided for @voiceMicRecovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Trying to recover the microphone...'**
+  String get voiceMicRecovering;
+
+  /// No description provided for @voiceMicStillBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone still busy. Still trying...'**
+  String get voiceMicStillBusy;
+
+  /// No description provided for @voiceNoteNeedPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for the inspection: first say which apiary and which hive (e.g. "apiary one", "hive seven"). A note for the notepad can be dictated right away.'**
+  String get voiceNoteNeedPlace;
+
+  /// No description provided for @voiceNoteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Note unavailable:'**
+  String get voiceNoteUnavailable;
+
+  /// No description provided for @voiceNoteNothingHeard.
+  ///
+  /// In en, this message translates to:
+  /// **'I did not hear a note - nothing was saved.'**
+  String get voiceNoteNothingHeard;
+
+  /// No description provided for @voiceNoteSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The note could NOT be saved'**
+  String get voiceNoteSaveFailed;
+
+  /// No description provided for @voiceNoteContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Content:'**
+  String get voiceNoteContent;
+
+  /// No description provided for @voiceSetLivePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Live body preview during commands'**
+  String get voiceSetLivePreview;
+
+  /// No description provided for @voiceSetDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice diagnostics'**
+  String get voiceSetDiagnostics;
+
+  /// No description provided for @voiceSetRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Note recording'**
+  String get voiceSetRecording;
+
+  /// No description provided for @voiceSetLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice 2 - landscape layout'**
+  String get voiceSetLandscape;
+
+  /// No description provided for @voiceSetLandscapeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Force landscape layout for the live body preview (regardless of device orientation)'**
+  String get voiceSetLandscapeSub;
+
+  /// No description provided for @voiceSetSignal.
+  ///
+  /// In en, this message translates to:
+  /// **'Command confirmation signal'**
+  String get voiceSetSignal;
 }
 
 class _AppLocalizationsDelegate

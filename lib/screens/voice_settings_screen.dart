@@ -94,7 +94,7 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           // opis ma być po polsku i mówić, co przełącznik robi.
           Card(
             child: ListTile(
-              title: const Text('Podgląd korpusu w trakcie poleceń'),
+              title: Text(AppLocalizations.of(context)!.voiceSetLivePreview),
               //zwykły Switch, NIE Switch.adaptive: .adaptive daje na iOS zielony
               //CupertinoSwitch, a Powiadomienia (SwitchListTile) są materiałowe
               trailing: Switch(
@@ -124,7 +124,7 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           // globals.voiceDiagnostyka - wystarczy odkomentować ten Card.
           // Card(
           //   child: ListTile(
-          //     title: const Text('Diagnostyka głosu'),
+          //     title: const Text(AppLocalizations.of(context)!.voiceSetDiagnostics),
           //     subtitle: const Text(
           //         'Pokazuje rozpoznany tekst i pewność rozpoznania. Tekst bywa zapisany inaczej niż wypowiedziane słowo - to dopasowanie fonetyczne, nie błąd'),
           //     //zwykły Switch, NIE Switch.adaptive - jak pozostałe na tym ekranie
@@ -145,7 +145,7 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           // znikają po tygodniu albo razem z notatką (patrz RecordingHelper).
           Card(
             child: ListTile(
-              title: const Text('Nagrywanie notatek'),
+              title: Text(AppLocalizations.of(context)!.voiceSetRecording),
               subtitle: Text(
                   'Nagrania zostają na telefonie i kasują się po ${RecordingHelper.dniPrzechowywania} dniach'),
               //zwykły Switch, NIE Switch.adaptive: .adaptive daje na iOS zielony
@@ -195,7 +195,7 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           // diagnozie wystarczy odkomentować ten Card i pole [_opisSygnalu].
           // Card(
           //   child: ListTile(
-          //     title: const Text('Sygnał potwierdzenia polecenia'),
+          //     title: const Text(AppLocalizations.of(context)!.voiceSetSignal),
           //     subtitle: Text(_opisSygnalu ??
           //         'Naciśnij dzwonek po prawej - powinien zabrzmieć krótki '
           //             'dźwięk systemowy. Pod spodem pokaże się, czym zagrał.'),

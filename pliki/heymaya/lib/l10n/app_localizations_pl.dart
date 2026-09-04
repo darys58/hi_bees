@@ -2693,4 +2693,120 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get undoFailed => 'Nie udało się cofnąć';
+
+  @override
+  String get voicePreparing => 'Przygotowuję rozpoznawanie mowy...';
+
+  @override
+  String voiceDownloadingModel(String size) {
+    return 'Pobieram model językowy ($size), tylko raz...';
+  }
+
+  @override
+  String get voiceLoadingModel => 'Ładuję model...';
+
+  @override
+  String get voiceBuildingGrammar => 'Buduję gramatykę poleceń...';
+
+  @override
+  String get voiceErrInit => 'Nie udało się przygotować rozpoznawania mowy.';
+
+  @override
+  String get voiceErrRecognizer => 'Nie udało się utworzyć recognizera Vosk.';
+
+  @override
+  String get voiceErrMicStart => 'Nie udało się uruchomić mikrofonu.';
+
+  @override
+  String get voiceErrModeSwitch => 'Nie udało się przełączyć nasłuchu w tryb';
+
+  @override
+  String get voiceErrAudioStream => 'Błąd strumienia audio:';
+
+  @override
+  String get voiceErrAudioProcess => 'Błąd przetwarzania audio:';
+
+  @override
+  String get voiceErrGrammar => 'Błąd gramatyki poleceń:';
+
+  @override
+  String get voiceNoMicPermission => 'Brak zgody na mikrofon.';
+
+  @override
+  String get voiceMicPermAndroid => 'Android: Ustawienia → Aplikacje → Hey Maya → Uprawnienia → Mikrofon.';
+
+  @override
+  String get voiceMicPermIos => 'iOS: Ustawienia → Hey Maya → Mikrofon.';
+
+  @override
+  String get voiceMicBusy => 'Mikrofon zajęty.';
+
+  @override
+  String get voiceMicBusyRetrying => 'Mikrofon zajęty. Próbuję dalej...';
+
+  @override
+  String get voiceMicBusyWillReturn => 'Mikrofon jest zajęty. Próbuję dalej - wrócę sam, gdy się zwolni.';
+
+  @override
+  String get voiceMicSilentAndroid => 'Mikrofon zamilkł (rozmowa, asystent albo alarm).';
+
+  @override
+  String get voiceMicSilentIos => 'Mikrofon zamilkł (rozmowa, Siri albo alarm).';
+
+  @override
+  String get voiceAudioClosed => 'Strumień audio zamknięty przez system.';
+
+  @override
+  String get voiceResuming => 'Wznawiam nasłuch...';
+
+  @override
+  String get voicePaused => 'Nasłuch wstrzymany.';
+
+  @override
+  String get voiceStandby => 'Czuwam. Powiedz „Hej Maja start", żeby zacząć.';
+
+  @override
+  String get voiceListening => 'Słucham poleceń.';
+
+  @override
+  String get voiceDictate => 'Dyktuj notatkę. Zakończ słowami „Hej Maja".';
+
+  @override
+  String get voiceMicRecovering => 'Próbuję odzyskać mikrofon...';
+
+  @override
+  String get voiceMicStillBusy => 'Mikrofon nadal zajęty. Próbuję dalej...';
+
+  @override
+  String get voiceNoteNeedPlace => 'Notatka do przeglądu: najpierw powiedz, która pasieka i który ul (np. „pasieka jeden", „ul siedem"). Notatkę do notesu możesz dyktować od razu.';
+
+  @override
+  String get voiceNoteUnavailable => 'Notatka niedostępna:';
+
+  @override
+  String get voiceNoteNothingHeard => 'Nie usłyszałam notatki - nic nie zapisałam.';
+
+  @override
+  String get voiceNoteSaveFailed => 'Notatki NIE udało się zapisać';
+
+  @override
+  String get voiceNoteContent => 'Treść:';
+
+  @override
+  String get voiceSetLivePreview => 'Podgląd korpusu w trakcie poleceń';
+
+  @override
+  String get voiceSetDiagnostics => 'Diagnostyka głosu';
+
+  @override
+  String get voiceSetRecording => 'Nagrywanie notatek';
+
+  @override
+  String get voiceSetLandscape => 'Voice 2 - układ poziomy';
+
+  @override
+  String get voiceSetLandscapeSub => 'Wymuś układ poziomy dla live podglądu korpusu (niezależnie od orientacji urządzenia)';
+
+  @override
+  String get voiceSetSignal => 'Sygnał potwierdzenia polecenia';
 }
