@@ -69,7 +69,8 @@ POMOC = [
         'pollen thirty five percent on the left',
         'honey thirty five percent on the left',
         'food thirty five percent on the left',
-        'sealed thirty five percent on the left',    # POPRAWKA: było "seald"
+        'ripe thirty five percent on the left',      # POPRAWKA: było "sealed"
+        'ripe honey thirty five percent on the left',
         'wax thirty five percent on the left',
         'comb thirty five percent on the left',
         'black queen on the left',
@@ -216,6 +217,10 @@ NIEAKTUALNE = [
     ('brood drone - szyk z polskiego', 'brood drone ten percent on the left'),
     ('covered z eng1.yml', 'covered brood twenty percent on the left'),
     ('seald - literowka', 'seald thirty five percent on the left'),
+    # "sealed" dla MIODU kolidowalo z "sealed brood" - miod ma teraz "ripe".
+    # Samo "sealed" bez slowa "brood" nie moze juz pasowac do niczego.
+    ('sealed dla miodu (kolizja z sealed brood)',
+     'sealed thirty five percent on the left'),
     ('virgine - wartosc ARB, nie wypowiadana', 'queen is virgine'),
     ('to replace - wartosc ARB, nie wypowiadana', 'queen is to replace'),
     ('apivarol usuniety z gramatyki', 'apivarol dose number one'),

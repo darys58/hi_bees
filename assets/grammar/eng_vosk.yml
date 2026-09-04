@@ -141,7 +141,14 @@ context:
     setStore:
       - food $pv.Percent:food (on) (the) ($siteOfFrame:siteOfFrame)
       - (set) honey $pv.Percent:honey (on) (the) ($siteOfFrame:siteOfFrame)
-      - (set) (honey) sealed $pv.Percent:honeySealed (on) (the)
+      # "ripe", NIE "sealed". Do 04.09.2026 był tu "sealed" - to samo słowo, co
+      # w "(capped, sealed) brood" niżej, więc dla mówiącego znaczyło dwie różne
+      # rzeczy (kolizja powstała, gdy czerw kryty dostał "capped, sealed"
+      # zamiast błędnego "covered" z eng1.yml). "ripe" jest w słowniku modelu,
+      # to poprawny termin pszczelarski i pokrywa się znaczeniowo z polskim
+      # "miód dojrzały". Kolejność słów pozwala powiedzieć "ripe 30 percent"
+      # albo "ripe honey 30 percent".
+      - (set) ripe (honey) $pv.Percent:honeySealed (on) (the)
         ($siteOfFrame:siteOfFrame)
       - (set) pollen $pv.Percent:pollen (on) (the) ($siteOfFrame:siteOfFrame)
       - (set) (capped, sealed) brood $pv.Percent:brood (on) (the)

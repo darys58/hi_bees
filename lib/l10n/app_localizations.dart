@@ -339,7 +339,7 @@ abstract class AppLocalizations {
   /// No description provided for @honeySealed.
   ///
   /// In en, this message translates to:
-  /// **'honey sealed'**
+  /// **'ripe honey'**
   String get honeySealed;
 
   /// No description provided for @honey.
@@ -951,7 +951,7 @@ abstract class AppLocalizations {
   /// No description provided for @larvaeEggsPollenHoneySealdWaxComb.
   ///
   /// In en, this message translates to:
-  /// **'larvae/eggs/pollen/honey/food/sealed/wax/comb'**
+  /// **'larvae/eggs/pollen/honey/food/ripe/wax/comb'**
   String get larvaeEggsPollenHoneySealdWaxComb;
 
   /// No description provided for @dElete.
@@ -3135,7 +3135,7 @@ abstract class AppLocalizations {
   /// No description provided for @aMountOfSealed.
   ///
   /// In en, this message translates to:
-  /// **'Amount of honey sealed in %'**
+  /// **'Amount of ripe honey in %'**
   String get aMountOfSealed;
 
   /// No description provided for @aMountOfHoney.
@@ -3201,7 +3201,7 @@ abstract class AppLocalizations {
   /// No description provided for @honeySealedN.
   ///
   /// In en, this message translates to:
-  /// **'honey\nsealed'**
+  /// **'ripe\nhoney'**
   String get honeySealedN;
 
   /// No description provided for @hOney.
@@ -5205,7 +5205,7 @@ abstract class AppLocalizations {
   /// No description provided for @legendHoneySealed.
   ///
   /// In en, this message translates to:
-  /// **'honey sealed'**
+  /// **'ripe honey'**
   String get legendHoneySealed;
 
   /// No description provided for @legendHoneyFood.

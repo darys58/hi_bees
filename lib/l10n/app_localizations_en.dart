@@ -124,7 +124,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pollen => 'pollen';
 
   @override
-  String get honeySealed => 'honey sealed';
+  String get honeySealed => 'ripe honey';
 
   @override
   String get honey => 'honey';
@@ -438,7 +438,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get larvaeEggsPollenHoneySealdWaxComb =>
-      'larvae/eggs/pollen/honey/food/sealed/wax/comb';
+      'larvae/eggs/pollen/honey/food/ripe/wax/comb';
 
   @override
   String get dElete => 'Delete';
@@ -1553,7 +1553,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aMountOfComb => 'Amount of wax comb in %';
 
   @override
-  String get aMountOfSealed => 'Amount of honey sealed in %';
+  String get aMountOfSealed => 'Amount of ripe honey in %';
 
   @override
   String get aMountOfHoney => 'Amount of honey in %';
@@ -1586,7 +1586,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bOdy => 'Body';
 
   @override
-  String get honeySealedN => 'honey\nsealed';
+  String get honeySealedN => 'ripe\nhoney';
 
   @override
   String get hOney => 'honey';
@@ -2626,7 +2626,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get legendWaxComb => 'wax comb';
 
   @override
-  String get legendHoneySealed => 'honey sealed';
+  String get legendHoneySealed => 'ripe honey';
 
   @override
   String get legendHoneyFood => 'honey/food';
