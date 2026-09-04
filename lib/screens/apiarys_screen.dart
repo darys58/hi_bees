@@ -193,9 +193,12 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           final mem = memData.items;
      
           //odczytanie ustawień języka z bazy (memjezyk) - nadpisanie języka systemowego
-          if (mem.isNotEmpty && mem[0].memjezyk.isNotEmpty && mem[0].memjezyk != 'system') {
+          final bool jezykZBazy = mem.isNotEmpty &&
+              mem[0].memjezyk.isNotEmpty &&
+              mem[0].memjezyk != 'system';
+          if (jezykZBazy) {
             globals.memJezyk = mem[0].memjezyk;
-            MyApp.setLocale(mem[0].memjezyk);
+            MyApp.setLocale(mem[0].memjezyk); //ustawia też globals.jezyk
           }
 
           //odczytanie widoczności kategorii w Aktualności ula (mem1)
@@ -203,9 +206,22 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
             globals.summaryVisibility = mem[0].mem1;
           }
 
-          //odczytanie aktualnego języka (po ewentualnym nadpisaniu)
-          Locale myLocale = Localizations.localeOf(context);
-          globals.jezyk = myLocale.toString(); //zapamiętanie aktualnego języka (np. pl_PL, en_US, de_DE)
+          //odczytanie aktualnego języka - TYLKO gdy nie ma nadpisania z bazy.
+          //
+          //BŁĄD ZGŁOSZONY 04.09.2026: apka z zapisanym językiem angielskim
+          //startowała po angielsku, ale sterowanie głosem budowało gramatykę
+          //POLSKĄ; dopiero przełączenie języka w Ustawieniach naprawiało.
+          //Przyczyna: MyApp.setLocale() wyżej ustawia globals.jezyk poprawnie
+          //i zmienia localeOverride, ale to ValueNotifier - przebudowa dzieje
+          //się dopiero w NASTĘPNEJ klatce. Ten `context` jest jeszcze sprzed
+          //przebudowy, więc Localizations.localeOf(context) zwracało STARY
+          //język i nadpisywało nim dobrą wartość. UI szedł za localeOverride
+          //(stąd angielski ekran), a globals.jezyk zostawał polski - i po nim
+          //voice_vosk_screen wybiera model i gramatykę.
+          if (!jezykZBazy) {
+            Locale myLocale = Localizations.localeOf(context);
+            globals.jezyk = myLocale.toString(); //np. pl_PL, en_US, de_DE
+          }
 
           globals.wersja = wersja;
 

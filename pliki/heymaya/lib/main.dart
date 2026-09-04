@@ -276,14 +276,19 @@ class _MyAppState extends State<MyApp> {
          //zeby domyślnie ustawić "en" jesli wybrano inny jezyk niz polski
          localeListResolutionCallback: (allLocales, supportedLocales) {
           final locale = allLocales?.first.languageCode;
-          if (locale == 'pl') return const Locale('pl', 'PL');
-          if (locale == 'de') return const Locale('de', 'DE');
-          if (locale == 'fr') return const Locale('fr', 'FR');
-          if (locale == 'es') return const Locale('es', 'ES');
-          if (locale == 'pt') return const Locale('pt', 'PT');
-          if (locale == 'it') return const Locale('it', 'IT');
-          // The default locale
-          return const Locale('en', 'US');
+          //Lista rozwinięta w mapę supportedLocaleMap (ten sam plik, wyżej) -
+          //dokładnie te same 7 języków, jedno źródło prawdy. Nieznany kod
+          //nadal daje domyślny en_US, jak w poprzedniej wersji.
+          //
+          //globals.jezyk USTAWIANY TUTAJ - to jedyne miejsce, które zna
+          //ostatecznie rozstrzygnięty język (także przy języku systemowym,
+          //gdzie setLocale() nie ma czego zapisać; komentarz w setLocale
+          //obiecywał to od dawna, ale nikt tego nie dopisał). Przypisanie
+          //samej zmiennej globalnej, bez setState - bezpieczne w budowie.
+          final Locale wybrany =
+              MyApp.supportedLocaleMap[locale] ?? const Locale('en', 'US');
+          globals.jezyk = wybrany.toString();
+          return wybrany;
         },
 
         ///title: 'Hi Bees',
