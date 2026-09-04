@@ -129,6 +129,100 @@ class VoskFraza {
   String toString() => '"$tekst" ${przyjeta ? "OK" : "odrzucona"} ($powod)';
 }
 
+/// Echa, które trzeba wyciąć z treści dyktowanej notatki - komplet na JEDEN
+/// język. Do 04.09.2026 wszystkie cztery wzorce były wpisane po polsku na
+/// sztywno, także dla angielskiego: notatka po angielsku zostawała więc
+/// z „hey maya" i „note" w treści, bo polskie wzorce nie miały czego dopasować.
+///
+/// To NIE są komunikaty, tylko logika czyszcząca tekst - dlatego nie idą do
+/// ARB, a tutaj, obok pozostałych map per język ([VoskEngine._frazyKonca],
+/// [VoskEngine._modeleUrl]).
+class _EchaNotatki {
+  const _EchaNotatki({
+    required this.ogonKonca,
+    required this.echoOtwarcia,
+    required this.echoZawolania,
+    this.echoOdzywki,
+  });
+
+  /// Fraza kończąca notatkę i wszystko po niej.
+  final RegExp ogonKonca;
+
+  /// Echo polecenia otwierającego notatkę, na jej POCZĄTKU.
+  final RegExp echoOtwarcia;
+
+  /// Samo zawołanie na początku, bez czasownika.
+  final RegExp echoZawolania;
+
+  /// Echo ODZYWKI Mai (mp3 grany przed wejściem w dyktowanie). Null = dla tego
+  /// języka nie ma czego wycinać - patrz [_echaEn].
+  final RegExp? echoOdzywki;
+}
+
+/// Wzorzec, który NIGDY nie pasuje - używany, gdy dany język nie ma czego
+/// wycinać (np. brak angielskiego nagrania odzywki). `(?!)` to negatywne
+/// wyprzedzenie pustego wzorca, więc dopasowanie zawsze zawodzi; dzięki temu
+/// `replaceFirst` po prostu nie zmienia tekstu, bez rozgałęziania kodu.
+final RegExp _nigdyNiePasuje = RegExp(r'(?!)');
+
+/// Wzorce polskie - ZMIERZONE na urządzeniu, nie zgadywane.
+final _EchaNotatki _echaPl = _EchaNotatki(
+  // Fraza kończąca bywa przepisana także przez recognizer notatki - i to w
+  // formie przekręconej, bo w wolnym modelu nic jej nie faworyzuje. Ucinamy ją
+  // z treści razem z ogonem, żeby "hej maja" nie zostało w zapisanej notatce.
+  ogonKonca: RegExp(
+    r'\s*\b(hej|ej)\s+(maja|mają|maj|majo|maju)\b[\s\S]*$',
+    caseSensitive: false,
+  ),
+  // Echo komendy otwierającej na POCZĄTKU notatki. Ta sama przyczyna co
+  // [VoskEngine._karencjaTerminatora] - opóźniony bufor wejściowy iOS. Bez
+  // wycięcia z przodu notatka ginęłaby w całości: ogonKonca tnie od pierwszego
+  // "hej maja" do końca, a tutaj to "hej maja" stoi na samym początku.
+  echoOtwarcia: RegExp(
+    r'^\s*((hej|ej)\s+(maja|mają|maj|majo|maju)\s+)?'
+    r'(zanotuj|zapisz\s+notatk[ęe])\b',
+    caseSensitive: false,
+  ),
+  echoZawolania: RegExp(
+    r'^\s*(hej|ej)\s+(maja|mają|maj|majo|maju)\b',
+    caseSensitive: false,
+  ),
+  // Odzywka „słucham", którą Maja gra PRZED wejściem w dyktowanie. Mikrofon jest
+  // na ten czas wyciszony, ale bufor wejściowy iOS oddaje dźwięk z opóźnieniem
+  // większym niż ogon wyciszenia, więc słowo i tak wpada do notatki - zawsze na
+  // jej początku. Zgłoszone z urządzenia 04.08.2026: KAŻDA notatka zaczynała
+  // się od „słucham".
+  echoOdzywki: RegExp(r'^\s*s[łl]ucham\b', caseSensitive: false),
+);
+
+/// Wzorce angielskie. Słowa wzięte WPROST z assets/grammar/eng_vosk.yml
+/// (voiceStart, voiceNote, voiceNotepad). Warianty przesłyszenia dobrane
+/// ZACHOWAWCZO: „hay" obok „hey", ale BEZ samego „may" - to zwykłe angielskie
+/// słowo i wycinałoby prawdziwą treść notatki. Nie były mierzone na nagraniach
+/// tak jak polskie - po testach na urządzeniu mogą wymagać uzupełnienia.
+final _EchaNotatki _echaEn = _EchaNotatki(
+  ogonKonca: RegExp(
+    r'\s*\b(hey|hay)\s+(maya|maja|mya)\b[\s\S]*$',
+    caseSensitive: false,
+  ),
+  echoOtwarcia: RegExp(
+    r'^\s*((hey|hay)\s+(maya|maja|mya)\s+)?'
+    r'(write\s+)?note(\s+for\s+(inspection|notepad))?\b',
+    caseSensitive: false,
+  ),
+  echoZawolania: RegExp(
+    r'^\s*(hey|hay)\s+(maya|maja|mya)\b',
+    caseSensitive: false,
+  ),
+  // echoOdzywki ŚWIADOMIE POMINIĘTE (null). Odzywka przed dyktowaniem to
+  // assets/audio/slucham.mp3 - nagranie POLSKIE, bo angielskich nagrań Mai
+  // jeszcze nie ma. Angielski model przepisze polskie „słucham" jako
+  // nieprzewidywalną zbitkę, więc każdy wzorzec byłby zgadywaniem, a ZŁY wzorzec
+  // ucina PRAWDZIWĄ treść notatki. Echo zostaje niewycięte (widoczne, ale
+  // nieszkodliwe) do czasu nagrań angielskich - wtedy wpisać tu to, co Maja
+  // faktycznie mówi.
+);
+
 class VoskEngine {
   VoskEngine({
     required this.gramatyka,
@@ -831,39 +925,9 @@ class VoskEngine {
     onDyktowanieTekst?.call(_bezEchaZPrzodu(calosc).trim());
   }
 
-  // Fraza kończąca bywa przepisana także przez recognizer notatki - i to w
-  // formie przekręconej, bo w wolnym modelu nic jej nie faworyzuje. Ucinamy ją
-  // z treści razem z ogonem, żeby "hej maja" nie zostało w zapisanej notatce.
-  static final RegExp _ogonKonca = RegExp(
-    r'\s*\b(hej|ej)\s+(maja|mają|maj|majo|maju)\b[\s\S]*$',
-    caseSensitive: false,
-  );
-
-  // Echo komendy otwierającej na POCZĄTKU notatki. Ta sama przyczyna co
-  // [_karencjaTerminatora] - opóźniony bufor wejściowy iOS. Bez wycięcia z
-  // przodu notatka ginęłaby w całości: _ogonKonca tnie od pierwszego "hej maja"
-  // do końca, a tutaj to "hej maja" stoi na samym początku.
-  static final RegExp _echoOtwarcia = RegExp(
-    r'^\s*((hej|ej)\s+(maja|mają|maj|majo|maju)\s+)?'
-    r'(zanotuj|zapisz\s+notatk[ęe])\b',
-    caseSensitive: false,
-  );
-
-  // Samo zawołanie na początku (bez czasownika) - też echo, nie treść.
-  static final RegExp _echoZawolania = RegExp(
-    r'^\s*(hej|ej)\s+(maja|mają|maj|majo|maju)\b',
-    caseSensitive: false,
-  );
-
-  // Odzywka „słucham", którą Maja gra PRZED wejściem w dyktowanie. Mikrofon jest
-  // na ten czas wyciszony, ale bufor wejściowy iOS oddaje dźwięk z opóźnieniem
-  // większym niż ogon wyciszenia (ta sama przyczyna co [_karencjaTerminatora]),
-  // więc słowo i tak wpada do notatki - zawsze na jej początku. Zgłoszone z
-  // urządzenia 04.08.2026: KAŻDA notatka zaczynała się od „słucham".
-  static final RegExp _echoOdzywki = RegExp(
-    r'^\s*s[łl]ucham\b',
-    caseSensitive: false,
-  );
+  /// Wzorce ech do wycięcia z notatki, dobrane wg [jezyk] - patrz
+  /// [_EchaNotatki] na początku pliku.
+  _EchaNotatki get _echa => jezyk == 'en' ? _echaEn : _echaPl;
 
   // Echa z POCZĄTKU notatki: komenda otwierająca, zawołanie i odzywka Mai.
   // W PĘTLI, bo wpadają w różnych kombinacjach („zanotuj słucham", „słucham",
@@ -874,9 +938,9 @@ class VoskEngine {
     for (int i = 0; i < 6; i++) {
       final String przed = t;
       t = t
-          .replaceFirst(_echoOtwarcia, '')
-          .replaceFirst(_echoZawolania, '')
-          .replaceFirst(_echoOdzywki, '');
+          .replaceFirst(_echa.echoOtwarcia, '')
+          .replaceFirst(_echa.echoZawolania, '')
+          .replaceFirst(_echa.echoOdzywki ?? _nigdyNiePasuje, '');
       if (t == przed) break; //nic już nie schodzi - dalej jest treść
     }
     return t;
@@ -884,7 +948,7 @@ class VoskEngine {
 
   String _oczyscNotatke(String tekst) =>
       _bezEchaZPrzodu(tekst.replaceAll(RegExp(r'\[unk\]|<unk>'), ' '))
-          .replaceFirst(_ogonKonca, '')
+          .replaceFirst(_echa.ogonKonca, '')
           .replaceAll(RegExp(r'\s+'), ' ')
           .trim();
 
@@ -1285,7 +1349,7 @@ class VoskEngine {
       _emitujNotatke();
       // Zapas na brak detektora: frazy szukamy w tym, co zapisał recognizer
       // notatki. Z treści i tak wypada - wycina ją _oczyscNotatke.
-      if (det == null && wolnoKonczyc && _ogonKonca.hasMatch(tekst)) {
+      if (det == null && wolnoKonczyc && _echa.ogonKonca.hasMatch(tekst)) {
         _zadanieKonca = PowodKoncaDyktowania.fraza;
         return;
       }
@@ -1298,7 +1362,7 @@ class VoskEngine {
         // nawet jeśli użytkownik jeszcze zbiera myśli.
         if (p.trim().isNotEmpty && wolnoKonczyc) _ostatniaMowa = DateTime.now();
         _emitujNotatke();
-        if (det == null && wolnoKonczyc && _ogonKonca.hasMatch(p)) {
+        if (det == null && wolnoKonczyc && _echa.ogonKonca.hasMatch(p)) {
           _zadanieKonca = PowodKoncaDyktowania.fraza;
           return;
         }
