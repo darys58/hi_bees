@@ -303,7 +303,16 @@ List<TextSpan> _sekcjaWyposazenie(BuildContext context) {
     TextSpan(text: l.eXclud, style: _wymagany),
     TextSpan(text: ' ' + l.onBodyNumber),
     TextSpan(text: ' 1', style: _wartosc),
-    TextSpan(text: '.\n\n'),
+    //Po angielsku MÓWI się "grid"/"grate" (słowa "excluder" nie ma w słowniku
+    //modelu Vosk), ale apka zapisuje i wyświetla "excluder" - tak samo jak
+    //przy wpisie ręcznym. Decyzja usera 04.09.2026: nazwy w apce NIE
+    //zmieniamy, bo rozjechałaby się z ręczną edycją; zamiast tego pomoc
+    //uprzedza, że zapis będzie brzmiał inaczej niż polecenie.
+    if (globals.jezyk == 'en_US')
+      TextSpan(text: '.  - ' + l.save.toLowerCase() + ': "' + l.excluder + '"\n\n',
+          style: _komentarz)
+    else
+      TextSpan(text: '.\n\n'),
     _punktor,
     //l.exclud ("excluder") jest też etykietą przycisku w infos_screen, więc
     //zostaje - ale słowa "excluder" NIE MA w słowniku modelu EN (patrz nagłówek

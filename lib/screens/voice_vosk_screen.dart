@@ -1790,6 +1790,17 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //"brak") - dopisany; literówka "marker other" zamiast "marked other" w tym
   //samym switchu - dopisany poprawny case obok (stary zostawiony).
   Map<String, Map<String, String>> _mapowanieSlotowEn(AppLocalizations l10n) => {
+        //Trójkąty nad ramką (frames_screen ~1713 i ~1736) porównują wartość
+        //ZNAK W ZNAK z app_en.arb, a ręczna edycja (frame_edit_screen ~2625)
+        //zapisuje dokładnie te klucze. Gramatyka mówi krócej i naturalniej
+        //("to extract" zamiast "to extraction", "to remove" zamiast
+        //"to delete") - stąd przeliczenie. Zgłoszone z urządzenia 04.09.2026:
+        //polecenia były ROZPOZNAWANE, ale znaczek się nie rysował.
+        //"work frame" i "to insulate" są identyczne z ARB - nie ma ich tutaj.
+        'toDo': {
+          'to extract': l10n.toExtraction, //"to extraction"
+          'to remove': l10n.toDelete, //"to delete"
+        },
         'queenState': {
           'virgin': l10n.virgine, //app_en.arb: "virgine" (literówka w ARB)
         },
@@ -1799,6 +1810,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         },
         'colonyState': {
           'okay': 'ok',
+          //"swarming" dołożone do gramatyki 03.09.2026 (samo "swarming mood"
+          //trzeba było wypowiedzieć w całości), ale kanoniczna wartość
+          //w app_en.arb i w ręcznej edycji (infos_edit_screen ~1706) to dalej
+          //pełne "swarming mood" - bez tego przeliczenia krótka forma
+          //zapisywałaby się inaczej niż ta sama rzecz wybrana z listy.
+          'swarming': l10n.swarmingMood,
         },
         'bottomBoard': {
           'cleaned': l10n.clean, //app_en.arb clean = "clean"
@@ -9155,10 +9172,18 @@ class MyHive extends CustomPainter {
     for (var i = 0; i < informacje.length; i++) {
       //print('i = $i');
       //print('excluder1 = $excluder');
-      if ((informacje[i].parametr == 'excluder') ||
-          (informacje[i].parametr == 'excluder -') ||
-          (informacje[i].parametr == 'krata odgrodowa') ||
-          (informacje[i].parametr == 'krata odgrodowa -')) {
+      //TRIM JEST ISTOTNY. Zapis USUNIĘCIA kraty wstawia parametr z WIODĄCĄ
+      //SPACJĄ (" excluder -" / " krata odgrodowa -" - patrz case 'excluderDel'
+      //wyżej i info_item.dart ~784, które porównuje dokładnie z tą spacją),
+      //a te warunki jej nie miały - więc wpis o zdjęciu kraty NIGDY tu nie
+      //trafiał i krata zostawała narysowana na korpusie mimo poprawnego
+      //zapisu. Zgłoszone z urządzenia 04.09.2026; błąd NIEZALEŻNY OD JĘZYKA -
+      //polski wariant ("krata odgrodowa -") miał go tak samo.
+      final String parametrInfo = informacje[i].parametr.trim();
+      if ((parametrInfo == 'excluder') ||
+          (parametrInfo == 'excluder -') ||
+          (parametrInfo == 'krata odgrodowa') ||
+          (parametrInfo == 'krata odgrodowa -')) {
         excluder = informacje[i]
             .miara; //zamiana pola wartosc z miara zeby poprawnie wyświetlać na listTail
         //print('excluder2 = $excluder');
