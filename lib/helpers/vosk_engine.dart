@@ -1645,7 +1645,9 @@ class VoskEngine {
   // Gdzie użytkownik ma sam włączyć mikrofon. Ekranu ustawień systemowych nie
   // otwieramy - to jedyny komunikat, po którym nasłuch NIE wróci sam, więc musi
   // mówić dokładnie, gdzie kliknąć na TYM systemie.
-  static String _gdzieZgodaNaMikrofon() => Platform.isAndroid
+  //NIE static: od 04.09.2026 sięga po `teksty` (pole instancji), a wołane jest
+  //i tak wyłącznie z metody instancyjnej [wznow].
+  String _gdzieZgodaNaMikrofon() => Platform.isAndroid
       ? teksty.voiceMicPermAndroid
       : teksty.voiceMicPermIos;
 

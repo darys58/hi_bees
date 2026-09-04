@@ -2724,7 +2724,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceNoMicPermission => 'No microphone permission.';
 
   @override
-  String get voiceMicPermAndroid => 'Android: Settings → Apps → Hi Bees → Permissions → Microphone.';
+  String get voiceMicPermAndroid =>
+      'Android: Settings → Apps → Hi Bees → Permissions → Microphone.';
 
   @override
   String get voiceMicPermIos => 'iOS: Settings → Hi Bees → Microphone.';
@@ -2736,13 +2737,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceMicBusyRetrying => 'Microphone busy. Still trying...';
 
   @override
-  String get voiceMicBusyWillReturn => 'The microphone is busy. Still trying - I will come back when it is free.';
+  String get voiceMicBusyWillReturn =>
+      'The microphone is busy. Still trying - I will come back when it is free.';
 
   @override
-  String get voiceMicSilentAndroid => 'The microphone went silent (a call, the assistant or an alarm).';
+  String get voiceMicSilentAndroid =>
+      'The microphone went silent (a call, the assistant or an alarm).';
 
   @override
-  String get voiceMicSilentIos => 'The microphone went silent (a call, Siri or an alarm).';
+  String get voiceMicSilentIos =>
+      'The microphone went silent (a call, Siri or an alarm).';
 
   @override
   String get voiceAudioClosed => 'Audio stream closed by the system.';
@@ -2754,13 +2758,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicePaused => 'Listening paused.';
 
   @override
-  String get voiceStandby => 'Standing by. Say "Hey Maya start" to begin.';
+  String get voiceStandby => 'Standing by. Say \"Hey Maya start\" to begin.';
 
   @override
   String get voiceListening => 'Listening for commands.';
 
   @override
-  String get voiceDictate => 'Dictate the note. Finish by saying "Hey Maya".';
+  String get voiceDictate => 'Dictate the note. Finish by saying \"Hey Maya\".';
 
   @override
   String get voiceMicRecovering => 'Trying to recover the microphone...';
@@ -2769,13 +2773,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceMicStillBusy => 'Microphone still busy. Still trying...';
 
   @override
-  String get voiceNoteNeedPlace => 'Note for the inspection: first say which apiary and which hive (e.g. "apiary one", "hive seven"). A note for the notepad can be dictated right away.';
+  String get voiceNoteNeedPlace =>
+      'Note for the inspection: first say which apiary and which hive (e.g. \"apiary one\", \"hive seven\"). A note for the notepad can be dictated right away.';
 
   @override
   String get voiceNoteUnavailable => 'Note unavailable:';
 
   @override
-  String get voiceNoteNothingHeard => 'I did not hear a note - nothing was saved.';
+  String get voiceNoteNothingHeard =>
+      'I did not hear a note - nothing was saved.';
 
   @override
   String get voiceNoteSaveFailed => 'The note could NOT be saved';
@@ -2796,7 +2802,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceSetLandscape => 'Voice 2 - landscape layout';
 
   @override
-  String get voiceSetLandscapeSub => 'Force landscape layout for the live body preview (regardless of device orientation)';
+  String get voiceSetLandscapeSub =>
+      'Force landscape layout for the live body preview (regardless of device orientation)';
 
   @override
   String get voiceSetSignal => 'Command confirmation signal';

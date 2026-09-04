@@ -5457,7 +5457,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceStandby.
   ///
   /// In en, this message translates to:
-  /// **'Standing by. Say "Hey Maya start" to begin.'**
+  /// **'Standing by. Say \"Hey Maya start\" to begin.'**
   String get voiceStandby;
 
   /// No description provided for @voiceListening.
@@ -5469,7 +5469,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceDictate.
   ///
   /// In en, this message translates to:
-  /// **'Dictate the note. Finish by saying "Hey Maya".'**
+  /// **'Dictate the note. Finish by saying \"Hey Maya\".'**
   String get voiceDictate;
 
   /// No description provided for @voiceMicRecovering.
@@ -5487,7 +5487,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceNoteNeedPlace.
   ///
   /// In en, this message translates to:
-  /// **'Note for the inspection: first say which apiary and which hive (e.g. "apiary one", "hive seven"). A note for the notepad can be dictated right away.'**
+  /// **'Note for the inspection: first say which apiary and which hive (e.g. \"apiary one\", \"hive seven\"). A note for the notepad can be dictated right away.'**
   String get voiceNoteNeedPlace;
 
   /// No description provided for @voiceNoteUnavailable.

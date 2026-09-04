@@ -1655,7 +1655,9 @@ class VoskEngine {
   // Nazwa aplikacji jak na ekranie telefonu: w tym projekcie (heymaya) to
   // "Hey Maya" (android:label w AndroidManifest / applicationId eu.darys.heymaya),
   // a nie "Hi Bees" jak w kopii dla App Store.
-  static String _gdzieZgodaNaMikrofon() => Platform.isAndroid
+  //NIE static: od 04.09.2026 sięga po `teksty` (pole instancji), a wołane jest
+  //i tak wyłącznie z metody instancyjnej [wznow].
+  String _gdzieZgodaNaMikrofon() => Platform.isAndroid
       ? teksty.voiceMicPermAndroid
       : teksty.voiceMicPermIos;
 

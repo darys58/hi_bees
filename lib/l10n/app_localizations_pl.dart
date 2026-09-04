@@ -2732,7 +2732,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceNoMicPermission => 'Brak zgody na mikrofon.';
 
   @override
-  String get voiceMicPermAndroid => 'Android: Ustawienia → Aplikacje → Hi Bees → Uprawnienia → Mikrofon.';
+  String get voiceMicPermAndroid =>
+      'Android: Ustawienia → Aplikacje → Hi Bees → Uprawnienia → Mikrofon.';
 
   @override
   String get voiceMicPermIos => 'iOS: Ustawienia → Hi Bees → Mikrofon.';
@@ -2744,13 +2745,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceMicBusyRetrying => 'Mikrofon zajęty. Próbuję dalej...';
 
   @override
-  String get voiceMicBusyWillReturn => 'Mikrofon jest zajęty. Próbuję dalej - wrócę sam, gdy się zwolni.';
+  String get voiceMicBusyWillReturn =>
+      'Mikrofon jest zajęty. Próbuję dalej - wrócę sam, gdy się zwolni.';
 
   @override
-  String get voiceMicSilentAndroid => 'Mikrofon zamilkł (rozmowa, asystent albo alarm).';
+  String get voiceMicSilentAndroid =>
+      'Mikrofon zamilkł (rozmowa, asystent albo alarm).';
 
   @override
-  String get voiceMicSilentIos => 'Mikrofon zamilkł (rozmowa, Siri albo alarm).';
+  String get voiceMicSilentIos =>
+      'Mikrofon zamilkł (rozmowa, Siri albo alarm).';
 
   @override
   String get voiceAudioClosed => 'Strumień audio zamknięty przez system.';
@@ -2762,13 +2766,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voicePaused => 'Nasłuch wstrzymany.';
 
   @override
-  String get voiceStandby => 'Czuwam. Powiedz „Hej Maja start", żeby zacząć.';
+  String get voiceStandby => 'Czuwam. Powiedz „Hej Maja start\", żeby zacząć.';
 
   @override
   String get voiceListening => 'Słucham poleceń.';
 
   @override
-  String get voiceDictate => 'Dyktuj notatkę. Zakończ słowami „Hej Maja".';
+  String get voiceDictate => 'Dyktuj notatkę. Zakończ słowami „Hej Maja\".';
 
   @override
   String get voiceMicRecovering => 'Próbuję odzyskać mikrofon...';
@@ -2777,13 +2781,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceMicStillBusy => 'Mikrofon nadal zajęty. Próbuję dalej...';
 
   @override
-  String get voiceNoteNeedPlace => 'Notatka do przeglądu: najpierw powiedz, która pasieka i który ul (np. „pasieka jeden", „ul siedem"). Notatkę do notesu możesz dyktować od razu.';
+  String get voiceNoteNeedPlace =>
+      'Notatka do przeglądu: najpierw powiedz, która pasieka i który ul (np. „pasieka jeden\", „ul siedem\"). Notatkę do notesu możesz dyktować od razu.';
 
   @override
   String get voiceNoteUnavailable => 'Notatka niedostępna:';
 
   @override
-  String get voiceNoteNothingHeard => 'Nie usłyszałam notatki - nic nie zapisałam.';
+  String get voiceNoteNothingHeard =>
+      'Nie usłyszałam notatki - nic nie zapisałam.';
 
   @override
   String get voiceNoteSaveFailed => 'Notatki NIE udało się zapisać';
@@ -2804,7 +2810,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceSetLandscape => 'Voice 2 - układ poziomy';
 
   @override
-  String get voiceSetLandscapeSub => 'Wymuś układ poziomy dla live podglądu korpusu (niezależnie od orientacji urządzenia)';
+  String get voiceSetLandscapeSub =>
+      'Wymuś układ poziomy dla live podglądu korpusu (niezależnie od orientacji urządzenia)';
 
   @override
   String get voiceSetSignal => 'Sygnał potwierdzenia polecenia';
