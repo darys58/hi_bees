@@ -80,8 +80,10 @@ POMOC = [
         'set right side',
         'set both side',
         'work frame',
-        'to extract',                             # POPRAWKA: było "to extraction"
-        'to remove',                              # POPRAWKA: było "to delete"
+        'to extraction',                          # forma KANONICZNA (z pomocy)
+        'to extract',                             # tolerowany skrót
+        'to delete',                              # forma KANONICZNA (z pomocy)
+        'to remove',                              # tolerowany skrót
         'to insulate',
         'deleted',
         'inserted',
@@ -231,8 +233,11 @@ NIEAKTUALNE = [
     ('eliminated spoza slotu $state', 'bee pollen trap is eliminated'),
     ('mouth zamiast month', 'set other mouth three'),
     ('site zamiast side', 'set left site'),
-    ('to extraction z eng1.yml', 'to extraction'),
-    ('to delete z eng1.yml', 'to delete'),
+    # UWAGA: "to extraction"/"to delete" NIE są tu wymienione - od 04.09.2026
+    # to formy KANONICZNE, które mają działać. Wcześniej stały w tej liście
+    # przez moją pomyłkę z KROK 2 (skróciłem je w gramatyce bez powodu, choć
+    # oba słowa są w słowniku modelu) - patrz komentarz przy slocie toDo
+    # w eng_vosk.yml.
 ]
 
 

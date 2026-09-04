@@ -1792,10 +1792,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   Map<String, Map<String, String>> _mapowanieSlotowEn(AppLocalizations l10n) => {
         //Trójkąty nad ramką (frames_screen ~1713 i ~1736) porównują wartość
         //ZNAK W ZNAK z app_en.arb, a ręczna edycja (frame_edit_screen ~2625)
-        //zapisuje dokładnie te klucze. Gramatyka mówi krócej i naturalniej
-        //("to extract" zamiast "to extraction", "to remove" zamiast
-        //"to delete") - stąd przeliczenie. Zgłoszone z urządzenia 04.09.2026:
-        //polecenia były ROZPOZNAWANE, ale znaczek się nie rysował.
+        //zapisuje dokładnie te klucze.
+        //
+        //Od 04.09.2026 gramatyka przyjmuje OBIE formy, a pomoc uczy tej
+        //KANONICZNEJ ("to extraction"/"to delete") - czyli tego, co użytkownik
+        //zobaczy potem w zapisie. Te dwa wpisy zostają dla krótszych wariantów
+        //("to extract"/"to remove"), żeby i one się zapisywały poprawnie.
         //"work frame" i "to insulate" są identyczne z ARB - nie ma ich tutaj.
         'toDo': {
           'to extract': l10n.toExtraction, //"to extraction"
@@ -4518,6 +4520,17 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                     }
                   } else {
                     switch (helpMe) {
+                      //odpowiednik polskiego 'notatki'. Dopisane 04.09.2026:
+                      //slot $helpMe ma "notes" w eng_vosk.yml od początku, ale
+                      //ta gałąź go nie obsługiwała - polecenie było
+                      //rozpoznawane i nie robiło nic.
+                      case 'notes':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        pomocSesja(context, poZamknieciu: () => openDialog = false);
+                        beep('open');
+                        openDialog = true;
+                        break;
                       case 'location':
                         if (openDialog) Navigator.pop(context); //zamknij okno
                         printText1 = ' ${slots[key]}';

@@ -64,14 +64,22 @@ typedef _Sekcja = List<TextSpan> Function(BuildContext);
 //---------------------------------------------------------------------------
 
 // Sesja, dyktowanie notatki i cofanie - polecenia, które pojawiły się dopiero
-// po przejściu z Picovoice na Vosk. Wywołanie głosem: "notatki pomóż mi"
-// (wartość "notatki" slotu $helpMe w pol_vosk.yml -> case 'notatki'
-// w voice_vosk_screen). Tekst po polsku POZA plikami ARB, bo
-// sterowanie głosem działa wyłącznie przy globals.jezyk == 'pl_PL' (mamy tylko
-// polski model Vosk), więc tłumaczenia nie miałyby czego opisywać - tak samo
-// jak w voice_settings_screen.dart. Stąd też strażnik na języku poniżej.
+// po przejściu z Picovoice na Vosk. Wywołanie głosem: "notatki pomóż mi" /
+// "notes help me" (wartość slotu $helpMe -> case 'notatki'/'notes'
+// w voice_vosk_screen).
+//
+// Tekst POZA plikami ARB, po polsku i po angielsku obok siebie. Powód ten sam
+// co w voice_settings_screen.dart: sterowanie głosem działa tylko dla tych
+// dwóch języków (brama w apiarys_screen), więc pozostałe pięć nie miałoby
+// czego opisywać, a klucze ARB trzeba by dokładać w siedmiu plikach.
+//
+// DO 04.09.2026 funkcja zwracała PUSTĄ LISTĘ poza pl_PL - strażnik został
+// z czasów, gdy głos działał wyłącznie po polsku. Efekt: po angielsku
+// "notes help me" było rozpoznawane, ale otwierało puste okno, a użytkownik
+// nie miał SKĄD się dowiedzieć, jak brzmią polecenia sesji, notatek
+// i cofania (zgłoszone z urządzenia).
 List<TextSpan> _sekcjaSesja(BuildContext context) {
-  if (globals.jezyk != 'pl_PL') return const [];
+  if (globals.jezyk == 'en_US') return _sekcjaSesjaEn();
   return [
     TextSpan(text: '\nSesja, notatki i cofanie - powiedz np.:\n', style: _naglowek),
     TextSpan(
@@ -102,6 +110,44 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
     _punktor,
     TextSpan(text: 'Hej Maja cofnij ostatni zapis/wpis', style: _wymagany),
     TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n\n',
+        style: _komentarz),
+  ];
+}
+
+//Angielski odpowiednik _sekcjaSesja. Każda fraza pochodzi WPROST
+//z assets/grammar/eng_vosk.yml (intencje voiceStart, voiceStop, voiceNote,
+//voiceNotepad, voiceUndo) - pilnuje tego pliki/vosk_pomoc_test_en.py.
+List<TextSpan> _sekcjaSesjaEn() {
+  return [
+    TextSpan(
+        text: '\nSession, notes and undo - say e.g.:\n', style: _naglowek),
+    TextSpan(
+        text: '(these work always, even with no apiary and hive selected:)\n\n',
+        style: _warunek),
+    _punktor,
+    TextSpan(text: 'Hey Maya', style: _wymagany),
+    TextSpan(text: ' start/begin'),
+    TextSpan(text: ' - opens command listening.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Hey Maya', style: _wymagany),
+    TextSpan(text: ' stop/done/finished'),
+    TextSpan(text: ' - back to standby.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Note', style: _wymagany),
+    TextSpan(text: '/write note/Hey Maya note for inspection'),
+    TextSpan(
+        text: ' - note for the current inspection.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Hey Maya note for notepad', style: _wymagany),
+    TextSpan(text: ' - note saved to the Notepad as a separate entry.\n',
+        style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Hey Maya', style: _wymagany),
+    TextSpan(text: ' - ends note dictation', style: _komentarz),
+    TextSpan(text: '.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Hey Maya undo last save/entry', style: _wymagany),
+    TextSpan(text: ' - undoes the last saving command.\n\n',
         style: _komentarz),
   ];
 }
@@ -561,11 +607,14 @@ List<TextSpan> _sekcjaPomoc(BuildContext context) {
   return [
     TextSpan(text: '\n' + l.helpSay + ' ', style: _naglowek),
     TextSpan(text: '(' + l.forPreciseHelp + ')\n', style: _warunek),
-    //"notatki pomóż mi" -> _sekcjaSesja. Po polsku i za strażnikiem języka
-    //z tego samego powodu co sama sekcja: opisuje polecenia, które istnieją
-    //tylko w polskim modelu Vosk. Bez strażnika pozycja prowadziłaby do
-    //pustego okna, bo _sekcjaSesja zwraca wtedy [].
+    //"notatki pomóż mi" / "notes help me" -> _sekcjaSesja. Wartość slotu
+    //$helpMe brzmi "notatki" (pol_vosk.yml) albo "notes" (eng_vosk.yml), stąd
+    //dwie formy. Do 04.09.2026 pozycja była TYLKO po polsku, bo _sekcjaSesja
+    //zwracała poza pl_PL pustą listę - teraz ma wersję angielską, więc pokazuje
+    //się w obu językach. Pozostałe pięć języków nie ma sterowania głosem
+    //(brama w apiarys_screen), więc tam pozycja dalej odpada.
     if (globals.jezyk == 'pl_PL') ...pozycja('Notatki'),
+    if (globals.jezyk == 'en_US') ...pozycja('Notes'),
     ...pozycja(l.lOcation),
     ...pozycja(l.iNspection),
     ...pozycja(l.eQuipment),

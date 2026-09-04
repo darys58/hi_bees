@@ -963,7 +963,7 @@ abstract class AppLocalizations {
   /// No description provided for @workFrameToExtraction.
   ///
   /// In en, this message translates to:
-  /// **'work frame/to extract/to remove/to insulate'**
+  /// **'work frame/to extraction/to delete/to insulate'**
   String get workFrameToExtraction;
 
   /// No description provided for @tOdo.

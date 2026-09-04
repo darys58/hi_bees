@@ -302,10 +302,23 @@ context:
       - left
       - right
       - both
+    # OBIE formy, kanoniczna PIERWSZA. "to extraction"/"to delete" to wartości
+    # zapisywane do bazy (app_en.arb: toExtraction/toDelete), tych samych używa
+    # wpis ręczny i po nich painter rysuje trójkąt nad ramką - więc to ONE mają
+    # być tym, co użytkownik mówi i widzi. Krótsze "to extract"/"to remove"
+    # zostają jako tolerowany wariant (przelicza je _mapowanieSlotowEn).
+    #
+    # HISTORIA: eng1.yml miał tu poprawnie "to extraction"/"to delete";
+    # skróciłem je przy pisaniu eng_vosk.yml (KROK 2) BEZ POWODU - oba słowa
+    # są w słowniku modelu, więc nic to nie naprawiało, a rozjechało polecenie
+    # z zapisem. Objawiło się dwa razy: najpierw "komendy nie działają"
+    # (04.09.2026), potem "mówię to remove, a zapisuje to delete".
     toDo:
       - work frame
-      - to remove
+      - to extraction
       - to extract
+      - to delete
+      - to remove
       - to insulate
     # UWAGA DLA KOLEJNEGO KROKU: te wartości MUSZĄ pasować znak w znak do tego,
     # co zwraca app_en.arb (patrz voice_vosk_screen.dart, metoda

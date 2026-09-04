@@ -247,12 +247,25 @@ class VoskEngine {
 
   // -- dyktowanie notatki ---------------------------------------------------
 
-  // Fraza kończąca notatkę. To samo "hej maja", które otwiera sesję - użytkownik
-  // ma pamiętać JEDNO zawołanie, nie dwa. W dyktowaniu wyłapuje ją osobny
-  // recognizer, dla którego jest ona CAŁĄ gramatyką (patrz _karmDyktowanie):
-  // w wolnym modelu nic jej nie faworyzuje i wychodzi jako "hej mają" albo
-  // "ej maja", więc szukanie jej w podyktowanym tekście jest tylko zapasem.
-  static const String _frazaKonca = 'hej maja';
+  // Fraza kończąca notatkę. To samo zawołanie, które otwiera sesję - użytkownik
+  // ma pamiętać JEDNO, nie dwa. W dyktowaniu wyłapuje ją osobny recognizer,
+  // dla którego jest ona CAŁĄ gramatyką (patrz _karmDyktowanie): w wolnym
+  // modelu nic jej nie faworyzuje i wychodzi jako "hej mają" albo "ej maja",
+  // więc szukanie jej w podyktowanym tekście jest tylko zapasem.
+  //
+  // ZALEŻNA OD JĘZYKA od 04.09.2026. Wcześniej stała "hej maja" była na
+  // sztywno, także dla angielskiego - a słowa "hej" NIE MA w słowniku modelu
+  // vosk-model-small-en-us-0.15 (sprawdzone w pliki/vosk_slownik_eng.txt).
+  // Vosk po cichu pomija słowa spoza słownika, więc detektor po angielsku
+  // nie miał czego rozpoznawać, a zapasowe szukanie w tekście też nie miało
+  // szans trafić. Efekt: podyktowanej notatki NIE DAŁO SIĘ zakończyć głosem -
+  // zostawała cisza (5 s) albo twardy limit.
+  static const Map<String, String> _frazyKonca = {
+    'pl': 'hej maja',
+    'en': 'hey maya',
+  };
+
+  String get _frazaKonca => _frazyKonca[jezyk] ?? _frazyKonca['pl']!;
 
   // Twardy limit długości notatki. Dyktowanie zdejmuje barierę, dzięki której
   // rozmowa przy ulu nie wchodzi do aplikacji - nie może więc trwać bez końca,
@@ -693,7 +706,7 @@ class VoskEngine {
     if (_recDetektor == null && _recDyktowanie != null && _model != null) {
       try {
         _recDetektor = await _nowyRecognizerZGramatyka(
-          const <String>[_frazaKonca, '[unk]'],
+          <String>[_frazaKonca, '[unk]'],
         );
         _bladBudowyDetektora = null;
       } catch (e) {
@@ -976,7 +989,7 @@ class VoskEngine {
     }
     try {
       _recDetektor = await _nowyRecognizerZGramatyka(
-        const <String>[_frazaKonca, '[unk]'],
+        <String>[_frazaKonca, '[unk]'],
       );
     } catch (e) {
       _recDetektor = null;
