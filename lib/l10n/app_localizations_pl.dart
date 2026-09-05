@@ -547,10 +547,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get treatmentSay => 'Leczenie:';
 
   @override
-  String get apivarolChemistry => 'Chemia';
+  String get apivarolChemistry => 'chemia';
 
   @override
-  String get treatmentStrips => 'Paski';
+  String get treatmentStrips => 'paski';
 
   @override
   String get dosePortionPart => 'dawka/porcja';
@@ -622,7 +622,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get italic => 'Pochylony';
 
   @override
-  String get optionalText => 'text nie jest wymagany';
+  String get optionalText => 'tekst nie jest wymagany';
 
   @override
   String get text1Text2 => 'Tekst1/tekst2';

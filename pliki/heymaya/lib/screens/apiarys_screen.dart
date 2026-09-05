@@ -148,10 +148,11 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.12.0.95 15.08.2026 - sterowanie głosem z modelem Vosk-PL przeniesione z wersji iOS: nowy ekran głosowy (żywy podgląd korpusu), notatki do przeglądu i do Notesu dyktowane głosem + nagranie WAV, cofanie zapisów "hej maja cofnij ostatni zapis", komenda "ustaw ule od X do Y", osobny ekran ustawień głosu; po stronie Androida: kolejka szeregowa w natywnej wtyczce Vosk (koniec zawieszania ekranu), reguły R8 dla JNA, źródło audio voiceRecognition, model 50 MB poza kopią zapasową
   //1.12.1.96 19.08.2026 - w "Ostatnich informacjach" pozycja "o dokarmianiu lub leczeniu" rozdzielona na "o dokarmianiu" i "o leczeniu", naprawa błędnej daty ostatniego miodobrania na belce ula (sekwencyjne odświezanie belek zamiast równoległego), ujednolicone nazewnictwo "polecenia" w tekstach sterowania głosem, schowany nieuzywany suwak głośności "Otworzenie", doprecyzowane etykiety dźwięków notatek
   //1.12.1.97 19.08.2026 - obsługa stron pamięci 16 KB wymagana przez Google Play: JNA podniesiona z 5.15.0 do 5.18.1 w build.gradle wtyczki Vosk (w 5.15.0 jni/x86_64/libjnidispatch.so miał segmenty LOAD wyrównane do 4 KB, co blokowało publikację), libvosk.so z vosk-android 0.3.75 i biblioteki Fluttera były juz zgodne
+  //1.13.0.98 05.09.2026 - angielskie sterowanie głosem (model Vosk-EN, gramatyka, pomoc i wszystkie komunikaty w ARB), odzywki Mai zależne od języka - komplet nagrań angielskich, rozdzielona odzywka "nie tutaj" (polecenie zrozumiane, ale niewykonalne) od "nie rozumiem", nazwy leczenia apivarol/biovar zastąpione na ekranach przez "chemia" i "paski", ręczne zapisywanie usunięcia pasków (dotąd tylko głosem), poprawki rozpoznawania liczb z jednostkami i czyszczenia dyktowanych notatek, ujednolicona pisownia poleceń w pomocy głosowej
 
 
-  final wersja = '1.12.1.97'; //wersja aplikacji tylko na Androida !!!!! 
-  final dataWersji = '2026-08-19';
+  final wersja = '1.13.0.98'; //wersja aplikacji tylko na Androida !!!!! 
+  final dataWersji = '2026-09-05';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;

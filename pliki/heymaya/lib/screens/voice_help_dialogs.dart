@@ -664,6 +664,53 @@ List<TextSpan> _sekcjaLegenda(BuildContext context) {
 
 // `poZamknieciu` odkłada z powrotem `openDialog = false` w voice_vosk_screen -
 // ekran pilnuje tym polem, żeby dwa okna pomocy nie nałożyły się na siebie.
+/// Zawołanie zapisane WIELKĄ literą - jedyny wyjątek od reguły niżej, bo to
+/// imię. Klucze, nie regex: po zamianie na małe litery szukamy dokładnie tych
+/// dwóch form.
+const Map<String, String> _zawolania = {
+  'hej maja': 'Hej Maja',
+  'hey maya': 'Hey Maya',
+};
+
+/// Polecenia w pomocy piszemy MAŁĄ literą - to słowa DO WYPOWIEDZENIA, nie
+/// zdania, a gramatyka (`pol_vosk.yml`, `eng_vosk.yml`) jest w całości małymi.
+/// Do 05.09.2026 część fraz szła z wielkiej, część z małej, zależnie od tego,
+/// czy tekst brał się z ARB (gdzie ten sam klucz bywa etykietą pola, np.
+/// „Wartość"), czy był wpisany w tym pliku - zgłoszone z urządzenia.
+///
+/// Zamiana jest TUTAJ, a nie w plikach ARB, właśnie dlatego: te same klucze
+/// opisują pola formularzy na innych ekranach, gdzie wielka litera jest
+/// poprawna.
+///
+/// Objaśnienia (nagłówek sekcji, warunek, komentarz po myślniku) to zdania
+/// i zostają nietknięte. Polecenie to span w jednym ze stylów poleceń ALBO
+/// BEZ STYLU: dalszy ciąg frazy idzie w tym pliku bez stylu („Ustaw inny"
+/// przed pogrubionym „dzień", „Załącz/wyłącz/otwórz/zamknij/ustaw" przed
+/// „zbieracz pyłku"), więc pominięcie takich spanów zostawiało w pomocy
+/// dokładnie ten bałagan, o który poszło zgłoszenie.
+///
+/// Legenda idzie tą samą drogą: jej wiersze („Normalny lub pogrubiony -
+/// tekst wymagany") to też nie zdania, tylko podpisy stylów, więc wielka
+/// litera na początku była tam równie przypadkowa. Nagłówek „Legenda:" ma
+/// własny styl wpisany w miejscu, więc zostaje - jak każdy inny nagłówek.
+TextSpan _poleceniaMalymi(TextSpan span) {
+  const List<TextStyle> stylePolecen = [
+    _wymagany,
+    _opcjonalny,
+    _wartosc,
+    _wartoscOpc,
+  ];
+  final String? tekst = span.text;
+  final bool polecenie =
+      span.style == null || stylePolecen.contains(span.style);
+  if (tekst == null || !polecenie) return span;
+  String maly = tekst.toLowerCase();
+  _zawolania.forEach((male, wielkie) {
+    maly = maly.replaceAll(male, wielkie);
+  });
+  return TextSpan(text: maly, style: span.style);
+}
+
 Future<void> _pokazOkno(
   BuildContext context,
   List<_Sekcja> sekcje,
@@ -680,7 +727,8 @@ Future<void> _pokazOkno(
               text: TextSpan(
                 style: TextStyle(color: Colors.black),
                 children: [
-                  for (final sekcja in sekcje) ...sekcja(context),
+                  for (final sekcja in sekcje)
+                    ...sekcja(context).map(_poleceniaMalymi),
                 ],
               ),
             ),

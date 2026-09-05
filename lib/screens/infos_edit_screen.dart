@@ -101,6 +101,41 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   //DropdownButton wywraca się na asercji, gdy dostanie value spoza swojej listy - a ul
   //może mieć rodzaj/typ zapisany przy innym języku aplikacji. Taką wartość DOKŁADAMY do
   //listy zamiast podmieniać, bo samo wejście w edycję nie ma prawa zmienić typu ula.
+  //PASKI: wartość ma postać „<stan> <liczba>" („wstaw 3", „usuń 2"), bo tak
+  //zapisuje ją sterowanie głosem - gramatyka ma $state:biovar PRZED słowem
+  //„paski". Ręczny formularz miał tu do 05.09.2026 samo pole cyfrowe
+  //z `digitsOnly`, więc USUNIĘCIA pasków nie dało się zapisać ręcznie, tylko
+  //głosem; zgłoszone z urządzenia.
+  //
+  //Stan i liczbę wyliczamy Z `nowyWartosc`, a nie trzymamy w osobnych polach:
+  //zapis idzie w dwóch miejscach (dodanie i edycja) i osobne pole musiałoby
+  //być z nimi zsynchronizowane, a rozjazd kończyłby się wpisem bez stanu.
+  String get _stanPaskow {
+    final List<String> czesci = nowyWartosc.trim().split(RegExp(r'\s+'));
+    return czesci.length > 1 ? czesci.first : '';
+  }
+
+  String get _liczbaPaskow {
+    final List<String> czesci = nowyWartosc.trim().split(RegExp(r'\s+'));
+    return czesci.isEmpty ? '' : czesci.last;
+  }
+
+  void _zlozPaski(String stan, String liczba) {
+    nowyWartosc = ('$stan $liczba').trim();
+  }
+
+  //Starsze wpisy ręczne to SAMA LICZBA - bez tego DropdownButton nie miałby
+  //co pokazać. Domyślamy się „wstaw", bo tylko takie wpisy dało się dotąd
+  //zrobić ręcznie; zapisany rekord zmienia się dopiero, gdy użytkownik
+  //faktycznie kliknie „zapisz".
+  void _uzupelnijStanPaskow(BuildContext ctx) {
+    if (nowyParametr != 'biovar' || _stanPaskow.isNotEmpty) return;
+    //liczba PUSTA daje „wstaw" bez drugiego słowa, a wtedy [_stanPaskow] znów
+    //zwraca pustkę (jedno słowo = sama liczba) i DropdownButton nie ma value
+    _zlozPaski(AppLocalizations.of(ctx)!.insert,
+        _liczbaPaskow.isEmpty ? '1' : _liczbaPaskow);
+  }
+
   List<String> _zBiezaca(List<String> lista, String biezaca) {
     if (biezaca.isNotEmpty && !lista.contains(biezaca)) lista.insert(0, biezaca);
     return lista;
@@ -363,6 +398,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     // print('idInfo === $idInfo|');
     // print('id === ${info[0].id}|');
     // print('nowyParametr === $nowyParametr');
+    _uzupelnijStanPaskow(context); //paski: stara wartość bez stanu -> „wstaw N"
     } //od if (_isInit) {
     _isInit = false;
     super.didChangeDependencies();
@@ -1353,7 +1389,64 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                         //  ),
                         ]
                       ),
-//parametr dla leczenie - biovar            
+//paski - stan (wstaw/usuń) NAD polem wartości. Dwa pola zamiast jednego
+//cyfrowego: sterowanie głosem zapisuje „wstaw 3"/„usuń 2", a ręczny formularz
+//umiał do 05.09.2026 zapisać wyłącznie liczbę, czyli nigdy usunięcia.
+//Układ jak przy pozostałych parametrach: lista w wyśrodkowanym Row, a pole
+//wartości OSOBNO, na całą szerokość.
+                    if (nowyParametr == 'biovar')
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Container(
+                            height: 50,
+                            width: 200,
+                            margin: EdgeInsets.only(bottom: 15),
+                            child: DropdownButton(
+                              isExpanded: true,
+                              style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0),),
+                              //null zamiast pustego stringa: DropdownButton
+                              //wywala się na assercie, gdy value nie ma na
+                              //liście, a pusty stan jest możliwy przy wpisie
+                              //z pustą wartością
+                              value: _stanPaskow.isEmpty ? null : _stanPaskow,
+                              //wpis mógł powstać przy INNYM języku interfejsu
+                              //(głos zapisuje kanoniczną wartość slotu, np.
+                              //„insert"), a DropdownButton wywala się na
+                              //assercie, gdy dostanie value spoza listy
+                              items: _zBiezaca([
+                                AppLocalizations.of(context)!.insert,
+                                AppLocalizations.of(context)!.remove,
+                              ], _stanPaskow)
+                                  .map((w) => DropdownMenuItem(child: Text(w), value: w))
+                                  .toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  _zlozPaski(newValue!.toString(), _liczbaPaskow);
+                                });
+                              },
+                            ),
+                          ),
+                        ]
+                      ),
+                    if (nowyParametr == 'biovar')
+                      TextFormField(
+                        initialValue: _liczbaPaskow,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                          focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                          labelText: (AppLocalizations.of(context)!.vAlue),
+                          labelStyle: TextStyle(color: Colors.black),
+                        ),
+                        validator: (value) {
+                          _zlozPaski(_stanPaskow, value ?? '');
+                          return null;
+                        },
+                      ),
+//parametr dla leczenie - varroa
                     if (nowyParametr == 'varroa')
                       Row(
                         //mainAxisAlignment: MainAxisAlignment.center,
@@ -1989,7 +2082,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                   if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = " || //ilość ramek 
                      // nowyParametr == 'tag NFC' ||
                       nowyParametr == 'apivarol' ||  //dawka 
-                      nowyParametr == 'biovar' ||
+                      //'biovar' ma WŁASNE pola (stan + liczba) - patrz wyżej
+
                       nowyParametr == AppLocalizations.of(context)!.acid ||  //kwas w ml
                       nowyParametr == " " + AppLocalizations.of(context)!.acid || //kwas w g
                       nowyParametr == 'varroa' || //ilość roztoczy

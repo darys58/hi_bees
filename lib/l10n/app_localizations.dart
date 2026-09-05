@@ -315,7 +315,7 @@ abstract class AppLocalizations {
   /// No description provided for @broodCovered.
   ///
   /// In en, this message translates to:
-  /// **'brood covered'**
+  /// **'capped brood'**
   String get broodCovered;
 
   /// No description provided for @larvae.
@@ -1155,13 +1155,13 @@ abstract class AppLocalizations {
   /// No description provided for @apivarolChemistry.
   ///
   /// In en, this message translates to:
-  /// **'Chemistry'**
+  /// **'chemistry'**
   String get apivarolChemistry;
 
   /// No description provided for @treatmentStrips.
   ///
   /// In en, this message translates to:
-  /// **'Strips'**
+  /// **'strips'**
   String get treatmentStrips;
 
   /// No description provided for @dosePortionPart.
@@ -3177,7 +3177,7 @@ abstract class AppLocalizations {
   /// No description provided for @aMountOfBrood.
   ///
   /// In en, this message translates to:
-  /// **'Amount of covered brood in %'**
+  /// **'Amount of capped brood in %'**
   String get aMountOfBrood;
 
   /// No description provided for @aMountOfDrone.
@@ -3225,7 +3225,7 @@ abstract class AppLocalizations {
   /// No description provided for @broodCoveredN.
   ///
   /// In en, this message translates to:
-  /// **'brood\ncovered'**
+  /// **'capped\nbrood'**
   String get broodCoveredN;
 
   /// No description provided for @droneN.
@@ -5265,7 +5265,7 @@ abstract class AppLocalizations {
   /// No description provided for @legendCoveredBrood.
   ///
   /// In en, this message translates to:
-  /// **'covered brood'**
+  /// **'capped brood'**
   String get legendCoveredBrood;
 
   /// No description provided for @legendDrone.

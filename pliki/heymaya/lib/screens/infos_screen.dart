@@ -1881,7 +1881,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text('(1)  ' + nazwaParametru(context, 'apivarol'),
+            }, child: Text('(1) ' + nazwaParametru(context, 'apivarol'),
             style: TextStyle(fontSize: 18)),
             ),
           if(wybranaKategoria == 'treatment')

@@ -549,10 +549,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get treatmentSay => 'Tratamento:';
 
   @override
-  String get apivarolChemistry => 'Química';
+  String get apivarolChemistry => 'química';
 
   @override
-  String get treatmentStrips => 'Tiras';
+  String get treatmentStrips => 'tiras';
 
   @override
   String get dosePortionPart => 'dose/porção';

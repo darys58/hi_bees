@@ -148,9 +148,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.12.0 95 13.08.2026 - nowe sterowanie głosem z modelem Vosk-PL, Picovoice usunięty, notatki do przeglądów i do Notatnika wprowadzane głosem + nagrywany dźwięk, słowne cofanie (do 5 razy) zapisów "hej maja cofnij ostatni zapis", komenda głosowa "ustaw ule od X do Y" , naprawa znikającego typu ula w belce, sekcja Sterowanie głosem w Parametryzacji, modyfikacja pomocy
   //1.12.1.96 19.08.2026 - w "Ostatnich informacjach" pozycja "o dokarmianiu lub leczeniu" rozdzielona na "o dokarmianiu" i "o leczeniu", naprawa błędnej daty ostatniego miodobrania na belce ula (sekwencyjne odświezanie belek zamiast równoległego), ujednolicone nazewnictwo "polecenia" w tekstach sterowania głosem, schowany nieuzywany suwak głośności "Otworzenie", doprecyzowane etykiety dźwięków notatek
   //1.12.1.97 19.08.2026 - obsługa stron pamięci 16 KB wymagana przez Google Play: wtyczka Vosk pobiera JNA 5.18.1 zamiast 5.15.0 (w 5.15.0 biblioteka natywna dla x86_64 była wyrównana do 4 KB) - zmiana dotyczy wyłącznie buildu Androida
+  //1.13.0.98 05.09.2026 - angielskie sterowanie głosem (model Vosk-EN, gramatyka, pomoc i wszystkie komunikaty w ARB), odzywki Mai zależne od języka - komplet nagrań angielskich, rozdzielona odzywka "nie tutaj" (polecenie zrozumiane, ale niewykonalne) od "nie rozumiem", nazwy leczenia apivarol/biovar zastąpione na ekranach przez "chemia" i "paski", ręczne zapisywanie usunięcia pasków (dotąd tylko głosem), poprawki rozpoznawania liczb z jednostkami i czyszczenia dyktowanych notatek, ujednolicona pisownia poleceń w pomocy głosowej
 
-  final wersja = '1.12.1.97'; //wersja aplikacji na iOS
-  final dataWersji = '2026-08-19';
+  final wersja = '1.13.0.98'; //wersja aplikacji na iOS
+  final dataWersji = '2026-09-05';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;

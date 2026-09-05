@@ -550,10 +550,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get treatmentSay => 'Trattamento:';
 
   @override
-  String get apivarolChemistry => 'Chimica';
+  String get apivarolChemistry => 'chimica';
 
   @override
-  String get treatmentStrips => 'Strisce';
+  String get treatmentStrips => 'strisce';
 
   @override
   String get dosePortionPart => 'dose/porzione';

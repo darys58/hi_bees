@@ -112,7 +112,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drone => 'drone';
 
   @override
-  String get broodCovered => 'brood covered';
+  String get broodCovered => 'capped brood';
 
   @override
   String get larvae => 'larvae';
@@ -546,10 +546,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treatmentSay => 'Treatment:';
 
   @override
-  String get apivarolChemistry => 'Chemistry';
+  String get apivarolChemistry => 'chemistry';
 
   @override
-  String get treatmentStrips => 'Strips';
+  String get treatmentStrips => 'strips';
 
   @override
   String get dosePortionPart => 'dose/portion';
@@ -1574,7 +1574,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aMountOfLarvae => 'Amount of larvae in %';
 
   @override
-  String get aMountOfBrood => 'Amount of covered brood in %';
+  String get aMountOfBrood => 'Amount of capped brood in %';
 
   @override
   String get aMountOfDrone => 'Amount of drone brood in %';
@@ -1598,7 +1598,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hOney => 'honey';
 
   @override
-  String get broodCoveredN => 'brood\ncovered';
+  String get broodCoveredN => 'capped\nbrood';
 
   @override
   String get droneN => 'drone';
@@ -2658,7 +2658,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get legendLarvae => 'larvae';
 
   @override
-  String get legendCoveredBrood => 'covered brood';
+  String get legendCoveredBrood => 'capped brood';
 
   @override
   String get legendDrone => 'drone';
