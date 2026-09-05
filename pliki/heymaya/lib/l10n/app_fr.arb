@@ -878,11 +878,11 @@
 
     "soundVolume": "Volume des sons",
     "@soundVolume": {},
-    "soundWakeWord": "Hey Maya détecté",
+    "soundWakeWord": "Avant la dictée d'une note",
     "@soundWakeWord": {},
-    "soundStart": "Démarrer l'écoute",
+    "soundStart": "Session vocale ouverte",
     "@soundStart": {},
-    "soundListening": "Retour à l'écoute",
+    "soundListening": "Session vocale fermée",
     "@soundListening": {},
     "soundSuccess": "Note enregistrée",
     "@soundSuccess": {},
@@ -898,6 +898,16 @@
     "@soundNieTutaj": {},
     "soundPlay": "Écouter",
     "@soundPlay": {},
+    "voiceSettingsTitle": "Commande vocale",
+    "@voiceSettingsTitle": {},
+    "voiceRecordingKeep": "Les enregistrements restent sur le téléphone et sont supprimés après {days} jours",
+    "@voiceRecordingKeep": {
+        "placeholders": {
+            "days": {
+                "type": "String"
+            }
+        }
+    },
     "masterVolume": "Volume principal",
     "@masterVolume": {},
     "withoutApiary": "Sans rucher",

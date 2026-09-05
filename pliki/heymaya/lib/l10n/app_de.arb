@@ -878,11 +878,11 @@
 
     "soundVolume": "Lautstärke",
     "@soundVolume": {},
-    "soundWakeWord": "Hey Maya erkannt",
+    "soundWakeWord": "Vor dem Diktieren einer Notiz",
     "@soundWakeWord": {},
-    "soundStart": "Zuhören starten",
+    "soundStart": "Sprachsitzung geöffnet",
     "@soundStart": {},
-    "soundListening": "Zurück zum Zuhören",
+    "soundListening": "Sprachsitzung geschlossen",
     "@soundListening": {},
     "soundSuccess": "Notiz gespeichert",
     "@soundSuccess": {},
@@ -898,6 +898,16 @@
     "@soundNieTutaj": {},
     "soundPlay": "Abspielen",
     "@soundPlay": {},
+    "voiceSettingsTitle": "Sprachsteuerung",
+    "@voiceSettingsTitle": {},
+    "voiceRecordingKeep": "Aufnahmen bleiben auf dem Telefon und werden nach {days} Tagen gelöscht",
+    "@voiceRecordingKeep": {
+        "placeholders": {
+            "days": {
+                "type": "String"
+            }
+        }
+    },
     "masterVolume": "Hauptlautstärke",
     "@masterVolume": {},
     "withoutApiary": "Ohne Bienenstand",

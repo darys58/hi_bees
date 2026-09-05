@@ -2579,13 +2579,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get soundVolume => 'Volume dei suoni';
 
   @override
-  String get soundWakeWord => 'Hey Maya rilevato';
+  String get soundWakeWord => 'Prima di dettare una nota';
 
   @override
-  String get soundStart => 'Avvia ascolto';
+  String get soundStart => 'Sessione vocale aperta';
 
   @override
-  String get soundListening => 'Torna all\'ascolto';
+  String get soundListening => 'Sessione vocale chiusa';
 
   @override
   String get soundSuccess => 'Nota salvata';
@@ -2607,6 +2607,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get soundPlay => 'Riproduci';
+
+  @override
+  String get voiceSettingsTitle => 'Controllo vocale';
+
+  @override
+  String voiceRecordingKeep(String days) {
+    return 'Le registrazioni restano sul telefono e vengono eliminate dopo $days giorni';
+  }
 
   @override
   String get masterVolume => 'Volume principale';

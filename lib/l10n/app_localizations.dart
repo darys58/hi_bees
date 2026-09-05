@@ -5085,19 +5085,19 @@ abstract class AppLocalizations {
   /// No description provided for @soundWakeWord.
   ///
   /// In en, this message translates to:
-  /// **'Hey Maya detected'**
+  /// **'Before dictating a note'**
   String get soundWakeWord;
 
   /// No description provided for @soundStart.
   ///
   /// In en, this message translates to:
-  /// **'Start listening'**
+  /// **'Voice session opened'**
   String get soundStart;
 
   /// No description provided for @soundListening.
   ///
   /// In en, this message translates to:
-  /// **'Back to listening'**
+  /// **'Voice session closed'**
   String get soundListening;
 
   /// No description provided for @soundSuccess.
@@ -5141,6 +5141,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play'**
   String get soundPlay;
+
+  /// No description provided for @voiceSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice control'**
+  String get voiceSettingsTitle;
+
+  /// No description provided for @voiceRecordingKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Recordings stay on the phone and are deleted after {days} days'**
+  String voiceRecordingKeep(String days);
 
   /// No description provided for @masterVolume.
   ///

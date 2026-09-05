@@ -1699,11 +1699,11 @@
 
     "soundVolume": "Sound Volume",
     "@soundVolume": {},
-    "soundWakeWord": "Hey Maya detected",
+    "soundWakeWord": "Before dictating a note",
     "@soundWakeWord": {},
-    "soundStart": "Start listening",
+    "soundStart": "Voice session opened",
     "@soundStart": {},
-    "soundListening": "Back to listening",
+    "soundListening": "Voice session closed",
     "@soundListening": {},
     "soundSuccess": "Note saved",
     "@soundSuccess": {},
@@ -1719,6 +1719,16 @@
     "@soundNieTutaj": {},
     "soundPlay": "Play",
     "@soundPlay": {},
+    "voiceSettingsTitle": "Voice control",
+    "@voiceSettingsTitle": {},
+    "voiceRecordingKeep": "Recordings stay on the phone and are deleted after {days} days",
+    "@voiceRecordingKeep": {
+        "placeholders": {
+            "days": {
+                "type": "String"
+            }
+        }
+    },
     "masterVolume": "Master volume",
     "@masterVolume": {},
     "withoutApiary": "Without apiary",

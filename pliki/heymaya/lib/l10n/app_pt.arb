@@ -878,11 +878,11 @@
 
     "soundVolume": "Volume dos sons",
     "@soundVolume": {},
-    "soundWakeWord": "Hey Maya detetado",
+    "soundWakeWord": "Antes de ditar uma nota",
     "@soundWakeWord": {},
-    "soundStart": "Iniciar escuta",
+    "soundStart": "Sessão de voz aberta",
     "@soundStart": {},
-    "soundListening": "Voltar a escutar",
+    "soundListening": "Sessão de voz fechada",
     "@soundListening": {},
     "soundSuccess": "Nota guardada",
     "@soundSuccess": {},
@@ -898,6 +898,16 @@
     "@soundNieTutaj": {},
     "soundPlay": "Reproduzir",
     "@soundPlay": {},
+    "voiceSettingsTitle": "Controlo por voz",
+    "@voiceSettingsTitle": {},
+    "voiceRecordingKeep": "As gravações ficam no telemóvel e são apagadas ao fim de {days} dias",
+    "@voiceRecordingKeep": {
+        "placeholders": {
+            "days": {
+                "type": "String"
+            }
+        }
+    },
     "masterVolume": "Volume principal",
     "@masterVolume": {},
     "withoutApiary": "Sem apiário",

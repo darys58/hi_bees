@@ -422,8 +422,10 @@ class _ParametrScreenState extends State<ParametrScreen> {
 //Sterowanie głosem - osobny ekran (podgląd korpusu, nagrywanie notatek,
 //głośność odzywek), tak samo jak "Aktualności ula" wyżej. Belka bez ikony
 //i bez pogrubienia - konwencja tej listy.
-//Tekst po polsku, poza ARB: sterowanie głosem działa wyłącznie przy
-//globals.jezyk == 'pl_PL' (mamy tylko polski model Vosk).
+//Tytuł z ARB (voiceSettingsTitle) - do 05.09.2026 był tu polski tekst na
+//sztywno, z uzasadnieniem „sterowanie głosem działa tylko przy pl_PL". Od
+//czasu modelu angielskiego to nieprawda, a belka po polsku wisiała także
+//w wersji EN - zgłoszone z urządzenia.
                   if (globals.key != '' && globals.key != 'bez_klucza')
                     GestureDetector(
                       onTap: () {
@@ -432,7 +434,8 @@ class _ParametrScreenState extends State<ParametrScreen> {
                       },
                       child: Card(
                         child: ListTile(
-                          title: const Text('Sterowanie głosem'),
+                          title: Text(
+                              AppLocalizations.of(context)!.voiceSettingsTitle),
                           trailing: const Icon(Icons.chevron_right),
                         ),
                       ),

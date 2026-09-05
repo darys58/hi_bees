@@ -17,6 +17,8 @@ CO KTÓRY PLIK MÓWI I KIEDY GRA
                                                   (nie po „hey maya start"!)
   czekam_na_polecenia.mp3 "Ready for commands."   po „hey maya start"
   czekam.mp3              "Standing by."          po „hey maya stop"
+                          (przegrane 05.09.2026 - pierwsza wersja była bajtową
+                           kopią slucham.mp3 i oba suwaki grały to samo)
   zapisalam.mp3           "Note saved."           po zapisie notatki
   zamkniete.mp3           "Closed."               zamknięcie okna/ekranu
   blad.mp3                "Error."                notatka nie powstała albo

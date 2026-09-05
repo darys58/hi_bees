@@ -893,11 +893,11 @@
 
     "soundVolume": "Głośność dźwięków",
     "@soundVolume": {},
-    "soundWakeWord": "Wykryto Hey Maya",
+    "soundWakeWord": "Przed dyktowaniem notatki",
     "@soundWakeWord": {},
-    "soundStart": "Start nasłuchiwania",
+    "soundStart": "Otwarcie sesji głosowej",
     "@soundStart": {},
-    "soundListening": "Powrót do nasłuchu",
+    "soundListening": "Zamknięcie sesji głosowej",
     "@soundListening": {},
     "soundSuccess": "Zapis notatki",
     "@soundSuccess": {},
@@ -913,6 +913,16 @@
     "@soundNieTutaj": {},
     "soundPlay": "Odtwórz",
     "@soundPlay": {},
+    "voiceSettingsTitle": "Sterowanie głosem",
+    "@voiceSettingsTitle": {},
+    "voiceRecordingKeep": "Nagrania zostają na telefonie i kasują się po {days} dniach",
+    "@voiceRecordingKeep": {
+        "placeholders": {
+            "days": {
+                "type": "String"
+            }
+        }
+    },
     "masterVolume": "Głośność główna",
     "@masterVolume": {},
     "withoutApiary": "Bez pasieki",

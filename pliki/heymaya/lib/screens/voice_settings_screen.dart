@@ -74,9 +74,9 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        title: const Text(
-          'Sterowanie głosem',
-          style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+        title: Text(
+          l.voiceSettingsTitle,
+          style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
@@ -147,8 +147,8 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
           Card(
             child: ListTile(
               title: Text(AppLocalizations.of(context)!.voiceSetRecording),
-              subtitle: Text(
-                  'Nagrania zostają na telefonie i kasują się po ${RecordingHelper.dniPrzechowywania} dniach'),
+              subtitle: Text(l.voiceRecordingKeep(
+                  '${RecordingHelper.dniPrzechowywania}')),
               //zwykły Switch, NIE Switch.adaptive: .adaptive daje na iOS zielony
               //CupertinoSwitch, a Powiadomienia (SwitchListTile) są materiałowe
               trailing: Switch(

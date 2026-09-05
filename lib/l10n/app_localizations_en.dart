@@ -2566,13 +2566,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soundVolume => 'Sound Volume';
 
   @override
-  String get soundWakeWord => 'Hey Maya detected';
+  String get soundWakeWord => 'Before dictating a note';
 
   @override
-  String get soundStart => 'Start listening';
+  String get soundStart => 'Voice session opened';
 
   @override
-  String get soundListening => 'Back to listening';
+  String get soundListening => 'Voice session closed';
 
   @override
   String get soundSuccess => 'Note saved';
@@ -2594,6 +2594,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get soundPlay => 'Play';
+
+  @override
+  String get voiceSettingsTitle => 'Voice control';
+
+  @override
+  String voiceRecordingKeep(String days) {
+    return 'Recordings stay on the phone and are deleted after $days days';
+  }
 
   @override
   String get masterVolume => 'Master volume';

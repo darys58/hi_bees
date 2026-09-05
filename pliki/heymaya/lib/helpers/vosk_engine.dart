@@ -143,6 +143,7 @@ class _EchaNotatki {
     required this.echoOtwarcia,
     required this.echoZawolania,
     this.echoOdzywki,
+    this.ogonPrzeslyszany,
   });
 
   /// Fraza kończąca notatkę i wszystko po niej.
@@ -157,6 +158,18 @@ class _EchaNotatki {
   /// Echo ODZYWKI Mai (mp3 grany przed wejściem w dyktowanie). Null = dla tego
   /// języka nie ma czego wycinać - patrz [_echaEn].
   final RegExp? echoOdzywki;
+
+  /// PRZESŁYSZANA fraza kończąca, na samym końcu notatki.
+  ///
+  /// Osobno od [ogonKonca], bo służy do CZEGO INNEGO: [ogonKonca] jest też
+  /// zapasowym detektorem końca dyktowania (`_karmDyktowanie`, gdy recognizer
+  /// detektora nie powstał), a te wzorce mają tylko sprzątać tekst. Fraza
+  /// przesłyszana jest z definicji podobna do zwykłych słów, więc dopuszczenie
+  /// jej do detektora kończyłoby notatkę w połowie zdania.
+  ///
+  /// Dlatego wszystkie warianty są ZAKOTWICZONE NA KOŃCU tekstu (`$`) - to
+  /// jedyne miejsce, w którym fraza kończąca ma prawo się pojawić.
+  final RegExp? ogonPrzeslyszany;
 }
 
 /// Wzorzec, który NIGDY nie pasuje - używany, gdy dany język nie ma czego
@@ -193,6 +206,20 @@ final _EchaNotatki _echaPl = _EchaNotatki(
   // jej początku. Zgłoszone z urządzenia 04.08.2026: KAŻDA notatka zaczynała
   // się od „słucham".
   echoOdzywki: RegExp(r'^\s*s[łl]ucham\b', caseSensitive: false),
+  // ZGŁOSZONE 05.09.2026: po jednej notatce zostało na końcu samo „maja" -
+  // detektor usłyszał „hej maja" i notatkę zamknął, a wolny recognizer zapisał
+  // tylko drugie słowo. Wycinamy je TYLKO na samym końcu i TYLKO wtedy, gdy nie
+  // poprzedza go słowo, po którym „maja" jest miesiącem („do maja", „końca
+  // maja") ani DATĄ („piątego maja", „5 maja" - stąd cyfry i końcówka -ego
+  // w straży). Bez tej ochrony notatka „podkarmić do końca maja" straciłaby
+  // sens, a to błąd CICHY - dużo gorszy niż zostawiony ogon, który widać
+  // w treści i da się poprawić ręcznie.
+  ogonPrzeslyszany: RegExp(
+    r'\s*(?<!\b(?:do|od|w|po|przed|około|końca|koniec|początku|połowy'
+    r'|\d+|[a-ząćęłńóśźż]+ego)\s)'
+    r'\b(maja|majo)\b\s*$',
+    caseSensitive: false,
+  ),
 );
 
 /// Warianty przesłyszenia zawołania „maya" w treści dyktowanej notatki.
@@ -225,6 +252,12 @@ final _EchaNotatki _echaEn = _EchaNotatki(
     r'^\s*(hey|hay)\s+' + _enZawolanie + r'\b',
     caseSensitive: false,
   ),
+  // ZMIERZONE 05.09.2026 na urządzeniu: „hey maya" wypowiedziane na koniec
+  // notatki wróciło z wolnego recognizera jako „a mile" - DWA RAZY, więc to nie
+  // przypadek, tylko stabilne przesłyszenie. „a mile" to poprawna angielszczyzna
+  // („half a mile from the road"), dlatego wzorzec działa WYŁĄCZNIE na samym
+  // końcu tekstu; w środku notatki zostaje nietknięty.
+  ogonPrzeslyszany: RegExp(r'\s*\ba\s+mile\b\s*$', caseSensitive: false),
   // echoOdzywki ŚWIADOMIE POMINIĘTE (null). Odzywka przed dyktowaniem to
   // assets/audio/slucham.mp3 - nagranie POLSKIE, bo angielskich nagrań Mai
   // jeszcze nie ma. Angielski model przepisze polskie „słucham" jako
@@ -960,6 +993,7 @@ class VoskEngine {
   String _oczyscNotatke(String tekst) =>
       _bezEchaZPrzodu(tekst.replaceAll(RegExp(r'\[unk\]|<unk>'), ' '))
           .replaceFirst(_echa.ogonKonca, '')
+          .replaceFirst(_echa.ogonPrzeslyszany ?? _nigdyNiePasuje, '')
           .replaceAll(RegExp(r'\s+'), ' ')
           .trim();
 
