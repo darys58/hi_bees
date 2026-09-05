@@ -243,6 +243,8 @@ _PAKIETY = {
         procent={'procent', 'procenta', 'procentów'},
         procent_kotwica='procent',
         mostek_po_liczebniku=False,
+        mostek_po_slocie=False,  # "dwa litry" - po polsku NIE zgłoszone,
+                                 # a kosztuje ~1638 fraz (patrz Dart)
         lacznik_zakresu=None,   # polskie "od X do Y" nie było zgłaszane jako
                                 # zepsute - patrz vosk_grammar.dart
         ordinaly={
@@ -270,6 +272,7 @@ _PAKIETY = {
         procent={'percent'},
         procent_kotwica='percent',
         mostek_po_liczebniku=True,
+        mostek_po_slocie=True,
         lacznik_zakresu='to',
         ordinaly={
             'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
@@ -286,6 +289,7 @@ SLOWO_SETEK = None
 PROCENT = None
 PROCENT_KOTWICA = None     # kanoniczne slowo do mostka bigramowego
 MOSTEK_PO_LICZEBNIKU = False
+MOSTEK_PO_SLOCIE = False   # bigram liczba -> slowo stojace zaraz po niej
 LACZNIK_ZAKRESU = None     # "do"/"to" miedzy dwiema liczbami
 
 
@@ -302,9 +306,10 @@ def ustaw_jezyk(kod):
     SLOWO_SETEK, PROCENT = p['slowo_setek'], p['procent']
     ORDINALY, POMIJALNE = p['ordinaly'], p['pomijalne']
     global PROCENT_KOTWICA, LACZNIK_ZAKRESU
-    global MOSTEK_PO_LICZEBNIKU
+    global MOSTEK_PO_LICZEBNIKU, MOSTEK_PO_SLOCIE
     PROCENT_KOTWICA = p['procent_kotwica']
     MOSTEK_PO_LICZEBNIKU = p['mostek_po_liczebniku']
+    MOSTEK_PO_SLOCIE = p['mostek_po_slocie']
     LACZNIK_ZAKRESU = p['lacznik_zakresu']
 
 
@@ -659,8 +664,67 @@ class SilnikGramatyki:
                 if ostatnie in slowa_liczb:
                     for l in slowa_liczb:
                         frazy.add('%s %s' % (ostatnie, l))
+            # CZWARTY mostek: liczba -> pierwsze slowo tego, co stoi zaraz PO
+            # niej ("two liters", "twenty on the left"). Jednostki miary sa
+            # w gramatyce samotnymi frazami - patrz vosk_grammar.dart,
+            # _PakietLiczb.mostek_po_slocie. Zgloszone z urzadzenia 05.09.2026.
+            if MOSTEK_PO_SLOCIE:
+                po_liczbie = set()
+                for intent, _, seq in self.wyrazenia:
+                    if intencje is not None and intent not in intencje:
+                        continue
+                    self._slowa_po_wbudowanym(seq, po_liczbie)
+                zrodla = list(slowa_liczb)
+                if SLOWO_SETEK is not None:
+                    zrodla.append(SLOWO_SETEK)
+                for liczba in zrodla:
+                    for slowo in po_liczbie:
+                        frazy.add('%s %s' % (liczba, slowo))
         frazy.discard('')
         return sorted(frazy)
+
+    def _slowa_po_wbudowanym(self, seq, out):
+        """Pierwsze slowa tego, co stoi ZARAZ PO typie wbudowanym (liczbie).
+
+        Zbior FIRST reszty wyrazenia, liczony jak w slowa_otwierajace().
+        Liczba bywa ZAGNIEZDZONA w nawiasie opcjonalnym ("acid (and)
+        ($pv.TwoDigitInteger:acid) (milliliter, milliliters)"), a jednostka
+        stoi dopiero w sekwencji NADRZEDNEJ - dlatego zejscie w wariant niesie
+        `kont`: liste (sekwencja, pozycja) do ktorej wrocic.
+        Odpowiednik VoskGrammar._slowaPoWbudowanym z vosk_grammar.dart.
+        """
+        def first(s, od, kont):
+            for i in range(od, len(s)):
+                e = s[i]
+                if isinstance(e, Slowo):
+                    out.add(e.w)
+                    return
+                elif isinstance(e, Slot):
+                    for v in self.sloty_def.get(e.nazwa, []):
+                        tok = v.lower().split()
+                        if tok:
+                            out.add(tok[0])
+                    return
+                elif isinstance(e, Wbudowany):
+                    return   # liczba po liczbie - to robi MOSTEK_PO_LICZEBNIKU
+                elif isinstance(e, Alternatywa):
+                    for w in e.warianty:
+                        first(w, 0, [(s, i + 1)] + kont)
+                    if not e.opcjonalna:
+                        return
+            # koniec sekwencji - dalszy ciag jest w wyrazeniu nadrzednym
+            if kont:
+                first(kont[0][0], kont[0][1], kont[1:])
+
+        def skanuj(s, kont):
+            for i, e in enumerate(s):
+                if isinstance(e, Wbudowany):
+                    first(s, i + 1, kont)
+                elif isinstance(e, Alternatywa):
+                    for w in e.warianty:
+                        skanuj(w, [(s, i + 1)] + kont)
+
+        skanuj(seq, [])
 
     def _ma_wbudowany(self, seq):
         for e in seq:

@@ -195,23 +195,34 @@ final _EchaNotatki _echaPl = _EchaNotatki(
   echoOdzywki: RegExp(r'^\s*s[łl]ucham\b', caseSensitive: false),
 );
 
+/// Warianty przesłyszenia zawołania „maya" w treści dyktowanej notatki.
+///
+/// Notatkę zapisuje recognizer BEZ gramatyki, więc imienia „maya" nie
+/// faworyzuje w nim nic - wraca jako najbliższe słowo słownika modelu.
+/// „my" ZMIERZONE na urządzeniu 05.09.2026: prawie każda angielska notatka
+/// kończyła się na „hey my", bo detektor frazy kończącej (osobny recognizer,
+/// gramatyka „hey maya") słyszał ją poprawnie i notatkę zamykał, a wzorzec
+/// czyszczący jej nie znał i zostawiał w treści.
+///
+/// Ryzyko wycięcia PRAWDZIWEJ treści jest małe, bo każdy wariant wymaga
+/// poprzedzającego „hey"/„hay" - samo „my"/„may"/„mine" NIE wchodzi.
+const String _enZawolanie = r'(maya|maja|mya|my|mia|mai)';
+
 /// Wzorce angielskie. Słowa wzięte WPROST z assets/grammar/eng_vosk.yml
 /// (voiceStart, voiceNote, voiceNotepad). Warianty przesłyszenia dobrane
-/// ZACHOWAWCZO: „hay" obok „hey", ale BEZ samego „may" - to zwykłe angielskie
-/// słowo i wycinałoby prawdziwą treść notatki. Nie były mierzone na nagraniach
-/// tak jak polskie - po testach na urządzeniu mogą wymagać uzupełnienia.
+/// ZACHOWAWCZO - patrz [_enZawolanie].
 final _EchaNotatki _echaEn = _EchaNotatki(
   ogonKonca: RegExp(
-    r'\s*\b(hey|hay)\s+(maya|maja|mya)\b[\s\S]*$',
+    r'\s*\b(hey|hay)\s+' + _enZawolanie + r'\b[\s\S]*$',
     caseSensitive: false,
   ),
   echoOtwarcia: RegExp(
-    r'^\s*((hey|hay)\s+(maya|maja|mya)\s+)?'
+    r'^\s*((hey|hay)\s+' + _enZawolanie + r'\s+)?'
     r'(write\s+)?note(\s+for\s+(inspection|notepad))?\b',
     caseSensitive: false,
   ),
   echoZawolania: RegExp(
-    r'^\s*(hey|hay)\s+(maya|maja|mya)\b',
+    r'^\s*(hey|hay)\s+' + _enZawolanie + r'\b',
     caseSensitive: false,
   ),
   // echoOdzywki ŚWIADOMIE POMINIĘTE (null). Odzywka przed dyktowaniem to

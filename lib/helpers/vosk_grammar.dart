@@ -115,6 +115,14 @@ class _Alternatywa extends _Element {
   final bool opcjonalna;
 }
 
+/// Miejsce powrotu przy liczeniu zbioru FIRST wewnątrz nawiasu: sekwencja
+/// NADRZĘDNA i pozycja tuż za nawiasem. Patrz [VoskGrammar._slowaPoWbudowanym].
+class _Ogon {
+  const _Ogon(this.seq, this.od);
+  final List<_Element> seq;
+  final int od;
+}
+
 class _Wyrazenie {
   _Wyrazenie(this.intent, this.tekst, this.sekwencja);
   final String intent;
@@ -166,6 +174,7 @@ class _PakietLiczb {
     required this.procentKotwica,
     this.lacznikZakresu,
     this.mostekPoLiczebniku = false,
+    this.mostekPoSlocie = false,
   });
 
   final Map<String, int> jednostki;
@@ -195,6 +204,19 @@ class _PakietLiczb {
   /// sto" + "dwadzieścia"). Kosztuje kilkaset fraz, więc włączane tam, gdzie
   /// problem realnie zgłoszono - patrz [_pakietLiczbPl].
   final bool mostekPoLiczebniku;
+
+  /// Czy dokładać mostek bigramowy LICZBA -> pierwsze słowo tego, co w
+  /// wyrażeniu stoi ZARAZ PO liczbie ("two" + "liters", "twenty" + "on").
+  /// Ta sama przyczyna co przy [lacznikZakresu] i [mostekPoLiczebniku]:
+  /// wyrażenie jest ROZCINANE na typach wbudowanych, więc jednostka miary
+  /// ląduje w gramatyce jako SAMOTNA, jednowyrazowa fraza ("liter", "liters",
+  /// "kilo") - bez żadnego bigramu wiążącego ją z poprzedzającą liczbą.
+  /// Zgłoszone z urządzenia 05.09.2026: "two liters" wchodziło "dość
+  /// opornie", trzeba było powtarzać. Kosztuje ~560 fraz dla angielskiego.
+  /// Wyłączone dla polskiego z tego samego powodu co [mostekPoLiczebniku] -
+  /// działa w terenie i nikt nie zgłosił, a dołożyłoby ~1640 fraz do
+  /// sprawdzonej konfiguracji.
+  final bool mostekPoSlocie;
 
   /// Słowo łączące dwie liczby w wyrażeniach zakresu ("ramka od X DO Y",
   /// "frame from X TO Y" - setFrames, setHivesRange). Zgłoszone z urządzenia
@@ -253,6 +275,10 @@ const _pakietLiczbPl = _PakietLiczb(
   // wchodziło. Włączenie dołożyłoby ~504 frazy do sprawdzonej konfiguracji
   // i zmieniło liczby w test/vosk_grammar_test.dart. Gdyby problem wypłynął
   // po polsku - wystarczy tu `mostekPoLiczebniku: true`.
+  //
+  // To samo dotyczy [mostekPoSlocie] ("dwa litry", "dwadzieścia z lewej"):
+  // po polsku NIE zgłoszone, a kosztuje ~1638 fraz (angielski: ~560, bo ma
+  // mniej form odmienionych po liczbie).
 );
 
 // Sprawdzone 03.09.2026 wobec słownika modelu vosk-model-small-en-us-0.15
@@ -281,6 +307,7 @@ const _pakietLiczbEn = _PakietLiczb(
   procentKotwica: 'percent',
   lacznikZakresu: 'to',
   mostekPoLiczebniku: true,
+  mostekPoSlocie: true,
 );
 
 const Map<String, _PakietLiczb> _pakietyLiczb = {
@@ -728,13 +755,13 @@ class VoskGrammar {
       // model języka praktycznie nie ma jak przejść - polecenie wypada jako
       // nierozpoznane. Zgłoszone z urządzenia 04.09.2026 dla "syrup three to
       // two two liters"; parser sam frazę przyjmuje, gubi ją dopiero Vosk.
+      final Set<String> slowaLiczb = {
+        ..._liczby.jednostki.keys,
+        ..._liczby.nastki.keys,
+        ..._liczby.dziesiatki.keys,
+        ..._liczby.setki.keys,
+      };
       if (_liczby.mostekPoLiczebniku) {
-        final Set<String> slowaLiczb = {
-          ..._liczby.jednostki.keys,
-          ..._liczby.nastki.keys,
-          ..._liczby.dziesiatki.keys,
-          ..._liczby.setki.keys,
-        };
         for (final fraza in wynik.toList()) {
           final List<String> slowa = fraza.split(' ');
           //TYLKO frazy WIELOWYRAZOWE. Bez tego warunku pętla brałaby też
@@ -745,6 +772,34 @@ class VoskGrammar {
           if (!slowaLiczb.contains(ostatnie)) continue;
           for (final String l in slowaLiczb) {
             wynik.add('$ostatnie $l');
+          }
+        }
+      }
+      // CZWARTY mostek: LICZBA -> pierwsze słowo tego, co stoi zaraz PO niej
+      // ("two liters", "twenty on the left", "five units"). Trzeci mostek
+      // (wyżej) łatał przejście liczba -> LICZBA, ten łata liczba -> SŁOWO:
+      // jednostki miary stoją w gramatyce jako samotne, jednowyrazowe frazy,
+      // więc model języka wchodzi w nie najdroższą ścieżką. Zgłoszone
+      // z urządzenia 05.09.2026 - "two liters" wchodziło "dość opornie".
+      // Zbiór słów liczony ze WSZYSTKICH wyrażeń (zbiór FIRST reszty
+      // sekwencji po typie wbudowanym), a nie z listy jednostek wpisanej
+      // ręcznie - inaczej każde nowe wyrażenie z liczbą wymagałoby dopisku
+      // tutaj i cicho gubiłoby ten sam bigram.
+      if (_liczby.mostekPoSlocie) {
+        final Set<String> poLiczbie = <String>{};
+        for (final w in _wyrazenia) {
+          if (intencje != null && !intencje.contains(w.intent)) continue;
+          _slowaPoWbudowanym(w.sekwencja, poLiczbie);
+        }
+        // "hundred" nie jest w [setki] (setka z dwóch słów), a po nim też pada
+        // jednostka - "one hundred milliliters".
+        final Set<String> zrodla = {
+          ...slowaLiczb,
+          if (_liczby.slowoSetek != null) _liczby.slowoSetek!,
+        };
+        for (final String liczba in zrodla) {
+          for (final String slowo in poLiczbie) {
+            wynik.add('$liczba $slowo');
           }
         }
       }
@@ -764,6 +819,60 @@ class VoskGrammar {
     }
     wynik.remove('');
     return wynik.toList()..sort();
+  }
+
+  /// Pierwsze słowa tego, co w wyrażeniu stoi ZARAZ PO typie wbudowanym
+  /// (liczbie) - czyli zbiór FIRST reszty wyrażenia, liczony jak
+  /// w [slowaOtwierajace]. Używane przez mostek [_PakietLiczb.mostekPoSlocie].
+  ///
+  /// Liczba bywa ZAGNIEŻDŻONA w nawiasie opcjonalnym ("acid (and)
+  /// ($pv.TwoDigitInteger:acid) (milliliter, milliliters)"), a jednostka stoi
+  /// dopiero w sekwencji NADRZĘDNEJ - dlatego zejście w wariant zapamiętuje
+  /// [_Ogon]: gdzie wrócić, gdy wariant się skończy. Bez tego "milliliters"
+  /// i "mites" wypadały ze zbioru, czyli dokładnie te jednostki, których
+  /// dotyczy problem.
+  void _slowaPoWbudowanym(List<_Element> seq, Set<String> out) {
+    void first(List<_Element> s, int od, List<_Ogon> kont) {
+      for (int i = od; i < s.length; i++) {
+        final e = s[i];
+        if (e is _Slowo) {
+          out.add(e.w);
+          return;
+        } else if (e is _SlotRef) {
+          for (final v in _slotyDef[e.nazwa] ?? const <String>[]) {
+            final t = v.toLowerCase().split(RegExp(r'\s+'));
+            if (t.isNotEmpty) out.add(t.first);
+          }
+          return;
+        } else if (e is _Wbudowany) {
+          return; //liczba po liczbie - to robi mostekPoLiczebniku
+        } else if (e is _Alternatywa) {
+          for (final w in e.warianty) {
+            first(w, 0, <_Ogon>[_Ogon(s, i + 1), ...kont]);
+          }
+          if (!e.opcjonalna) return; //wariant wymagany domyka zbiór FIRST
+        }
+      }
+      //koniec sekwencji - dalszy ciąg jest w wyrażeniu nadrzędnym
+      if (kont.isNotEmpty) {
+        first(kont.first.seq, kont.first.od, kont.sublist(1));
+      }
+    }
+
+    void skanuj(List<_Element> s, List<_Ogon> kont) {
+      for (int i = 0; i < s.length; i++) {
+        final e = s[i];
+        if (e is _Wbudowany) {
+          first(s, i + 1, kont);
+        } else if (e is _Alternatywa) {
+          for (final w in e.warianty) {
+            skanuj(w, <_Ogon>[_Ogon(s, i + 1), ...kont]);
+          }
+        }
+      }
+    }
+
+    skanuj(seq, const <_Ogon>[]);
   }
 
   bool _maWbudowany(List<_Element> seq) {

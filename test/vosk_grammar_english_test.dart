@@ -137,6 +137,25 @@ void main() {
       expect(frazy, contains('three to'));
       expect(frazy, contains('to five'));
     });
+
+    test('gramatyka recognizera wiąże jednostki miary z liczbą', () {
+      // Zgłoszenie z urządzenia 05.09.2026: "two liters" wchodziło "dość
+      // opornie". Jednostka stoi za $pv, więc po rozcięciu wyrażenia trafiała
+      // do gramatyki jako samotna, jednowyrazowa fraza - bez bigramu
+      // wiążącego ją z poprzedzającą liczbą (mostekPoSlocie).
+      final frazy = silnik.frazy();
+      expect(frazy, contains('two liters'));
+      expect(frazy, contains('three kilo'));
+      expect(frazy, contains('five units'));
+      // Te dwie jednostki stoją PO nawiasie, w którym siedzi liczba
+      // ("acid (and) ($pv:acid) (milliliter, milliliters)") - łapie je dopiero
+      // zbiór FIRST liczony z ciągiem dalszym sekwencji nadrzędnej.
+      expect(frazy, contains('ten mites'));
+      expect(frazy, contains('twenty milliliters'));
+      // Dalszy ciąg komendy, nie tylko jednostka.
+      expect(frazy, contains('twenty on'),
+          reason: '"drone brood twenty percent on the left"');
+    });
   });
 
   group('excluder - jedyne brakujące słowo, łata [excluder,grid,grate]', () {
