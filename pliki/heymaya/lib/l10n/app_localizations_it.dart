@@ -178,6 +178,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get belts => 'strisce';
 
   @override
+  String get pieces => 'pezzi';
+
+  @override
   String get mites => 'pezzi';
 
   @override
@@ -548,6 +551,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get apivarolChemistry => 'Chimica';
+
+  @override
+  String get treatmentStrips => 'Strisce';
 
   @override
   String get dosePortionPart => 'dose/porzione';

@@ -14,6 +14,7 @@ import 'recording_player.dart';
 import '../screens/frames_screen.dart';
 import '../screens/infos_edit_screen.dart';
 import '../globals.dart' as globals;
+import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 
 class InfoItem extends StatelessWidget {
   String zmienDate(String data) {
@@ -480,7 +481,7 @@ class InfoItem extends StatelessWidget {
                             style: TextStyle(color: Colors.black),
                             children: [
                           TextSpan(
-                            text: ('${info.parametr} '),
+                            text: ('${nazwaParametru(context, info.parametr)} '),
                             style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -544,7 +545,7 @@ class InfoItem extends StatelessWidget {
                             children: [
                           info.wartosc == 'green'
                               ? TextSpan(
-                                  text: ('${info.parametr} '),
+                                  text: ('${nazwaParametru(context, info.parametr)} '),
                                   style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -552,7 +553,7 @@ class InfoItem extends StatelessWidget {
                                 )
                               : info.wartosc == 'yellow'
                                  ? TextSpan(
-                                    text: ('${info.parametr} '),
+                                    text: ('${nazwaParametru(context, info.parametr)} '),
                                     style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -560,14 +561,14 @@ class InfoItem extends StatelessWidget {
                                   )
                                   : info.wartosc == 'red'
                                       ? TextSpan(
-                                          text: ('${info.parametr} '),
+                                          text: ('${nazwaParametru(context, info.parametr)} '),
                                           style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                               color: Color.fromARGB(255, 179, 2, 2)),
                                         )
                                       : TextSpan(
-                                          text: ('${info.parametr} '),
+                                          text: ('${nazwaParametru(context, info.parametr)} '),
                                           style: TextStyle(
                                               fontSize: 16,
                                               //fontWeight: FontWeight.bold,
@@ -659,7 +660,7 @@ class InfoItem extends StatelessWidget {
 //jezeli to matka to matkaID na poczatku wiersza z pola "pogoda" + parametr                         
                               info.kategoria == 'queen' 
                                 ? TextSpan(
-                                  text: ('ID${info.pogoda} ${info.parametr} '),
+                                  text: ('ID${info.pogoda} ${nazwaParametru(context, info.parametr)} '),
                                   style: TextStyle(
                                       fontSize: 16,
                                       //fontWeight: FontWeight.bold,
@@ -667,7 +668,7 @@ class InfoItem extends StatelessWidget {
                                 )
 //jezeli to nie matka to: sam parametr                         
                                 : TextSpan(
-                                  text: ('${info.parametr} '),
+                                  text: ('${nazwaParametru(context, info.parametr)} '),
                                   style: TextStyle(
                                       fontSize: 16,
                                       //fontWeight: FontWeight.bold,

@@ -506,10 +506,11 @@ List<TextSpan> _sekcjaLeczenie(BuildContext context) {
     //Słowa "Biovar" w gramatyce NIE MA, a czasownik stoi PRZED "paski".
     _punktor,
     TextSpan(text: l.rem, style: _wymagany),
-    //l.belts ("belts") i l.mites ("mites") to wartości zapisywane do BAZY
-    //(voice_vosk_screen, infos_edit_screen) - nie wolno ich zmieniać. Gramatyka
-    //angielska mówi jednak [strip,strips] i [unit,units], więc pomoc musi
-    //pokazać te słowa. Polski ma tu ten sam wyjątek niżej ("sztuki").
+    //l.belts to SŁOWO POLECENIA („paski"), nie miara - od 05.09.2026 miarą
+    //jest osobny klucz `pieces` („sztuk"/„units"), bo jeden klucz w dwóch
+    //rolach dawał wpis „Paski wstaw 3 paski". Gramatyka angielska mówi
+    //[strip,strips] i [unit,units], więc pomoc pokazuje te słowa wprost.
+    //Polski ma tu ten sam wyjątek niżej („sztuki").
     if (globals.jezyk == 'en_US')
       TextSpan(text: ' strips', style: _wymagany)
     else

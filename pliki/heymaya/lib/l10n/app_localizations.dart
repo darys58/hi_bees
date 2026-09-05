@@ -444,6 +444,12 @@ abstract class AppLocalizations {
   /// **'belts'**
   String get belts;
 
+  /// No description provided for @pieces.
+  ///
+  /// In en, this message translates to:
+  /// **'units'**
+  String get pieces;
+
   /// No description provided for @mites.
   ///
   /// In en, this message translates to:
@@ -1151,6 +1157,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chemistry'**
   String get apivarolChemistry;
+
+  /// No description provided for @treatmentStrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Strips'**
+  String get treatmentStrips;
 
   /// No description provided for @dosePortionPart.
   ///

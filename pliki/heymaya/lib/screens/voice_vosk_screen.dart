@@ -77,6 +77,7 @@ import 'voice_help_dialogs.dart'; //okna pomocy - wydzielone z tego pliku
 import '../models/weather.dart';
 import '../models/weathers.dart';
 //import '../models/dodatki1.dart';
+import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 //void main() {
 //  runApp(MyApp());
 //}
@@ -3723,10 +3724,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                 case 'apivarol': //
                   if (readyApiary == true &&
                       (readyHive == true || readyAllHives == true)) {
-                    printText1 += "\n Apiwarol =";
+                    printText1 += "\n ${nazwaParametru(context, 'apivarol')} =";
                     printText1 +=
                         "  ${slots[key]} " + AppLocalizations.of(context)!.dose;
-                    zapis = 'Apiwarol = ${slots[key]} ' +
+                    zapis = "${nazwaParametru(context, 'apivarol')} = ${slots[key]} " +
                         AppLocalizations.of(context)!.dose;
                     readyInfo = true;
                     zapisInfoDoBazy('treatment', 'apivarol', '${slots[key]}',
@@ -3736,40 +3737,40 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                 case 'biovar': //
                   if (readyApiary == true &&
                       (readyHive == true || readyAllHives == true)) {
-                    printText1 += "\n Biowar =";
+                    printText1 += "\n ${nazwaParametru(context, 'biovar')} =";
                     printText1 += "  ${slots[key]} " +
                         '$biovarBelts ' +
-                        AppLocalizations.of(context)!.belts;
+                        AppLocalizations.of(context)!.pieces;
                     biovarState = '${slots[key]}';
-                    zapis = 'Biowar = ${slots[key]} ' +
+                    zapis = "${nazwaParametru(context, 'biovar')} = ${slots[key]} " +
                         '$biovarBelts ' +
-                        AppLocalizations.of(context)!.belts;
+                        AppLocalizations.of(context)!.pieces;
                     readyInfo = true;
                     zapisInfoDoBazy(
                         'treatment',
                         'biovar',
                         '${slots[key]}' + ' $biovarBelts',
-                        AppLocalizations.of(context)!.belts); //
+                        AppLocalizations.of(context)!.pieces); //
                   }
                   break;
                 case 'biovarBelts': //
                   if (readyApiary == true &&
                       (readyHive == true || readyAllHives == true)) {
-                    printText1 += "\n Biowar =";
+                    printText1 += "\n ${nazwaParametru(context, 'biovar')} =";
                     printText1 += '$biovarState ' +
                         "${slots[key]} " +
-                        AppLocalizations.of(context)!.belts;
+                        AppLocalizations.of(context)!.pieces;
                     biovarBelts = '${slots[key]}';
-                    zapis = 'Biowar = ' +
+                    zapis = "${nazwaParametru(context, 'biovar')} = " +
                         '$biovarState ' +
                         ' ${slots[key]} ' +
-                        AppLocalizations.of(context)!.belts;
+                        AppLocalizations.of(context)!.pieces;
                     readyInfo = true;
                     zapisInfoDoBazy(
                         'treatment',
                         'biovar',
                         '$biovarState' + ' ${slots[key]}',
-                        AppLocalizations.of(context)!.belts); //
+                        AppLocalizations.of(context)!.pieces); //
                   }
                   break;
                 case 'acid': //

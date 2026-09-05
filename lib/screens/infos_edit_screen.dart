@@ -23,6 +23,7 @@ import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/dodatki2.dart';
 import '../widgets/recording_player.dart'; //odtwarzacz nagrania notatki
+import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 
 class InfosEditScreen extends StatefulWidget {
   static const routeName = '/infos_edit';
@@ -329,7 +330,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       if(nowyParametr ==  AppLocalizations.of(context)!.invert) nowyMiara = 'l'; //wartość domyslna dla syrop - invert
       if(nowyParametr ==  AppLocalizations.of(context)!.candy) nowyMiara = 'kg'; //wartość domyslna dla ciasta
       if(nowyParametr ==  'apivarol') nowyMiara = AppLocalizations.of(context)!.dose; //wartość domyslna dla apivarol
-      if(nowyParametr ==  'biovar') nowyMiara = AppLocalizations.of(context)!.belts; //wartość domyslna dla biovar
+      //MIARA, nie nazwa polecenia: do 05.09.2026 był tu `belts` („paski"),
+      //przez co wpis czytał się „Paski wstaw 3 paski". Gramatyka i tak liczy
+      //paski w sztukach („paski pięć sztuk" / „strips five units").
+      if(nowyParametr ==  'biovar') nowyMiara = AppLocalizations.of(context)!.pieces; //wartość domyslna dla biovar
       if(nowyParametr == AppLocalizations.of(context)!.acid) nowyMiara = 'ml'; //wartość domyslna dla kwasu w ml
       if(nowyParametr == " " + AppLocalizations.of(context)!.acid) nowyMiara = 'g'; //wartość domyslna dla kwasu w g
       if(nowyParametr ==  'varroa') nowyMiara = AppLocalizations.of(context)!.mites; //wartość domyslna dla varroa
@@ -1302,7 +1306,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           // SizedBox(
                           //   width: 200,
                           //   child: 
-                            Text( "apivarol (" + AppLocalizations.of(context)!.dose + ")",
+                            Text( nazwaParametru(context, 'apivarol') + " (" + AppLocalizations.of(context)!.dose + ")",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -1337,7 +1341,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           // SizedBox(
                           //   width: 200,
                           //   child: 
-                            Text( "biovar (" + AppLocalizations.of(context)!.belts + ")",
+                            Text( nazwaParametru(context, 'biovar'),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,

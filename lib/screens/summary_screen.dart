@@ -15,6 +15,7 @@ import '../models/note.dart';
 import '../globals.dart' as globals;
 import '../helpers/queen_helpers.dart';
 import '../widgets/hives_item.dart';
+import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 
 class SummaryScreen extends StatefulWidget {
   static const routeName = '/screen-summary';
@@ -890,7 +891,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${_lastTreatment!.parametr} ${_lastTreatment!.wartosc} ${_lastTreatment!.miara} (${_zmienDateCala(_lastTreatment!.data)})',
+                            '${nazwaParametru(context, _lastTreatment!.parametr)} ${_lastTreatment!.wartosc} ${_lastTreatment!.miara} (${_zmienDateCala(_lastTreatment!.data)})',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),

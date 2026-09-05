@@ -27,6 +27,7 @@ import '../screens/frame_edit_screen.dart';
 import '../screens/frame_edit_screen2.dart';
 import '../helpers/queen_helpers.dart';
 //import '../screens/add_queen_screen.dart';
+import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 
 class InfoScreen extends StatefulWidget {
   static const routeName = '/screen-infos';
@@ -1880,7 +1881,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(1)  apivarol'),
+            }, child: Text('(1)  ' + nazwaParametru(context, 'apivarol'),
             style: TextStyle(fontSize: 18)),
             ),
           if(wybranaKategoria == 'treatment')
@@ -1895,7 +1896,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               'idPasieki': pasieka, 
                               'idUla':ul,},
                 );         
-            }, child: Text(('(2) biovar'),
+            }, child: Text('(2) ' + nazwaParametru(context, 'biovar'),
             style: TextStyle(fontSize: 18)),
             ),
           if(wybranaKategoria == 'treatment')
@@ -3050,10 +3051,10 @@ class _InfoScreenState extends State<InfoScreen> {
                         Text('(5) varroa' + ' $rokStatystyk: ${(varroa).toString().replaceAll('.', ',')} ' + AppLocalizations.of(context)!.mites,
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255))),
                       if (wartosc1 != '')
-                        Text('(1) apivarol' + ' $wartosc1',
+                        Text('(1) ' + nazwaParametru(context, 'apivarol') + ' $wartosc1',
                             style: const TextStyle(fontSize: 16)),
                       if (wartosc2 != '')
-                        Text('(2) biovar' + ' $wartosc2',
+                        Text('(2) ' + nazwaParametru(context, 'biovar') + ' $wartosc2',
                             style: const TextStyle(fontSize: 16)),
                       if (wartosc3 != '')
                         Text('(3) ' + AppLocalizations.of(context)!.acid + ' $wartosc3', //w ml
