@@ -14,6 +14,14 @@ analyzer:
     # Kod zwendorowanej wtyczki (kopia pakietu z pub.dev) — nie nasz styl,
     # nie chcemy jego lintów w wynikach `flutter analyze`.
     - packages/**
+    # pliki/heymaya to OSOBNY projekt Fluttera (fork na Androida, pakiet
+    # `heymaya`) z własnym pubspec.yaml — nie część tej aplikacji. Analizowany
+    # z katalogu głównego zalewał wynik setkami błędów w rodzaju „Target of URI
+    # doesn't exist: package:flutter/material.dart", bo jego
+    # .dart_tool/package_config.json jest z 27.07.2026, sprzed migracji na Vosk
+    # (nie robiono tam od tego czasu `flutter pub get`). To NIE są błędy kodu.
+    # Fork analizuje się osobno: cd pliki/heymaya && flutter pub get && flutter analyze
+    - pliki/**
 
 linter:
   # The lint rules applied to this project can be customized in the
