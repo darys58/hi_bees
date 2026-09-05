@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../globals.dart' as globals;
+
 /// Helper do odtwarzania dźwięków w sterowania głosowym.
 /// Dźwięki odtwarzane przez kanał mediów (głośność kontrolowana suwakiem Media Volume).
 /// Każdy dźwięk ma osobną głośność (0.0 - 1.0) konfigurowalną w [volumes].
@@ -90,7 +92,38 @@ class SoundHelper {
     'close',
     'error',
     'nie_rozumiem',
+    'nie_tutaj',
   ];
+
+  /// Katalogi z odzywkami Mai - JEDNA nazwa pliku, dwa nagrania.
+  ///
+  /// Polskie leżą tam, gdzie zawsze (`assets/audio/`), angielskie w podkatalogu
+  /// `assets/audio/en/`, pod DOKŁADNIE tymi samymi nazwami (`slucham.mp3`
+  /// itd.). Dzięki temu dorzucenie nagrań angielskich nie wymaga ani linii
+  /// kodu, ani wpisu w `pubspec.yaml` - katalog jest tam zgłoszony w całości.
+  ///
+  /// Komplet angielski nagrano 05.09.2026 - dziewięć plików, ten sam serwis
+  /// co polskie (24 kHz / 160 kb/s / mono), wszystkie krótsze od polskich
+  /// odpowiedników. Szczegóły i teksty: assets/audio/en/README.txt.
+  ///
+  /// Nazwy plików zostają POLSKIE także po angielsku świadomie: to klucze
+  /// [_soundFiles], a nie treść. Przemianowanie ich znaczyłoby przepisanie
+  /// [soundNames], [volumes], etykiet `sound*` w 7 plikach ARB i `case`
+  /// w `voice_settings_screen` - za to, że plik nazywa się „ładniej".
+  static const String _katalogPl = 'audio';
+  static const String _katalogEn = 'audio/en';
+
+  /// Katalog, z którego odtwarzacze mają WCZYTANE źródła. Pusty = jeszcze nic.
+  /// Po zmianie języka w Ustawieniach [init] przestawia źródła na nowy katalog,
+  /// zamiast tworzyć odtwarzacze od nowa.
+  String _katalogWczytany = '';
+
+  /// Katalog odzywek dla AKTUALNEGO języka aplikacji. Bramka głosu w
+  /// `apiarys_screen` przepuszcza tylko `pl_PL` i `en_US`, więc każdy inny
+  /// język i tak nigdy tu nie trafi - ale gdyby trafił, dostanie polskie
+  /// nagrania, czyli to samo, co dostawał przed tą zmianą.
+  static String get _katalogOdzywek =>
+      globals.jezyk == 'en_US' ? _katalogEn : _katalogPl;
 
   /// Mapowanie nazw dźwięków na pliki MP3.
   static const Map<String, String> _soundFiles = {
@@ -102,6 +135,20 @@ class SoundHelper {
     'close': 'zamkniete.mp3',
     'error': 'blad.mp3',
     'nie_rozumiem': 'nie_rozumiem.mp3',
+    'nie_tutaj': 'nie_tutaj.mp3',
+  };
+
+  /// Czym zastąpić odzywkę, dla której brakuje nagrania - SIATKA
+  /// BEZPIECZEŃSTWA, nie stan docelowy.
+  ///
+  /// 'nie_tutaj' rozdzielono od 'nie_rozumiem' 05.09.2026, bo jeden plik
+  /// obsługiwał dwa różne znaczenia: „zrozumiałam, ale nie w tym miejscu"
+  /// (43 wywołania `beep('error')` w switchu pasiecznym) i „nie zrozumiałam
+  /// treści notatki" (zapis notatki bez rozpoznanego tekstu). Kod rozdzielono
+  /// ZANIM powstały nagrania i przez kilka godzin grał tu stary plik - wpis
+  /// zostaje, żeby brak nagrania nigdy nie oznaczał ciszy w pasiece.
+  static const Map<String, String> _plikZapasowy = {
+    'nie_tutaj': 'nie_rozumiem.mp3',
   };
 
   /// Głośności poszczególnych dźwięków (0.0 - 1.0).
@@ -115,6 +162,7 @@ class SoundHelper {
     'close': 0.8,
     'error': 1.0,
     'nie_rozumiem': 0.9,
+    'nie_tutaj': 0.9,
   };
 
   /// Główna głośność (mnożnik dla wszystkich dźwięków).
@@ -123,13 +171,20 @@ class SoundHelper {
   /// Inicjalizacja - preload wszystkich dźwięków + odczyt zapisanych głośności.
   /// Wywołać raz w initState ekranu voice lub parametryzacji.
   Future<void> init() async {
-    if (_initialized) return;
+    // Język mógł się zmienić w Ustawieniach OD OSTATNIEGO wejścia na ekran
+    // głosowy - wtedy odtwarzacze trzymają jeszcze nagrania poprzedniego
+    // języka. Wychodzimy dopiero, gdy wczytany katalog zgadza się z aktualnym.
+    final String katalog = _katalogOdzywek;
+    if (_initialized && katalog == _katalogWczytany) return;
     for (final name in soundNames) {
-      final player = AudioPlayer();
-      await player.setSource(AssetSource('audio/${_soundFiles[name]}'));
+      final player = _players[name] ?? AudioPlayer();
+      await _ustawZrodloOdzywki(player, name, katalog);
       await player.setReleaseMode(ReleaseMode.stop);
       _players[name] = player;
     }
+    _katalogWczytany = katalog;
+    //reszta jest niezależna od języka - przy samej zmianie języka nie ma po co
+    if (_initialized) return;
     final beep = AudioPlayer();
     // Własny plik ma pierwszeństwo, wbudowany jest zawsze na miejscu. Brak
     // assetu leci z `rootBundle` jako błąd (nie wyjątek), stąd `catch (_)` bez
@@ -146,6 +201,48 @@ class SoundHelper {
     _beepPlayer = beep;
     await loadVolumes();
     _initialized = true;
+  }
+
+  /// Źródło JEDNEJ odzywki, z cofaniem się po kolejnych kandydatach.
+  ///
+  /// Kolejność: nagranie w języku aplikacji -> jego zamiennik z [_plikZapasowy]
+  /// W TYM SAMYM języku -> nagranie polskie -> polski zamiennik. Język trzyma
+  /// pierwszeństwo nad dokładnością znaczenia: angielskie „I don't understand"
+  /// jest w angielskiej sesji mniej mylące niż poprawne, ale polskie
+  /// „Nie tutaj".
+  ///
+  /// Cofanie jest tu po to, żeby zmiany w kodzie nie musiały czekać na studio -
+  /// tak powstało rozdzielenie 'nie_tutaj' od 'nie_rozumiem' i katalog
+  /// angielski (05.09.2026, oba wpięte przed nagraniami). Brak pliku wraca
+  /// z `rootBundle` jako błąd, nie wyjątek - stąd `catch (_)` bez typu.
+  ///
+  /// OSTATNI kandydat leci BEZ łapania: gdyby padł, to nie jest brakujące
+  /// nagranie, tylko rozjechany `pubspec.yaml` - i lepiej, żeby było to widać
+  /// od razu, a nie jako cicha cisza w pasiece.
+  Future<void> _ustawZrodloOdzywki(
+    AudioPlayer player,
+    String name,
+    String katalog,
+  ) async {
+    final String plik = _soundFiles[name]!;
+    final String? zapas = _plikZapasowy[name];
+    final List<String> kandydaci = <String>[
+      if (katalog != _katalogPl) ...<String>[
+        '$katalog/$plik',
+        if (zapas != null) '$katalog/$zapas',
+      ],
+      '$_katalogPl/$plik',
+      if (zapas != null) '$_katalogPl/$zapas',
+    ];
+    for (int i = 0; i < kandydaci.length - 1; i++) {
+      try {
+        await player.setSource(AssetSource(kandydaci[i]));
+        return;
+      } catch (_) {
+        debugPrint('SoundHelper: brak „${kandydaci[i]}" - próbuję dalej');
+      }
+    }
+    await player.setSource(AssetSource(kandydaci.last));
   }
 
   /// Krótki sygnał potwierdzenia przyjęcia komendy (patrz [_beepPlayer]).

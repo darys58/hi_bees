@@ -2605,10 +2605,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get soundClose => 'Fermer';
 
   @override
-  String get soundError => 'Erreur d\'enregistrement de la note';
+  String get soundError => 'Erreur';
 
   @override
   String get soundNieRozumiem => 'Je ne comprends pas';
+
+  @override
+  String get soundNieTutaj => 'Pas ici';
 
   @override
   String get soundPlay => 'Écouter';

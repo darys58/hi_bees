@@ -61,6 +61,7 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
       case 'close': return l.soundClose;
       case 'error': return l.soundError;
       case 'nie_rozumiem': return l.soundNieRozumiem;
+      case 'nie_tutaj': return l.soundNieTutaj;
       default: return name;
     }
   }

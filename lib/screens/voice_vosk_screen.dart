@@ -788,7 +788,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           (nrXXOfApiary == 0 || nrXXOfHive == 0)) {
         _slad('brak pasieki albo ula');
         _powiedzONotatce(AppLocalizations.of(context)!.voiceNoteNeedPlace);
-        await _zagraj('nie_rozumiem');
+        //polecenie zrozumiane, tylko nie ma go gdzie zapisać - to samo
+        //znaczenie co `beep('error')` w switchu pasiecznym
+        await _zagraj('nie_tutaj');
         return;
       }
       _powiedzONotatce(''); //nowa notatka - stary komunikat traci ważność
@@ -855,7 +857,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       setState(() => _dyktuje = false);
       _slad('odmowa: $powod');
       _powiedzONotatce('${AppLocalizations.of(context)!.voiceNoteUnavailable} $powod');
-      await _zagraj('nie_rozumiem');
+      //AWARIA aplikacji (recognizery dyktowania nie powstały), nie
+      //nieporozumienie - stąd 'error'
+      await _zagraj('error');
     } catch (err, stos) {
       //Ostatnia deska ratunku. Bez niej awaria dowolnego kroku wygląda z
       //zewnątrz identycznie jak zignorowana komenda.
@@ -915,7 +919,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         rozpoznane.isEmpty && nagranie != null && nagranieZDzwiekiem;
     if (rozpoznane.isEmpty && !ratujemyNagranie) {
       _powiedzONotatce(AppLocalizations.of(context)!.voiceNoteNothingHeard);
-      await _zagraj('nie_rozumiem');
+      //notatka NIE POWSTAŁA - ani tekstu, ani dźwięku do uratowania
+      await _zagraj('error');
       return;
     }
     final String tresc = rozpoznane.isEmpty ? _trescBezTekstu : rozpoznane;
@@ -6972,8 +6977,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         _pendingOpenBeep = true;
         break;
       case 'error':
+        //MYLĄCA NAZWA, zostawiona świadomie: 43 wywołania w switchu pasiecznym
+        //i przemianowanie ich niczego nie poprawia. To NIE jest błąd aplikacji,
+        //tylko „zrozumiałam, ale nie da się tego zrobić tu i teraz" - brak
+        //zdekodowanego slotu, zła kolejność komend, brak wybranej pasieki albo
+        //ula, pusty stos cofania. Stąd odzywka 'nie_tutaj', a nie 'error'.
         _pendingOpenBeep = false; //błąd kasuje odroczone 'okej'
-        _zagraj('nie_rozumiem');
+        _zagraj('nie_tutaj');
         break;
     }
   }

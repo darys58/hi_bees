@@ -127,6 +127,14 @@ flutter:
     - assets/audio/zamkniete.mp3
     - assets/audio/blad.mp3
     - assets/audio/nie_rozumiem.mp3
+    # „Nie tutaj" - polecenie ZROZUMIANE, ale niewykonalne w tym miejscu.
+    # Rozdzielone od nie_rozumiem.mp3 05.09.2026, nagrane tego samego dnia.
+    - assets/audio/nie_tutaj.mp3
+    # Angielskie odzywki Mai - CAŁY katalog, nie pojedyncze pliki: dzięki
+    # temu dorzucenie nagrania nie wymaga wpisu tutaj. Katalog może być
+    # pusty (jest w nim README.txt), a SoundHelper cofa się wtedy do
+    # nagrań polskich - patrz _ustawZrodloOdzywki.
+    - assets/audio/en/
     # wyjście awaryjne sygnału potwierdzenia, gdyby kanał systemowy nie odpowiedział
     - assets/audio/listening.wav
     # Własny sygnał zamiast wbudowanego: wrzuć plik pod tę nazwę i odkomentuj

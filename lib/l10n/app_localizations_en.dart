@@ -2584,10 +2584,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soundClose => 'Close';
 
   @override
-  String get soundError => 'Note save error';
+  String get soundError => 'Error';
 
   @override
   String get soundNieRozumiem => 'Don\'t understand';
+
+  @override
+  String get soundNieTutaj => 'Not here';
 
   @override
   String get soundPlay => 'Play';

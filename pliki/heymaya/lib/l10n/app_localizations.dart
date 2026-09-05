@@ -5122,7 +5122,7 @@ abstract class AppLocalizations {
   /// No description provided for @soundError.
   ///
   /// In en, this message translates to:
-  /// **'Note save error'**
+  /// **'Error'**
   String get soundError;
 
   /// No description provided for @soundNieRozumiem.
@@ -5130,6 +5130,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Don\'t understand'**
   String get soundNieRozumiem;
+
+  /// No description provided for @soundNieTutaj.
+  ///
+  /// In en, this message translates to:
+  /// **'Not here'**
+  String get soundNieTutaj;
 
   /// No description provided for @soundPlay.
   ///

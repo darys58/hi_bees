@@ -2597,10 +2597,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get soundClose => 'Schließen';
 
   @override
-  String get soundError => 'Fehler beim Speichern der Notiz';
+  String get soundError => 'Fehler';
 
   @override
   String get soundNieRozumiem => 'Nicht verstanden';
+
+  @override
+  String get soundNieTutaj => 'Nicht hier';
 
   @override
   String get soundPlay => 'Abspielen';

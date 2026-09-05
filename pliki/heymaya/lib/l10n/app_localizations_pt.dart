@@ -2596,10 +2596,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get soundClose => 'Fechar';
 
   @override
-  String get soundError => 'Erro ao guardar a nota';
+  String get soundError => 'Erro';
 
   @override
   String get soundNieRozumiem => 'Não entendo';
+
+  @override
+  String get soundNieTutaj => 'Aqui não';
 
   @override
   String get soundPlay => 'Reproduzir';

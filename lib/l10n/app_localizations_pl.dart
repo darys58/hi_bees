@@ -2592,10 +2592,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get soundClose => 'Zamknięcie';
 
   @override
-  String get soundError => 'Błąd zapisu notatki';
+  String get soundError => 'Błąd';
 
   @override
   String get soundNieRozumiem => 'Nie rozumiem';
+
+  @override
+  String get soundNieTutaj => 'Nie tutaj';
 
   @override
   String get soundPlay => 'Odtwórz';
