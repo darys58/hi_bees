@@ -32,4 +32,24 @@ class Info with ChangeNotifier {
     required this.arch,
   });
 
+  /// Wiersz z tabeli `info` (surowa mapa z sqflite) na obiekt.
+  /// Potrzebne tam, gdzie czytamy `info` POZA providerem Infos - ten trzyma
+  /// wpisy jednego ula, a cechy matki trzeba czasem znaleźć w ulu POPRZEDNIM
+  /// (patrz przenoszenie cech po przełożeniu matki, `infos_screen`
+  /// i `hives_screen`).
+  factory Info.fromMap(Map<String, dynamic> item) => Info(
+        id: item['id'],
+        data: item['data'],
+        pasiekaNr: item['pasiekaNr'],
+        ulNr: item['ulNr'],
+        kategoria: item['kategoria'],
+        parametr: item['parametr'],
+        wartosc: item['wartosc'],
+        miara: item['miara'],
+        pogoda: item['pogoda'],
+        temp: item['temp'],
+        czas: item['czas'],
+        uwagi: item['uwagi'],
+        arch: item['arch'],
+      );
 }

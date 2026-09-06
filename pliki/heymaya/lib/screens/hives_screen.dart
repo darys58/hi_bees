@@ -834,7 +834,7 @@ class _HivesScreenState extends State<HivesScreen> {
     //pobranie wszystkich info dla wybranego ula
     Provider.of<Infos>(context, listen: false)
       .fetchAndSetInfosForHive(globals.pasiekaID, numerUla)
-      .then((_) { 
+      .then((_) async { 
       final infosUla = Provider.of<Infos>(context, listen: false);  
       final hivesInfo = infosUla.items; //przypisanie tutaj bo inaczej nie działa tworzenie list: np List<Info> infosIleRamek = hivesInfo.where a nie List<Info> infosIleRamek = infosUla.items.where
 
@@ -861,6 +861,28 @@ class _HivesScreenState extends State<HivesScreen> {
       bool tejMatki(Info inf) =>
           idMatkiWUlu.isEmpty || inf.pogoda.isEmpty || inf.pogoda == idMatkiWUlu;
 
+      //Cechy PRZENIESIONE z poprzedniego ula. Po przełożeniu matki nowy ul ma
+      //na starcie tylko wpis o znaku, a jakość, unasiennienie, ograniczenie
+      //i rocznik zostały przy wpisach z ula poprzedniego - belka brała je
+      //stamtąd, gdy w tym ulu jeszcze ich nie ma. Nic nie zapisujemy do bazy;
+      //w panelu ekranu "info" to samo idzie SZARYM tekstem, w belce nie ma
+      //jak tego odróżnić i tak ma zostać (decyzja usera 06.09.2026).
+      List<Info> wpisyMatki = [];
+      if (idMatkiWUlu.isNotEmpty) {
+        final rows = await DBHelper.getInfosOfQueen(idMatkiWUlu);
+        wpisyMatki = rows.map((item) => Info.fromMap(item)).toList();
+      }
+      //najnowszy wpis TEJ matki o danym parametrze, zrobiony w INNYM ulu
+      //(lista przychodzi posortowana malejąco po dacie i czasie)
+      Info? przeniesiony(String parametr) {
+        for (final inf in wpisyMatki) {
+          if (inf.parametr == parametr &&
+              inf.wartosc.isNotEmpty &&
+              (inf.ulNr != numerUla || inf.pasiekaNr != globals.pasiekaID)) return inf;
+        }
+        return null;
+      }
+
      //ILOŚĆ RAMEK   //lista dat info ula zeby uzyskac datę ostatniego wpisu ilości ramek w wybranym ulu
       getDatyInfo(globals.pasiekaID, numerUla,'equipment',AppLocalizations.of(context)!.numberOfFrame + " = ").then((_) async {
         if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o ilości ramek 
@@ -874,116 +896,127 @@ class _HivesScreenState extends State<HivesScreen> {
         
         //MATKA1 - queenQuality (dobra, OK)
         getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs).then((_) async {
+          //wpis z TEGO ula, a gdy go nie ma - PRZENIESIONY z ula poprzedniego
+          Info? wpisMatka1;
           if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce1
             tempDataMatka1 = _datyInfo[0].data; //data ostatniego wpisu matka1
             //pobranie info dla ula i dla daty ostatniego wpisu o matce1
             List<Info> infosMatka1 = hivesInfo.where((m1) {
                 return  m1.data == tempDataMatka1 && m1.kategoria == 'queen' &&  m1.parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs && tejMatki(m1); 
               }).toList();
-              //pusto = wpis z tej daty należy do POPRZEDNIEJ matki (odsiał go
-              //tejMatki) - belka ma wtedy nie pokazywać nic
-              if (infosMatka1.isEmpty) {
-                matka1 = '';
-              //jakość matki znają queen_helpers - lista literałów łapała tylko polski
-              //i angielski, więc np. niemieckie "zu ersetzen" szło na kciuk w górę
-              } else if (qualityIsBad(infosMatka1[0].wartosc)) {
-                matka1 = 'zła';
-                if (ikona == 'red') { //bo był brak matki
-                  ikona = 'orange';
-                  //globals.ikonaPasieki = 'orange';
-                }
-                if (matka2 == 'brak') matka2 = '';
-              } else {
-                matka1 = 'ok';
-                if (ikona == 'red') {  //bo był brak matki               
-                  ikona = 'orange';
-                  //globals.ikonaPasieki = 'orange';
-                }
-                if (matka2 == 'brak') matka2 = '';
-              }
-              //print('matka1 = ${infosMatka1[0].wartosc}'); 
-          } else {matka1 = '';}
+            //pusto = wpis z tej daty należy do POPRZEDNIEJ matki (odsiał go tejMatki)
+            if (infosMatka1.isNotEmpty) wpisMatka1 = infosMatka1[0];
+          }
+          wpisMatka1 ??= przeniesiony(AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs);
+          if (wpisMatka1 == null) {
+            matka1 = '';
+          //jakość matki znają queen_helpers - lista literałów łapała tylko polski
+          //i angielski, więc np. niemieckie "zu ersetzen" szło na kciuk w górę
+          } else if (qualityIsBad(wpisMatka1.wartosc)) {
+            matka1 = 'zła';
+            if (ikona == 'red') { //bo był brak matki
+              ikona = 'orange';
+              //globals.ikonaPasieki = 'orange';
+            }
+            if (matka2 == 'brak') matka2 = '';
+          } else {
+            matka1 = 'ok';
+            if (ikona == 'red') {  //bo był brak matki
+              ikona = 'orange';
+              //globals.ikonaPasieki = 'orange';
+            }
+            if (matka2 == 'brak') matka2 = '';
+          }
         DBHelper.updateUleMatka1('${globals.pasiekaID}.$numerUla',matka1);
           
             //MATKA3 - queenState (dziewica, naturalna, trutówka)
             getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queen + " -").then((_) async {
+              //wpis z TEGO ula, a gdy go nie ma - PRZENIESIONY z ula poprzedniego
+              Info? wpisMatka3;
               if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce3
                 tempDataMatka3 = _datyInfo[0].data; //data ostatniego wpisu matka3
                 //pobranie info dla ula i dla daty ostatniego wpisu o matce3
                 List<Info> infosMatka3 = hivesInfo.where((m3) {
                     return  m3.data == tempDataMatka3 && m3.kategoria == 'queen' &&  m3.parametr == AppLocalizations.of(context)!.queen + " -" && tejMatki(m3); 
                   }).toList();
-                  //print('matka3 = ${infosMatka3[0].wartosc}');
-                  //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
-                  if (infosMatka3.isEmpty) {
-                      matka3 = '';
-                  } else if (infosMatka3[0].wartosc == 'dziewica' || infosMatka3[0].wartosc == 'virgine') {
-                      matka3 = 'nieunasienniona';
-                      if (ikona == 'red') { //bo był brak matki
-                        ikona = 'orange';
-                        //globals.ikonaPasieki = 'orange';
-                      }
-                      if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
-                  } else if (infosMatka3[0].wartosc == 'trutówka' || infosMatka3[0].wartosc == 'drone laying') {
-                      matka3 = 'trutowa';
-                      if (ikona == 'red') { //bo był brak matki
-                        ikona = 'orange';
-                        //globals.ikonaPasieki = 'orange';
-                      }
-                      if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
-                    } else {
-                      matka3 = 'unasienniona';
-                      if (ikona != 'yellow') { //jezeli nie toDo
-                        ikona = 'green';
-                        //globals.ikonaPasieki = 'green'; 
-                      }
-                      if (matka2 == 'brak') matka2 = '';
-                    }
-                  //print('matka3 = ${infosMatka3[0].wartosc}'); 
-              } else {matka3 = '';}
+                //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
+                if (infosMatka3.isNotEmpty) wpisMatka3 = infosMatka3[0];
+              }
+              wpisMatka3 ??= przeniesiony(AppLocalizations.of(context)!.queen + " -");
+              if (wpisMatka3 == null) {
+                matka3 = '';
+              } else if (wpisMatka3.wartosc == 'dziewica' || wpisMatka3.wartosc == 'virgine') {
+                matka3 = 'nieunasienniona';
+                if (ikona == 'red') { //bo był brak matki
+                  ikona = 'orange';
+                  //globals.ikonaPasieki = 'orange';
+                }
+                if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
+              } else if (wpisMatka3.wartosc == 'trutówka' || wpisMatka3.wartosc == 'drone laying') {
+                matka3 = 'trutowa';
+                if (ikona == 'red') { //bo był brak matki
+                  ikona = 'orange';
+                  //globals.ikonaPasieki = 'orange';
+                }
+                if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
+              } else {
+                matka3 = 'unasienniona';
+                if (ikona != 'yellow') { //jezeli nie toDo
+                  ikona = 'green';
+                  //globals.ikonaPasieki = 'green'; 
+                }
+                if (matka2 == 'brak') matka2 = '';
+              }
             DBHelper.updateUleMatka3('${globals.pasiekaID}.$numerUla',matka3);
            
               //MATKA4 - queenStart (wolna, w klatce)
               getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queenIs).then((_) async {
+                //wpis z TEGO ula, a gdy go nie ma - PRZENIESIONY z ula poprzedniego
+                Info? wpisMatka4;
                 if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce4
                   tempDataMatka4 = _datyInfo[0].data; //data ostatniego wpisu matka4
                   //pobranie info dla ula i dla daty ostatniego wpisu o matce4
                   List<Info> infosMatka4 = hivesInfo.where((m4) {
                       return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  m4.parametr == AppLocalizations.of(context)!.queenIs && tejMatki(m4); 
                     }).toList();
-                    //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
-                    if (infosMatka4.isEmpty) {
-                      matka4 = '';
-                    } else if (infosMatka4[0].wartosc == 'wolna' || infosMatka4[0].wartosc == 'freed' || infosMatka4[0].wartosc  == 'freed' || infosMatka4[0].wartosc  == 'frei' || infosMatka4[0].wartosc  == 'libre' || infosMatka4[0].wartosc  == 'libera' || infosMatka4[0].wartosc  == 'livre'){
-                      matka4 = 'wolna';
-                      if (ikona == 'red') {//bo był brak matki
-                        ikona = 'orange';
-                        //globals.ikonaPasieki = 'orange';
-                      }
-                      if (matka2 == 'brak') matka2 = '';
-                    } else{
-                      matka4 = 'ograniczona';
-                      if (ikona == 'red') {  //bo był brak matki
-                        ikona = 'orange';
-                        //globals.ikonaPasieki = 'orange';
-                      }
-                      if (matka2 == 'brak') matka2 = '';
-                    }
-                    //print('matka4 = ${infosMatka4[0].wartosc}'); 
-                } else {matka4 = '';}
+                  //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
+                  if (infosMatka4.isNotEmpty) wpisMatka4 = infosMatka4[0];
+                }
+                wpisMatka4 ??= przeniesiony(AppLocalizations.of(context)!.queenIs);
+                if (wpisMatka4 == null) {
+                  matka4 = '';
+                } else if (wpisMatka4.wartosc == 'wolna' || wpisMatka4.wartosc == 'freed' || wpisMatka4.wartosc  == 'frei' || wpisMatka4.wartosc  == 'libre' || wpisMatka4.wartosc  == 'libera' || wpisMatka4.wartosc  == 'livre'){
+                  matka4 = 'wolna';
+                  if (ikona == 'red') {//bo był brak matki
+                    ikona = 'orange';
+                    //globals.ikonaPasieki = 'orange';
+                  }
+                  if (matka2 == 'brak') matka2 = '';
+                } else{
+                  matka4 = 'ograniczona';
+                  if (ikona == 'red') {  //bo był brak matki
+                    ikona = 'orange';
+                    //globals.ikonaPasieki = 'orange';
+                  }
+                  if (matka2 == 'brak') matka2 = '';
+                }
                 DBHelper.updateUleMatka4('${globals.pasiekaID}.$numerUla',matka4);
                   
                 //MATKA5 - queenBorn
                 getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queenWasBornIn).then((_) async {
+                  //wpis z TEGO ula, a gdy go nie ma - PRZENIESIONY z ula poprzedniego
+                  Info? wpisMatka5;
                   if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce5
                    tempDataMatka5 = _datyInfo[0].data; //data oststniego wpisu matka5
                     //pobranie info dla ula i dla daty ostatniego wpisu o matce5
                     List<Info> infosMatka5 = hivesInfo.where((m5) {
                         return  m5.data == tempDataMatka5 && m5.kategoria == 'queen' &&  m5.parametr == AppLocalizations.of(context)!.queenWasBornIn && tejMatki(m5); 
                       }).toList();
-                      //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
-                      matka5 = infosMatka5.isEmpty ? '' : infosMatka5[0].wartosc;
-                  } else {matka5 = '';}
+                    //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
+                    if (infosMatka5.isNotEmpty) wpisMatka5 = infosMatka5[0];
+                  }
+                  wpisMatka5 ??= przeniesiony(AppLocalizations.of(context)!.queenWasBornIn);
+                  matka5 = wpisMatka5 == null ? '' : wpisMatka5.wartosc;
                 DBHelper.updateUleMatka5('${globals.pasiekaID}.$numerUla',matka5);
 
     //MATKA2 - queenMark (ma znak, brak)

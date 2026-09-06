@@ -702,6 +702,18 @@ class DBHelper {
     return db.query("ramka", where: "arch=?", whereArgs: [0]);
   }
 
+  //Wpisy o JEDNEJ matce ze WSZYSTKICH pasiek i uli - kolumna info.pogoda
+  //trzyma dla kategorii "queen" matkaID. Potrzebne po przełożeniu matki do
+  //innego ula: cechy (jakość, unasiennienie, ograniczenie, rocznik) zostają
+  //przy wpisach zrobionych w ulu POPRZEDNIM, a nowy ul ma na starcie tylko
+  //wpis o znaku. Sortowanie jak w getInfosOfHive - najnowsze pierwsze.
+  static Future<List<Map<String, dynamic>>> getInfosOfQueen(String matkaID) async {
+    final db = await DBHelper.database();
+    return db.query("info",
+        where: "kategoria='queen' and pogoda=? ORDER BY data DESC, czas DESC",
+        whereArgs: [matkaID]);
+  }
+
   //pobieranie info dla danego ula i pasieki - dla infos
   static Future<List<Map<String, dynamic>>> getInfosOfHive(
       int pasieka, int ul) async {

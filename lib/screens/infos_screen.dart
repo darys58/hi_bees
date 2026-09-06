@@ -26,6 +26,7 @@ import '../screens/frame_edit_screen.dart';
 //import '../screens/frame_move_screen.dart';
 import '../screens/frame_edit_screen2.dart';
 import '../helpers/queen_helpers.dart';
+import '../helpers/db_helper.dart'; //getInfosOfQueen - cechy matki z poprzedniego ula
 //import '../screens/add_queen_screen.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 
@@ -35,6 +36,11 @@ class InfoScreen extends StatefulWidget {
   @override
   State<InfoScreen> createState() => _InfoScreenState();
 }
+
+//Kolor cech matki PRZENIESIONYCH z poprzedniego ula - normalna czcionka, tylko
+//jaśniejsza od czarnej reszty panelu. Kursywa była pierwszą wersją (06.09.2026),
+//user odrzucił ją jako nieczytelną.
+const Color _kolorPrzeniesionej = Color.fromARGB(255, 120, 120, 120);
 
 class _InfoScreenState extends State<InfoScreen> {
   bool _isInit = true;
@@ -47,6 +53,11 @@ class _InfoScreenState extends State<InfoScreen> {
   String uwagiUla = '';
   String nazwaWlasna = '';
   List<Photo> _photos = [];
+  //wpisy o matce, która siedzi w tym ulu, ze WSZYSTKICH uli - z nich biorą się
+  //cechy PRZENIESIONE po przełożeniu matki (patrz build). Wczytywane raz na
+  //matkę, poza budowaniem widoku.
+  List<Info> _infoTejMatki = [];
+  String _idMatkiInfo = ''; //dla jakiej matki wczytano _infoTejMatki
   final ImagePicker _picker = ImagePicker();
 
   List<Color> colory = [
@@ -103,6 +114,21 @@ class _InfoScreenState extends State<InfoScreen> {
     _isInit = false;
     //Provider.of<Rests>(context, listen: false).fetchAndSetRests(); //dostawca restauracji
     super.didChangeDependencies();
+  }
+
+  //Wpisy JEDNEJ matki ze wszystkich uli - dla cech przenoszonych po przełożeniu
+  //matki do innego ula. Wołane z build przez addPostFrameCallback, więc setState
+  //nie wpada w trakcie budowania widoku.
+  Future<void> _wczytajInfoMatki(String matkaID) async {
+    if (matkaID.isEmpty) {
+      if (_infoTejMatki.isNotEmpty && mounted) setState(() { _infoTejMatki = []; });
+      return;
+    }
+    final dataList = await DBHelper.getInfosOfQueen(matkaID);
+    if (!mounted) return;
+    setState(() {
+      _infoTejMatki = dataList.map((item) => Info.fromMap(item)).toList();
+    });
   }
 
   //odzyskanie zdjęcia po restarcie Activity na Androidzie
@@ -733,6 +759,11 @@ class _InfoScreenState extends State<InfoScreen> {
     Image image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
     String rocznik = '';
     bool brakMatki = false;
+    //czy dana cecha jest PRZENIESIONA z poprzedniego ula (szary tekst w panelu)
+    bool przeniesiona1 = false; //jakość
+    bool przeniesiona3 = false; //unasiennienie
+    bool przeniesiona4 = false; //ograniczenie
+    bool przeniesiona5 = false; //rocznik
 
     //ID matki, która siedzi w ulu TERAZ - z NAJNOWSZEGO wpisu o znaku matki.
     //Wpis o znaku powstaje zawsze przy podłączaniu matki do ula
@@ -751,6 +782,67 @@ class _InfoScreenState extends State<InfoScreen> {
           idMatkiWUlu = infos[i].pogoda;
         }
       }
+      //wpisy tej matki ze wszystkich uli - do przeniesienia cech (patrz niżej).
+      //Ładowane poza budowaniem widoku, raz na matkę.
+      if (idMatkiWUlu != _idMatkiInfo) {
+        _idMatkiInfo = idMatkiWUlu;
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _wczytajInfoMatki(idMatkiWUlu));
+      }
+    }
+
+    //nazwy parametrów cech matki - używane i w pętli, i przy przenoszeniu cech
+    final String paramJakosc = AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs;
+    final String paramRocznik = AppLocalizations.of(context)!.queenWasBornIn;
+    final String paramUnasiennienie = AppLocalizations.of(context)!.queen + " -";
+    final String paramOgraniczenie = AppLocalizations.of(context)!.queenIs;
+
+    //Formatowanie czterech cech matki wyjęte z pętli do domknięć, bo używamy go
+    //DWA RAZY: dla wpisu z tego ula, a gdy takiego nie ma - dla wpisu
+    //PRZENIESIONEGO z ula poprzedniego. Domknięcia piszą po wartosc1/3/4/5,
+    //icon1/icon3, image4 i rocznik zadeklarowanych wyżej.
+    void ustawJakosc(Info inf) {
+      //porównanie z bieżącym l10n dawało kciuk w dół każdemu wpisowi zrobionemu
+      //przy innym języku (np. "bardzo dobra" oglądane po angielsku) - listę
+      //wszystkich języków i wartości historycznych trzyma queen_helpers
+      if (qualityIsBad(inf.wartosc))
+        icon1 = Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),);
+      else icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+      wartosc1 = 'ID' + inf.pogoda + ' ' + inf.wartosc +
+          ' (${zmienDate_cala(inf.data)})';
+    }
+
+    void ustawRocznik(Info inf) {
+      rocznik = '\'${inf.wartosc.substring(2)}';
+      wartosc5 = 'ID' + inf.pogoda + ' ' + AppLocalizations.of(context)!.bornIn + ' ' + inf.wartosc +
+          ' (${zmienDate_cala(inf.data)})';
+    }
+
+    void ustawUnasiennienie(Info inf) {
+      String wartoscM3 = '';
+      if(inf.wartosc == AppLocalizations.of(context)!.virgine){
+        icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
+        wartoscM3 = AppLocalizations.of(context)!.virgine1;
+      } else if(inf.wartosc == AppLocalizations.of(context)!.naturallyMated){
+        icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+        wartoscM3 = AppLocalizations.of(context)!.naturallyMated1;
+      } else if(inf.wartosc == AppLocalizations.of(context)!.artificiallyInseminated){
+        icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+        wartoscM3 = AppLocalizations.of(context)!.artificiallyInseminated1;
+      } else if(inf.wartosc == AppLocalizations.of(context)!.droneLaying){
+        icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),);
+        wartoscM3 = AppLocalizations.of(context)!.droneLaying;
+      }
+      wartosc3 = 'ID' + inf.pogoda + ' ' + wartoscM3 +
+          ' (${zmienDate_cala(inf.data)})';
+    }
+
+    void ustawOgraniczenie(Info inf) {
+      if(inf.wartosc == AppLocalizations.of(context)!.freed)
+        image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
+      else image4 = Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
+      wartosc4 = 'ID' + inf.pogoda + ' ' + inf.wartosc +
+          ' (${zmienDate_cala(inf.data)})';
     }
 
 //******************************************************** */
@@ -1006,72 +1098,40 @@ class _InfoScreenState extends State<InfoScreen> {
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) {
+            infos[i].parametr == paramJakosc) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
-            //porównanie z bieżącym l10n dawało kciuk w dół każdemu wpisowi zrobionemu
-            //przy innym języku (np. "bardzo dobra" oglądane po angielsku) - listę
-            //wszystkich języków i wartości historycznych trzyma queen_helpers
-            if(qualityIsBad(infos[i].wartosc))
-              icon1 = Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),);
-            else icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-            wartosc1 = 'ID' + infos[i].pogoda + ' ' + infos[i].wartosc +
-                ' (${zmienDate_cala(infos[i].data)})';
-                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            ustawJakosc(infos[i]);
           }
         }
         //dla wszystkich lat i cechy matki queenBorn
         if (//infos[i].data.substring(0, 4) == rokStatystyk &&
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.queenWasBornIn) {
+            infos[i].parametr == paramRocznik) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
-            rocznik = '\'${infos[i].wartosc.substring(2)}';
-            wartosc5 = 'ID' + infos[i].pogoda + ' ' + AppLocalizations.of(context)!.bornIn + ' ' + infos[i].wartosc +
-                ' (${zmienDate_cala(infos[i].data)})';
-               // ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            ustawRocznik(infos[i]);
           }
         }
         //wszystkich lat i cechy matki queenState (dziewica, naturalna)
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.queen + " -") {
+            infos[i].parametr == paramUnasiennienie) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
-            String wartoscM3 = '';
-            if(infos[i].wartosc == AppLocalizations.of(context)!.virgine){                   
-              icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),); 
-              wartoscM3 = AppLocalizations.of(context)!.virgine1;
-            } else if(infos[i].wartosc == AppLocalizations.of(context)!.naturallyMated){   
-              icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);                   
-              wartoscM3 = AppLocalizations.of(context)!.naturallyMated1;
-            } else if(infos[i].wartosc == AppLocalizations.of(context)!.artificiallyInseminated){   
-              icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);                   
-              wartoscM3 = AppLocalizations.of(context)!.artificiallyInseminated1;
-            } else if(infos[i].wartosc == AppLocalizations.of(context)!.droneLaying){   
-              icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),);                   
-              wartoscM3 = AppLocalizations.of(context)!.droneLaying;
-            }
-            wartosc3 = 'ID' + infos[i].pogoda + ' ' + wartoscM3 +
-                ' (${zmienDate_cala(infos[i].data)})';
-                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            ustawUnasiennienie(infos[i]);
           }
         }
         //dla wszystkich lat i cechy matki queenStart (wolna, w klatce)
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.queenIs) {
+            infos[i].parametr == paramOgraniczenie) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
-            if(infos[i].wartosc == AppLocalizations.of(context)!.freed)
-               image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
-            else image4 = Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
-            wartosc4 = 'ID' + infos[i].pogoda + ' ' + infos[i].wartosc +
-                ' (${zmienDate_cala(infos[i].data)})';
-                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+            ustawOgraniczenie(infos[i]);
           }
         }
         //dla wszystkich lat i cechy matki queenMark
@@ -1248,6 +1308,47 @@ class _InfoScreenState extends State<InfoScreen> {
           });
           varroaSlupekNr = varroaSlupekNr + 1;
         }
+      }
+    }
+
+    //CECHY PRZENIESIONE Z POPRZEDNIEGO ULA
+    //
+    //Po przełożeniu matki do innego ula nowy ul ma na starcie tylko wpis
+    //o znaku (robi go queen_item przy podłączaniu) - jakość, unasiennienie,
+    //ograniczenie i rocznik zostały przy wpisach z ula POPRZEDNIEGO. Zamiast
+    //przepisywać je do bazy z dzisiejszą datą (kopia kłamałaby w dzienniku,
+    //a przy `id` = data.pasieka.ul.kategoria.parametr + ConflictAlgorithm
+    //.replace mogłaby NADPISAĆ prawdziwy wpis z tego samego dnia) pokazujemy
+    //je tutaj: z ORYGINALNĄ datą i SZAREJ, żeby było widać, że to nie jest
+    //ocena zrobiona w tym ulu (kolor: _kolorPrzeniesionej). Nic nie trafia
+    //do bazy.
+    if (wybranaKategoria == 'queen' && idMatkiWUlu.isNotEmpty) {
+      //najnowszy wpis TEJ matki o danym parametrze, zrobiony w INNYM ulu
+      //(_infoTejMatki przychodzi z bazy posortowane malejąco po dacie i czasie)
+      Info? przeniesiony(String parametr) {
+        for (final inf in _infoTejMatki) {
+          if (inf.parametr == parametr &&
+              inf.wartosc.isNotEmpty &&
+              (inf.ulNr != globals.ulID || inf.pasiekaNr != globals.pasiekaID)) return inf;
+        }
+        return null;
+      }
+
+      if (wartosc1 == '') {
+        final inf = przeniesiony(paramJakosc);
+        if (inf != null) { ustawJakosc(inf); przeniesiona1 = true; }
+      }
+      if (wartosc3 == '') {
+        final inf = przeniesiony(paramUnasiennienie);
+        if (inf != null) { ustawUnasiennienie(inf); przeniesiona3 = true; }
+      }
+      if (wartosc4 == '') {
+        final inf = przeniesiony(paramOgraniczenie);
+        if (inf != null) { ustawOgraniczenie(inf); przeniesiona4 = true; }
+      }
+      if (wartosc5 == '') {
+        final inf = przeniesiony(paramRocznik);
+        if (inf != null) { ustawRocznik(inf); przeniesiona5 = true; }
       }
     }
 
@@ -2907,8 +3008,10 @@ class _InfoScreenState extends State<InfoScreen> {
                         Row(
                           children: [
                             image4,
+                            //szary = cecha PRZENIESIONA z poprzedniego ula
                             Text(' (1) $wartosc4',
-                                style: const TextStyle(fontSize: 16)),
+                                style: TextStyle(fontSize: 16,
+                                  color: przeniesiona4 ? _kolorPrzeniesionej : null)),
                           ],
                         ),
  //jakość matki                     
@@ -2918,7 +3021,8 @@ class _InfoScreenState extends State<InfoScreen> {
                             SizedBox(width: 6),
                             icon1,
                             Text(' (2) $wartosc1',
-                                style: const TextStyle(fontSize: 16)),
+                                style: TextStyle(fontSize: 16,
+                                  color: przeniesiona1 ? _kolorPrzeniesionej : null)),
                           ],
                         ),
 //unasiennienie                      
@@ -2928,7 +3032,8 @@ class _InfoScreenState extends State<InfoScreen> {
                             SizedBox(width: 6),
                             icon3,
                             Text(' (3) $wartosc3',
-                                style: const TextStyle(fontSize: 16)),
+                                style: TextStyle(fontSize: 16,
+                                  color: przeniesiona3 ? _kolorPrzeniesionej : null)),
                           ],
                         ),
 //znak                      
@@ -2944,7 +3049,8 @@ class _InfoScreenState extends State<InfoScreen> {
 //rocznik                      
                       if (wartosc5 != '')
                         Text('$rocznik (5) $wartosc5',
-                            style: const TextStyle(fontSize: 16)),
+                            style: TextStyle(fontSize: 16,
+                              color: przeniesiona5 ? _kolorPrzeniesionej : null)),
                     ],
                   ),
                 ),
