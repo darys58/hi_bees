@@ -231,7 +231,13 @@ class _QueenItemState extends State<QueenItem> {
                     globals.ulID,
                     'queen',
                     " " + AppLocalizations.of(context)!.queen, //oznaczenie matki
-                    matki.znak,
+                    //info.wartosc dla kategorii "queen" to TEKST W BIEŻĄCYM
+                    //JĘZYKU - infos_screen porównuje go z loc.markedWhite itd.,
+                    //a info_item wyświetla wprost. matki.znak bywa tymczasem
+                    //KLUCZEM ("mark_white"), bo tak zapisuje queen_edit_screen;
+                    //wpisywany tu na surowo pokazywał się na przeglądzie jako
+                    //"mark_white" i nie dawał ikonki (zgłoszone 06.09.2026).
+                    znakMatkiNaEkran(matki.znak, AppLocalizations.of(context)!),
                     matki.napis,
                     matki.id.toString(), //pogoda - tu matkaID
                     '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',

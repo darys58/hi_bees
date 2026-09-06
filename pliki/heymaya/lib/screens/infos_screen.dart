@@ -734,6 +734,25 @@ class _InfoScreenState extends State<InfoScreen> {
     String rocznik = '';
     bool brakMatki = false;
 
+    //ID matki, która siedzi w ulu TERAZ - z NAJNOWSZEGO wpisu o znaku matki.
+    //Wpis o znaku powstaje zawsze przy podłączaniu matki do ula
+    //(queen_item.dart), a kolumna info.pogoda niesie dla kategorii "queen"
+    //matkaID - wpisują je queen_item, infos_edit_screen i sterowanie głosem.
+    //Po tym ID statystyki niżej odsiewają wpisy POPRZEDNICH matek (patrz
+    //[tejMatki]). Puste = brak takiego wpisu, czyli nie ma czym filtrować.
+    String idMatkiWUlu = '';
+    if (wybranaKategoria == 'queen') {
+      var dataZnakuMatki = DateTime.parse('2022-01-01 00:00');
+      for (var i = 0; i < infos.length; i++) {
+        if (infos[i].wartosc.isNotEmpty &&
+            infos[i].parametr == " " + AppLocalizations.of(context)!.queen &&
+            DateTime.parse(infos[i].data).isAfter(dataZnakuMatki)) {
+          dataZnakuMatki = DateTime.parse(infos[i].data);
+          idMatkiWUlu = infos[i].pogoda;
+        }
+      }
+    }
+
 //******************************************************** */
     //dla kazdego info - podliczenie roczne zbiorów i przygotowanie danych do wykresów
  //******************************************************** */
@@ -966,9 +985,26 @@ class _InfoScreenState extends State<InfoScreen> {
 
       //********** MATKA ******** dla queen
       if (wybranaKategoria == 'queen') {
+        //Czy ten wpis dotyczy matki, która siedzi w ulu TERAZ?
+        //
+        //Statystyki niżej biorą OSTATNI wpis danej cechy - do 06.09.2026
+        //z całej historii ula, bez pytania o to, czyja to była matka. Po
+        //ustawieniu "brak matki" dane znikały (brakMatki czyści je na końcu),
+        //ale po podłączeniu NOWEJ matki wracały dane STAREJ: nowa nie ma
+        //jeszcze własnych wpisów, więc "ostatni" wciąż wskazywał poprzednią.
+        //Zgłoszone z urządzenia - mylące, bo rocznik i jakość dotyczyły matki,
+        //której już nie ma. [idMatkiWUlu] liczone jest wyżej, raz na ekran.
+        //
+        //Wpis BEZ ID matki (pogoda puste - zapisy sprzed wprowadzenia matkaID)
+        //zostaje pokazany: nie ma po czym go odrzucić, a odrzucenie skasowałoby
+        //całą historię tym, którzy mają tylko takie wpisy.
+        final bool tejMatki = idMatkiWUlu.isEmpty ||
+            infos[i].pogoda.isEmpty ||
+            infos[i].pogoda == idMatkiWUlu;
          
          //dla wszystkich lat i cechy matki queenQuality (bardzo dobra)
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
+            tejMatki &&
             infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
@@ -986,6 +1022,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla wszystkich lat i cechy matki queenBorn
         if (//infos[i].data.substring(0, 4) == rokStatystyk &&
+            tejMatki &&
             infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.queenWasBornIn) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
@@ -998,6 +1035,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //wszystkich lat i cechy matki queenState (dziewica, naturalna)
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
+            tejMatki &&
             infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.queen + " -") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
@@ -1023,6 +1061,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla wszystkich lat i cechy matki queenStart (wolna, w klatce)
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
+            tejMatki &&
             infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == AppLocalizations.of(context)!.queenIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
@@ -1037,37 +1076,41 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla wszystkich lat i cechy matki queenMark
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
+            tejMatki &&
             infos[i].wartosc.isNotEmpty &&
             infos[i].parametr == " " + AppLocalizations.of(context)!.queen) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
             final loc = AppLocalizations.of(context)!;
-            if(infos[i].wartosc == loc.unmarked)
+            //wpisy sprzed 06.09.2026 mają tu KLUCZ znaku ("mark_white") -
+            //patrz znakMatkiNaEkran() w queen_helpers.dart
+            final wartoscZnaku = znakMatkiNaEkran(infos[i].wartosc, loc);
+            if(wartoscZnaku == loc.unmarked)
               icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);
-            else if(infos[i].wartosc == loc.markedOther)
+            else if(wartoscZnaku == loc.markedOther)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),);
-            else if(infos[i].wartosc == loc.markedWhite)
+            else if(wartoscZnaku == loc.markedWhite)
               icon2 = Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),);
-            else if(infos[i].wartosc == loc.markedYellow)
+            else if(wartoscZnaku == loc.markedYellow)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),);
-            else if(infos[i].wartosc == loc.markedRed)
+            else if(wartoscZnaku == loc.markedRed)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
-            else if(infos[i].wartosc == loc.markedGreen)
+            else if(wartoscZnaku == loc.markedGreen)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-            else if(infos[i].wartosc == loc.markedBlue)
+            else if(wartoscZnaku == loc.markedBlue)
               icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),);
-            else if(infos[i].wartosc == loc.gone){
+            else if(wartoscZnaku == loc.gone){
               icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
               brakMatki = true;
               }
-            else if(infos[i].wartosc == loc.missing){
+            else if(wartoscZnaku == loc.missing){
               icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
                brakMatki = true;
               }
-            String wartoscM2 = infos[i].wartosc;
-            if(infos[i].wartosc == AppLocalizations.of(context)!.unmarked ) wartoscM2 = AppLocalizations.of(context)!.unmarked1; 
-            else if(infos[i].wartosc == AppLocalizations.of(context)!.missing ) wartoscM2 = AppLocalizations.of(context)!.missing1; 
-            else if(infos[i].wartosc == AppLocalizations.of(context)!.gone ) wartoscM2 = AppLocalizations.of(context)!.gone1;            
+            String wartoscM2 = wartoscZnaku;
+            if(wartoscZnaku == AppLocalizations.of(context)!.unmarked ) wartoscM2 = AppLocalizations.of(context)!.unmarked1; 
+            else if(wartoscZnaku == AppLocalizations.of(context)!.missing ) wartoscM2 = AppLocalizations.of(context)!.missing1; 
+            else if(wartoscZnaku == AppLocalizations.of(context)!.gone ) wartoscM2 = AppLocalizations.of(context)!.gone1;            
             wartosc2 = 'ID' + infos[i].pogoda + ' ' + wartoscM2 + ' ' + infos[i].miara +
                 ' (${zmienDate_cala(infos[i].data)})';
                 //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';

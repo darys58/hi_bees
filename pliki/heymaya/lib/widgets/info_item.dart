@@ -15,6 +15,7 @@ import '../screens/frames_screen.dart';
 import '../screens/infos_edit_screen.dart';
 import '../globals.dart' as globals;
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
+import '../helpers/queen_helpers.dart'; //klucz znaku matki -> napis na ekran
 
 class InfoItem extends StatelessWidget {
   String zmienDate(String data) {
@@ -760,7 +761,15 @@ class InfoItem extends StatelessWidget {
                                           color: Color.fromARGB(255, 0, 0, 0)),
                                     )
                                     :TextSpan(
-                            text: ('${info.wartosc.replaceAll('.', ',')} '),
+                            //wpisy o znaku matki sprzed 06.09.2026 mają
+                            //w wartosci KLUCZ ("mark_white") zamiast napisu -
+                            //patrz znakMatkiNaEkran() w queen_helpers.dart
+                            text: ((info.kategoria == 'queen'
+                                        ? znakMatkiNaEkran(info.wartosc,
+                                            AppLocalizations.of(context)!)
+                                        : info.wartosc)
+                                    .replaceAll('.', ',') +
+                                ' '),
                             style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

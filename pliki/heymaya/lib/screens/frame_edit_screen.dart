@@ -93,6 +93,11 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   String typUla = '';
   String tagNFC = '';
   List<int> gridItems = [];//tworzona lista klawiszy klawiatury wyboru numeru ramki
+  //MATECZNIKI mają własną, STAŁĄ klawiaturę 0..10. Do 06.09.2026 brały
+  //gridItems, czyli listę numerów RAMEK - a liczba mateczników na plastrze nie
+  //ma z liczbą ramek w ulu nic wspólnego (w ulu na 6 ramek nie dało się wpisać
+  //więcej niż 6 mateczników, w ulu na 20 - klawiatura rozjeżdżała okno).
+  List<int> gridItemsMateczniki = [0,1,2,3,4,5,6,7,8,9,10];
   List<int> gridItemsKorpus = [1,2,3,4,5,6,7,8,9]; //lista klawiszy klawiatury wyboru numeru korpusu
   List<int> gridItemsZasob = [0,5,10,15,20,25,30,35,40,50,60,70,80,90,100]; //lista klawiszy klawiatury ilosci zasobu do dodania
   List<String> gridItemsKolor = ['czarny','żółty','czerwony','zielony','niebieski','biały','brak\ndanych','inny'];
@@ -350,6 +355,12 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   
   //wybór numeru ramki lub toDo lub isDone
   void _showAlertNr(String wybor, int przycisk) {
+    //przyciski 11/12 (i 111/112 na drugim ekranie) to MATECZNIKI - stała
+    //klawiatura 0..10, niezależna od liczby ramek w ulu. Reszta przycisków to
+    //NUMERY RAMEK, więc dla nich lista dalej idzie z gridItems (0..ramek).
+    final bool toMateczniki =
+        przycisk == 11 || przycisk == 12 || przycisk == 111 || przycisk == 112;
+    final List<int> pozycje = toMateczniki ? gridItemsMateczniki : gridItems;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -370,7 +381,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                 childAspectRatio: (3 / dzielnik), //proporcje boków kafli
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                children: gridItems
+                children: pozycje
                   .map((data) => InkWell(
                     onTap: () {
                       switch (przycisk) {

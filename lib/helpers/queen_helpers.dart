@@ -289,6 +289,22 @@ String markToDisplay(String key, AppLocalizations loc) {
   }
 }
 
+/// Znak matki z kolumny `info.wartosc` na tekst w BIEŻĄCYM języku.
+///
+/// `info.wartosc` dla kategorii "queen" trzyma TEKST - tak porównują ją
+/// `infos_screen`, `infos_edit_screen` (lista rozwijana!) i tak trafia na
+/// ekran w `info_item`. Tymczasem `queen_item` wstawiał tam do 06.09.2026
+/// `matki.znak` NA SUROWO, a to bywa KLUCZ (`mark_white`), bo tak zapisuje
+/// `queen_edit_screen`. Takie wiersze zostają w bazie na zawsze i wracają
+/// importem z chmury, więc ODCZYT musi je tolerować - stąd ta funkcja.
+///
+/// Wartości, które znakiem nie są ("nie żyje", "brak", data, cokolwiek),
+/// przechodzą NIETKNIĘTE: obie składowe mają fallback na wejście. Efekt
+/// uboczny, celowy: znak zapisany po niemiecku czy włosku (import z innego
+/// telefonu) pokaże się w języku ustawionym teraz.
+String znakMatkiNaEkran(String wartosc, AppLocalizations loc) =>
+    markToDisplay(markToKey(wartosc), loc);
+
 /// Get mark icon widget from canonical key
 List<Widget> markToIcon(String key) {
   if (key.isEmpty || key == '0') return [];

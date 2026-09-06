@@ -838,6 +838,29 @@ class _HivesScreenState extends State<HivesScreen> {
       final infosUla = Provider.of<Infos>(context, listen: false);  
       final hivesInfo = infosUla.items; //przypisanie tutaj bo inaczej nie działa tworzenie list: np List<Info> infosIleRamek = hivesInfo.where a nie List<Info> infosIleRamek = infosUla.items.where
 
+      //ID matki, która siedzi w ulu TERAZ - z NAJNOWSZEGO wpisu o znaku matki.
+      //Lista przychodzi z bazy posortowana malejąco po dacie i czasie, więc
+      //wystarczy pierwszy pasujący wpis. Kolumna info.pogoda niesie dla
+      //kategorii "queen" matkaID (wpisują je queen_item, infos_edit_screen
+      //i sterowanie głosem).
+      String idMatkiWUlu = '';
+      for (final inf in hivesInfo) {
+        if (inf.kategoria == 'queen' &&
+            inf.parametr == " " + AppLocalizations.of(context)!.queen &&
+            inf.wartosc.isNotEmpty) {
+          idMatkiWUlu = inf.pogoda;
+          break;
+        }
+      }
+      //Czy wpis dotyczy matki, która jest w ulu teraz? Belki matka1/3/4/5 brały
+      //do 06.09.2026 OSTATNI wpis danej cechy z całej historii ula - po
+      //podłączeniu nowej matki pokazywały więc cechy POPRZEDNIEJ (nowa nie ma
+      //jeszcze własnych wpisów). Ten sam filtr stoi w infos_screen.
+      //Wpis bez ID matki (pogoda puste - zapisy sprzed wprowadzenia matkaID)
+      //zostaje, bo nie ma po czym go odrzucić.
+      bool tejMatki(Info inf) =>
+          idMatkiWUlu.isEmpty || inf.pogoda.isEmpty || inf.pogoda == idMatkiWUlu;
+
      //ILOŚĆ RAMEK   //lista dat info ula zeby uzyskac datę ostatniego wpisu ilości ramek w wybranym ulu
       getDatyInfo(globals.pasiekaID, numerUla,'equipment',AppLocalizations.of(context)!.numberOfFrame + " = ").then((_) async {
         if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o ilości ramek 
@@ -855,11 +878,15 @@ class _HivesScreenState extends State<HivesScreen> {
             tempDataMatka1 = _datyInfo[0].data; //data ostatniego wpisu matka1
             //pobranie info dla ula i dla daty ostatniego wpisu o matce1
             List<Info> infosMatka1 = hivesInfo.where((m1) {
-                return  m1.data == tempDataMatka1 && m1.kategoria == 'queen' &&  m1.parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs; 
+                return  m1.data == tempDataMatka1 && m1.kategoria == 'queen' &&  m1.parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs && tejMatki(m1); 
               }).toList();
+              //pusto = wpis z tej daty należy do POPRZEDNIEJ matki (odsiał go
+              //tejMatki) - belka ma wtedy nie pokazywać nic
+              if (infosMatka1.isEmpty) {
+                matka1 = '';
               //jakość matki znają queen_helpers - lista literałów łapała tylko polski
               //i angielski, więc np. niemieckie "zu ersetzen" szło na kciuk w górę
-              if (qualityIsBad(infosMatka1[0].wartosc)) {
+              } else if (qualityIsBad(infosMatka1[0].wartosc)) {
                 matka1 = 'zła';
                 if (ikona == 'red') { //bo był brak matki
                   ikona = 'orange';
@@ -884,10 +911,13 @@ class _HivesScreenState extends State<HivesScreen> {
                 tempDataMatka3 = _datyInfo[0].data; //data ostatniego wpisu matka3
                 //pobranie info dla ula i dla daty ostatniego wpisu o matce3
                 List<Info> infosMatka3 = hivesInfo.where((m3) {
-                    return  m3.data == tempDataMatka3 && m3.kategoria == 'queen' &&  m3.parametr == AppLocalizations.of(context)!.queen + " -"; 
+                    return  m3.data == tempDataMatka3 && m3.kategoria == 'queen' &&  m3.parametr == AppLocalizations.of(context)!.queen + " -" && tejMatki(m3); 
                   }).toList();
                   //print('matka3 = ${infosMatka3[0].wartosc}');
-                  if (infosMatka3[0].wartosc == 'dziewica' || infosMatka3[0].wartosc == 'virgine') {
+                  //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
+                  if (infosMatka3.isEmpty) {
+                      matka3 = '';
+                  } else if (infosMatka3[0].wartosc == 'dziewica' || infosMatka3[0].wartosc == 'virgine') {
                       matka3 = 'nieunasienniona';
                       if (ikona == 'red') { //bo był brak matki
                         ikona = 'orange';
@@ -919,9 +949,12 @@ class _HivesScreenState extends State<HivesScreen> {
                   tempDataMatka4 = _datyInfo[0].data; //data ostatniego wpisu matka4
                   //pobranie info dla ula i dla daty ostatniego wpisu o matce4
                   List<Info> infosMatka4 = hivesInfo.where((m4) {
-                      return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  m4.parametr == AppLocalizations.of(context)!.queenIs; 
+                      return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  m4.parametr == AppLocalizations.of(context)!.queenIs && tejMatki(m4); 
                     }).toList();
-                    if (infosMatka4[0].wartosc == 'wolna' || infosMatka4[0].wartosc == 'freed' || infosMatka4[0].wartosc  == 'freed' || infosMatka4[0].wartosc  == 'frei' || infosMatka4[0].wartosc  == 'libre' || infosMatka4[0].wartosc  == 'libera' || infosMatka4[0].wartosc  == 'livre'){
+                    //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
+                    if (infosMatka4.isEmpty) {
+                      matka4 = '';
+                    } else if (infosMatka4[0].wartosc == 'wolna' || infosMatka4[0].wartosc == 'freed' || infosMatka4[0].wartosc  == 'freed' || infosMatka4[0].wartosc  == 'frei' || infosMatka4[0].wartosc  == 'libre' || infosMatka4[0].wartosc  == 'libera' || infosMatka4[0].wartosc  == 'livre'){
                       matka4 = 'wolna';
                       if (ikona == 'red') {//bo był brak matki
                         ikona = 'orange';
@@ -946,9 +979,10 @@ class _HivesScreenState extends State<HivesScreen> {
                    tempDataMatka5 = _datyInfo[0].data; //data oststniego wpisu matka5
                     //pobranie info dla ula i dla daty ostatniego wpisu o matce5
                     List<Info> infosMatka5 = hivesInfo.where((m5) {
-                        return  m5.data == tempDataMatka5 && m5.kategoria == 'queen' &&  m5.parametr == AppLocalizations.of(context)!.queenWasBornIn; 
+                        return  m5.data == tempDataMatka5 && m5.kategoria == 'queen' &&  m5.parametr == AppLocalizations.of(context)!.queenWasBornIn && tejMatki(m5); 
                       }).toList();
-                      matka5 = infosMatka5[0].wartosc;
+                      //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
+                      matka5 = infosMatka5.isEmpty ? '' : infosMatka5[0].wartosc;
                   } else {matka5 = '';}
                 DBHelper.updateUleMatka5('${globals.pasiekaID}.$numerUla',matka5);
 
@@ -961,34 +995,27 @@ class _HivesScreenState extends State<HivesScreen> {
               List<Info> infosMatka2 = hivesInfo.where((m2) {
                   return  m2.data == tempDataMatka2 && m2.kategoria == 'queen' &&  m2.parametr == " " + AppLocalizations.of(context)!.queen; 
                 }).toList();
-                switch (infosMatka2[0].wartosc) {
-                  case 'nie ma znak': matka2 = 'niez'; //nieznaczona
+                //markToKey sprowadza wartość do KLUCZA, więc jedna gałąź
+                //obsługuje wszystkie siedem języków ORAZ same klucze
+                //("mark_white"), które queen_item wpisywał tu do 06.09.2026.
+                //Dotąd switch znał tylko napisy polskie i angielskie - wpis
+                //w innym języku (albo klucz) zostawiał belkę ula PUSTĄ.
+                //Wartości spoza znaków ('nie ma', 'brak', 'gone', 'missing')
+                //markToKey oddaje bez zmian, więc niżej zostają jak były.
+                switch (markToKey(infosMatka2[0].wartosc)) {
+                  case kMarkUnmarked: matka2 = 'niez'; //nieznaczona
                     break;
-                  case 'unmarked': matka2 = 'niez'; //nieznaczona
+                  case kMarkOther: matka2 = 'inny ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
-                  case 'ma inny znak': matka2 = 'inny ' + infosMatka2[0].miara; //kolor + numer matki
+                  case kMarkWhite: matka2 = 'biał ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
-                  case 'marked other': matka2 = 'inny ' + infosMatka2[0].miara; //kolor + numer matki
+                  case kMarkYellow: matka2 = 'żółt ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
-                  case 'ma biały znak': matka2 = 'biał ' + infosMatka2[0].miara; //kolor + numer matki
+                  case kMarkRed: matka2 = 'czer ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
-                  case 'marked white': matka2 = 'biał ' + infosMatka2[0].miara; //kolor + numer matki
+                  case kMarkGreen: matka2 = 'ziel ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
-                  case 'ma żółty znak': matka2 = 'żółt ' + infosMatka2[0].miara; //kolor + numer matki
-                    break;
-                  case 'marked yellow': matka2 = 'żółt ' + infosMatka2[0].miara; //kolor + numer matki
-                    break;
-                  case 'ma czerwony znak': matka2 = 'czer ' + infosMatka2[0].miara; //kolor + numer matki
-                    break;
-                  case 'marked red': matka2 = 'czer ' + infosMatka2[0].miara; //kolor + numer matki
-                    break;
-                  case 'ma zielony znak': matka2 = 'ziel ' + infosMatka2[0].miara; //kolor + numer matki
-                    break;
-                  case 'marked green': matka2 = 'ziel ' + infosMatka2[0].miara; //kolor + numer matki
-                    break;
-                  case 'ma niebieski znak': matka2 = 'nieb ' + infosMatka2[0].miara; //kolor + numer matki
-                    break;
-                  case 'marked blue': matka2 = 'nieb ' + infosMatka2[0].miara; //kolor + numer matki
+                  case kMarkBlue: matka2 = 'nieb ' + infosMatka2[0].miara; //kolor + numer matki
                     break;
                   case 'nie ma': matka2 = 'brak'; matka1 = ''; matka3 = ''; matka4 = '';matka5 = '';
                     ikona = 'red';

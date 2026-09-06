@@ -202,6 +202,13 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowaKategoria = info[0].kategoria;
       nowyParametr = info[0].parametr;
       nowyWartosc = info[0].wartosc;
+      //znak matki: wpisy sprzed 06.09.2026 trzymają KLUCZ ("mark_white"), a
+      //lista rozwijana niżej ma wartości JĘZYKOWE - klucz nie pasowałby do
+      //żadnej pozycji (DropdownButton wymaga dokładnie jednej zgodnej).
+      //Patrz znakMatkiNaEkran() w queen_helpers.dart.
+      if (nowaKategoria == 'queen') {
+        nowyWartosc = znakMatkiNaEkran(nowyWartosc, AppLocalizations.of(context)!);
+      }
       nowyMiara = info[0].miara;
       if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {
         typUla = info[0].miara; //dla iloscRamek =
