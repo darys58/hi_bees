@@ -190,6 +190,15 @@ POMOC = [
         'harvest help me',
         'date help me',
         'hive help me',
+        # CZTERY formy nawigacji po ulu - w pomocy stoją jako osobne pozycje
+        # (voice_help_dialogs.dart), więc muszą tu być sprawdzone osobno.
+        # "hive earlier help me" nie działało do 06.09.2026: pomoc uczyła
+        # frazy, a slot $helpMe w eng_vosk.yml jej nie miał (zgłoszone
+        # z urządzenia). Polski bliźniak testu miał te pozycje od początku.
+        'hive before help me',
+        'hive after help me',
+        'hive earlier help me',
+        'hive later help me',
         'notes help me',
         'close help',
         'help me',

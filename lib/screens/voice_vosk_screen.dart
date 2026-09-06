@@ -4815,6 +4815,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                           indexDaty = indexDaty + 1;
                           getDaty(globals.pasiekaID, globals.ulID).then((_) {
                             //pobranie dat z bazy
+                            //ogranicznik jak w "ul wcześniej" - bez niego wejście
+                            //za najstarszą datę wychodziło poza listę (RangeError)
+                            if (indexDaty == _daty.length)
+                              indexDaty = indexDaty - 1;
                             if (_daty.isNotEmpty) {
                               //print('wybrana = $wybranaData');
                               wybranaData = _daty[indexDaty].data;

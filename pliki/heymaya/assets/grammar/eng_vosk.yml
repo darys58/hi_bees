@@ -409,14 +409,23 @@ context:
     helpMe:
       # POPRAWKA wobec eng1.yml: dodane "notes" (odpowiednik polskiego
       # "notatki" - jedyna pozycja pomocy bez odpowiednika w czasach Rhino,
-      # bo dyktowanie/cofanie powstały dopiero przy Vosku, patrz pol_vosk.yml)
-      # i "hive after" jako drugi synonim obok "hive later" (w pol_vosk.yml są
-      # DWIE pary synonimów - ul po/ul później i ul przed/ul wcześniej;
-      # eng1.yml miał tylko jedną parę).
+      # bo dyktowanie/cofanie powstały dopiero przy Vosku, patrz pol_vosk.yml).
+      #
+      # CZTERY formy "hive ..." to NIE są synonimy - każda robi co innego
+      # w switchu voice_vosk_screen.dart (sekcja setHelp):
+      #   hive / hive after  -> ul PO przeglądzie, data bieżąca (_ulPo = true)
+      #   hive before        -> ul PRZED przeglądem (_ulPo = false)
+      #   hive earlier       -> krok WSTECZ po datach (indexDaty + 1)
+      #   hive later         -> krok W PRZÓD po datach (indexDaty - 1)
+      # Odpowiadają polskim: ul / ul po, ul przed, ul wcześniej, ul później.
+      # "hive earlier" brakowało tu do 06.09.2026 - pomoc uczyła frazy
+      # ("hive earlier help me"), a gramatyka jej nie znała, więc słowo
+      # "earlier" zostawało niezjedzone i całe polecenie szło w "nie rozumiem".
       - notes
       - location
       - hive before
       - hive after
+      - hive earlier
       - hive later
       - hive
       - harvest
