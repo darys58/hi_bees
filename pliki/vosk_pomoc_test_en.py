@@ -67,7 +67,13 @@ POMOC = [
         'larvae thirty five percent on the left',
         'eggs thirty five percent on the left',
         'pollen thirty five percent on the left',
+        # pierzga to po angielsku "bee bread" - pomoc uczy tej formy od
+        # 07.09.2026, "pollen" zostaje jako wariant wsteczny
+        'bee bread thirty five percent on the left',
         'honey thirty five percent on the left',
+        # nakrop: warianty jednoznaczne, osobny punktor w pomocy (EN-only)
+        'uncapped honey thirty five percent on the left',
+        'nectar thirty five percent on the left',
         'food thirty five percent on the left',
         'ripe thirty five percent on the left',      # POPRAWKA: było "sealed"
         'ripe honey thirty five percent on the left',

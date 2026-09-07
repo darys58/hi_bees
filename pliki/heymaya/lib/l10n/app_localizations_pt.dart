@@ -121,7 +121,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get eggs => 'ovos';
 
   @override
-  String get pollen => 'perga';
+  String get pollen => 'pão de abelha';
 
   @override
   String get honeySealed => 'mel operculado';
@@ -443,7 +443,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get larvaeEggsPollenHoneySealdWaxComb =>
-      'Larvas/ovos/perga/mel/alimento/não operculado/operculado/cera alveolada/quadro vazio';
+      'Larvas/ovos/pão de abelha/mel/alimento/não operculado/operculado/cera alveolada/quadro vazio';
 
   @override
   String get dElete => 'Eliminar';
@@ -923,7 +923,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get editHarvest => 'Edição da colheita';
 
   @override
-  String get perga => 'perga';
+  String get perga => 'pão de abelha';
 
   @override
   String get wax => 'cera';
@@ -1571,7 +1571,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aMountOfHoney => 'Quantidade de mel não operculado em %';
 
   @override
-  String get aMountOfPollen => 'Quantidade de perga em %';
+  String get aMountOfPollen => 'Quantidade de pão de abelha em %';
 
   @override
   String get aMountOfEggs => 'Quantidade de ovos em %';
@@ -2661,7 +2661,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get legendHoneyFood => 'mel/alimento';
 
   @override
-  String get legendPollen => 'perga';
+  String get legendPollen => 'pão de abelha';
 
   @override
   String get legendEggs => 'ovos';

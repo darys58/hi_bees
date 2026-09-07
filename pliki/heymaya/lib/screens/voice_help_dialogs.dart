@@ -281,7 +281,18 @@ List<TextSpan> _sekcjaPrzeglad(BuildContext context) {
     _punktor,
     TextSpan(text: l.larvaeEggsPollenHoneySealdWaxComb, style: _wymagany),
     TextSpan(text: ' 35%', style: _wartosc),
-    TextSpan(text: ' ' + l.leftRight + '.\n', style: _opcjonalny),
+    TextSpan(text: ' ' + l.leftRight + '.', style: _opcjonalny),
+    //Które z tych nazw znaczą to samo (07.09.2026) - tylko EN, bo polski ma
+    //jedno słowo na zasób. Lista wyżej wymienia warianty osobno, żeby było
+    //widać, co wolno powiedzieć; ta uwaga mówi, które zapisują to samo pole:
+    //pierzga (zasób 5) oraz nakrop (zasób 6 - sloty honey i food trafiają tam
+    //oba, patrz voice_vosk_screen, zapisZas = 6). Hardkod angielski jak przy
+    //"Bee pollen trap" niżej. Gramatyka: setStore w eng_vosk.yml.
+    if (globals.jezyk != 'pl_PL')
+      const TextSpan(
+          text: ' - bee bread = pollen, uncapped honey = nectar = honey = food',
+          style: _komentarz),
+    const TextSpan(text: '\n'),
     //matka na ramce
     _punktor,
     TextSpan(text: l.queenColors + ' ', style: _wymagany),

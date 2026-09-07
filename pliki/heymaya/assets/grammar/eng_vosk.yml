@@ -140,7 +140,14 @@ context:
     #     polskich 8 form przypadka - angielski nie odmienia, więc nie trzeba.
     setStore:
       - food $pv.Percent:food (on) (the) ($siteOfFrame:siteOfFrame)
-      - (set) honey $pv.Percent:honey (on) (the) ($siteOfFrame:siteOfFrame)
+      # Nakrop (miód NIEsklepiony). Samo "honey" znaczy dla pszczelarza miód
+      # w ogóle, więc 07.09.2026 doszły dwa jednoznaczne warianty:
+      # "uncapped honey" (para do "capped brood" niżej) i "nectar".
+      # Świadomie NIE ma tu "unripe honey": różni się od "ripe honey" (miód
+      # dojrzały, linia niżej) jedną nieakcentowaną sylabą, a to dwa różne pola
+      # zapisu. "honey" zostaje, bo tego uczyła pomoc do tej pory.
+      - "(set) [honey, uncapped honey, nectar] $pv.Percent:honey (on) (the)
+        ($siteOfFrame:siteOfFrame)"
       # "ripe", NIE "sealed". Do 04.09.2026 był tu "sealed" - to samo słowo, co
       # w "(capped, sealed) brood" niżej, więc dla mówiącego znaczyło dwie różne
       # rzeczy (kolizja powstała, gdy czerw kryty dostał "capped, sealed"
@@ -150,7 +157,12 @@ context:
       # albo "ripe honey 30 percent".
       - (set) ripe (honey) $pv.Percent:honeySealed (on) (the)
         ($siteOfFrame:siteOfFrame)
-      - (set) pollen $pv.Percent:pollen (on) (the) ($siteOfFrame:siteOfFrame)
+      # Slot "pollen" to PIERZGA (zasób ramki nr 5), nie pyłek z poławiacza
+      # (ten ma osobną intencję "bee pollen harvest"). Po angielsku pierzga to
+      # "bee bread" - dodane 07.09.2026 razem z poprawą etykiet na ekranach.
+      # "pollen" zostaje jako wariant wsteczny.
+      - "(set) [pollen, bee bread] $pv.Percent:pollen (on) (the)
+        ($siteOfFrame:siteOfFrame)"
       - (set) (capped, sealed) brood $pv.Percent:brood (on) (the)
         ($siteOfFrame:siteOfFrame)
       - (set) larvae $pv.Percent:larvae (on) (the) ($siteOfFrame:siteOfFrame)

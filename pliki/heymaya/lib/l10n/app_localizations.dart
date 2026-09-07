@@ -333,7 +333,7 @@ abstract class AppLocalizations {
   /// No description provided for @pollen.
   ///
   /// In en, this message translates to:
-  /// **'pollen'**
+  /// **'bee bread'**
   String get pollen;
 
   /// No description provided for @honeySealed.
@@ -957,7 +957,7 @@ abstract class AppLocalizations {
   /// No description provided for @larvaeEggsPollenHoneySealdWaxComb.
   ///
   /// In en, this message translates to:
-  /// **'larvae/eggs/pollen/honey/food/ripe/wax/comb'**
+  /// **'larvae/eggs/bee bread/pollen/uncapped honey/nectar/honey/food/ripe/wax/comb'**
   String get larvaeEggsPollenHoneySealdWaxComb;
 
   /// No description provided for @dElete.
@@ -1881,7 +1881,7 @@ abstract class AppLocalizations {
   /// No description provided for @perga.
   ///
   /// In en, this message translates to:
-  /// **'perga'**
+  /// **'bee bread'**
   String get perga;
 
   /// No description provided for @wax.
@@ -3159,7 +3159,7 @@ abstract class AppLocalizations {
   /// No description provided for @aMountOfPollen.
   ///
   /// In en, this message translates to:
-  /// **'Amount of pollen in %'**
+  /// **'Amount of bee bread in %'**
   String get aMountOfPollen;
 
   /// No description provided for @aMountOfEggs.
@@ -5248,7 +5248,7 @@ abstract class AppLocalizations {
   /// No description provided for @legendPollen.
   ///
   /// In en, this message translates to:
-  /// **'pollen'**
+  /// **'bee bread'**
   String get legendPollen;
 
   /// No description provided for @legendEggs.
