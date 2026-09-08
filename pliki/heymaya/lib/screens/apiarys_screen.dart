@@ -1102,8 +1102,12 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           (Platform.isAndroid ? odp['url_android'] : odp['url_ios'])
                   ?.toString() ??
               '';
+      //URL z backendu bywa literówkowy - 08.09.2026 wracało
+      //"https://play/google.com/store/details?id=..." (hostem było "play"),
+      //więc przycisk "Aktualizuj" nie otwierał sklepu. Gdy adres nie wygląda na
+      //poprawny, po cichu bierzemy link zapasowy wpisany w apce.
       final String url =
-          urlSerwer.isNotEmpty ? urlSerwer : _domyslnyUrlSklepu();
+          _poprawnyUrlSklepu(urlSerwer) ? urlSerwer : _domyslnyUrlSklepu();
       if (!mounted) return;
       _showUpdateDialog(wersjaLast, url);
     } catch (_) {
@@ -1115,7 +1119,16 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   String _domyslnyUrlSklepu() {
     return Platform.isAndroid
         ? 'https://play.google.com/store/apps/details?id=eu.darys.heymaya'
-        : 'https:/apps.apple.com/pl/app/hey-maya/id6447341365';
+        : 'https://apps.apple.com/pl/app/hey-maya/id6447341365';
+  }
+
+  //czy adres ze sklepu nadaje się do otwarcia: http(s) i host z kropką (np. play.google.com)
+  bool _poprawnyUrlSklepu(String url) {
+    if (url.isEmpty) return false;
+    final Uri? uri = Uri.tryParse(url);
+    if (uri == null) return false;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return false;
+    return uri.host.contains('.'); //odsiewa literówki typu host "play"
   }
 
   //porównanie wersji w formacie "1.11.2.93" segment po segmencie; zwraca true gdy a > b
