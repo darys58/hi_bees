@@ -7241,6 +7241,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     }
 
 print('openDialog = $openDialog');
+    //ORIENTACJA dla paska tytułu. Liczona tu, a nie w [LayoutBuilder] niżej
+    //(gdzie ta sama wartość nazywa się `poziom`), bo [AppBar] powstaje POZA
+    //nim. Warunek jest ten sam: prawdziwy landscape ALBO wymuszony układ
+    //poziomy z ustawień.
+    final bool czyPoziom =
+        MediaQuery.of(context).orientation == Orientation.landscape ||
+            globals.voice2LiveLandscape;
     return MaterialApp(
       home: Scaffold(
         //BIAŁE TŁO JAWNIE. Ten ekran opakowuje się we WŁASNY [MaterialApp] bez
@@ -7251,10 +7258,39 @@ print('openDialog = $openDialog');
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
-          title: Text(
-            AppLocalizations.of(context)!.voiceControlSmall,
-            style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-          ),
+          //ZEGAR W PASKU TYTUŁU, ale TYLKO w poziomie. W pionie pasek jest już
+          //zajęty: tytuł, wskaźnik stanu mikrofonu i pomoc wypełniają go co do
+          //piksela na wąskich telefonach - dlatego godziny tam świadomie nie
+          //ma. W poziomie między tytułem a ikonami zostaje puste pole i to
+          //właśnie ono dostaje zegar: [Expanded] zabiera całą przestrzeń
+          //między nimi, a [Center] stawia godzinę w jej środku.
+          title: czyPoziom
+              ? Row(
+                  children: [
+                    //Flexible + ellipsis, bo przy podniesionej systemowej skali
+                    //czcionki tytuł i zegar zaczynają walczyć o tę samą
+                    //szerokość - lepiej skrócić nazwę ekranu niż wypchnąć
+                    //godzinę poza pasek
+                    Flexible(
+                      child: Text(
+                        AppLocalizations.of(context)!.voiceControlSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                      ),
+                    ),
+                    const Expanded(child: Center(child: _ZegarEkranu())),
+                  ],
+                )
+              : Text(
+                  AppLocalizations.of(context)!.voiceControlSmall,
+                  style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                ),
+          //JAWNIE do lewej w poziomie: na iOS motyw domyślnie centruje tytuł,
+          //a wtedy [Row] i tak zajmuje całą szerokość paska - efekt byłby ten
+          //sam, tylko zależny od platformy. W pionie zostaje `null`, czyli
+          //zachowanie sprzed zmiany (na iOS wyśrodkowany, na Androidzie z lewej).
+          centerTitle: czyPoziom ? false : null,
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
           // backgroundColor: Color.fromARGB(255, 233, 140, 0),
           // title: Text('Voice Control'),
@@ -9084,6 +9120,69 @@ print('openDialog = $openDialog');
     return flex ? Expanded(flex: isError ? 4 : 0, child: content) : content;
   }
 
+}
+
+//ZEGAR W PASKU TYTUŁU ekranu głosowego (tylko układ poziomy).
+//Osobny [StatefulWidget] z WŁASNYM timerem, a nie pole stanu ekranu: gdyby
+//minutę odliczał `_VoiceVoskScreenState`, każde tyknięcie przebudowywałoby
+//cały ekran razem z rysunkiem korpusu (CustomPaint) i to w trakcie dyktowania
+//notatki. Tutaj `setState` dotyka wyłącznie jednej linijki tekstu.
+//Timer celuje w NAJBLIŻSZĄ pełną minutę, a potem chodzi co minutę - dzięki
+//temu cyfra zmienia się wtedy, kiedy naprawdę zmienia się godzina, a nie
+//z przypadkowym opóźnieniem do 60 s.
+class _ZegarEkranu extends StatefulWidget {
+  const _ZegarEkranu();
+
+  @override
+  State<_ZegarEkranu> createState() => _ZegarEkranuState();
+}
+
+class _ZegarEkranuState extends State<_ZegarEkranu> {
+  //ten sam format, co w reszcie apki (godzina bez wiodącego zera)
+  static final DateFormat _format = DateFormat('H:mm');
+  Timer? _timer;
+  String _czas = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _czas = _format.format(DateTime.now());
+    _zaplanuj();
+  }
+
+  void _zaplanuj() {
+    final DateTime teraz = DateTime.now();
+    final Duration doPelnej = Duration(
+        seconds: 60 - teraz.second, milliseconds: -teraz.millisecond);
+    _timer = Timer(doPelnej, () {
+      _odswiez();
+      _timer = Timer.periodic(const Duration(minutes: 1), (_) => _odswiez());
+    });
+  }
+
+  void _odswiez() {
+    if (!mounted) return;
+    final String nowy = _format.format(DateTime.now());
+    if (nowy != _czas) setState(() => _czas = nowy);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Text(
+        _czas,
+        //odrobinę mniejszy i lżejszy od tytułu - ma być czytelny, ale nie ma
+        //konkurować z nazwą ekranu ani ze wskaźnikiem stanu mikrofonu
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color.fromARGB(255, 0, 0, 0),
+        ),
+      );
 }
 
 class MyHive extends CustomPainter {
