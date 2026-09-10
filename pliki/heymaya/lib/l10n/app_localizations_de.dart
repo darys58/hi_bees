@@ -2894,4 +2894,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceGrammarOutdated => 'WARNING: the loaded grammar does not know the note or undo command - the app bundle contains an outdated grammar file. Rebuild the app (full restart, not hot reload).';
+
+  @override
+  String voiceNoRoomOnSide(String free) {
+    return 'Passt nicht - $free% frei';
+  }
+
+  @override
+  String voiceSavedOnFrames(String saved, String all) {
+    return 'Auf $saved von $all Waben gespeichert - auf den übrigen kein Platz';
+  }
 }

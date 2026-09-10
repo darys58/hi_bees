@@ -1091,5 +1091,24 @@
     "voiceNoteHint": "Note - speak, finish by saying \"Hey Maya\"",
     "@voiceNoteHint": {},
     "voiceGrammarOutdated": "WARNING: the loaded grammar does not know the note or undo command - the app bundle contains an outdated grammar file. Rebuild the app (full restart, not hot reload).",
-    "@voiceGrammarOutdated": {}
+    "@voiceGrammarOutdated": {},
+    "voiceNoRoomOnSide": "Passt nicht - {free}% frei",
+    "@voiceNoRoomOnSide": {
+        "placeholders": {
+            "free": {
+                "type": "String"
+            }
+        }
+    },
+    "voiceSavedOnFrames": "Auf {saved} von {all} Waben gespeichert - auf den übrigen kein Platz",
+    "@voiceSavedOnFrames": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "all": {
+                "type": "String"
+            }
+        }
+    }
 }

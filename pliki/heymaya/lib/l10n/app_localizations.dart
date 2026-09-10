@@ -5706,6 +5706,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'WARNING: the loaded grammar does not know the note or undo command - the app bundle contains an outdated grammar file. Rebuild the app (full restart, not hot reload).'**
   String get voiceGrammarOutdated;
+
+  /// No description provided for @voiceNoRoomOnSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Doesn't fit - {free}% free'**
+  String voiceNoRoomOnSide(String free);
+
+  /// No description provided for @voiceSavedOnFrames.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on {saved} of {all} frames - no room on the rest'**
+  String voiceSavedOnFrames(String saved, String all);
 }
 
 class _AppLocalizationsDelegate

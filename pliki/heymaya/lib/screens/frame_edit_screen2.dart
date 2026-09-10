@@ -7,6 +7,7 @@ import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 
 import '../helpers/db_helper.dart';
+import '../helpers/frame_capacity.dart';
 import '../models/apiarys.dart';
 import '../models/frame.dart';
 import '../models/hives.dart';
@@ -1142,6 +1143,96 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
   
   
   //zapis zasobu do tabeli "ramki" - tylko dla lewej strony ramki
+  //KONTROLA SUMY PRZED ZAPISEM (09.09.2026).
+  //
+  //Ten ekran wprowadza OBIE strony plastra naraz, a klawiatury wartości pilnują
+  //sumy tylko w obrębie tego, co wpisano na ekranie (`trutDodL`, `trutDodP`...).
+  //Ekran startuje pusty i nie wie, co na ramce już leży, więc dopisanie zasobu
+  //do ramki zapisanej wcześniej (choćby głosem) wychodziło ponad 100%.
+  //
+  //Sprawdzamy przy zapisie, bo dopiero tu znany jest komplet wartości obu stron
+  //i zakres ramek „od-do". Strony liczone są osobno - lewą zapisuje
+  //[zapisDoBazyL] (strona 1), prawą [zapisDoBazyP] (strona 2).
+  //Zwraca gotowy komunikat albo null, gdy wszystko się mieści.
+  String? _bladSumyPrzedZapisem() {
+    final Map<int, Map<int, int>> noweNaStronie = {
+      1: {
+        if (trutDodL > 0) 1: trutDodL,
+        if (czerwDodL > 0) 2: czerwDodL,
+        if (larwyDodL > 0) 3: larwyDodL,
+        if (jajaDodL > 0) 4: jajaDodL,
+        if (pierzgaDodL > 0) 5: pierzgaDodL,
+        if (miodDodL > 0) 6: miodDodL,
+        if (dojrzalyDodL > 0) 7: dojrzalyDodL,
+        if (wezaDodL > 0) 8: wezaDodL,
+        if (suszDodL > 0) 9: suszDodL,
+      },
+      2: {
+        if (trutDodP > 0) 1: trutDodP,
+        if (czerwDodP > 0) 2: czerwDodP,
+        if (larwyDodP > 0) 3: larwyDodP,
+        if (jajaDodP > 0) 4: jajaDodP,
+        if (pierzgaDodP > 0) 5: pierzgaDodP,
+        if (miodDodP > 0) 6: miodDodP,
+        if (dojrzalyDodP > 0) 7: dojrzalyDodP,
+        if (wezaDodP > 0) 8: wezaDodP,
+        if (suszDodP > 0) 9: suszDodP,
+      },
+    };
+
+    //pary (ramka przed, ramka po) - dokładnie jak w [zapisDoBazyL]
+    final List<List<int>> ramki = [];
+    if (_selectedZakresRamek[1]) {
+      for (var i = nrRamkiOd; i <= nrRamkiDo; i++) {
+        if (_selectedNumeryWieluRamek[0] == true) {
+          ramki.add([i, 0]); //ramki usuwane
+        } else if (_selectedNumeryWieluRamek[2] == true) {
+          ramki.add([0, i]); //ramki wstawiane
+        } else {
+          ramki.add([i, i]); //przed = po
+        }
+      }
+    } else {
+      ramki.add([nowyNrRamki ?? 0, nowyNrRamkiPo ?? 0]);
+    }
+
+    final List<Frame> wszystkie =
+        Provider.of<Frames>(context, listen: false).items;
+    for (final List<int> r in ramki) {
+      for (final int strona in noweNaStronie.keys) {
+        final Map<int, int> nowe = noweNaStronie[strona]!;
+        if (nowe.isEmpty) continue; //ta strona nic nie dostaje
+        int sumaNowych = 0;
+        for (final int wartosc in nowe.values) sumaNowych += wartosc;
+        final int zajete = zajeteNaStronie(
+          wszystkieRamki: wszystkie,
+          data: dateController.text,
+          pasiekaNr: nowyNrPasieki ?? 0,
+          ulNr: nowyNrUla ?? 0,
+          korpusNr: nowyNrKorpusu ?? 0,
+          ramkaNr: r[0],
+          ramkaNrPo: r[1],
+          strona: strona,
+          pomijaneZasoby: nowe.keys.toSet(), //te wpisy zapis zastąpi
+        );
+        if (zajete + sumaNowych > 100) {
+          final int wolne = zajete >= 100 ? 0 : 100 - zajete;
+          return AppLocalizations.of(context)!.fRameNumber +
+              ' ${r[0] != 0 ? r[0] : r[1]} (' +
+              (strona == 1
+                  ? AppLocalizations.of(context)!.left
+                  : AppLocalizations.of(context)!.right) +
+              ')\n' +
+              AppLocalizations.of(context)!.aBout +
+              ' ${zajete + sumaNowych - 100}' +
+              AppLocalizations.of(context)!.tooMuch +
+              ' $wolne%';
+        }
+      }
+    }
+    return null;
+  }
+
   zapisDoBazyL(int zas, String wart, String zrobic) {
     String formattedDate = dateController.text; //nowyRok + '-' + nowyMiesiac + '-' + nowyDzien;
 
@@ -2642,7 +2733,16 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
-                                 
+                                 //suma zasobów strony nie może przekroczyć 100%
+                                 final String? bladSumy = _bladSumyPrzedZapisem();
+                                 if (bladSumy != null) {
+                                   _showAlertAnuluj(
+                                       context,
+                                       AppLocalizations.of(context)!.cancel,
+                                       bladSumy);
+                                   return; //nic nie zapisujemy
+                                 }
+
                                  if(trutDodL > 0){zapisDoBazyL(1, trutDodL.toString(), 'dodaj');};
                                  if(czerwDodL > 0){zapisDoBazyL(2, czerwDodL.toString(), 'dodaj');};
                                  if(larwyDodL > 0){zapisDoBazyL(3, larwyDodL.toString(), 'dodaj');};

@@ -7,6 +7,7 @@ import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 
 import '../helpers/db_helper.dart';
+import '../helpers/frame_capacity.dart';
 import '../models/apiarys.dart';
 import '../models/frame.dart';
 import '../models/hives.dart';
@@ -118,6 +119,121 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
   int matecznikiDod = 0;
   int usunmatDod = 0;
   int sumaZasobow = 0;
+
+  //ILE PROCENT WOLNEGO ZOSTAŁO NA STRONIE EDYTOWANEGO WPISU (09.09.2026).
+  //
+  //Tryb „dodaj" pilnuje sumy sam z siebie: wszystkie zasoby wpisuje się na
+  //jednym ekranie, więc widać je w polach `*Dod`. W trybie „edycja" ekran
+  //trzyma JEDEN wiersz tabeli `ramka` (`ramka[0]`) i zeruje pozostałe pola -
+  //nie ma z czego zsumować strony, więc kontroli tu nie było i dało się
+  //podnieść wartość ponad 100% (np. czerw 50 + miód 50, wejście w miód
+  //i ustawienie 80 = 130%). Zasób zapisuje się przez `insertFrame`, czyli
+  //replace JEDNEGO wiersza - reszta strony zostaje w bazie nietknięta.
+  //
+  //Dlatego sumę bierzemy z providera [Frames], po tym samym adresie, z jakiego
+  //powstaje `id` wiersza: data, pasieka, ul, korpus, ramka przed/po, strona.
+  //Wybrany zasób jest z sumy WYŁĄCZONY, bo to jego wartość właśnie ustawiamy;
+  //przy zmianie RODZAJU zasobu (np. z miodu na czerw) stary wiersz zostaje
+  //w bazie i - słusznie - dalej liczy się do sumy.
+  int _wolneNaStronieRamki(int zasob) {
+    if (ramka.isEmpty) return 100;
+    final Frame edytowany = ramka[0];
+    return wolneNaStronie(
+      wszystkieRamki: Provider.of<Frames>(context, listen: false).items,
+      data: edytowany.data,
+      pasiekaNr: edytowany.pasiekaNr,
+      ulNr: edytowany.ulNr,
+      korpusNr: edytowany.korpusNr,
+      ramkaNr: edytowany.ramkaNr,
+      ramkaNrPo: edytowany.ramkaNrPo,
+      strona: edytowany.strona,
+      pomijaneZasoby: {zasob}, //ten właśnie ustawiamy - zastąpi stary wiersz
+    );
+  }
+
+  //KONTROLA SUMY PRZED ZAPISEM W TRYBIE „DODAJ" (09.09.2026).
+  //
+  //Kontrola przy klawiaturze wartości sumuje tylko to, co wpisano NA TYM
+  //ekranie (`trutDod`, `czerwDod`...) - a ekran dodawania startuje pusty i nie
+  //wie, co na ramce już leży. Dało się więc dopisać miód 60 do ramki, na której
+  //był już czerw 50, i wyjść z bazą na 110%.
+  //
+  //Sprawdzamy DOPIERO przy zapisie, bo dopiero tu znane są wszystkie trzy
+  //rzeczy naraz: komplet wartości, wybrana strona (lewa / obie / prawa) oraz
+  //zakres ramek „od-do" - przy klawiaturze numer ramki bywa jeszcze nieustalony.
+  //Zwraca gotowy komunikat dla użytkownika albo null, gdy wszystko się mieści.
+  //Blokujemy CAŁY zapis, a nie tylko ramki bez miejsca: ekran ręczny działa
+  //tak wszędzie (alert i wartość nie zostaje przyjęta), a przy zapisie z ręki
+  //widać przed sobą całą ramkę i można ją poprawić.
+  String? _bladSumyPrzedZapisem() {
+    final Map<int, int> nowe = {};
+    if (trutDod > 0) nowe[1] = trutDod;
+    if (czerwDod > 0) nowe[2] = czerwDod;
+    if (larwyDod > 0) nowe[3] = larwyDod;
+    if (jajaDod > 0) nowe[4] = jajaDod;
+    if (pierzgaDod > 0) nowe[5] = pierzgaDod;
+    if (miodDod > 0) nowe[6] = miodDod;
+    if (dojrzalyDod > 0) nowe[7] = dojrzalyDod;
+    if (wezaDod > 0) nowe[8] = wezaDod;
+    if (suszDod > 0) nowe[9] = suszDod;
+    if (nowe.isEmpty) return null; //sama matka, mateczniki albo znacznik
+
+    int sumaNowych = 0;
+    for (final int wartosc in nowe.values) sumaNowych += wartosc;
+
+    //strony dokładnie jak w [zapisDoBazy]: [0] lewa, [2] prawa, inaczej obie
+    final List<int> strony = _selectedStronaRamki[0] == true
+        ? [1]
+        : (_selectedStronaRamki[2] == true ? [2] : [1, 2]);
+
+    //pary (ramka przed, ramka po) - też jak w [zapisDoBazy]
+    final List<List<int>> ramki = [];
+    if (_selectedZakresRamek[1]) {
+      for (var i = nrRamkiOd; i <= nrRamkiDo; i++) {
+        if (_selectedNumeryWieluRamek[0] == true) {
+          ramki.add([i, 0]); //ramki usuwane
+        } else if (_selectedNumeryWieluRamek[2] == true) {
+          ramki.add([0, i]); //ramki wstawiane
+        } else {
+          ramki.add([i, i]); //przed = po
+        }
+      }
+    } else {
+      ramki.add([nowyNrRamki ?? 0, nowyNrRamkiPo ?? 0]);
+    }
+
+    final List<Frame> wszystkie =
+        Provider.of<Frames>(context, listen: false).items;
+    for (final List<int> r in ramki) {
+      for (final int strona in strony) {
+        final int zajete = zajeteNaStronie(
+          wszystkieRamki: wszystkie,
+          data: dateController.text,
+          pasiekaNr: nowyNrPasieki ?? 0,
+          ulNr: nowyNrUla ?? 0,
+          korpusNr: nowyNrKorpusu ?? 0,
+          ramkaNr: r[0],
+          ramkaNrPo: r[1],
+          strona: strona,
+          pomijaneZasoby: nowe.keys.toSet(), //te wpisy zapis zastąpi
+        );
+        if (zajete + sumaNowych > 100) {
+          final int wolne = zajete >= 100 ? 0 : 100 - zajete;
+          return AppLocalizations.of(context)!.fRameNumber +
+              ' ${r[0] != 0 ? r[0] : r[1]} (' +
+              (strona == 1
+                  ? AppLocalizations.of(context)!.left
+                  : AppLocalizations.of(context)!.right) +
+              ')\n' +
+              AppLocalizations.of(context)!.aBout +
+              ' ${zajete + sumaNowych - 100}' +
+              AppLocalizations.of(context)!.tooMuch +
+              ' $wolne%';
+        }
+      }
+    }
+    return null;
+  }
   
   
   @override
@@ -631,6 +747,22 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                     onTap: () {
                       
                       if(tryb == 'edycja'){//zerowanie zasobów bo będzie nowy zasób
+                        //SUMA STRONY NIE MOŻE PRZEKROCZYĆ 100% - ten sam
+                        //komunikat, co przy dodawaniu, tylko wolne miejsce
+                        //liczone z bazy (patrz [_wolneNaStronieRamki]).
+                        if (przycisk >= 1 && przycisk <= 9) {
+                          final int wolne = _wolneNaStronieRamki(przycisk);
+                          if (data > wolne) {
+                            _showAlertAnuluj(
+                                context,
+                                AppLocalizations.of(context)!.cancel,
+                                AppLocalizations.of(context)!.aBout +
+                                    ' ${data - wolne}' +
+                                    AppLocalizations.of(context)!.tooMuch +
+                                    ' $wolne%');
+                            return; //wartość NIE zostaje ustawiona
+                          }
+                        }
                         trutDod = 0;
                         czerwDod = 0;
                         larwyDod = 0;
@@ -2711,7 +2843,16 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
-                                 
+                                 //suma zasobów strony nie może przekroczyć 100%
+                                 final String? bladSumy = _bladSumyPrzedZapisem();
+                                 if (bladSumy != null) {
+                                   _showAlertAnuluj(
+                                       context,
+                                       AppLocalizations.of(context)!.cancel,
+                                       bladSumy);
+                                   return; //nic nie zapisujemy
+                                 }
+
                                  if(trutDod > 0){zapisDoBazy(1, trutDod.toString(), 'dodaj');};
                                  if(czerwDod > 0){zapisDoBazy(2, czerwDod.toString(), 'dodaj');};
                                  if(larwyDod > 0){zapisDoBazy(3, larwyDod.toString(), 'dodaj');};

@@ -150,6 +150,42 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //odróżnienia od „aplikacja w ogóle nic nie powiedziała".
   String _komunikatNotatki = '';
   Timer? _timerKomunikatuNotatki;
+  //KONTROLA SUMY ZASOBÓW NA STRONIE RAMKI (09.09.2026)
+  //
+  //Ręczna edycja pilnuje, żeby zasoby jednej strony plastra nie przekroczyły
+  //100% (`frame_edit_screen` ~666: alert „o X za dużo"). Głos szedł obok tej
+  //kontroli i potrafił zapisać sumę większą - a wtedy rysunek gubił ostatni
+  //zasób, więc z ekranu wyglądało to jak zapis, którego nie ma.
+  //
+  //Suma liczona jest z providera [Frames] (tego samego, z którego korzysta
+  //live podgląd korpusu), a NIE z bazy: `zapisDoBazy` nie awaituje insertów,
+  //więc odczyt z bazy potrafiłby nie zobaczyć własnego zapisu sprzed sekundy.
+  //Dlatego obok providera trzymamy to, co ekran sam zapisał, zanim provider
+  //zdążył się odświeżyć. Klucz mapy to DOKŁADNIE `id` wiersza tabeli `ramka`,
+  //więc jeden zasób jednej strony ma w obu źródłach ten sam adres.
+  //Cofnięcie komendy czyści tę mapę - baza wraca do stanu sprzed zapisu.
+  final Map<String, int> _zapisaneZasoby = {};
+  //ZDJĘCIE STANU RAMEK NA CZAS JEDNEJ KOMENDY: `id` wiersza -> procent.
+  //Budowane raz, na wejściu w [zapisDoBazy] - komenda na zakres ramek pyta
+  //o wolne miejsce nawet kilkaset razy (20 ramek x 2 strony x 9 zasobów),
+  //a przeszukiwanie listy providera za każdym razem to ten sam koszt liczony
+  //od nowa.
+  final Map<String, int> _zasobyZProvidera = {};
+  //ile procent zostało wolnych przy OSTATNIM odrzuconym zapisie - do
+  //komunikatu, bo sam fakt „nie zmieściło się" nie mówi, ile jeszcze wchodzi
+  int _ostatnieWolne = 0;
+  //komunikat o braku miejsca. Osobna, trwała linijka - z tego samego powodu,
+  //co [_komunikatNotatki]: pasek stanu przepisuje każda domknięta fraza
+  //z Vosk, a odrzuceniu towarzyszy odzywka Mai, która wraca echem do
+  //mikrofonu i skasowałaby komunikat po ułamku sekundy.
+  String _komunikatZapisu = '';
+  Timer? _timerKomunikatuZapisu;
+  //CZEGO ten komunikat dotyczy - odcisk miejsca zapisu z chwili, gdy powstał.
+  //Komunikat mówi o KONKRETNEJ stronie KONKRETNEJ ramki („wolne 30%"), więc po
+  //przejściu na inną ramkę, stronę, korpus, ul albo datę jest już nieprawdą.
+  //Zamiast kasować go w kilkunastu `case` slotów, po każdej komendzie
+  //porównujemy ten odcisk z bieżącym - patrz [_adresKontekstu].
+  String _adresKomunikatuZapisu = '';
   //ŚLAD WEJŚCIA W DYKTOWANIE - tylko przy włączonej diagnostyce.
   //Wejście w notatkę to łańcuszek kroków, z których każdy potrafi się urwać po
   //cichu (odzywka, wyciszenie mikrofonu, budowa recognizera). Bez tego jedyną
@@ -467,6 +503,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   void dispose() {
     _inferenceTimer?.cancel(); //anulowanie timera
     _timerKomunikatuNotatki?.cancel(); //kasowanie komunikatu notatki
+    _timerKomunikatuZapisu?.cancel(); //kasowanie komunikatu o braku miejsca
     WidgetsBinding.instance.removeObserver(this);
     //nasłuch jest ciągły, więc wyjście z ekranu MUSI zwolnić mikrofon
     _engine?.zamknij();
@@ -760,6 +797,145 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       if (!mounted) return;
       setState(() => _komunikatNotatki = '');
     });
+  }
+
+  //Komunikat o braku miejsca na stronie ramki - patrz [_komunikatZapisu].
+  //Kasuje się sam po 25 s, tak jak komunikat notatki.
+  //Odcisk MIEJSCA ZAPISU, do którego odnosi się komunikat o braku miejsca.
+  //Bierzemy stan ekranu, a nie pola wyliczane w [zapisDoBazy] (`formattedDate`,
+  //`_korpusNr`) - te zmieniają się dopiero przy zapisie, więc komenda „data
+  //piąty maja" nie ruszyłaby odcisku i nieaktualny komunikat zostałby na
+  //ekranie.
+  String _adresKontekstu() =>
+      '$ustawianaData|$nrXXOfApiary|$nrXXOfHive|$nrXOfBody|$nrXOfHalfBody|'
+      '${readyFrames ? "$nrXXOdFrame-$nrXXDoFrame" : "$nrXXOfFrame/$nrXXOfFramePo"}|'
+      '$siteOfFrame';
+
+  void _powiedzOZapisie(String tekst) {
+    _timerKomunikatuZapisu?.cancel();
+    if (!mounted) return;
+    setState(() => _komunikatZapisu = tekst);
+    if (tekst.isEmpty) return;
+    _adresKomunikatuZapisu = _adresKontekstu();
+    _timerKomunikatuZapisu = Timer(const Duration(seconds: 25), () {
+      if (!mounted) return;
+      setState(() => _komunikatZapisu = '');
+    });
+  }
+
+  //"50%" / "50" / null -> 50. Wartości zasobów bywają w bazie z procentem
+  //i bez, zależnie od tego, którędy trafiły (głos, ręczna edycja, import).
+  int _naProcent(dynamic wartosc) =>
+      int.tryParse(wartosc.toString().replaceAll('%', '').trim()) ?? 0;
+
+  //ILE PROCENT WOLNEGO zostało na JEDNEJ stronie ramki.
+  //
+  //Zasób `zasob` jest z sumy WYŁĄCZONY, bo zapis go zastąpi, a nie doda:
+  //`id` wiersza zawiera numer zasobu, a insert działa w trybie replace.
+  //Dzięki temu poprawka „czerw 50" -> „czerw 30" przechodzi zawsze.
+  //Liczą się tylko zasoby 1..9 (trut..susz) - matka, mateczniki i znaczki
+  //(10..14) nie zajmują powierzchni plastra, tak samo jak w ekranie ręcznym.
+  //Zdjęcie stanu ramek z providera - patrz [_zasobyZProvidera].
+  void _odswiezMapeZasobow() {
+    _zasobyZProvidera.clear();
+    for (final Frame fr in Provider.of<Frames>(context, listen: false).items) {
+      if (fr.zasob >= 1 && fr.zasob <= 9) {
+        _zasobyZProvidera[fr.id] = _naProcent(fr.wartosc);
+      }
+    }
+    //własne zapisy, które provider zdążył już wczytać, przestają być potrzebne
+    //- inaczej mapa rosłaby przez cały przegląd i trzymała numery ramek, które
+    //po "usuń ramkę" albo przeniesieniu korpusu już nic nie znaczą
+    _zapisaneZasoby.removeWhere((id, wartosc) => _zasobyZProvidera[id] == wartosc);
+  }
+
+  int _wolneNaStronie(int ramkaNr, int ramkaNrPo, int strona, int zasob) {
+    int suma = 0;
+    for (var z = 1; z <= 9; z++) {
+      if (z == zasob) continue;
+      final String id =
+          '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$ramkaNr.$ramkaNrPo.$strona.$z';
+      //własny zapis jest ŚWIEŻSZY niż provider - patrz [_zapisaneZasoby]
+      suma += _zapisaneZasoby[id] ?? _zasobyZProvidera[id] ?? 0;
+    }
+    final int wolne = 100 - suma;
+    return wolne < 0 ? 0 : wolne;
+  }
+
+  //Które strony plastra zapisuje bieżąca komenda. Ten sam łańcuch warunków,
+  //co w [zapisDoBazy] - slot strony przychodzi z Vosk raz po polsku, raz po
+  //angielsku, a brak dopasowania znaczy "obie strony" ("cała ramka").
+  List<int> _stronyDoZapisu() {
+    if (siteOfFrame == 'left' ||
+        siteOfFrame == 'lewa' ||
+        siteOfFrame == 'lewej' ||
+        siteOfFrame == 'lewą') return [1];
+    if (siteOfFrame == 'right' ||
+        siteOfFrame == 'prawa' ||
+        siteOfFrame == 'prawej' ||
+        siteOfFrame == 'prawą') return [2];
+    return [1, 2];
+  }
+
+  //Czy komenda ma gdzie wejść CHOĆ RAZ - pytanie zadawane PRZED zapisem.
+  //
+  //Dlaczego przed, a nie dopiero przy wstawianiu wiersza: `_zapisWTejKomendzie`
+  //(od niego zależy, czy krok trafi na stos cofania) jest czytany zaraz po
+  //switchu komendy, a wiersze `ramka` lecą dopiero w `.then` po
+  //`fetchAndSetHives`. Gdyby odrzucenie zapadało tam, flaga byłaby już
+  //przeczytana i „cofnij" zdejmowałoby krok, który niczego nie zmienił.
+  bool _czyCokolwiekSieZmiesci(int zas, dynamic wart) {
+    if (zas < 1 || zas > 9) return true; //matka, mateczniki, znaczki
+    final int nowa = _naProcent(wart);
+    final List<int> strony = _stronyDoZapisu();
+    if (readyFrames) {
+      for (var i = nrXXOdFrame; i <= nrXXDoFrame; i++) {
+        for (final int st in strony) {
+          if (nowa <= _wolneNaStronie(i, i, st, zas)) return true;
+        }
+      }
+      return false;
+    }
+    for (final int st in strony) {
+      if (nowa <= _wolneNaStronie(nrXXOfFrame, nrXXOfFramePo, st, zas))
+        return true;
+    }
+    return false;
+  }
+
+  //JEDEN wiersz tabeli `ramka`, z kontrolą sumy dla zasobów 1..9.
+  //`false` = zasób się nie mieści i NIC nie zostało zapisane - także belka
+  //ula, bo `sumujZasob` zostaje wtedy niewywołane. Ile było wolnego, zostaje
+  //w [_ostatnieWolne] dla komunikatu.
+  bool _wstawZasobRamki(
+      int ramkaNr, int ramkaNrPo, int strona, int zas, dynamic wart) {
+    final String id =
+        '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$ramkaNr.$ramkaNrPo.$strona.$zas';
+    if (zas >= 1 && zas <= 9) {
+      final int nowa = _naProcent(wart);
+      final int wolne = _wolneNaStronie(ramkaNr, ramkaNrPo, strona, zas);
+      if (nowa > wolne) {
+        _ostatnieWolne = wolne;
+        return false;
+      }
+      _zapisaneZasoby[id] = nowa;
+    }
+    Frames.insertFrame(
+        id,
+        formattedDate,
+        nrXXOfApiary,
+        nrXXOfHive,
+        _korpusNr,
+        _typ,
+        ramkaNr,
+        ramkaNrPo,
+        _rozmiar,
+        strona,
+        zas,
+        wart,
+        0);
+    sumujZasob(zas, wart);
+    return true;
   }
 
   //DYKTOWANIE NOTATKI
@@ -1478,6 +1654,17 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       rhinoText = prettyPrintInference(inference);
     });
 
+    //KOMUNIKAT O BRAKU MIEJSCA GINIE ZE ZMIANĄ MIEJSCA. Sprawdzamy DOPIERO
+    //TUTAJ, bo sloty komendy ustawia dopiero co wykonany switch (siedzi
+    //w `prettyPrintInference`) - przed nim odcisk byłby jeszcze sprzed
+    //komendy i „ramka szósta" kasowałaby komunikat dopiero przy następnym
+    //poleceniu. Komunikat postawiony przez TĘ komendę ma odcisk zgodny
+    //z bieżącym, więc zostaje.
+    if (_komunikatZapisu.isNotEmpty &&
+        _adresKomunikatuZapisu != _adresKontekstu()) {
+      _powiedzOZapisie('');
+    }
+
     //Dopiero TERAZ wiadomo, czy komenda cokolwiek zapisała i pod jakim opisem -
     //`zapis` to ten sam tekst, który ekran pokazuje w wierszu "Zapis:".
     //
@@ -1656,6 +1843,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       }
 
       final MigawkaZapisu cofnieta = wynik.migawka!;
+
+      //PAMIĘĆ WŁASNYCH ZAPISÓW przestała odpowiadać bazie - plaster wrócił do
+      //stanu sprzed komendy. Gdyby została, kontrola sumy zasobów liczyłaby
+      //wartości, których w bazie już nie ma, i odrzucała poprawne komendy.
+      //Czyścimy CAŁĄ mapę, bo migawka bywa szersza niż jeden ul.
+      _zapisaneZasoby.clear();
 
       //providery trzymają dane z PRZED cofnięcia - bez tego ekran i widok uli
       //pokazywałyby wartości, których nie ma już w bazie
@@ -5848,6 +6041,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _zapisWTejKomendzie = true; //migawka do cofania trafi na stos po switchu
     zapisZas = 0; //zerowanie parametów wywołania tej funkcji
     zapisWart = '0'; //j.w.
+    //KOMUNIKAT O BRAKU MIEJSCA DOTYCZY POPRZEDNIEJ KOMENDY - kasujemy go na
+    //wejściu, a nie dopiero po 25 s. Zgłoszenie z urządzenia (09.09.2026): po
+    //poprawieniu wartości na taką, która się mieści, „Nie mieści się - wolne
+    //30%" wisiało dalej i wyglądało, jakby i ta komenda została odrzucona.
+    //Jeżeli nowa komenda też się nie zmieści, komunikat wróci niżej - z NOWĄ
+    //liczbą wolnych procent. Timer zostaje jako zabezpieczenie na wypadek,
+    //gdy po odrzuceniu nie pada już żadna komenda zasobu.
+    if (_komunikatZapisu.isNotEmpty) _powiedzOZapisie('');
 
 //** data i czas przeglądu, rozmiar ramki */
     if (ustawianaData != '')
@@ -5873,6 +6074,44 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     // int tempKorpusNr =
     //     korpusNr; //czy przed zapisem korpusNr był 0 (bo czy dopisywać czy liczyć od nowa)
     // korpusNr = _korpusNr;
+
+    _odswiezMapeZasobow(); //stan ramek na czas TEJ komendy
+
+    //SUMA ZASOBÓW STRONY NIE MOŻE PRZEKROCZYĆ 100% - patrz [_wolneNaStronie].
+    //Tu wychodzimy tylko wtedy, gdy zasób nie mieści się NIGDZIE (jedyna
+    //ramka albo wszystkie ramki zakresu). Częściowe pominięcia obsługują same
+    //gałęzie zapisu niżej, bo tam wiadomo, ilu ramek dotyczyły.
+    //Warunek `miejsceUstalone` powtarza wymagania gałęzi zapisu: bez wybranej
+    //ramki komenda i tak kończy się `beep('error')` - i to jest właściwy
+    //komunikat, a nie „nie mieści się".
+    final bool miejsceUstalone = readyFrames
+        ? (nrXXOfApiary != 0 &&
+            nrXXOfHive != 0 &&
+            _korpusNr != 0 &&
+            nrXXOdFrame != 0)
+        : (nrXXOfApiary != 0 &&
+            nrXXOfHive != 0 &&
+            _korpusNr != 0 &&
+            (nrXXOfFrame != 0 || nrXXOfFramePo != 0));
+    if (miejsceUstalone && !_czyCokolwiekSieZmiesci(zas, wart)) {
+      _zapisWTejKomendzie = false; //nic nie wchodzi - nie ma czego cofać
+      beep('error');
+      if (readyFrames) {
+        _powiedzOZapisie(AppLocalizations.of(context)!
+            .voiceSavedOnFrames('0', '${nrXXDoFrame - nrXXOdFrame + 1}'));
+      } else {
+        //przy "całej ramce" podajemy WIĘKSZE z dwóch wolnych miejsc - to ono
+        //mówi, jaką wartość da się jeszcze wypowiedzieć
+        int wolne = 0;
+        for (final int st in _stronyDoZapisu()) {
+          final int w = _wolneNaStronie(nrXXOfFrame, nrXXOfFramePo, st, zas);
+          if (w > wolne) wolne = w;
+        }
+        _powiedzOZapisie(
+            AppLocalizations.of(context)!.voiceNoRoomOnSide('$wolne'));
+      }
+      return;
+    }
 
     Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrXXOfApiary)
       .then((_) {
@@ -5971,6 +6210,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           _korpusNr != 0 &&
           nrXXOdFrame != 0) {
         //print('if wejscie przed for');
+        //RAMKI POMINIĘTE, bo zasób się na nich nie mieścił - liczymy je, żeby
+        //powiedzieć wprost, na ilu ramkach zapis wszedł. Pojedyncza ramka bez
+        //miejsca w zakresie NIE blokuje pozostałych: przy 20-ramkowym ulu
+        //jeden pełny plaster unieważniłby całą komendę.
+        int zapisaneRamki = 0;
+        int pominieteRamki = 0;
         //zapis w pętli dia zakresu ramek
         for (var i = nrXXOdFrame; i <= nrXXDoFrame; i++) {
           //print('pętla for - i = $i');
@@ -5978,76 +6223,39 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               siteOfFrame == 'lewa' ||
               siteOfFrame == 'lewej' ||
               siteOfFrame == 'lewą') {
-            Frames.insertFrame(
-                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.1.$zas',
-                formattedDate,
-                nrXXOfApiary,
-                nrXXOfHive,
-                _korpusNr,
-                _typ,
-                i,
-                i, //ramka po ??? i trzeba zmienić id - dodać ramkaNrPo (tu sie chyba nie da)
-                _rozmiar,
-                1, //lewa
-                zas,
-                wart,
-                0);
-            sumujZasob(zas, wart);
+            if (_wstawZasobRamki(i, i, 1, zas, wart))
+              zapisaneRamki++;
+            else
+              pominieteRamki++;
           } else if (siteOfFrame == 'right' ||
               siteOfFrame == 'prawa' ||
               siteOfFrame == 'prawej' ||
               siteOfFrame == 'prawą') {
-            Frames.insertFrame(
-                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.2.$zas',
-                formattedDate,
-                nrXXOfApiary,
-                nrXXOfHive,
-                _korpusNr,
-                _typ,
-                i,
-                i, //ramka po ???
-                _rozmiar,
-                2, //prawa
-                zas,
-                wart,
-                0);
-            sumujZasob(zas, wart);
+            if (_wstawZasobRamki(i, i, 2, zas, wart))
+              zapisaneRamki++;
+            else
+              pominieteRamki++;
           } else {
             //bo both lub whole
-            Frames.insertFrame(
-                '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.1.$zas',
-                formattedDate,
-                nrXXOfApiary,
-                nrXXOfHive,
-                _korpusNr,
-                _typ,
-                i,
-                i,
-                _rozmiar,
-                1, //lewa
-                zas,
-                wart,
-                0);
-            sumujZasob(zas, wart);
+            bool cokolwiek = _wstawZasobRamki(i, i, 1, zas, wart);
             if(zas < 13 ){ //kod nie jest wykonywany dla toDo i isDone (ograniczenie ilości znaczków  - wystarczą tylko dla lewej strony )
-              Frames.insertFrame(
-                  '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$i.$i.2.$zas',
-                  formattedDate,
-                  nrXXOfApiary,
-                  nrXXOfHive,
-                  _korpusNr,
-                  _typ,
-                  i,
-                  i,
-                  _rozmiar,
-                  2, //prawa
-                  zas,
-                  wart,
-                  0);
-              sumujZasob(zas, wart);
+              //strony liczone są OSOBNO: lewa może być pełna, a prawa pusta
+              if (_wstawZasobRamki(i, i, 2, zas, wart)) cokolwiek = true;
             }
+            if (cokolwiek)
+              zapisaneRamki++;
+            else
+              pominieteRamki++;
           }
         } //od for
+
+        //KOMUNIKAT o ramkach bez miejsca. Bez niego komenda kończyła się
+        //dźwiękiem potwierdzenia, a część ramek zostawała pusta.
+        if (pominieteRamki > 0) {
+          beep('error');
+          _powiedzOZapisie(AppLocalizations.of(context)!.voiceSavedOnFrames(
+              '$zapisaneRamki', '${zapisaneRamki + pominieteRamki}'));
+        }
        
         //automatyczna zmiana numeru "ramkaNr" po "isDone" dla zakresu zamek (najpierw komenda "ustaw ramka od X do Y"     
         //dla "wstaw ramka"
@@ -6196,76 +6404,43 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           nrXXOfHive != 0 &&
           _korpusNr != 0 &&
           (nrXXOfFrame != 0 || nrXXOfFramePo != 0)) {
+        //strony liczone OSOBNO - patrz [_wstawZasobRamki]
+        int zapisaneStrony = 0;
+        int pominieteStrony = 0;
         if (siteOfFrame == 'left' ||
             siteOfFrame == 'lewa' ||
             siteOfFrame == 'lewej' ||
             siteOfFrame == 'lewą') {
-          Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFramePo.1.$zas',
-              formattedDate,
-              nrXXOfApiary,
-              nrXXOfHive,
-              _korpusNr,
-              _typ,
-              nrXXOfFrame,
-              nrXXOfFramePo, //ramka po 
-              _rozmiar,
-              1, //lewa
-              zas,
-              wart,
-              0);
-          sumujZasob(zas, wart);
+          if (_wstawZasobRamki(nrXXOfFrame, nrXXOfFramePo, 1, zas, wart))
+            zapisaneStrony++;
+          else
+            pominieteStrony++;
         } else if (siteOfFrame == 'right' ||
             siteOfFrame == 'prawa' ||
             siteOfFrame == 'prawej' ||
             siteOfFrame == 'prawą') {
-          Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFramePo.2.$zas',
-              formattedDate,
-              nrXXOfApiary,
-              nrXXOfHive,
-              _korpusNr,
-              _typ,
-              nrXXOfFrame,
-              nrXXOfFramePo, //ramka po 
-              _rozmiar,
-              2, //prawa
-              zas,
-              wart,
-              0);
-          sumujZasob(zas, wart);
+          if (_wstawZasobRamki(nrXXOfFrame, nrXXOfFramePo, 2, zas, wart))
+            zapisaneStrony++;
+          else
+            pominieteStrony++;
         } else {
           //bo both lub whole
-          Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFramePo.1.$zas',
-              formattedDate,
-              nrXXOfApiary,
-              nrXXOfHive,
-              _korpusNr,
-              _typ,
-              nrXXOfFrame,
-              nrXXOfFramePo, //ramka po
-              _rozmiar,
-              1, //lewa
-              zas,
-              wart,
-              0);
-          sumujZasob(zas, wart);
-          Frames.insertFrame(
-              '$formattedDate.$nrXXOfApiary.$nrXXOfHive.$_korpusNr.$nrXXOfFrame.$nrXXOfFramePo.2.$zas',
-              formattedDate,
-              nrXXOfApiary,
-              nrXXOfHive,
-              _korpusNr,
-              _typ,
-              nrXXOfFrame,
-              nrXXOfFramePo, //ramka po ???
-              _rozmiar,
-              2, //prawa
-              zas,
-              wart,
-              0);
-          sumujZasob(zas, wart);
+          if (_wstawZasobRamki(nrXXOfFrame, nrXXOfFramePo, 1, zas, wart))
+            zapisaneStrony++;
+          else
+            pominieteStrony++;
+          if (_wstawZasobRamki(nrXXOfFrame, nrXXOfFramePo, 2, zas, wart))
+            zapisaneStrony++;
+          else
+            pominieteStrony++;
+        }
+
+        //KOMUNIKAT o braku miejsca - z liczbą wolnych procent, żeby dało się
+        //od razu powiedzieć komendę z wartością, która wejdzie.
+        if (pominieteStrony > 0) {
+          beep('error');
+          _powiedzOZapisie(
+              AppLocalizations.of(context)!.voiceNoRoomOnSide('$_ostatnieWolne'));
         }
       } else {
         beep('error');
@@ -8732,6 +8907,23 @@ print('openDialog = $openDialog');
                           fontSize: 12),
                     ),
                   ),
+                //brak miejsca na stronie ramki - patrz [_komunikatZapisu].
+                //Z tego samego powodu, co niżej: stan nasłuchu przepisuje
+                //każda kolejna fraza z Vosk, także echo własnej odzywki.
+                if (_komunikatZapisu.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      _komunikatZapisu,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          color: Color.fromARGB(255, 200, 90, 0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
                 //osobna, TRWAŁA linijka notatki - patrz [_komunikatNotatki].
                 //Nie może dzielić miejsca ze stanem nasłuchu, bo ten jest
                 //przepisywany przez każdą kolejną frazę z Vosk.
@@ -9010,6 +9202,7 @@ print('openDialog = $openDialog');
         isError ||
         _stanNasluchu.isNotEmpty ||
         _komunikatNotatki.isNotEmpty ||
+        _komunikatZapisu.isNotEmpty ||
         (globals.voiceDiagnostyka && _sladNotatki.isNotEmpty) ||
         _gramatykaNieaktualna;
     if (!cokolwiek) return const SizedBox.shrink();
@@ -9075,6 +9268,18 @@ print('openDialog = $openDialog');
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                   color: Color.fromARGB(255, 90, 90, 90), fontSize: 12),
+            ),
+          //osobna, TRWAŁA linijka o braku miejsca na stronie ramki
+          if (_komunikatZapisu.isNotEmpty)
+            Text(
+              _komunikatZapisu,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: Color.fromARGB(255, 200, 90, 0),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500),
             ),
           //osobna, TRWAŁA linijka notatki - patrz [_komunikatNotatki]
           if (_komunikatNotatki.isNotEmpty)
@@ -9280,8 +9485,6 @@ class MyHive extends CustomPainter {
     //   ..strokeWidth = 1
     //   ..style = PaintingStyle.fill //stroke
     //   ..strokeCap = StrokeCap.round;
-    double startNastZas =
-        0; //start następnego zasobu - do sprawdzania czy nowy zasób przekracza 100%
     //wielokąty
     double sides = 3;
     double radius = 5;
@@ -9475,6 +9678,29 @@ class MyHive extends CustomPainter {
             (ramki[i].wartosc.replaceAll(RegExp('%'), ''))); // bez '%'
       }
 
+      //DŁUGOŚĆ PASKA ZASOBU, PRZYCIĘTA DO WOLNEGO MIEJSCA NA STRONIE RAMKI.
+      //Do 09.09.2026 każdy z dziewięciu zasobów sprawdzał osobno, czy zmieści
+      //się w całości, i jeżeli nie - NIE RYSOWAŁ GO WCALE. Ramka z sumą ponad
+      //100% (co potrafiło zrobić sterowanie głosem, bo tam kontroli nie było)
+      //wyglądała więc tak, jakby ostatniego zasobu nikt nie wpisał. Teraz
+      //pasek jest skracany do tego, co zostało: użytkownik widzi, że zasób
+      //JEST, tylko strona jest przepełniona.
+      //Zapis nadal pilnuje sumy (patrz `_wolneNaStronie`), to jest ratunek dla
+      //danych, które trafiły do bazy wcześniej.
+      final String kluczZasobu =
+          '${ramki[i].korpusNr}.$numerRamki.${ramki[i].strona}';
+      final double dolnaGranicaZasobu =
+          (startyMaxZasobow[kluczZasobu] ?? ramki[i].rozmiar * 75) -
+              ramki[i].rozmiar * 75;
+      final double zadanaDlugoscZasobu =
+          ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+      final double wolneMiejsceZasobu = startZasobu - dolnaGranicaZasobu;
+      final double dlugoscZasobu = wolneMiejsceZasobu <= 0
+          ? 0
+          : (zadanaDlugoscZasobu > wolneMiejsceZasobu
+              ? wolneMiejsceZasobu
+              : zadanaDlugoscZasobu);
+
       switch (ramki[i].zasob) {
         case 1:
           //print('case 1');
@@ -9488,13 +9714,8 @@ class MyHive extends CustomPainter {
               Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9510,7 +9731,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 dronePaint); //zasob 1 - drone // dla strony lewej i prawej
 
             //print('${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}');
@@ -9519,7 +9740,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 2:
@@ -9534,13 +9755,8 @@ class MyHive extends CustomPainter {
               Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9556,7 +9772,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 broodPaint); //zasob 2 - brook // dla strony lewej i prawej
 
             //print('${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}');
@@ -9565,7 +9781,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 3:
@@ -9579,13 +9795,8 @@ class MyHive extends CustomPainter {
               Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9601,7 +9812,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 larvaePaint); //zasob 3 - larvae // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -9609,7 +9820,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
 
           break;
@@ -9624,13 +9835,8 @@ class MyHive extends CustomPainter {
               Offset(10 + (numerRamki - 1) * 20 + 10,
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9646,7 +9852,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 eggPaint); //zasob 4 - egg // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -9654,7 +9860,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 5:
@@ -9669,13 +9875,8 @@ class MyHive extends CustomPainter {
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9691,7 +9892,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 pollenPaint); //zasob 5 - pollen // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -9699,7 +9900,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 6:
@@ -9714,13 +9915,8 @@ class MyHive extends CustomPainter {
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9736,7 +9932,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 honeyPaint); //zasob 6 - miód // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -9744,7 +9940,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 7:
@@ -9759,13 +9955,8 @@ class MyHive extends CustomPainter {
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9781,7 +9972,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 sealedPaint); //zasob 7 - zasklep // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -9789,7 +9980,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 8:
@@ -9804,13 +9995,8 @@ class MyHive extends CustomPainter {
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9826,7 +10012,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 waxPaint); //zasob 9 - węza // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -9834,7 +10020,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 9:
@@ -9849,13 +10035,8 @@ class MyHive extends CustomPainter {
                   start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =
-              startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >=
-              startyMaxZasobow[
-                      '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                  ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(
                     10 +
@@ -9871,7 +10052,7 @@ class MyHive extends CustomPainter {
                     start +
                         15 +
                         startZasobu -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 combPaint); //zasob 8 - susz // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -9879,7 +10060,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}'] =
                 (startyZasobow[
                         '${ramki[i].korpusNr}.${numerRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 10:

@@ -1143,7 +1143,6 @@ class MyHive extends CustomPainter {
     //   ..strokeWidth = 1
     //   ..style = PaintingStyle.fill //stroke
     //   ..strokeCap = StrokeCap.round;
-    double startNastZas = 0; //start następnego zasobu - do sprawdzania czy nowy zasób przekracza 100%
     //wielokąty
     double sides = 3;
     double radius = 5;
@@ -1347,6 +1346,25 @@ class MyHive extends CustomPainter {
     // print('startyZas $startyZas');
     // print('startyMaxZas $startyMaxZas');
     // print('nrRamki ********** $nrRamki');
+
+    //DŁUGOŚĆ PASKA ZASOBU, PRZYCIĘTA DO WOLNEGO MIEJSCA NA STRONIE RAMKI.
+    //Do 09.09.2026 zasób, który nie mieścił się w całości, NIE BYŁ RYSOWANY
+    //WCALE - ramka z sumą ponad 100% wyglądała tak, jakby ostatniego zasobu
+    //nikt nie wpisał. Teraz pasek jest skracany do tego, co zostało.
+    //`?? ` w odczycie mapy jest dla ramek z numerem 0 (usunięte/wstawione),
+    //dla których klucza w mapie nie ma - tam i tak nic się nie rysuje.
+    final String kluczZas = '${ramki[i].korpusNr}.$nrRamki.${ramki[i].strona}';
+    final double dolnaGranicaZas =
+        (startyMaxZas[kluczZas] ?? ramki[i].rozmiar * 75) -
+            ramki[i].rozmiar * 75;
+    final double zadanaDlugoscZas =
+        ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
+    final double wolneMiejsceZas = startZas - dolnaGranicaZas;
+    final double dlugoscZasobu = wolneMiejsceZas <= 0
+        ? 0
+        : (zadanaDlugoscZas > wolneMiejsceZas
+            ? wolneMiejsceZas
+            : zadanaDlugoscZas);
     
     if(nrRamki > 0) //dla ramek przed przeglądem bez ramek nowych i po przegladzie bez ramek usunietych czyli z numerem innym niz 0  
       switch (ramki[i].zasob) { //rysowanie poszczególnych zasobów
@@ -1361,20 +1379,19 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 dronePaint); //zasob 1 - drone // dla strony lewej i prawej
 
             //print('${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}');
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 2:
@@ -1388,20 +1405,19 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 broodPaint); //zasob 2 - brook // dla strony lewej i prawej
 
             //print('${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}');
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 3:
@@ -1414,19 +1430,17 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 larvaePaint); //zasob 3 - larvae // dla strony lewej i prawej
-      //print('startNastZas $startNastZas');
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
             //  print('startyZas ${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}');       
             //  print(startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']);
             //  print('koniec rysowania larwy zasób $i');
@@ -1444,13 +1458,12 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + 13),
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                 ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                 dlugoscZasobu),
                 eggPaint); //zasob 4 - egg // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
@@ -1458,7 +1471,7 @@ class MyHive extends CustomPainter {
                     '${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas[
                         '${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 5:
@@ -1472,19 +1485,18 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 pollenPaint); //zasob 5 - pollen // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 6:
@@ -1498,19 +1510,18 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas = startZasobu - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 honeyPaint); //zasob 6 - miód // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 7:
@@ -1524,19 +1535,18 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas =  startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 sealedPaint); //zasob 7 - zasklep // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 8:
@@ -1550,19 +1560,18 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 waxPaint); //zasob 9 - węza // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 9:
@@ -1576,19 +1585,18 @@ class MyHive extends CustomPainter {
               Offset(offStart + (nrRamki - 1) * 20 * lupa + 10, start + (75 * ramki[i].rozmiar) + 15),
               linePaint); // | (kreska pionowa) dla poszczególnych ramek
 
-          //kontrola czy zasób nie przekracza łącznie 100%
-          startNastZas = startZas - ((ramki[i].rozmiar * 75) * wartoscInt) / 100;
-          if (startNastZas >= startyMaxZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! - ramki[i].rozmiar * 75) {
+          //pasek przycięty do wolnego miejsca (0 = strona już pełna)
+          if (dlugoscZasobu > 0) {
             canvas.drawLine(
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas),
                 Offset(offStart + (nrRamki - 1) * 20 * lupa + (ramki[i].strona * offP1a) - offP1b, start + 15 + startZas -
-                        ((ramki[i].rozmiar * 75) * wartoscInt) / 100),
+                        dlugoscZasobu),
                 combPaint); //zasob 8 - susz // dla strony lewej i prawej
 
             //modyfikacja startuZasobu w mapie startyZasobow dla danego zasobu, ramki i korpusu
             startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}'] =
                 (startyZas['${ramki[i].korpusNr}.${nrRamki}.${ramki[i].strona}']! -
-                    (((ramki[i].rozmiar * 75) * wartoscInt) / 100));
+                    (dlugoscZasobu));
           }
           break;
         case 10:

@@ -2889,4 +2889,14 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get voiceGrammarOutdated => 'UWAGA: wczytana gramatyka nie zna polecenia notatki albo cofania - w pakiecie apki jest stary plik gramatyki. Zbuduj apkę od nowa (pełny restart, nie hot reload).';
+
+  @override
+  String voiceNoRoomOnSide(String free) {
+    return 'Nie mieści się - wolne $free%';
+  }
+
+  @override
+  String voiceSavedOnFrames(String saved, String all) {
+    return 'Zapisano na $saved z $all ramek - na pozostałych brak miejsca';
+  }
 }
