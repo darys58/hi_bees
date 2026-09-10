@@ -205,11 +205,21 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   double heightScreen = 601;
   //WARIANT WIERSZY STREFY 1: true = pudełka niższe i węższe, cyfry mniejsze.
   //Liczony RAZ na budowę ekranu, w [LayoutBuilder] - patrz komentarz tam.
-  //Wcześniej każdy z dziewięciu wierszy powtarzał ten sam warunek
-  //`heightScreen < 590 && orientacja == portrait && !voice2LiveLandscape`,
-  //przez co w poziomie zawsze wychodził wariant DUŻY - a lewa kolumna ma tam
-  //połowę szerokości ekranu i pudełka po 100 px wchodziły na siebie.
+  //Kryterium jest INNE dla każdej orientacji: w pionie decyduje wysokość
+  //(czy duży układ mieści się w ekranie), w poziomie szerokość lewej kolumny
+  //(czy mieści się w niej wiersz „ul / korpus / ramka" w wariancie dużym).
+  //Do 10.09.2026 każdy układ poziomy dostawał wariant mały niezależnie od
+  //ekranu - na zwykłym telefonie kafelki były wtedy bez potrzeby kurczone.
   bool _maleWiersze = false;
+  //WARIANT SAMEGO WIERSZA „ul / korpus / półkorpus / ramka" - osobny od
+  //[_maleWiersze], bo w POZIOMIE te dwie rzeczy rozjeżdżają się celowo:
+  //  * kafelki ula mają wyglądać jak w pionie, dopóki mieszczą się w lewej
+  //    kolumnie - to one niosą numery, na które patrzy się przy ulu,
+  //  * pozostałe wiersze (pasieka, opis ramki, „Zapis:", info) zostają MAŁE,
+  //    żeby kolumna nie urosła i nie trzeba było jej przewijać po każdej
+  //    komendzie.
+  //W PIONIE obie flagi są równe - tam nic się nie zmienia.
+  bool _maleKafelkiUla = false;
   bool czyJesWidget = false;
   // String rhinoModelPath = 'assets/models/rhino_params_pl.pv';
   // String porcupineModelPath = 'assets/models/porcupine_params_pl.pv';
@@ -411,6 +421,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   static const double _kNumeryRamek = 18; //pas na numery ramek nad i pod obrysem
   static const double _kZapasKorpusu = 8; //margines estetyczny strefy korpusu
   static const double _kMinStrefaTekstu = 64; //minimum dla strefy 3 w poziomie
+  //Szerokość wiersza „ul / korpus / ramka" w wariancie DUŻYM - trzy pudełka po
+  //100 px. Próg wyboru wariantu w układzie poziomym; MUSI się zgadzać
+  //z `width:` pudełek w [buildAnswerArea] i z [_szerokoscWierszaUla].
+  static const double _kWierszUlaDuzy = 300;
 
   //STAŁE WYSOKOŚCI STREF 1 i 2 (04.08.2026). Wcześniej obie strefy zajmowały
   //tyle, ile akurat miały treści, więc dopóki nie było otwartej pasieki i ula,
@@ -7571,8 +7585,41 @@ print('openDialog = $openDialog');
             final double potrzebaNaDuze = globals.voice2LivePodglad
                 ? _kStrefaDanych + _kStrefaKorpusu + 2 + _kMinStrefaTekstu
                 : _kStrefaDanych * 6 / 4;
-            _maleWiersze =
-                poziom || wysokosc < potrzebaNaDuze * math.max(1.0, skalaTekstu);
+            //W POZIOMIE KAFELKI ULA DECYDUJĄ SZEROKOŚCIĄ (10.09.2026).
+            //Do tej pory każdy układ poziomy dostawał WSZYSTKIE wiersze małe -
+            //i słusznie na wąskich ekranach, bo strefa 1 jest tam lewą POŁOWĄ
+            //ekranu i pudełka po 100 px wchodziły na siebie. Ale na zwykłym
+            //telefonie (iPhone 15 w poziomie to ~426 px na kolumnę) miejsca
+            //jest aż nadto, a kafelki ula, korpusu i ramki i tak były kurczone
+            //do 80 x 60 - wyglądały na wciśnięte na siłę (zgłoszenie z
+            //urządzenia).
+            //Rozdzielone są więc DWIE decyzje: kafelki ula ([_maleKafelkiUla])
+            //pytają, czy wiersz w wariancie DUŻYM mieści się w lewej kolumnie -
+            //jeśli tak, wyglądają jak w pionie; cała reszta wierszy zostaje
+            //mała, żeby kolumna nie urosła i nie trzeba było jej przewijać.
+            //
+            //Liczymy STAŁY, typowy zestaw „ul + korpus + ramka" (3 x 100 px),
+            //a nie bieżącą [_szerokoscWierszaUla], bo ta zmienia się razem
+            //z flagami `ready*` - wariant przeskakiwałby w trakcie sesji
+            //(otwarcie półkorpusu nagle zmniejszałoby wszystkie kafelki).
+            //Rzadszy, szerszy zestaw (z półkorpusem) domyka [_dopasujWiersz]:
+            //skaluje wiersz w dół dopiero wtedy, kiedy naprawdę nie wchodzi.
+            //Zapas 20 px to odstępy `spaceEvenly` między pudełkami.
+            if (poziom) {
+              //Pozostałe wiersze zostają MAŁE - lewa kolumna ma wysokość
+              //ekranu w poziomie i każdy piksel się liczy.
+              _maleWiersze = true;
+              //Kafelki ula decydują SZEROKOŚCIĄ: Row z dwoma Expanded dzieli
+              //ekran na pół, a kontener strefy zabiera jeszcze 2 x 15 px
+              //paddingu.
+              final double lewaKolumna = wymiary.maxWidth / 2 - 30;
+              _maleKafelkiUla = lewaKolumna <
+                  (_kWierszUlaDuzy + 20) * math.max(1.0, skalaTekstu);
+            } else {
+              _maleWiersze =
+                  wysokosc < potrzebaNaDuze * math.max(1.0, skalaTekstu);
+              _maleKafelkiUla = _maleWiersze;
+            }
 
             //UKŁAD KLASYCZNY (bez live podglądu) - bez zmian: dane u góry,
             //teksty z notatką do czterech linii, na dole błąd silnika.
@@ -7684,11 +7731,11 @@ print('openDialog = $openDialog');
   //UWAGA: te liczby MUSZĄ się zgadzać z `width:` pudełek niżej.
   double _szerokoscWierszaUla() {
     double suma = 0;
-    if (readyHive) suma += _maleWiersze ? 80 : 100;
-    if (readyBody) suma += 100;
-    if (readyHalfBody) suma += 100;
-    if (readyFrame) suma += _maleWiersze ? 80 : 100;
-    if (readyFrames) suma += _maleWiersze ? 80 : 100;
+    if (readyHive) suma += _maleKafelkiUla ? 80 : 100;
+    if (readyBody) suma += _maleKafelkiUla ? 80 : 100;
+    if (readyHalfBody) suma += _maleKafelkiUla ? 80 : 100;
+    if (readyFrame) suma += _maleKafelkiUla ? 80 : 100;
+    if (readyFrames) suma += _maleKafelkiUla ? 80 : 100;
     return suma;
   }
 
@@ -7918,7 +7965,7 @@ print('openDialog = $openDialog');
                   Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
 //ul numer
                 if (readyHive)
-                  _maleWiersze
+                  _maleKafelkiUla
                       ? Container(
                           width: 80,
                           height: 60,
@@ -8017,9 +8064,15 @@ print('openDialog = $openDialog');
                         ),
 //korpus numer
                 if (readyBody)
-                  _maleWiersze
+                  _maleKafelkiUla
                       ? Container(
-                          width: 100,
+                          //80 px jak ul i ramka - do 10.09.2026 korpus
+                          //i półkorpus zostawały tu 100 px (miejsce na dłuższe
+                          //słowo „półkorpus"), przez co w wariancie małym były
+                          //wyraźnie szersze od sąsiadów i na wąskiej lewej
+                          //kolumnie wchodziły na nie (iPhone SE w poziomie).
+                          //Etykietę zamiast tego skaluje [FittedBox] niżej.
+                          width: 80,
                           height: 60,
                           padding: const EdgeInsets.all(4),
                           alignment: Alignment.topCenter,
@@ -8030,7 +8083,14 @@ print('openDialog = $openDialog');
                           ),
                           child: Column(
                             children: <Widget>[
-                              Text(AppLocalizations.of(context)!.body),
+                              //„półkorpus" / „half body" nie mieści się w 80 px
+                              //przy domyślnym rozmiarze - zmniejszamy SAM napis,
+                              //zamiast poszerzać pudełko
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                    AppLocalizations.of(context)!.body),
+                              ),
                               nrXOfBody != 0
                                   ? Text(
                                       "$nrXOfBody",
@@ -8101,9 +8161,15 @@ print('openDialog = $openDialog');
                         ),
 //półkorpus numer
                 if (readyHalfBody)
-                  _maleWiersze
+                  _maleKafelkiUla
                       ? Container(
-                          width: 100,
+                          //80 px jak ul i ramka - do 10.09.2026 korpus
+                          //i półkorpus zostawały tu 100 px (miejsce na dłuższe
+                          //słowo „półkorpus"), przez co w wariancie małym były
+                          //wyraźnie szersze od sąsiadów i na wąskiej lewej
+                          //kolumnie wchodziły na nie (iPhone SE w poziomie).
+                          //Etykietę zamiast tego skaluje [FittedBox] niżej.
+                          width: 80,
                           height: 60,
                           padding: const EdgeInsets.all(4),
                           alignment: Alignment.topCenter,
@@ -8116,7 +8182,14 @@ print('openDialog = $openDialog');
                           ),
                           child: Column(
                             children: <Widget>[
-                              Text(AppLocalizations.of(context)!.halfBody),
+                              //„półkorpus" / „half body" nie mieści się w 80 px
+                              //przy domyślnym rozmiarze - zmniejszamy SAM napis,
+                              //zamiast poszerzać pudełko
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                    AppLocalizations.of(context)!.halfBody),
+                              ),
                               nrXOfHalfBody != 0
                                   ? Text(
                                       "$nrXOfHalfBody",
@@ -8188,7 +8261,7 @@ print('openDialog = $openDialog');
                 
 //ramka numer
                 if (readyFrame)
-                  _maleWiersze
+                  _maleKafelkiUla
                       ? Container(
                           width: 80,
                           height: 60,
@@ -8277,7 +8350,7 @@ print('openDialog = $openDialog');
 
 //ramki od do
                 if (readyFrames)
-                  _maleWiersze
+                  _maleKafelkiUla
                       ? Container(
                           width: 80,
                           height: 60,
