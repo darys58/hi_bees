@@ -1773,9 +1773,12 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           //Pasek ma tylko dwa przyciski: sterowanie głosem i NFC. Gdy żaden się
           //nie pokaże, chowamy cały pasek - inaczej zostaje pusty biały pas 100px.
           //Sterowanie głosem odpada przy "bez_klucza" ALBO przy języku innym niż
-          //polski (Vosk ma u nas wyłącznie model polski - patrz vosk_engine.dart).
+          //polski i angielski (modele Vosk PL i EN - patrz vosk_engine.dart).
+          //Warunek musi być lustrem bramki przycisku głosu niżej - do 15.09.2026
+          //sprawdzał tylko 'pl_PL' i przy EN z wyłączonym NFC chował przycisk.
           : globals.nfcMode == 'off' &&
-                  (globals.key == "bez_klucza" || globals.jezyk != 'pl_PL')
+                  (globals.key == "bez_klucza" ||
+                      (globals.jezyk != 'pl_PL' && globals.jezyk != 'en_US'))
             ? null
             : Container(
                 //margin:  EdgeInsets.only(bottom:15),

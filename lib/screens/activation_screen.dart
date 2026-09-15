@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 //import 'package:provider/provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
+import 'package:url_launcher/url_launcher.dart';
 import 'package:hi_bees/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import 'package:http/http.dart' as http;
@@ -140,6 +141,39 @@ class _ActivationScreenState extends State<ActivationScreen> {
     );
   }
 
+  //Tekst z adresem "heymaya.eu" (klucz enterYourActivationCode, 7 języków) -
+  //adres zamieniany na klikalny link bez ruszania plików ARB. Gdyby tłumaczenie
+  //nie zawierało "heymaya.eu", tekst wyświetla się jak dawniej.
+  //launchUrl bez canLaunchUrl - na Androidzie 11+ canLaunchUrl zależy od <queries>.
+  Widget _tekstZLinkiem(String tekst) {
+    const adres = 'heymaya.eu';
+    const styl = TextStyle(fontSize: 15);
+    final i = tekst.indexOf(adres);
+    if (i < 0) return Text(tekst, style: styl);
+    return Text.rich(
+      TextSpan(style: styl, children: [
+        TextSpan(text: tekst.substring(0, i)),
+        WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: GestureDetector(
+            onTap: () => launchUrl(Uri.parse('https://www.heymaya.eu'),
+                mode: LaunchMode.externalApplication),
+            child: Text(
+              adres,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.blue[700],
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
+        TextSpan(text: tekst.substring(i + adres.length)),
+      ]),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     //uzyskanie dostępu do danych w pamięci
@@ -167,12 +201,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
               child: Column(children: <Widget>[
             Container(
                 padding: const EdgeInsets.all(20),
-                child: Text(
-                  (AppLocalizations.of(context)!.enterYourActivationCode),
-                  style: TextStyle(
-                    fontSize: 15,
-                  ),
-                )),
+                child: _tekstZLinkiem(
+                    AppLocalizations.of(context)!.enterYourActivationCode)),
             Form(
               key: _formKey3,
               child: Container(
