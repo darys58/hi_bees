@@ -425,6 +425,17 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //100 px. Próg wyboru wariantu w układzie poziomym; MUSI się zgadzać
   //z `width:` pudełek w [buildAnswerArea] i z [_szerokoscWierszaUla].
   static const double _kWierszUlaDuzy = 300;
+  //O TYLE WYŻSZY jest wiersz kafelków w wariancie DUŻYM: 92 + 2 * marginRow(10)
+  //= 112 px wobec 60 + 20 = 80 px. Jedyna różnica między wariantem małym
+  //a „małe wiersze + duże kafelki" (patrz wybór wariantu w [build]).
+  static const double _kWierszKafelkiDodatek = 32;
+  //ILE STREFA KORPUSU MOŻE ODDAĆ na duże kafelki (17.09.2026). Rysunek korpusu
+  //i tak jest skalowany [FittedBox], więc kilkanaście pikseli mniej jest
+  //niewidoczne, a kafelki z numerami ula są tym, na co patrzy się przy ulu.
+  //Bez tego ustępstwa iPhone 6S Plus (414 x 736, ok. 659 px na treść) przegrywał
+  //próg o 7 px i dostawał małe kafelki mimo wolnego miejsca (zgłoszenie
+  //z urządzenia).
+  static const double _kKorpusUstepstwo = 0.95;
 
   //STAŁE WYSOKOŚCI STREF 1 i 2 (04.08.2026). Wcześniej obie strefy zajmowały
   //tyle, ile akurat miały treści, więc dopóki nie było otwartej pasieki i ula,
@@ -7618,7 +7629,23 @@ print('openDialog = $openDialog');
             } else {
               _maleWiersze =
                   wysokosc < potrzebaNaDuze * math.max(1.0, skalaTekstu);
-              _maleKafelkiUla = _maleWiersze;
+              //W PIONIE KAFELKI ULA MAJĄ WŁASNY PRÓG (17.09.2026). Do tej pory
+              //szły razem z `_maleWiersze`, więc ekran, któremu do pełnego
+              //układu brakowało kilku pikseli, kurczył WSZYSTKO - łącznie
+              //z kafelkami ula, choć te potrzebują tylko 32 px więcej niż
+              //wariant mały (zgłoszenie z iPhone 6S Plus: miejsca w pionie
+              //jest dosyć, a kafelki i tak były zmniejszane).
+              //Pytamy więc osobno: czy zmieści się układ „małe wiersze + duże
+              //kafelki", jeżeli strefa korpusu odda [_kKorpusUstepstwo]?
+              //Resztę domyka istniejące proporcjonalne ściskanie stref niżej.
+              _maleKafelkiUla = _maleWiersze &&
+                  wysokosc <
+                      (_kStrefaDanychMala +
+                              _kWierszKafelkiDodatek +
+                              _kStrefaKorpusu * _kKorpusUstepstwo +
+                              2 +
+                              _kMinStrefaTekstu) *
+                          math.max(1.0, skalaTekstu);
             }
 
             //UKŁAD KLASYCZNY (bez live podglądu) - bez zmian: dane u góry,
@@ -7684,8 +7711,14 @@ print('openDialog = $openDialog');
             //PROPORCJONALNIE, zostawiając strefie 3 jej minimum. Wysokość dalej
             //jest stała dla danego urządzenia, więc nic nie skacze: strefa 1
             //przewija się w środku, a korpus zmniejsza [FittedBox].
-            double strefaDanych =
-                _maleWiersze ? _kStrefaDanychMala : _kStrefaDanych;
+            //Trzy warianty strefy 1: duży, mały oraz „małe wiersze + duże
+            //kafelki" (wtedy wiersz kafelków jest o [_kWierszKafelkiDodatek]
+            //wyższy niż w wariancie małym).
+            double strefaDanych = _maleWiersze
+                ? (_maleKafelkiUla
+                    ? _kStrefaDanychMala
+                    : _kStrefaDanychMala + _kWierszKafelkiDodatek)
+                : _kStrefaDanych;
             double strefaKorpusu = _kStrefaKorpusu;
             final double doPodzialu = wysokosc - 2 - _kMinStrefaTekstu; //2 kreski
             if (strefaDanych + strefaKorpusu > doPodzialu && doPodzialu > 0) {
