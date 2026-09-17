@@ -151,9 +151,10 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //1.13.0.98 05.09.2026 - angielskie sterowanie głosem (model Vosk-EN, gramatyka, pomoc i wszystkie komunikaty w ARB), odzywki Mai zależne od języka - komplet nagrań angielskich, rozdzielona odzywka "nie tutaj" (polecenie zrozumiane, ale niewykonalne) od "nie rozumiem", nazwy leczenia apivarol/biovar zastąpione na ekranach przez "chemia" i "paski", ręczne zapisywanie usunięcia pasków (dotąd tylko głosem), poprawki rozpoznawania liczb z jednostkami i czyszczenia dyktowanych notatek, ujednolicona pisownia poleceń w pomocy głosowej
 
   //1.13.1.99 10.09.2026 - suma zasobów na jednej stronie ramki nie może przekroczyć 100%: kontrola przy zapisie głosem (odrzucenie z podaniem wolnego miejsca, przy zakresie ramek pomijane tylko te bez miejsca) oraz przy ręcznej edycji i dodawaniu w obu ekranach ramki, zasób który się nie mieści jest teraz na rysunku plastra PRZYCINANY zamiast pomijany (widać też dane sprzed poprawki i z importu), zegar w pasku tytułu ekranu sterowania głosem w układzie poziomym, kafelki ul/korpus/ramka w poziomie w rozmiarze takim jak w pionie na telefonach, na których się mieszczą, korpus i półkorpus zwężone do szerokości sąsiadów w wariancie dla małych ekranów
+  //1.13.2.100 17.09.2026 - kafelki ul/korpus/ramka w pionie nie są juz zmniejszane na ekranach, na których jest dla nich miejsce (własny próg, niezalezny od pozostałych wierszy), linki w "O aplikacji" i przycisk "Aktualizuj" otwierane bez canLaunchUrl i z komunikatem, gdy otwarcie się nie uda (dotąd nieudany link nie robił nic i nie informował o tym), adres heymaya.eu na ekranie "Aktywacja" jest teraz klikalnym linkiem, deklaracja <queries> w manifeście (otwieranie stron i poczty na Androidzie 11+)
 
-  final wersja = '1.13.1.99'; //wersja aplikacji tylko na Androida !!!!! 
-  final dataWersji = '2026-09-10';
+  final wersja = '1.13.2.100'; //wersja aplikacji tylko na Androida !!!!!
+  final dataWersji = '2026-09-17';
   final now = DateTime.now();
   late DateFormat formatter;
   int aktywnosc = 0;
