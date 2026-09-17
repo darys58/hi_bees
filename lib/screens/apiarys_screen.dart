@@ -943,9 +943,16 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
               DBHelper.updateMem2(globals.deviceId, nowaWersja);
               Navigator.of(dialogCtx).pop();
               if (url.isNotEmpty) {
-                final Uri uri = Uri.parse(url);
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                //BEZ canLaunchUrl (17.09.2026) - ta funkcja mówi tylko, czy
+                //WOLNO nam zapytać o schemat (Android 11+: <queries>, iOS:
+                //LSApplicationQueriesSchemes), więc potrafi zwrócić false przy
+                //sprawnej przeglądarce. Wtedy przycisk "Aktualizuj" po cichu nic
+                //nie robił. Tak samo w about_screen (_otworz).
+                try {
+                  await launchUrl(Uri.parse(url),
+                      mode: LaunchMode.externalApplication);
+                } catch (_) {
+                  //brak przeglądarki - nie wywracamy apki; dialog jest już zamknięty
                 }
               }
             },

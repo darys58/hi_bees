@@ -12,6 +12,32 @@ import '../models/memory.dart';
 class AboutScreen extends StatelessWidget {
   static const routeName = '/about';
 
+  //LINKI BEZ canLaunchUrl (17.09.2026). Wcześniej każdy link otwierał się
+  //dopiero, gdy canLaunchUrl() zwróciło true. Ta funkcja nie odpowiada na
+  //pytanie „czy da się otworzyć", tylko „czy WOLNO mi o to zapytać": na
+  //Androidzie 11+ zależy od <queries> w manifeście, na iOS od
+  //LSApplicationQueriesSchemes. Gdy zabraknie wpisu, dostajemy false mimo
+  //sprawnej przeglądarki, a link po naciśnięciu NIC nie robi - bez komunikatu
+  //(zgłoszenie z Motoroli). Teraz otwieramy od razu, a gdy się nie uda,
+  //mówimy o tym wprost. Komunikat z istniejącego klucza `error` (7 języków).
+  Future<void> _otworz(BuildContext context, String adres) async {
+    bool otwarte = false;
+    try {
+      otwarte = await launchUrl(Uri.parse(adres),
+          mode: LaunchMode.externalApplication);
+    } catch (_) {
+      otwarte = false; //brak przeglądarki / klienta poczty - nie wywracamy apki
+    }
+    if (!otwarte && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${AppLocalizations.of(context)!.error}: $adres'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
 
 
   // void _showAlertAnuluj(BuildContext context, String nazwa, String text) {
@@ -172,12 +198,7 @@ class AboutScreen extends StatelessWidget {
                     children: [
      //www                
                       GestureDetector(
-                        onTap: () async {
-                          final uri = Uri.parse('https://www.heymaya.eu');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
-                        },
+                        onTap: () => _otworz(context, 'https://www.heymaya.eu'),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -199,12 +220,7 @@ class AboutScreen extends StatelessWidget {
                       SizedBox(height: 22),
      //email                 
                       GestureDetector(
-                        onTap: () async {
-                          final uri = Uri.parse('mailto:maya@heymaya.eu');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri);
-                          }
-                        },
+                        onTap: () => _otworz(context, 'mailto:maya@heymaya.eu'),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -229,12 +245,7 @@ class AboutScreen extends StatelessWidget {
                     SizedBox(height: 22),
  //patronite                     
                       GestureDetector(
-                        onTap: () async {
-                          final uri = Uri.parse('https://patronite.pl/heymaya');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri);
-                          }
-                        },
+                        onTap: () => _otworz(context, 'https://patronite.pl/heymaya'),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -257,12 +268,7 @@ class AboutScreen extends StatelessWidget {
                     SizedBox(height: 22),
    //suppi                   
                       GestureDetector(
-                        onTap: () async {
-                          final uri = Uri.parse('https://suppi.pl/heymaya');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri);
-                          }
-                        },
+                        onTap: () => _otworz(context, 'https://suppi.pl/heymaya'),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
