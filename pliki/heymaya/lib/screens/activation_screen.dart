@@ -157,7 +157,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
           alignment: PlaceholderAlignment.baseline,
           baseline: TextBaseline.alphabetic,
           child: GestureDetector(
-            onTap: () => launchUrl(Uri.parse('https://www.heymaya.eu'),
+            onTap: () => launchUrl(Uri.parse(globals.adresStronyHeyMaya()),
                 mode: LaunchMode.externalApplication),
             child: Text(
               adres,

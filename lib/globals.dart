@@ -37,6 +37,34 @@ int walutaDlaJezyka() {
     default: return 3; // EUR (de, fr, es, pt, it)
   }
 }
+
+/// Strona www.heymaya.eu w języku apki (adresy z hreflang strony, sprawdzone 27.09.2026).
+/// Nieobsługiwany język -> wersja angielska.
+String adresStronyHeyMaya() {
+  switch (jezyk.length >= 2 ? jezyk.substring(0, 2) : jezyk) {
+    case 'pl': return 'https://heymaya.eu/';
+    case 'de': return 'https://heymaya.eu/index.php/de/deutsch/';
+    case 'fr': return 'https://heymaya.eu/index.php/fr/francais/';
+    case 'es': return 'https://heymaya.eu/index.php/es/espanol/';
+    case 'pt': return 'https://heymaya.eu/index.php/pt/';
+    case 'it': return 'https://heymaya.eu/index.php/it/italia/';
+    default: return 'https://heymaya.eu/index.php/en/english/';
+  }
+}
+
+/// Przewodnik (ikona "?" na ekranie startowym) w języku apki.
+String adresPrzewodnikaHeyMaya() {
+  switch (jezyk.length >= 2 ? jezyk.substring(0, 2) : jezyk) {
+    case 'pl': return 'https://heymaya.eu/index.php/przewodnik/';
+    case 'de': return 'https://heymaya.eu/index.php/de/wegweiser/';
+    case 'fr': return 'https://heymaya.eu/index.php/fr/guide-2/';
+    case 'es': return 'https://heymaya.eu/index.php/es/guia/';
+    case 'pt': return 'https://heymaya.eu/index.php/pt/guia-2/';
+    case 'it': return 'https://heymaya.eu/index.php/it/guida/';
+    default: return 'https://heymaya.eu/index.php/en/guide/';
+  }
+}
+
 String ikonaUla = 'green'; //
 String ikonaPasieki = 'green'; //
 String widokMatek = 'activ'; //lista matek w ZARZADZANIE MATKAMI (all, activ, living, lost) 

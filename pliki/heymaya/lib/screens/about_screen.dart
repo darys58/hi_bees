@@ -198,7 +198,7 @@ class AboutScreen extends StatelessWidget {
                     children: [
      //www                
                       GestureDetector(
-                        onTap: () => _otworz(context, 'https://www.heymaya.eu'),
+                        onTap: () => _otworz(context, globals.adresStronyHeyMaya()),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,

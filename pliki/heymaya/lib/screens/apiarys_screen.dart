@@ -1580,10 +1580,8 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     // print('wysokość ekranu');
     // print(heightScreen);
 
-    final Uri toLaunchPl = Uri(
-        scheme: 'https', host: 'www.heymaya.eu', path: '/index.php/przewodnik');
-    final Uri toLaunchEn =
-        Uri(scheme: 'https', host: 'www.heymaya.eu', path: '/index.php/guide');
+    //przewodnik na heymaya.eu w języku apki (7 wersji językowych)
+    final Uri toLaunchPrzewodnik = Uri.parse(globals.adresPrzewodnikaHeyMaya());
 
 
     return Scaffold(
@@ -1632,27 +1630,14 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
 //pomoc w przeglądarce
           IconButton(
             icon: Icon(Icons.help_rounded, color: Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => globals.jezyk.startsWith('pl')
-                ? _isInternet().then((inter) {
-                    if (inter) {
-                      _launchInBrowser(toLaunchPl);
-                      //'https://www.cobytu.com/index.php?d=polityka&mobile=1');
-                      // Navigator.of(context).pushNamed(LanguagesScreen.routeName);
-                    } else {
-                      print('braaaaaak internetu');
-                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
-                          AppLocalizations.of(context)!.noInternet);
-                    }
-                  })
-                : _isInternet().then((inter) {
-                    if (inter) { //inter != null && 
-                      _launchInBrowser(toLaunchEn);
-                    } else {
-                      print('braaaaaak internetu');
-                      _showAlertOK(context, AppLocalizations.of(context)!.alert,
-                          AppLocalizations.of(context)!.noInternet);
-                    }
-                  }),
+            onPressed: () => _isInternet().then((inter) {
+              if (inter) {
+                _launchInBrowser(toLaunchPrzewodnik);
+              } else {
+                _showAlertOK(context, AppLocalizations.of(context)!.alert,
+                    AppLocalizations.of(context)!.noInternet);
+              }
+            }),
           ),
           
 //ustawienia
