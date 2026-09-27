@@ -22,7 +22,11 @@ import '../models/infos.dart';
 import '../models/memory.dart';
 
 class RaportColorScreen extends StatefulWidget {
-  static const routeName = '/raport_color';
+  static const routeName = '/raport_color'; //zbiór miodu
+  static const routeNamePylek = '/raport_color_pylek'; //zbiór pyłku
+
+  final String typ; //'miod' albo 'pylek' - który wykres pokazuje ekran
+  RaportColorScreen({this.typ = 'miod'});
 
   @override
   State<RaportColorScreen> createState() => _RaportColorScreenState();
@@ -299,7 +303,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                           Navigator.pushReplacement(
                             context,
                             PageRouteBuilder( //przejście bez najazdu ekranu 
-                              pageBuilder: (context, animation, secondaryAnimation) => RaportColorScreen(),
+                              pageBuilder: (context, animation, secondaryAnimation) => RaportColorScreen(typ: widget.typ),
                               transitionDuration: Duration.zero, // brak animacji
                               reverseTransitionDuration: Duration.zero,
                             ),  
@@ -514,7 +518,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: datyMiodobran.asMap().entries.map((entry) {
+              children: datyMiodobran.asMap().entries.toList().reversed.map((entry) { //od najnowszej daty (jak na słupku - od góry)
                 int index = entry.key;
                 String date = entry.value;
                 Color color = harvestColors[index % harvestColors.length];
@@ -626,7 +630,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: datyMiodobran.asMap().entries.map((entry) {
+              children: datyMiodobran.asMap().entries.toList().reversed.map((entry) { //od najnowszej daty (jak na słupku - od góry)
                 int index = entry.key;
                 String date = entry.value;
                 Color color = harvestColors[index % harvestColors.length];
@@ -1368,7 +1372,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                     padding: const pw.EdgeInsets.only(left: 40), // yAxisWidth
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: datyMiodobran.asMap().entries.map((entry) {
+                      children: datyMiodobran.asMap().entries.toList().reversed.map((entry) { //od najnowszej daty (jak na słupku - od góry)
                         int index = entry.key;
                         String date = entry.value;
                         PdfColor color = _getPdfColor(index);
@@ -2009,7 +2013,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = 'wszystkie';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName,
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName,
                   );
               }, child: globals.rokRaportow == 'wszystkie'
                         ? Text(('> ${AppLocalizations.of(context)!.aLl} <'),style: TextStyle(fontSize: 18))
@@ -2021,7 +2025,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = '2023';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName,
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName,
                   );
               }, child: globals.rokRaportow == '2023'
                         ? Text(('> 2023 <'),style: TextStyle(fontSize: 18))
@@ -2033,7 +2037,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = '2024';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName, 
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName, 
                 );
               }, child: globals.rokRaportow == '2024'
                         ? Text(('> 2024 <'),style: TextStyle(fontSize: 18))
@@ -2045,7 +2049,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = '2025';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName, 
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName, 
                 );
               }, child: globals.rokRaportow == '2025'
                         ? Text(('> 2025 <'),style: TextStyle(fontSize: 18))
@@ -2057,7 +2061,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = '2026';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName, 
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName, 
                 );
               }, child: globals.rokRaportow == '2026'
                         ? Text(('> 2026 <'),style: TextStyle(fontSize: 18))
@@ -2069,7 +2073,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = '2027';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName, 
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName, 
                 );
               }, child: globals.rokRaportow == '2027'
                         ? Text(('> 2027 <'),style: TextStyle(fontSize: 18))
@@ -2081,7 +2085,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = '2028';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName, 
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName, 
                 );
               }, child: globals.rokRaportow == '2028'
                         ? Text(('> 2028 <'),style: TextStyle(fontSize: 18))
@@ -2093,7 +2097,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = '2029';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName, 
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName, 
                 );
               }, child: globals.rokRaportow == '2029'
                         ? Text(('> 2029 <'),style: TextStyle(fontSize: 18))
@@ -2105,7 +2109,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                 Navigator.of(context).pop();
                 globals.rokRaportow = '2030';
                 Navigator.of(context).pushNamed(
-                    RaportColorScreen.routeName, 
+                    widget.typ == 'pylek' ? RaportColorScreen.routeNamePylek : RaportColorScreen.routeName, 
                 );
               }, child: globals.rokRaportow == '2030'
                         ? Text(('> 2030 <'),style: TextStyle(fontSize: 18))
@@ -2160,7 +2164,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                  _showAlertYear(),              
            ),
         ],
-        title: Text('${AppLocalizations.of(context)!.hArvestReports} ${globals.rokRaportow}',
+        title: Text('${widget.typ == 'pylek' ? AppLocalizations.of(context)!.bEePollenHarvest : AppLocalizations.of(context)!.hOneyHarvest} ${globals.rokRaportow}',
           //AppLocalizations.of(context)!.pArameterization,
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
@@ -2215,7 +2219,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                                         Navigator.pushReplacement(
                                           context,
                                           PageRouteBuilder(
-                                            pageBuilder: (context, animation, secondaryAnimation) => RaportColorScreen(),
+                                            pageBuilder: (context, animation, secondaryAnimation) => RaportColorScreen(typ: widget.typ),
                                             transitionDuration: Duration.zero, // brak animacji
                                             reverseTransitionDuration: Duration.zero,
                                           ),
@@ -2270,7 +2274,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                                       Navigator.pushReplacement(
                                         context,
                                         PageRouteBuilder(
-                                          pageBuilder: (context, animation, secondaryAnimation) => RaportColorScreen(),
+                                          pageBuilder: (context, animation, secondaryAnimation) => RaportColorScreen(typ: widget.typ),
                                           transitionDuration: Duration.zero, // brak animacji
                                           reverseTransitionDuration: Duration.zero,
                                         ),
@@ -2318,7 +2322,9 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: <Widget>[
-              daneZbioruMioduDoWykresu2023.isEmpty && daneZbioruMioduDoWykresu2024.isEmpty && daneZbioruMioduDoWykresu2025.isEmpty && daneZbioruMioduDoWykresu2026.isEmpty && daneZbioruMioduDoWykresu2027.isEmpty && daneZbioruMioduDoWykresu2028.isEmpty && daneZbioruMioduDoWykresu2029.isEmpty && daneZbioruMioduDoWykresu2030.isEmpty
+              (widget.typ == 'miod'
+                  ? daneZbioruMioduDoWykresu2023.isEmpty && daneZbioruMioduDoWykresu2024.isEmpty && daneZbioruMioduDoWykresu2025.isEmpty && daneZbioruMioduDoWykresu2026.isEmpty && daneZbioruMioduDoWykresu2027.isEmpty && daneZbioruMioduDoWykresu2028.isEmpty && daneZbioruMioduDoWykresu2029.isEmpty && daneZbioruMioduDoWykresu2030.isEmpty
+                  : daneZbioruPylkuDoWykresu2023.isEmpty && daneZbioruPylkuDoWykresu2024.isEmpty && daneZbioruPylkuDoWykresu2025.isEmpty && daneZbioruPylkuDoWykresu2026.isEmpty && daneZbioruPylkuDoWykresu2027.isEmpty && daneZbioruPylkuDoWykresu2028.isEmpty && daneZbioruPylkuDoWykresu2029.isEmpty && daneZbioruPylkuDoWykresu2030.isEmpty)
                 ? Center(
                     child: Column(
                       children: <Widget>[
@@ -2342,8 +2348,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                     SizedBox(height: 10),
         
         //miód wykres 2030  
-                    if(daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) SizedBox(height: 10),
-                    if(daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) 
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) SizedBox(height: 10),
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) 
                       RichText(
                         text: TextSpan(           
                           style: TextStyle(color: Colors.black),
@@ -2355,7 +2361,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${(miod2030/1000).toStringAsFixed(2)} kg)'),
                             style: TextStyle(fontSize: 14 )),                          
                           ])),
-                    if(daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -2424,14 +2430,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
         //legenda miodobrań 2030
-                    if(daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
                       _buildLegendMiod(datyMiodobranMiod2030, sumaKgMiod2030,
                         rok: '2030',
                         daneZbioru: daneZbioruMioduDoWykresu2030,
                         totalValue: allMiod2030,
                       ),
         //kreska
-                    if(daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) const Divider(
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) const Divider(
                         height: 10,
                         thickness: 1,indent: 0,
                         endIndent: 0,
@@ -2439,8 +2445,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                       ),
 
         //miód wykres 2029  
-                    if(daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) SizedBox(height: 10),
-                    if(daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) 
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) SizedBox(height: 10),
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) 
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -2452,7 +2458,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${(miod2029/1000).toStringAsFixed(2)} kg)'),
                             style: TextStyle(fontSize: 14 )),                          
                           ])),
-                    if(daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -2521,14 +2527,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),       
         //legenda miodobrań 2029
-                    if(daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
                       _buildLegendMiod(datyMiodobranMiod2029, sumaKgMiod2029,
                         rok: '2029',
                         daneZbioru: daneZbioruMioduDoWykresu2029,
                         totalValue: allMiod2029,
                       ),
         //kreska 
-                    if(daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) const Divider(
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) const Divider(
                         height: 10,
                         thickness: 1,
                         indent: 0,
@@ -2537,8 +2543,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                       ), 
         
         //miód wykres 2028 
-                    if(daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028')) SizedBox(height: 10),
-                    if(daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028')) SizedBox(height: 10),
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -2550,7 +2556,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${(miod2028/1000).toStringAsFixed(2)} kg)'),
                             style: TextStyle(fontSize: 14 )),                         
                           ])),
-                    if(daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -2619,14 +2625,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),      
                     //legenda miodobrań 2028
-                    if(daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
                       _buildLegendMiod(datyMiodobranMiod2028, sumaKgMiod2028,
                         rok: '2028',
                         daneZbioru: daneZbioruMioduDoWykresu2028,
                         totalValue: allMiod2028,
                       ),
         //kreska 
-                    if(daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))const Divider(
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))const Divider(
                         height: 10,
                         thickness: 1,
                         indent: 0,
@@ -2635,8 +2641,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                       ),      
           
           //miód wykres 2027           
-                    if(daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) SizedBox(height: 10),
-                    if(daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) 
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) SizedBox(height: 10),
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) 
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -2648,7 +2654,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${(miod2027/1000).toStringAsFixed(2)} kg)'),
                             style: TextStyle(fontSize: 14 )),                          
                           ])),
-                    if(daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -2717,14 +2723,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ), 
                     //legenda miodobrań 2027
-                    if(daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
                       _buildLegendMiod(datyMiodobranMiod2027, sumaKgMiod2027,
                         rok: '2027',
                         daneZbioru: daneZbioruMioduDoWykresu2027,
                         totalValue: allMiod2027,
                       ),
          //kreska 
-                    if(daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))const Divider(
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))const Divider(
                         height: 10,
                         thickness: 1,
                         indent: 0,
@@ -2733,8 +2739,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                       ),
         
         //miód wykres 2026   
-                    if(daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) SizedBox(height: 10),
-                    if(daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) 
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) SizedBox(height: 10),
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) 
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -2747,7 +2753,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                             style: TextStyle(fontSize: 14 )),
                           
                           ])),
-                    if(daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -2816,14 +2822,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
         //legenda miodobrań 2026
-                    if(daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
                       _buildLegendMiod(datyMiodobranMiod2026, sumaKgMiod2026,
                         rok: '2026',
                         daneZbioru: daneZbioruMioduDoWykresu2026,
                         totalValue: allMiod2026,
                       ),
         //kreska
-                    if(daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) const Divider(
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) const Divider(
                         height: 10,
                         thickness: 1,
                         indent: 0,
@@ -2832,8 +2838,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                       ), 
         
         //miód wykres 2025  
-                    if(daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025')) SizedBox(height: 10),
-                    if(daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025')) 
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025')) SizedBox(height: 10),
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025')) 
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -2845,7 +2851,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${(miod2025/1000).toStringAsFixed(2)} kg)'),
                             style: TextStyle(fontSize: 14 )),                          
                           ])),
-                    if(daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -2914,14 +2920,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                     //legenda miodobrań 2025
-                    if(daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
                       _buildLegendMiod(datyMiodobranMiod2025, sumaKgMiod2025,
                         rok: '2025',
                         daneZbioru: daneZbioruMioduDoWykresu2025,
                         totalValue: allMiod2025,
                       ),
       //kreska 
-                    if(daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))const Divider(
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))const Divider(
                         height: 10,
                         thickness: 1,
                         indent: 0,
@@ -2931,8 +2937,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
         
         
         //miód wykres 2024
-                    if(daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) SizedBox(height: 10),
-                    if(daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) SizedBox(height: 10),
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
                       RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -2944,7 +2950,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${(miod2024/1000).toStringAsFixed(2)} kg)'),
                               style: TextStyle(fontSize: 14 )),                         
                           ])),
-                    if(daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
+                    if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3013,14 +3019,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda miodobrań 2024
-                  if(daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
+                  if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
                     _buildLegendMiod(datyMiodobranMiod2024, sumaKgMiod2024,
                       rok: '2024',
                       daneZbioru: daneZbioruMioduDoWykresu2024,
                       totalValue: allMiod2024,
                     ),
         //kreska 
-                  if(daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) const Divider(
+                  if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) const Divider(
                       height: 10,
                       thickness: 1,
                       indent: 0,
@@ -3029,8 +3035,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                     ),   
         
         //miód wykres 2023        
-                  if(daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) SizedBox(height: 10),
-                  if(daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) 
+                  if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) SizedBox(height: 10),
+                  if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) 
                     RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3042,7 +3048,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${(miod2023/1000).toStringAsFixed(2)} kg)'),
                             style: TextStyle(fontSize: 14 )),                          
                           ])), 
-                  if(daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))
+                  if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3112,14 +3118,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),  
                   //legenda miodobrań 2023
-                  if(daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))
+                  if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))
                     _buildLegendMiod(datyMiodobranMiod2023, sumaKgMiod2023,
                       rok: '2023',
                       daneZbioru: daneZbioruMioduDoWykresu2023,
                       totalValue: allMiod2023,
                     ),
         //kreska 
-                  if(daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))const Divider(
+                  if(widget.typ == 'miod' && daneZbioruMioduDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,
@@ -3128,8 +3134,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   ), 
         
         //pyłek wykres 2030        
-                  if(daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) SizedBox(height: 10),
-                  if(daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) 
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) SizedBox(height: 10),
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) 
                   RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3141,7 +3147,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${pylek2030/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),  
-                  if(daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3211,14 +3217,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda pyłku 2030
-                  if(daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030'))
                     _buildLegend(datyMiodobranPylek2030, sumaLPylek2030,
                       rok: '2030',
                       daneZbioru: daneZbioruPylkuDoWykresu2030,
                       totalValue: allPylek2030.toDouble(),
                     ),
         //kreska
-                  if(daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) const Divider(
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2030.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2030')) const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,
@@ -3227,8 +3233,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   ),
 
         //pyłek wykres 2029        
-                  if(daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) SizedBox(height: 10),
-                  if(daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) 
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) SizedBox(height: 10),
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) 
                     RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3240,7 +3246,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${pylek2029/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),  
-                  if(daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3310,14 +3316,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda pyłku 2029
-                  if(daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029'))
                     _buildLegend(datyMiodobranPylek2029, sumaLPylek2029,
                       rok: '2029',
                       daneZbioru: daneZbioruPylkuDoWykresu2029,
                       totalValue: allPylek2029.toDouble(),
                     ),
         //kreska
-                  if(daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) const Divider(
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2029.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2029')) const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,
@@ -3326,8 +3332,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   ),
 
         //pyłek wykres 2028        
-                  if(daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028')) SizedBox(height: 10),
-                  if(daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028')) 
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028')) SizedBox(height: 10),
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028')) 
                     RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3339,7 +3345,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${pylek2028/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),
-                  if(daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3409,14 +3415,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda pyłku 2028
-                  if(daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028'))
                     _buildLegend(datyMiodobranPylek2028, sumaLPylek2028,
                       rok: '2028',
                       daneZbioru: daneZbioruPylkuDoWykresu2028,
                       totalValue: allPylek2028.toDouble(),
                     ),
         //kreska
-                  if(daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028')) const Divider(
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2028.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2028')) const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,
@@ -3425,8 +3431,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   ),
 
         //pyłek wykres 2027        
-                  if(daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) SizedBox(height: 10),
-                  if(daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) 
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) SizedBox(height: 10),
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) 
                     RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3438,7 +3444,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${pylek2027/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])), 
-                  if(daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3508,14 +3514,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda pyłku 2027
-                  if(daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027'))
                     _buildLegend(datyMiodobranPylek2027, sumaLPylek2027,
                       rok: '2027',
                       daneZbioru: daneZbioruPylkuDoWykresu2027,
                       totalValue: allPylek2027.toDouble(),
                     ),
         //kreska
-                  if(daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) const Divider(
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2027.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2027')) const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,
@@ -3524,8 +3530,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   ),
 
         //pyłek wykres 2026        
-                  if(daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) SizedBox(height: 10),
-                  if(daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) 
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) SizedBox(height: 10),
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) 
                     RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3537,7 +3543,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${pylek2026/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])), 
-                  if(daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3607,14 +3613,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda pyłku 2026
-                  if(daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026'))
                     _buildLegend(datyMiodobranPylek2026, sumaLPylek2026,
                       rok: '2026',
                       daneZbioru: daneZbioruPylkuDoWykresu2026,
                       totalValue: allPylek2026.toDouble(),
                     ),
         //kreska
-                  if(daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) const Divider(
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2026.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2026')) const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,
@@ -3623,8 +3629,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   ),
 
         //pyłek wykres 2025        
-                  if(daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025')) SizedBox(height: 10),
-                  if(daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025')) SizedBox(height: 10),
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
                     RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3636,7 +3642,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${pylek2025/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])), 
-                  if(daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3706,14 +3712,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda pyłku 2025
-                  if(daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025'))
                     _buildLegend(datyMiodobranPylek2025, sumaLPylek2025,
                       rok: '2025',
                       daneZbioru: daneZbioruPylkuDoWykresu2025,
                       totalValue: allPylek2025.toDouble(),
                     ),
         //kreska
-                  if(daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025')) const Divider(
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2025.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2025')) const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,
@@ -3722,8 +3728,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   ),
 
         //pyłek wykres 2024        
-                  if(daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) SizedBox(height: 10),
-                  if(daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) 
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) SizedBox(height: 10),
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) 
                     RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3735,7 +3741,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${pylek2024/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),  
-                  if(daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3805,14 +3811,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda pyłku 2024
-                  if(daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024'))
                     _buildLegend(datyMiodobranPylek2024, sumaLPylek2024,
                       rok: '2024',
                       daneZbioru: daneZbioruPylkuDoWykresu2024,
                       totalValue: allPylek2024.toDouble(),
                     ),
         //kreska
-                  if(daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) const Divider(
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2024.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2024')) const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,
@@ -3821,8 +3827,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   ),
 
         //pyłek wykres 2023        
-                  if(daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) SizedBox(height: 10),
-                  if(daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) 
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) SizedBox(height: 10),
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) 
                     RichText(
                         text: TextSpan(
                           style: TextStyle(color: Colors.black),
@@ -3834,7 +3840,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                               text:('(${pylek2023/1000} l)'),
                             style: TextStyle(fontSize: 14 )),
                           ])),  
-                  if(daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))
                     Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 24.0, top: 15.0, bottom: 10),
                         child: AspectRatio(
@@ -3904,14 +3910,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         ),
                       ),
                   //legenda pyłku 2023
-                  if(daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023'))
                     _buildLegend(datyMiodobranPylek2023, sumaLPylek2023,
                       rok: '2023',
                       daneZbioru: daneZbioruPylkuDoWykresu2023,
                       totalValue: allPylek2023.toDouble(),
                     ),
           //kreska
-                  if(daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) const Divider(
+                  if(widget.typ == 'pylek' && daneZbioruPylkuDoWykresu2023.isNotEmpty && (globals.rokRaportow == 'wszystkie' || globals.rokRaportow == '2023')) const Divider(
                     height: 10,
                     thickness: 1,
                     indent: 0,

@@ -26,9 +26,8 @@ import '../models/weather.dart';
 import '../models/weathers.dart';
 import '../screens/apiary_weather_5Days.dart';
 import '../screens/apiarys_weather_edit_screen.dart';
-import '../screens/raport2_screen.dart';
-import '../screens/raport_screen.dart';
 import '../screens/raport_color_screen.dart';
+import '../screens/raport2_color_screen.dart';
 import '../widgets/hives_item.dart';
 
 class HivesScreen extends StatefulWidget {
@@ -1667,33 +1666,29 @@ class _HivesScreenState extends State<HivesScreen> {
 
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
-               // Navigator.of(context).pop();
-                //globals.odswiezBelkiUliDL = true;
-                Navigator.of(context).pushNamed(
-                    RaportScreen.routeName,
-                    arguments: {'numerPasieki': globals.pasiekaID },
-                  );
-              }, child: Text((AppLocalizations.of(context)!.hArvestReports),style: TextStyle(fontSize: 18))
-              ),  
-
-              TextButton(onPressed: (){
-                Navigator.of(context).pop();
                 Navigator.of(context).pushNamed(
                     RaportColorScreen.routeName,
                     arguments: {'numerPasieki': globals.pasiekaID },
                   );
-              }, child: Text((AppLocalizations.of(context)!.hArvestReports + ' +'),style: TextStyle(fontSize: 18))
+              }, child: Text((AppLocalizations.of(context)!.hOneyHarvest),style: TextStyle(fontSize: 18))
               ),
 
               TextButton(onPressed: (){
                 Navigator.of(context).pop();
-               // Navigator.of(context).pop();
-                //globals.odswiezBelkiUliDL = true;
                 Navigator.of(context).pushNamed(
-                    Raport2Screen.routeName,
+                    RaportColorScreen.routeNamePylek,
                     arguments: {'numerPasieki': globals.pasiekaID },
                   );
-              }, child: Text((AppLocalizations.of(context)!.tReatmentReports),style: TextStyle(fontSize: 18))
+              }, child: Text((AppLocalizations.of(context)!.bEePollenHarvest),style: TextStyle(fontSize: 18))
+              ),
+
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed(
+                    Raport2ColorScreen.routeName,
+                    arguments: {'numerPasieki': globals.pasiekaID },
+                  );
+              }, child: Text((AppLocalizations.of(context)!.dEad + ' varroa'),style: TextStyle(fontSize: 18))
               ),    
  
           ],
