@@ -788,6 +788,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get subscryptionTo => 'Suscripcion hasta: ';
 
   @override
+  String get voiceControlTo => 'Control de voz hasta: ';
+
+  @override
   String get onlyNew =>
       'solo los no enviados anteriormente, de todas las categorias';
 

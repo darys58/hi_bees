@@ -503,6 +503,8 @@
     "@activationCode": {},
     "subscryptionTo": "Subscryption to: ",
     "@subscryptionTo": {},
+    "voiceControlTo": "Voice control until: ",
+    "@voiceControlTo": {},
     "onlyNew": "only not previously shipped, from all categories",
     "@onlyNew": {},
     "exportNewData": "Only data that has not yet been sent will be sent",

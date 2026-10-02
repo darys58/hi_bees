@@ -85,6 +85,18 @@ class AboutScreen extends StatelessWidget {
   //   }
   // }
 
+  //data końca bezpłatnego okresu sterowania głosem (memory.do = be_do) do wyświetlenia.
+  //Przez DateTime.tryParse, nie zmienDate - zmienDate tnie napis i przy dacie
+  //z godziną doklejałby godzinę do dnia.
+  String dataGlosu(String data) {
+    final DateTime? d = DateTime.tryParse(data);
+    if (d == null) return data;
+    final String rok = d.year.toString().padLeft(4, '0');
+    final String miesiac = d.month.toString().padLeft(2, '0');
+    final String dzien = d.day.toString().padLeft(2, '0');
+    return globals.isEuropeanFormat() ? '$dzien.$miesiac.$rok' : '$rok-$miesiac-$dzien';
+  }
+
   String zmienDate(String data) {
     String rok = data.substring(0, 4);
     String miesiac = data.substring(5, 7);
@@ -159,7 +171,9 @@ class AboutScreen extends StatelessWidget {
               ? Card(
                   child: ListTile(
                     //leading: Icon(Icons.settings),
-                    title:Text(AppLocalizations.of(context)!.subscryptionTo + AppLocalizations.of(context)!.noLimits),
+                    //od 02.10.2026 "Sterowanie głosem do: <be_do>" zamiast "Subskrypcja do: bez ograniczeń"
+                    //(płatne sterowanie głosem - pliki/plan_subskrypcja_glos.md); be_do dociera przez _synchronizujKonto
+                    title: Text(AppLocalizations.of(context)!.voiceControlTo + dataGlosu(mem[0].ddo)),
                     // title: globals.isEuropeanFormat()
                     // ? Text(AppLocalizations.of(context)!.subscryptionTo + zmienDate(mem[0].ddo))
                     // : Text(AppLocalizations.of(context)!.subscryptionTo + mem[0].ddo),

@@ -787,6 +787,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get subscryptionTo => 'Abonnement bis: ';
 
   @override
+  String get voiceControlTo => 'Sprachsteuerung bis: ';
+
+  @override
   String get onlyNew => 'nur bisher nicht gesendete, aus allen Kategorien';
 
   @override

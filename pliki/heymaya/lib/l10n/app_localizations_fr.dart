@@ -790,6 +790,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get subscryptionTo => 'Abonnement jusqu\'au : ';
 
   @override
+  String get voiceControlTo => 'Commande vocale jusqu\'au : ';
+
+  @override
   String get onlyNew =>
       'uniquement les données non envoyées précédemment, de toutes les catégories';
 

@@ -332,6 +332,13 @@ class DBHelper {
     db.update('memory', {'mem2': text}, where: 'dev = ?', whereArgs: [dev]);
   }
 
+  //update memory - pola konta z serwera (key, od, do) - synchronizacja przy starcie apki
+  //(apiarys_screen: _synchronizujKonto). Po id, nie po dev - id to be_id z serwera.
+  static Future<void> updateKonto(String id, Map<String, String> pola) async {
+    final db = await DBHelper.database();
+    await db.update('memory', pola, where: 'id = ?', whereArgs: [id]);
+  }
+
   //update dodatki1 - dla import_screen
   static Future<void> updateDodatki1(String pole, String wartosc) async {
     final db = await DBHelper.database();

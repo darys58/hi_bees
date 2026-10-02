@@ -788,6 +788,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get subscryptionTo => 'Subscrição até: ';
 
   @override
+  String get voiceControlTo => 'Controlo por voz até: ';
+
+  @override
   String get onlyNew =>
       'apenas os não enviados anteriormente, de todas as categorias';
 

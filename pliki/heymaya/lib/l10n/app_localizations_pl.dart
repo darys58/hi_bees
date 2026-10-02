@@ -786,6 +786,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get subscryptionTo => 'Subskrypcja do: ';
 
   @override
+  String get voiceControlTo => 'Sterowanie głosem do: ';
+
+  @override
   String get onlyNew =>
       'tylko wcześniej nie wysyłanych, ze wszystkich kategorii';
 

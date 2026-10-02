@@ -1620,6 +1620,12 @@ abstract class AppLocalizations {
   /// **'Subscryption to: '**
   String get subscryptionTo;
 
+  /// No description provided for @voiceControlTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice control until: '**
+  String get voiceControlTo;
+
   /// No description provided for @onlyNew.
   ///
   /// In en, this message translates to:

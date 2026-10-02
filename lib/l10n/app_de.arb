@@ -254,6 +254,7 @@
     "versionApp": "App-Version: ",
     "activationCode": "Aktivierungscode: ",
     "subscryptionTo": "Abonnement bis: ",
+    "voiceControlTo": "Sprachsteuerung bis: ",
     "onlyNew": "nur bisher nicht gesendete, aus allen Kategorien",
     "exportNewData": "Es werden nur Daten gesendet, die noch nicht gesendet wurden",
     "eXport": "Exportieren",

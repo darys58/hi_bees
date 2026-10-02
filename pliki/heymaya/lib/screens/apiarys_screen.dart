@@ -1096,6 +1096,7 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
           .timeout(const Duration(seconds: 8));
       if (response.statusCode < 200 || response.statusCode > 400) return;
       final Map<String, dynamic> odp = json.decode(response.body);
+      await _synchronizujKonto(odp, kod); //key/od/do z serwera - przed returnami sprawdzania wersji
       final String wersjaLast = (odp['wersja_last'] ?? '').toString();
       if (wersjaLast.isEmpty) return; //backend nie zwrócił wersji - nic nie robimy
       if (!_nowszaWersja(wersjaLast, wersja)) return; //brak nowszej wersji
@@ -1115,6 +1116,50 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
       _showUpdateDialog(wersjaLast, url);
     } catch (_) {
       //brak sieci / timeout / błędny JSON - sprawdzenie wersji nie może blokować startu apki
+    }
+  }
+
+  //Synchronizacja konta z serwerem (02.10.2026) - cicho, przy każdym starcie,
+  //z tej samej odpowiedzi co sprawdzenie wersji.
+  //Dotąd memory odświeżała się tylko w wyslijKod (aktywacja / zmiana wersji),
+  //więc zmiana na serwerze nie docierała do telefonu aż do aktualizacji apki.
+  //Potrzebne do płatnego sterowania głosem (pliki/plan_subskrypcja_glos.md, pkt 2.4):
+  //  be_key = 'bez_klucza' - ręczna blokada głosu dla konta,
+  //  be_do  - data końca bezpłatnego okresu sterowania głosem.
+  Future<void> _synchronizujKonto(Map<String, dynamic> odp, String kod) async {
+    try {
+      if (odp['success'] != 'ok') return;
+      //odpowiedź musi dotyczyć tego konta
+      if ((odp['be_kod'] ?? '').toString() != kod) return;
+      if (!mounted) return;
+      final memData = Provider.of<Memory>(context, listen: false);
+      if (memData.items.isEmpty) return;
+      final mem = memData.items[0];
+
+      final Map<String, String> zmiany = {};
+      //pusty key = apka nieaktywowana (ekran aktywacji) - synchronizacja nie może
+      //tego wymusić, więc pustego klucza nie przepisujemy
+      final String key = (odp['be_key'] ?? '').toString();
+      if (key.isNotEmpty && key != mem.key) zmiany['key'] = key;
+      //start apki robi DateTime.parse(mem[0].ddo) bez try/catch - zła data
+      //z serwera wywracałaby każdy następny start. Niepoprawne daty pomijamy.
+      final String od = (odp['be_od'] ?? '').toString();
+      if (DateTime.tryParse(od) != null && od != mem.dod) zmiany['od'] = od;
+      final String ddo = (odp['be_do'] ?? '').toString();
+      if (DateTime.tryParse(ddo) != null && ddo != mem.ddo) zmiany['do'] = ddo;
+      if (zmiany.isEmpty) return;
+
+      await DBHelper.updateKonto(mem.id, zmiany);
+      if (!mounted) return;
+      await Provider.of<Memory>(context, listen: false).fetchAndSetMemory2();
+      if (zmiany.containsKey('key')) {
+        globals.key = key;
+        globals.keyMemory = key;
+      }
+      if (!mounted) return;
+      setState(() {}); //przycisk sterowania głosem zależy od globals.key
+    } catch (_) {
+      //synchronizacja nie może blokować startu ani sprawdzania wersji
     }
   }
 

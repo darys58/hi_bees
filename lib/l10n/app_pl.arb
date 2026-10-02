@@ -254,6 +254,7 @@
     "versionApp": "Wersja aplikacji: ",
     "activationCode": "Kod aktywacyjny: ",
     "subscryptionTo": "Subskrypcja do: ",
+    "voiceControlTo": "Sterowanie głosem do: ",
     "onlyNew": "tylko wcześniej nie wysyłanych, ze wszystkich kategorii",
     "exportNewData": "Wysłane zostaną tylko dane, które nie były jeszcze wysyłane",
     "eXport": "Eksportuj",
