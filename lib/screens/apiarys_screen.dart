@@ -53,7 +53,8 @@ class ApiarysScreen extends StatefulWidget {
   State<ApiarysScreen> createState() => _ApiarysScreenState();
 }
 
-class _ApiarysScreenState extends State<ApiarysScreen> {
+class _ApiarysScreenState extends State<ApiarysScreen>
+    with WidgetsBindingObserver {
   bool _isInit = true;
   bool _isLoading = false;
   final _formKey2 = GlobalKey<FormState>();
@@ -160,6 +161,42 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   int aktywnosc = 0;
   List<Weather>? pogoda;
   String stopnie = '\u2103';  
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this); //synchronizacja konta po powrocie z tła
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  //Synchronizacja konta przy powrocie apki z tła (02.10.2026) - patrz _synchronizujKonto.
+  //Bez tego zmiana na serwerze (blokada be_key, przedłużenie be_do) docierała
+  //dopiero po usunięciu apki z pamięci i ponownym uruchomieniu. Nie częściej niż
+  //co godzinę - przełączanie między aplikacjami, okno NFC czy pytanie o mikrofon
+  //też dają "resumed" i nie mogą za każdym razem pytać serwera.
+  DateTime? _ostatniaSynchronizacja;
+  static const Duration _odstepSynchronizacji = Duration(hours: 1);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (globals.key == '' || globals.kod == '') return; //apka nieaktywowana
+    final DateTime teraz = DateTime.now();
+    if (_ostatniaSynchronizacja != null &&
+        teraz.difference(_ostatniaSynchronizacja!) < _odstepSynchronizacji) {
+      return;
+    }
+    _ostatniaSynchronizacja = teraz;
+    final String kod = globals.kod;
+    _pobierzKonto(kod).then((odp) {
+      if (odp != null) _synchronizujKonto(odp, kod);
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -844,22 +881,9 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
   //ostatniaProponowana = mem2 z bazy - żeby nie pokazywać dialogu przy każdym starcie dla tej samej wersji.
   Future<void> sprawdzNowaWersje(String kod, String ostatniaProponowana) async {
     try {
-      final http.Response response = await http
-          .post(
-            Uri.parse('https://darys.pl/cbt_hi_kod_v2.php'),
-            headers: <String, String>{
-              'Content-Type': 'application/json; charset=UTF-8',
-            },
-            body: jsonEncode(<String, String>{
-              "kod_mobile": kod,
-              "deviceId": globals.deviceId,
-              "wersja": wersja,
-              "jezyk": globals.jezyk,
-            }),
-          )
-          .timeout(const Duration(seconds: 8));
-      if (response.statusCode < 200 || response.statusCode > 400) return;
-      final Map<String, dynamic> odp = json.decode(response.body);
+      _ostatniaSynchronizacja = DateTime.now(); //start liczy się jak synchronizacja - patrz didChangeAppLifecycleState
+      final Map<String, dynamic>? odp = await _pobierzKonto(kod);
+      if (odp == null) return;
       await _synchronizujKonto(odp, kod); //key/od/do z serwera - przed returnami sprawdzania wersji
       final String wersjaLast = (odp['wersja_last'] ?? '').toString();
       if (wersjaLast.isEmpty) return; //backend nie zwrócił wersji - nic nie robimy
@@ -883,7 +907,35 @@ class _ApiarysScreenState extends State<ApiarysScreen> {
     }
   }
 
-  //Synchronizacja konta z serwerem (02.10.2026) - cicho, przy każdym starcie,
+  //zapytanie do cbt_hi_kod_v2.php - wspólne dla sprawdzNowaWersje (start apki)
+  //i synchronizacji konta po powrocie z tła (didChangeAppLifecycleState).
+  //null = brak sieci / timeout / błąd serwera / zły JSON - obie ścieżki są ciche.
+  Future<Map<String, dynamic>?> _pobierzKonto(String kod) async {
+    try {
+      final http.Response response = await http
+          .post(
+            Uri.parse('https://darys.pl/cbt_hi_kod_v2.php'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String, String>{
+              "kod_mobile": kod,
+              "deviceId": globals.deviceId,
+              "wersja": wersja,
+              "jezyk": globals.jezyk,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode < 200 || response.statusCode > 400) return null;
+      final odp = json.decode(response.body);
+      return odp is Map<String, dynamic> ? odp : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  //Synchronizacja konta z serwerem (02.10.2026) - cicho, przy każdym starcie
+  //i po powrocie z tła (najwyżej co godzinę - didChangeAppLifecycleState),
   //z tej samej odpowiedzi co sprawdzenie wersji.
   //Dotąd memory odświeżała się tylko w wyslijKod (aktywacja / zmiana wersji),
   //więc zmiana na serwerze nie docierała do telefonu aż do aktualizacji apki.
