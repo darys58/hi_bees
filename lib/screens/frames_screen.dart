@@ -22,6 +22,8 @@ import '../screens/frame_edit_screen.dart';
 import '../screens/frame_edit_screen2.dart';
 import '../screens/frame_move_screen.dart';
 import '../screens/infos_edit_screen.dart';
+import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki, parametrWBiezacym
+import '../helpers/powierzchnia_ramki.dart'; //ramekKorpusuPrzegladu
 
 class FramesScreen extends StatefulWidget {
   static const routeName = '/screen-frames'; //nazwa trasy do tego ekranu
@@ -251,7 +253,7 @@ class _FramesScreenState extends State<FramesScreen> {
   Future<List<Frame>> getDaty(pasieka, ul, String parametrPrzegladu) async {
     final dataList = await DBHelper.getDate(pasieka, ul); //daty z ramek
     final infoList = await DBHelper.getDateInfo(
-        pasieka, ul, 'inspection', [parametrPrzegladu]); //daty samych przeglądów
+        pasieka, ul, 'inspection', wszystkieJezyki((l) => l.inspection)); //daty samych przeglądów - wpisy z każdego języka
     final Set<String> unikalneDaty = <String>{
       for (final item in dataList) '${item['data']}',
       for (final item in infoList) '${item['data']}',
@@ -638,7 +640,6 @@ class _FramesScreenState extends State<FramesScreen> {
     // }
     String notatka = '';
     String idNotatki = '';
-    int? ramekPrzegladu; //liczba ramek korpusu zapamiętana w tym przeglądzie (snapshot z pola "pogoda"); null = stary przegląd bez snapshotu
     final infosData = Provider.of<Infos>(context);
     List<Info> infos = infosData.items.where((inf) {
       return inf.data == (wybranaData);
@@ -646,11 +647,12 @@ class _FramesScreenState extends State<FramesScreen> {
 
     //print('infos dla wybranej daty = $wybranaData');
     for (var i = 0; i < infos.length; i++) {
-      if ((infos[i].data == wybranaData) && (infos[i].parametr == AppLocalizations.of(context)!.inspection)){
+      //parametr przeglądu w KAŻDYM języku - przegląd zapisany przy innym języku interfejsu
+      //nie dawał tu ani notatki, ani snapshotu liczby ramek (korpus rysował się z ula)
+      if ((infos[i].data == wybranaData) && (parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.inspection)){
         idNotatki = infos[i].id;
         notatka = infos[i].uwagi;
-        //odczyt zapamiętanej liczby ramek korpusu (rozmiar ula z momentu przeglądu)
-        ramekPrzegladu = int.tryParse(infos[i].pogoda);
+        //snapshot liczby ramek z tego wpisu czyta ramekKorpusuPrzegladu() niżej
       //   print(
       //       '${infos[i].id},${infos[i].data},${infos[i].pasiekaNr},${infos[i].ulNr},${infos[i].kategoria},${infos[i].parametr},${infos[i].wartosc},${infos[i].miara},${infos[i].uwagi}');
       //   print('======='); 
@@ -706,9 +708,12 @@ class _FramesScreenState extends State<FramesScreen> {
       return hv.ulNr == hiveNr; // jest ==  a było contain ale dla typu String
     }).toList();
 
-    //liczba ramek korpusu: priorytet ma snapshot zapisany w przeglądzie (zachowuje rozmiar starego ula),
-    //fallback do aktualnego ula dla starych przeglądów bez snapshotu
-    final int iloscRamekKorpusu = ramekPrzegladu ?? hive[0].ramek;
+    //liczba ramek korpusu: historia wpisów "liczba ramek =" -> snapshot z przeglądu ->
+    //aktualny ul (helpers/powierzchnia_ramki.dart - ta sama reguła co na ekranie głosu).
+    //Dotąd stare przeglądy bez snapshotu brały AKTUALNĄ liczbę ramek ula, więc
+    //zmniejszenie ula je zwężało.
+    final int iloscRamekKorpusu = ramekKorpusuPrzegladu(
+        context, infosData.items, hiveNr, wybranaData, hive[0].ramek);
     globals.iloscRamek = iloscRamekKorpusu; //ilość ramek w korpusie
     widthCanvas = iloscRamekKorpusu * 20 * luPa + 20; //po 20px na ramkę i 2 x 10px na padding
     //print('hive= ${hive[0].ramek}');

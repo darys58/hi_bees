@@ -643,6 +643,33 @@ class DBHelper {
   //znaki zapytania dla "parametr IN (...)"
   static String _znakiZapytania(int ile) => List.filled(ile, '?').join(',');
 
+  //Liczba ramek (ramek), rodzaj (h1) i typ ula (h2) w tabeli "ule" z NAJNOWSZEGO
+  //(data, czas) wpisu "liczba ramek =" ula - jedynego nośnika tych danych.
+  //parametry: wersje językowe parametru (wszystkieJezyki z parametr_nazwy.dart).
+  //Do 05.10.2026 belkę ustawiał każdy pisarz osobno, z wartości, którą akurat miał:
+  //wpis z wcześniejszą datą, edycja starego wpisu, usunięcie wpisu, dane ula
+  //nieodświeżone po zapisie głosem - belka pokazywała wtedy poprzednią liczbę ramek.
+  //Brak wpisu = nic nie zmieniamy; puste pogoda/miara (stare wpisy głosowe) nie kasują rodzaju/typu.
+  static Future<void> przeliczRamkiZInfo(int pasieka, int ul, Iterable<String> parametry) async {
+    if (parametry.isEmpty) return;
+    final db = await DBHelper.database();
+    final rows = await db.rawQuery(
+        'SELECT wartosc, pogoda, miara FROM info WHERE pasiekaNr = ? and ulNr = ? and kategoria = ? '
+        'and parametr IN (${_znakiZapytania(parametry.length)}) ORDER BY data DESC, czas DESC LIMIT 1',
+        [pasieka, ul, 'equipment', ...parametry]);
+    if (rows.isEmpty) return;
+    final ramek = int.tryParse((rows[0]['wartosc'] as String?) ?? '');
+    final rodzaj = (rows[0]['pogoda'] as String?) ?? '';
+    final typ = (rows[0]['miara'] as String?) ?? '';
+    final zmiany = <String, Object?>{
+      if (ramek != null) 'ramek': ramek,
+      if (rodzaj.isNotEmpty) 'h1': rodzaj,
+      if (typ.isNotEmpty) 'h2': typ,
+    };
+    if (zmiany.isEmpty) return;
+    await db.update('ule', zmiany, where: 'id = ?', whereArgs: ['$pasieka.$ul']);
+  }
+
   //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki, kategorii, parametru - dla hives_screen
   //parametry: WSZYSTKIE wersje językowe parametru (wszystkieJezyki z parametr_nazwy.dart),
   //bo info.parametr jest zapisany w języku z chwili zapisu
@@ -902,14 +929,25 @@ class DBHelper {
   }
 
   //sprawdzenie czy rekord inspekcji istnieje w bazie (bezpośrednio, nie przez provider)
-  static Future<bool> inspectionExists(String data, int pasieka, int ul, String parametr) async {
+  //parametry: wersje językowe parametru przeglądu (wszystkieJezyki((l) => l.inspection)).
+  //Do 05.10.2026 tylko bieżący język - przegląd zapisany przy innym języku nie był
+  //znajdowany i tego samego dnia powstawał DRUGI wpis przeglądu (id z innym parametrem).
+  static Future<bool> inspectionExists(String data, int pasieka, int ul, Iterable<String> parametry) async {
+    return (await inspectionId(data, pasieka, ul, parametry)) != null;
+  }
+
+  //id istniejącego wpisu przeglądu (data, pasieka, ul) w dowolnym języku albo null -
+  //żeby dopisywać do niego (notatka dyktowana), a nie zakładać drugi
+  static Future<String?> inspectionId(String data, int pasieka, int ul, Iterable<String> parametry) async {
+    if (parametry.isEmpty) return null;
     final db = await DBHelper.database();
     final result = await db.query('info',
-      where: 'data = ? AND pasiekaNr = ? AND ulNr = ? AND kategoria = ? AND parametr = ?',
-      whereArgs: [data, pasieka, ul, 'inspection', parametr],
+      columns: ['id'],
+      where: 'data = ? AND pasiekaNr = ? AND ulNr = ? AND kategoria = ? AND parametr IN (${_znakiZapytania(parametry.length)})',
+      whereArgs: [data, pasieka, ul, 'inspection', ...parametry],
       limit: 1,
     );
-    return result.isNotEmpty;
+    return result.isEmpty ? null : result[0]['id'] as String?;
   }
 
   //usuniecie rekordu z tabeli info - dla frame_screen

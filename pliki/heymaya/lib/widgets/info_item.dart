@@ -327,6 +327,16 @@ class InfoItem extends StatelessWidget {
                             });
                           }
 
+                          //usunięty wpis "liczba ramek =": belka wraca do liczby ramek, rodzaju
+                          //i typu z NAJNOWSZEGO pozostałego wpisu (do 05.10.2026 zostawała
+                          //wartość z usuniętego). Kolejka sqflite: wołane PO insertHive wyżej (zerowanie belki),
+                          //więc w kolejce sqflite idzie za nim i go nie cofa.
+                          if (wszystkieJezyki((l) => l.numberOfFrame + " = ").contains(info.parametr)) {
+                            DBHelper.przeliczRamkiZInfo(info.pasiekaNr, info.ulNr,
+                                    wszystkieJezyki((l) => l.numberOfFrame + " = "))
+                                .then((_) => hiveData.fetchAndSetHives(info.pasiekaNr)); //provider pobrany na początku tego bloku
+                          }
+
                           //ile info dla ula pozostało?
                           Provider.of<Infos>(context, listen: false)
                               .fetchAndSetInfosForHive(

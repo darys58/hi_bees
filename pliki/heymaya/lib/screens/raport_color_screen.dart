@@ -21,6 +21,7 @@ import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/memory.dart';
 import '../helpers/parametr_nazwy.dart'; //parametrWBiezacym - wpisy z każdego języka
+import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 
 class RaportColorScreen extends StatefulWidget {
   static const routeName = '/raport_color'; //zbiór miodu
@@ -148,11 +149,11 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
   // Pomocnicze funkcje do obliczania wartości miodu i pyłku
   double _obliczMiod(Info info, int b, String honeySmall, String honeyBig, String honeyKg) {
     if (parametrWBiezacym(context, info.parametr) == honeySmall && info.wartosc.isNotEmpty) {
-      double dmVal = info.pogoda == '' ? 35175 : double.parse(info.pogoda);
+      double dmVal = dmZWpisu(info.pogoda, mala: true);
       return double.parse(info.wartosc) * b * dmVal / 10000;
     }
     if (parametrWBiezacym(context, info.parametr) == honeyBig && info.wartosc.isNotEmpty) {
-      double dmVal = info.pogoda == '' ? 78725 : double.parse(info.pogoda);
+      double dmVal = dmZWpisu(info.pogoda, mala: false);
       return double.parse(info.wartosc) * b * dmVal / 10000;
     }
     if (parametrWBiezacym(context, info.parametr) == honeyKg && info.wartosc.isNotEmpty) {
@@ -1667,11 +1668,11 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
       String honeyKg = AppLocalizations.of(context)!.honey + " = ";
 
       if (parametrWBiezacym(context, info.parametr) == honeySmall && info.wartosc.isNotEmpty) {
-        double dmVal = info.pogoda == '' ? 35175 : double.parse(info.pogoda);
+        double dmVal = dmZWpisu(info.pogoda, mala: true);
         return double.parse(info.wartosc) * b * dmVal / 10000;
       }
       if (parametrWBiezacym(context, info.parametr) == honeyBig && info.wartosc.isNotEmpty) {
-        double dmVal = info.pogoda == '' ? 78725 : double.parse(info.pogoda);
+        double dmVal = dmZWpisu(info.pogoda, mala: false);
         return double.parse(info.wartosc) * b * dmVal / 10000;
       }
       if (parametrWBiezacym(context, info.parametr) == honeyKg && info.wartosc.isNotEmpty) {

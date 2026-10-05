@@ -14,6 +14,7 @@ import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
 import '../helpers/queen_helpers.dart';
 import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki
+import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu
 import '../models/apiarys.dart';
 import '../models/dodatki1.dart';
 import '../models/frame.dart';
@@ -258,6 +259,17 @@ class _HivesScreenState extends State<HivesScreen> {
                               
         
         dataZbioru = '0000-00-00'; //zerowanie daty dla zbiorów na ramkach
+        wartoscDouble = 0; //pole stanu - bez zerowania brało zbiór z ramek POPRZEDNIEGO ula
+
+        int bValDlaBelki = int.tryParse(dod1[0].b) ?? 0; //nadpisywane niżej wagą z miodobrania
+        //SUMA wszystkich wpisów z danego dnia, nie pierwszy z listy. Wpisy z jednego
+        //dnia w różnych językach (np. "miód = mała ramka x" i "honey = small frame x")
+        //mają różne id, więc są osobno - statystyka je sumowała, belka brała jeden.
+        //Powierzchnia węzy z pola pogoda (tam zapisuje ją wpis ręczny i głos), nie z miara.
+        double sumaRamek(List<Info> wpisy, bool mala) => wpisy.fold(0.0, (suma, inf) =>
+            suma + (double.tryParse(inf.wartosc) ?? 0) * bValDlaBelki * dmZWpisu(inf.pogoda, mala: mala) / 10000);
+        double sumaKg(List<Info> wpisy) =>
+            wpisy.fold(0.0, (suma, inf) => suma + (double.tryParse(inf.wartosc) ?? 0));
         
        
         if(dataZkgOK != '0000-00-00' || dataZmrOK != '0000-00-00' || tempDataZdr != '0000-00-00' ){//jezeli są jakieś daty/wpisy o zbiorach (harvest) dla ula
@@ -278,6 +290,7 @@ class _HivesScreenState extends State<HivesScreen> {
               }
             }
           }
+          bValDlaBelki = bVal;
           //POROWNYWANIE DAT dla małych i duzych ramek
           if(dataZmrOK != '0000-00-00' || tempDataZdr != '0000-00-00' ){
           
@@ -287,9 +300,7 @@ class _HivesScreenState extends State<HivesScreen> {
               return  inf_mr.data == dataZmrOK && inf_mr.kategoria == 'harvest' && pMiodMalaRamka.contains(inf_mr.parametr); 
             }).toList();
             //print('ul = $numerUla, wartość tylko mr = ${infosZ_mr[0].wartosc}');
-            if(infosZ_mr[0].miara == '') dm_mr = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-            else dm_mr = double.parse(infosZ_mr[0].miara); //wielkość plastra w uzytej ramce w dm2
-            wartoscDouble = double.parse(infosZ_mr[0].wartosc) * bVal * dm_mr/10000;// zbiór tylko dla małych ramek
+            wartoscDouble = sumaRamek(infosZ_mr, true);// zbiór tylko dla małych ramek
             wartosc = (wartoscDouble/1000).toStringAsFixed(2);
             //print('tylko małe = $wartosc');
             dataZbioru = dataZmrOK;
@@ -299,9 +310,7 @@ class _HivesScreenState extends State<HivesScreen> {
               return  inf_dr.data == tempDataZdr && inf_dr.kategoria == 'harvest' && pMiodDuzaRamka.contains(inf_dr.parametr); 
             }).toList();
             //print('ul = $numerUla, wartość tylko dr = ${infosZ_dr[0].wartosc}');
-            if(infosZ_dr[0].miara == '') dm_dr = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-            else dm_dr = double.parse(infosZ_dr[0].miara); //wielkość plastra w uzytej ramce w dm2
-            wartoscDouble = double.parse(infosZ_dr[0].wartosc) * bVal * dm_dr/10000;// zbiór tylko dla duzych ramek
+            wartoscDouble = sumaRamek(infosZ_dr, false);// zbiór tylko dla duzych ramek
             wartosc = (wartoscDouble/1000).toStringAsFixed(2);
             //print('tylko duze = $wartosc');
             dataZbioru = tempDataZdr;
@@ -319,11 +328,7 @@ class _HivesScreenState extends State<HivesScreen> {
             if(infosZ_mr.isNotEmpty || infosZ_dr.isNotEmpty){
                //print('ul = $numerUla, wartość mr = ${infosZ_mr[0].wartosc}');
                //print('ul = $numerUla, wartość dr = ${infosZ_dr[0].wartosc}');
-              if(infosZ_mr[0].miara == '') dm_mr = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm_mr = double.parse(infosZ_mr[0].miara); //wielkość plastra w uzytej ramce w dm2
-              if(infosZ_dr[0].miara == '') dm_dr = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm_dr = double.parse(infosZ_dr[0].miara); //wielkość plastra w uzytej ramce w dm2
-              wartoscDouble = (double.parse(infosZ_mr[0].wartosc) * bVal * dm_mr/10000) + (double.parse(infosZ_dr[0].wartosc) * bVal * dm_dr/10000);//infosZ[0].wartosc;
+              wartoscDouble = sumaRamek(infosZ_mr, true) + sumaRamek(infosZ_dr, false);
               wartosc = (wartoscDouble/1000).toStringAsFixed(2);
               //print('tylko duze i małe = $wartosc');
               dataZbioru = dataZmrOK;
@@ -349,7 +354,7 @@ class _HivesScreenState extends State<HivesScreen> {
               return  inf_kg.data == dataZkgOK && inf_kg.kategoria == 'harvest' && pMiodKg.contains(inf_kg.parametr); 
             }).toList();
             //print('ul = $numerUla, wartość tylko kg = ${infosZ_kg[0].wartosc}');
-            wartosc = (double.parse(infosZ_kg[0].wartosc)).toString(); // zbiór tylko w kg
+            wartosc = sumaKg(infosZ_kg).toString(); // zbiór tylko w kg
             //print('tylko w kg = $wartosc');
             dataZbioru = dataZkgOK;
             
@@ -363,7 +368,7 @@ class _HivesScreenState extends State<HivesScreen> {
               if(wartoscDouble != 0 || infosZ_kg.isNotEmpty){
                 //print('ul = $numerUla, wartość ramek = $wartoscDouble');
                 //print('ul = $numerUla, wartość kg = ${infosZ_kg[0].wartosc}');
-                wartosc = (wartoscDouble/1000 + (double.parse(infosZ_kg[0].wartosc))).toStringAsFixed(2);//infosZ[0].wartosc;
+                wartosc = (wartoscDouble/1000 + sumaKg(infosZ_kg)).toStringAsFixed(2);
                 //print('sa ramki i kg = $wartosc');
                 dataZbioru = dataZkgOK; 
               } 

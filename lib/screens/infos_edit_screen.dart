@@ -301,7 +301,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
         final infoData = Provider.of<Infos>(context, listen: false);
         //pobranie info o tym przeglądzie bo powinien być (czyli zgadza się data, nr ula, kategoria i parametr)
         info = infoData.items.where((element) { 
-          return element.data == globals.dataInspekcji && element.ulNr == idUla && element.kategoria == 'inspection' && element.parametr == '${AppLocalizations.of(context)!.inspection}'; //data, nr ula, kategoria i parametr
+          return element.data == globals.dataInspekcji && element.ulNr == idUla && element.kategoria == 'inspection' && parametrWBiezacym(context, element.parametr) == AppLocalizations.of(context)!.inspection; //data, nr ula, kategoria i parametr
         }).toList();
         dateController.text = info[0].data;
         nowaPasieka = info[0].pasiekaNr;
@@ -2673,6 +2673,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                         if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'queen' || nowaKategoria == 'equipment'  || nowaKategoria == 'inspection') {
                           //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli (belki)
                           final hiveData = Provider.of<Hives>(context,listen: false);
+                          //pobrane TERAZ: łańcuch niżej kończy się po zamknięciu ekranu (pop
+                          //robi równoległy łańcuch zapisu info), a wtedy context już nie działa
+                          final apiarysData = Provider.of<Apiarys>(context, listen: false);
                           final hive = hiveData.items.where((element) {
                             //to wczytanie danych edytowanego ula
                             return element.id == ('$nowaPasieka.$nowyUl');
@@ -2855,10 +2858,19 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             tagNFC, //h3
                             0,// aktualne bo aktualizowane na biezaco
                           ).then((_) {
+                            //liczba ramek, rodzaj i typ ula z NAJNOWSZEGO wpisu "liczba ramek ="
+                            //(każdy język). Wyżej szły z danych ula w pamięci albo z tego wpisu -
+                            //wpis z wcześniejszą datą, edycja starego wpisu albo nieodświeżone
+                            //dane po zapisie głosem zostawiały w belce poprzednią liczbę ramek.
+                            //Wpis info jest już w bazie: sqflite wykonuje zapytania po kolei,
+                            //a insertInfo poszło do kolejki przed insertHive.
+                            return DBHelper.przeliczRamkiZInfo(nowaPasieka, nowyUl,
+                                wszystkieJezyki((l) => l.numberOfFrame + " = "));
+                          }).then((_) {
                             //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
-                            Provider.of<Hives>(context, listen: false).fetchAndSetHives(nowaPasieka,)
+                            hiveData.fetchAndSetHives(nowaPasieka,)
                               .then((_) {
-                                final hivesData = Provider.of<Hives>(context,listen: false);
+                                final hivesData = hiveData;
                                 final hives = hivesData.items;
                                 int ileUli = hives.length;
 
@@ -2894,7 +2906,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   globals.ikonaPasieki, //ikona
                                   '??', //opis
                                 ).then((_) {
-                                  Provider.of<Apiarys>(context,listen: false).fetchAndSetApiarys()
+                                  apiarysData.fetchAndSetApiarys()
                                     .then((_) {
                                             // print(
                                             //     'edit_screen: aktualizacja Apiarys_items z tabeli "pasieki" z bazy');

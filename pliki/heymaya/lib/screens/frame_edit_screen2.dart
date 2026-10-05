@@ -16,6 +16,7 @@ import '../models/info.dart';
 //import '../screens/activation_screen.dart';
 import '../models/frames.dart';
 import '../models/hive.dart';
+import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki, parametrWBiezacym
 // import 'package:flutter/services.dart';
 //import 'frames_detail_screen.dart';
 
@@ -1678,7 +1679,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
       final infoData = Provider.of<Infos>(context, listen: false);
       //pobranie info o tym przeglądzie jezeli jest (czyli zgadza się data, nr ula, kategoria i parametr)
       List<Info> info = infoData.items.where((element) { 
-        return element.data == formattedDate && element.ulNr == nowyNrUla && element.kategoria == 'inspection' && element.parametr == '${AppLocalizations.of(context)!.inspection}'; //data, nr ula, kategoria i parametr
+        return element.data == formattedDate && element.ulNr == nowyNrUla && element.kategoria == 'inspection' && parametrWBiezacym(context, element.parametr) == AppLocalizations.of(context)!.inspection; //data, nr ula, kategoria i parametr
       }).toList();
       //i jezeli wpis o przeglądzie juz jest to
       if(info.isNotEmpty){ 
@@ -1687,7 +1688,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
         //print('info = ${info[0].id}, kategoria = ${info[0].kategoria}, czas = ${info[0].czas}');
       }else{ //a jezeli jeszcze nie ma takego wpisu w providerze
         //dodatkowe sprawdzenie bezpośrednio w bazie (provider może nie być jeszcze załadowany)
-        DBHelper.inspectionExists(formattedDate, nowyNrPasieki!, nowyNrUla!, AppLocalizations.of(context)!.inspection).then((exists) {
+        DBHelper.inspectionExists(formattedDate, nowyNrPasieki!, nowyNrUla!, wszystkieJezyki((l) => l.inspection)).then((exists) { //przegląd w każdym języku
           if(exists){
             globals.dataAktualnegoPrzegladu = '$formattedDate';
           }else{
@@ -2165,7 +2166,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
       final infoData = Provider.of<Infos>(context, listen: false);
       //pobranie info o tym przeglądzie jezeli jest (czyli zgadza się data, nr ula, kategoria i parametr)
       List<Info> info = infoData.items.where((element) { 
-        return element.data == formattedDate && element.ulNr == nowyNrUla && element.kategoria == 'inspection' && element.parametr == '${AppLocalizations.of(context)!.inspection}'; //data, nr ula, kategoria i parametr
+        return element.data == formattedDate && element.ulNr == nowyNrUla && element.kategoria == 'inspection' && parametrWBiezacym(context, element.parametr) == AppLocalizations.of(context)!.inspection; //data, nr ula, kategoria i parametr
       }).toList();
       //i jezeli wpis o przeglądzie juz jest to
       if(info.isNotEmpty){ 
@@ -2174,7 +2175,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
         //print('info = ${info[0].id}, kategoria = ${info[0].kategoria}, czas = ${info[0].czas}');
       }else{ //a jezeli jeszcze nie ma takego wpisu w providerze
         //dodatkowe sprawdzenie bezpośrednio w bazie (provider może nie być jeszcze załadowany)
-        DBHelper.inspectionExists(formattedDate, nowyNrPasieki!, nowyNrUla!, AppLocalizations.of(context)!.inspection).then((exists) {
+        DBHelper.inspectionExists(formattedDate, nowyNrPasieki!, nowyNrUla!, wszystkieJezyki((l) => l.inspection)).then((exists) { //przegląd w każdym języku
           if(exists){
             globals.dataAktualnegoPrzegladu = '$formattedDate';
           }else{

@@ -1148,7 +1148,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     }
 
     final String wpis = '$godzina - $tresc';
-    final String idInfo = '$formattedDate.$nrXXOfApiary.$nrXXOfHive.inspection.'
+    String idInfo = '$formattedDate.$nrXXOfApiary.$nrXXOfHive.inspection.'
         '${AppLocalizations.of(context)!.inspection}';
 
     //ZAPIS POD KONTROLĄ: ta metoda jest wołana z callbacka silnika, więc
@@ -1156,6 +1156,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //i uznał, że notatka się zapisała. Treść pokazujemy przy błędzie na ekranie,
     //żeby dało się ją przepisać ręcznie, zanim zniknie.
     try {
+      //przegląd z tego dnia zapisany przy INNYM języku ma inne id - dopisujemy do
+      //niego, zamiast zakładać drugi wpis przeglądu (05.10.2026)
+      idInfo = await DBHelper.inspectionId(formattedDate, nrXXOfApiary, nrXXOfHive,
+              wszystkieJezyki((l) => l.inspection)) ??
+          idInfo;
       //null = rekordu przeglądu jeszcze nie ma ('' = jest, tylko bez uwag)
       final String? uwagi = await DBHelper.getInfoUwagi(idInfo);
       if (!mounted) return; //dalej sięgamy po context (lokalizacja, provider)
@@ -4526,8 +4531,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -4584,8 +4589,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -4642,8 +4647,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -4704,8 +4709,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -4764,8 +4769,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -4899,8 +4904,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -4957,8 +4962,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -5015,8 +5020,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -5079,8 +5084,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -5139,8 +5144,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                                       return hv.ulNr ==
                                           nrXXOfHive; // jest ==  a było contain ale dla typu String
                                     }).toList();
-                                    widthCanvas = hive[0].ramek * 20 +
-                                        20; //opis zawiera ilość ramek, po 20px na ramkę i 2 x 10px na padding
+                                    widthCanvas = _ramekPodgladu(hive[0].ramek) * 20 +
+                                        20; //liczba ramek przeglądu (snapshot/historia/ul), po 20px na ramkę i 2 x 10px na padding
 
                                     _dialogBuilderHive(context);
                                     openDialog = true;
@@ -6486,7 +6491,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //   globals.ikonaPasieki = 'yellow';
     // }
 
-    if(_nowaIloscRamek > 0) ramek = _nowaIloscRamek; //zmieniono ilość ramek
+    //Było: if(_nowaIloscRamek > 0) ramek = _nowaIloscRamek. Pole nigdy nie było zerowane,
+    //więc po komendzie "liczba ramek" KAŻDY późniejszy zapis zasobu - także w innym ulu -
+    //wpisywał tę liczbę do belki, a ręczna poprawka wracała przy następnym przeglądzie
+    //głosem (05.10.2026). Niepotrzebne: komenda zapisuje ule.ramek wprost
+    //(updateUleRamek), a ramek wyżej pochodzi ze świeżo pobranego ula.
     
     // print(
     //     'zapis Hive do bazy korpus = $korpusNr, todo = $todo, usunmat = $usunmat *******************');
@@ -6575,7 +6584,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       final infoData = Provider.of<Infos>(context, listen: false);
       //pobranie info o tym przeglądzie jezeli jest (czyli zgadza się data, nr ula, kategoria i parametr)
       List<Info> info = infoData.items.where((element) { 
-        return element.data == formattedDate && element.ulNr == nrXXOfHive && element.kategoria == 'inspection' && element.parametr == '${AppLocalizations.of(context)!.inspection}'; //data, nr ula, kategoria i parametr
+        return element.data == formattedDate && element.ulNr == nrXXOfHive && element.kategoria == 'inspection' && parametrWBiezacym(context, element.parametr) == AppLocalizations.of(context)!.inspection; //data, nr ula, kategoria i parametr
       }).toList();
       //i jezeli wpis o przeglądzie juz jest to
       if(info.isNotEmpty){ 
@@ -6584,10 +6593,17 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         //print('info = ${info[0].id}, kategoria = ${info[0].kategoria}, czas = ${info[0].czas}');
       }else{ //a jezeli jeszcze nie ma takego wpisu w providerze
         //dodatkowe sprawdzenie bezpośrednio w bazie (provider może nie być jeszcze załadowany)
-        DBHelper.inspectionExists(formattedDate, nrXXOfApiary, nrXXOfHive, AppLocalizations.of(context)!.inspection).then((exists) {
+        DBHelper.inspectionExists(formattedDate, nrXXOfApiary, nrXXOfHive, wszystkieJezyki((l) => l.inspection)).then((exists) { //przegląd w każdym języku
           if(exists){
             globals.dataAktualnegoPrzegladu = '$formattedDate';
           }else{
+            //liczba ramek TEGO ula do snapshotu. Nie pole "ramek": ten blok stoi poza
+            //łańcuchem fetchAndSetHives wyżej, więc pole mogło jeszcze trzymać wartość
+            //poprzedniego ula. Tu (po inspectionExists, które w kolejce sqflite poszło za
+            //fetchAndSetHives) provider ma już świeże dane.
+            final ulPrzegladu = Provider.of<Hives>(context, listen: false).items
+                .where((h) => h.id == '$nrXXOfApiary.$nrXXOfHive').toList();
+            final String ramekPrzegladu = ulPrzegladu.isNotEmpty ? '${ulPrzegladu[0].ramek}' : '';
             //to zapis przegladu do info 'inspection"
             Infos.insertInfo(
               '$formattedDate.$nrXXOfApiary.$nrXXOfHive.inspection.${AppLocalizations.of(context)!.inspection}', //id
@@ -6598,7 +6614,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               AppLocalizations.of(context)!.inspection, //parametr
               ikona, //wartosc
               '', //miara
-              '',//icon, //ikona pogody
+              //snapshot liczby ramek korpusu (jak frame_edit_screen) - frames_screen rysuje
+              //nim ten przegląd także po późniejszej zmianie liczby ramek ula. Do 05.10.2026
+              //szło '' i przegląd głosowy brał aktualną liczbę ramek ula.
+              ramekPrzegladu, //ikona pogody -> dla przeglądu: liczba ramek korpusu
               '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
               formatterHm.format(DateTime.now()), //formatedTime, //czas
               '', //uwagi
@@ -6702,6 +6721,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               formatedTime, //czas
               '', //uwagi
               0); //niezarchiwizowane
+          //"liczba ramek" dla wielu uli: belka z NAJNOWSZEGO wpisu każdego ula, po ostatnim
+          //odświeżenie danych uli w pamięci (opis przy zapisie dla jednego ula niżej)
+          if (toLiczbaRamek) {
+            final bool ostatni = i == hives.length - 1;
+            DBHelper.przeliczRamkiZInfo(nrXXOfApiary, hives[i].ulNr,
+                    wszystkieJezyki((l) => l.numberOfFrame + " = "))
+                .then((_) { if (ostatni) hivesData.fetchAndSetHives(nrXXOfApiary); });
+          }
           //print('kategoria');
           //print(kat);
           //jezeli dokarmianie lub leczenie to zmiana danych do wyświetlania belki w widoku uli
@@ -6840,6 +6867,16 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           formatedTime, //czas
           '', //uwagi
           0); //niezarchiwizowane
+      //liczba ramek, rodzaj i typ w belce z NAJNOWSZEGO wpisu "liczba ramek =" (komenda
+      //z ustawioną wcześniejszą datą nie może nadpisać nowszego wpisu) + odświeżenie danych
+      //uli w pamięci - bez tego następny zapis ręczny przywracał w belce starą liczbę ramek.
+      //W kolejce sqflite idzie za insertInfo wyżej.
+      if (toLiczbaRamek) {
+        final hivesProv = Provider.of<Hives>(context, listen: false);
+        DBHelper.przeliczRamkiZInfo(nrXXOfApiary, nrXXOfHive,
+                wszystkieJezyki((l) => l.numberOfFrame + " = "))
+            .then((_) => hivesProv.fetchAndSetHives(nrXXOfApiary));
+      }
       // print('voice_screen: zapis Info do bazy ?????????????????????????????');
 
       // print(
@@ -9115,6 +9152,19 @@ print('openDialog = $openDialog');
         ),
       );
 
+  //Liczba ramek korpusu rysowanego przeglądu (wybranaData) - ta sama reguła co
+  //w frames_screen: historia "liczba ramek =" -> snapshot z przeglądu -> aktualny ul.
+  //Ustawia też globals.iloscRamek, z którego painter rysuje numery ramek. Do 05.10.2026
+  //płótno szło z AKTUALNEJ liczby ramek ula, a numery z globals ustawionego przez
+  //ostatnio oglądany ekran ramek - po zmniejszeniu ula rozjeżdżały się.
+  //Wymaga świeżego providera Infos dla tego ula (fetchAndSetInfosForHive wcześniej).
+  int _ramekPodgladu(int ramekUla) {
+    final int n = ramekKorpusuPrzegladu(context,
+        Provider.of<Infos>(context, listen: false).items, nrXXOfHive, wybranaData, ramekUla);
+    globals.iloscRamek = n;
+    return n;
+  }
+
   //odświeżenie danych dla live podglądu korpusu - wywoływane po komendzie głosowej
   //która zmienia zawartość korpusu lub wybór pasieki/ula/korpusu.
   //Gdy rozpoczęto nowy przegląd dzisiaj - pokazuje dzisiejszy przegląd.
@@ -9151,7 +9201,7 @@ print('openDialog = $openDialog');
       final hivesData = Provider.of<Hives>(context, listen: false);
       final hv = hivesData.items.where((h) => h.ulNr == nrXXOfHive).toList();
       if (hv.isNotEmpty) {
-        widthCanvas = hv[0].ramek * 20 + 20;
+        widthCanvas = _ramekPodgladu(hv[0].ramek) * 20 + 20;
       }
       if (mounted) setState(() {});
     } catch (e) {

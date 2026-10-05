@@ -17,6 +17,7 @@ import '../models/frames.dart';
 import '../models/hive.dart';
 import '../screens/frames_screen.dart';
 import '../screens/infos_screen.dart';
+import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki, parametrWBiezacym
 // import 'package:flutter/services.dart';
 
 
@@ -1255,7 +1256,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                         .then((_) {
                                           final infoData = Provider.of<Infos>(context, listen: false);
                                           List<Info> info = infoData.items.where((element) {
-                                            return element.data == globals.dataPrzeniesRamke && element.ulNr == globals.nrUlaPrzeniesDo && element.kategoria == 'inspection' && element.parametr == AppLocalizations.of(context)!.inspection;
+                                            return element.data == globals.dataPrzeniesRamke && element.ulNr == globals.nrUlaPrzeniesDo && element.kategoria == 'inspection' && parametrWBiezacym(context, element.parametr) == AppLocalizations.of(context)!.inspection; //przegląd w każdym języku
                                           }).toList();
                                           if(info.isEmpty){
                                             //utworzenie wpisu inspection w docelowym ulu

@@ -29,6 +29,7 @@ import '../helpers/queen_helpers.dart';
 import '../helpers/db_helper.dart'; //getInfosOfQueen - cechy matki z poprzedniego ula
 //import '../screens/add_queen_screen.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
+import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 
 class InfoScreen extends StatefulWidget {
   static const routeName = '/screen-infos';
@@ -868,8 +869,7 @@ class _InfoScreenState extends State<InfoScreen> {
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x") {
           
-          if(infos[i].pogoda == '') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-          else dm = double.parse(infos[i].pogoda);
+          dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
          
           miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
           //dane do wykresu
@@ -891,8 +891,7 @@ class _InfoScreenState extends State<InfoScreen> {
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
             parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x") {
           
-          if(infos[i].pogoda == '') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-          else dm = double.parse(infos[i].pogoda);
+          dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
           //print('dod1[0].b = ${dod1[0].b}');
           miod = miod + double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000;//np: 1(ilość ramek) x 245(waga 1dm2) x 78725/10000(ilość dm2 wezy w ramce)
           //dane do wykresu

@@ -16,6 +16,7 @@ import '../globals.dart' as globals;
 import '../helpers/queen_helpers.dart';
 import '../widgets/hives_item.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
+import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 
 class SummaryScreen extends StatefulWidget {
   static const routeName = '/screen-summary';
@@ -170,10 +171,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
             for (final info in infosData.items) {
               if (info.kategoria == 'harvest' && info.data == latestHoneyDate && info.wartosc.isNotEmpty) {
                 if (parametrWBiezacym(context, info.parametr) == paramHoneySmall) {
-                  double dm = info.miara.isEmpty ? 35175 : double.parse(info.miara);
+                  double dm = dmZWpisu(info.pogoda, mala: true) /*pogoda, nie miara - tam zapisuje ją wpis*/;
                   totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
                 } else if (parametrWBiezacym(context, info.parametr) == paramHoneyBig) {
-                  double dm = info.miara.isEmpty ? 78725 : double.parse(info.miara);
+                  double dm = dmZWpisu(info.pogoda, mala: false) /*pogoda, nie miara - tam zapisuje ją wpis*/;
                   totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
                 } else if (parametrWBiezacym(context, info.parametr) == paramHoneyKg) {
                   totalGrams += double.parse(info.wartosc) * 1000;

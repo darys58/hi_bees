@@ -12,6 +12,7 @@ import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
 import '../helpers/parametr_nazwy.dart'; //parametrWBiezacym - wpisy z każdego języka
+import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 
 class RaportScreen extends StatefulWidget {
   static const routeName = '/raport';
@@ -528,13 +529,11 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == allHivesNumbers[j-1]) { //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               allMiod2023 = allMiod2023 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);  
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               allMiod2023 = allMiod2023 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);           
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
@@ -569,14 +568,12 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000); 
               miod2023 = miod2023 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000); //suma zbioru za 2023
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2023 = miod2023 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);  //suma zbioru za 2023           
             }
@@ -631,13 +628,11 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               allMiod2024 = allMiod2024 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               allMiod2024 = allMiod2024 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
@@ -671,14 +666,12 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2024 = miod2024 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2024 = miod2024 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
@@ -730,13 +723,11 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               allMiod2025 = allMiod2025 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               allMiod2025 = allMiod2025 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000); //miód duza ramka            
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
@@ -770,14 +761,12 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2025 = miod2025 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2025 = miod2025 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
@@ -830,13 +819,11 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               allMiod2026 = allMiod2026 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               allMiod2026 = allMiod2026 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
@@ -870,14 +857,12 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2026 = miod2026 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2026 = miod2026 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
@@ -928,13 +913,11 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               allMiod2027 = allMiod2027 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               allMiod2027 = allMiod2027 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
@@ -968,14 +951,12 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2027 = miod2027 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2027 = miod2027 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
@@ -1027,13 +1008,11 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               allMiod2028 = allMiod2028 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               allMiod2028 = allMiod2028 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
@@ -1067,14 +1046,12 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2028 = miod2028 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2028 = miod2028 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
@@ -1125,13 +1102,11 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               allMiod2029 = allMiod2029 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               allMiod2029 = allMiod2029 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
@@ -1165,14 +1140,12 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2029 = miod2029 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2029 = miod2029 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
@@ -1223,13 +1196,11 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               allMiod2030 = allMiod2030 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               allMiod2030 = allMiod2030 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
@@ -1263,14 +1234,12 @@ class _RaportScreenState extends State<RaportScreen> {
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
-              if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: true); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2030 = miod2030 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
             if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
-              if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
-              else dm = double.parse(infos[i].pogoda);
+              dm = dmZWpisu(infos[i].pogoda, mala: false); //pusto/śmieć = ramka wielkopolska
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2030 = miod2030 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
