@@ -9,6 +9,7 @@ import '../globals.dart' as globals;
 import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
+import '../helpers/parametr_nazwy.dart'; //rokNaEkran
 
 class Raport2Screen extends StatefulWidget {
   static const routeName = '/raport2';
@@ -805,7 +806,7 @@ class _Raport2ScreenState extends State<Raport2Screen> {
                  _showAlertYear(),              
            ),
         ],
-        title: Text('${AppLocalizations.of(context)!.tReatmentReports} ${globals.rokRaportow}',
+        title: Text('${AppLocalizations.of(context)!.tReatmentReports} ${rokNaEkran(context, globals.rokRaportow)}',
           //AppLocalizations.of(context)!.pArameterization,
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../l10n/app_localizations.dart';
+import 'queen_helpers.dart'; //jakoscMatkiNaEkran, znakMatkiNaEkran
 
 /// Nazwa parametru do POKAZANIA użytkownikowi.
 ///
@@ -28,7 +29,9 @@ String nazwaParametru(BuildContext context, String parametr) {
     case 'biovar':
       return l.treatmentStrips;
     default:
-      return parametr;
+      //wpis zapisany przy innym języku interfejsu - na ekran w BIEŻĄCYM (05.10.2026).
+      //Tylko wyświetlanie: w bazie zostaje tekst z chwili zapisu (bez migracji).
+      return parametrWBiezacym(context, parametr);
   }
 }
 
@@ -85,16 +88,21 @@ final List<String Function(AppLocalizations l)> _szablonyParametrow = [
   (l) => l.acid,
   (l) => " " + l.acid,
   (l) => l.inspection,
+  (l) => l.honey, //belka ula: ule.parametr dla zbioru (OdswiezBelkiZ) - tylko do wyświetlania
 ];
 
 /// Wartości `info.wartosc` porównywane w statystykach z napisem bieżącego
-/// języka. "usuń"/"zabierz" mają w ES, FR i PT ten sam napis - obie idą
-/// w statystyce do tej samej gałęzi.
+/// języka i wybierane z list rozwijanych w infos_edit_screen (każda pozycja
+/// list musi tu być - inaczej edycja starego wpisu przy innym języku dawała
+/// wartość spoza listy i DropdownButton wywracał ekran, 05.10.2026).
+/// "usuń"/"zabierz" mają w ES, FR i PT ten sam napis - obie idą w statystyce
+/// do tej samej gałęzi. "trutówka" (matka) i "strutowiała" (rodzina) - ten sam
+/// napis w DE, ES, FR, IT, PT: rozstrzyga parametr (patrz wartoscWBiezacym).
 final List<String Function(AppLocalizations l)> _szablonyWartosci = [
   (l) => l.virgine,
   (l) => l.naturallyMated,
   (l) => l.artificiallyInseminated,
-  (l) => l.droneLaying,
+  (l) => l.droneLaying, //_iTrutowka - indeks 3
   (l) => l.freed,
   (l) => l.zalacz,
   (l) => l.set,
@@ -105,7 +113,33 @@ final List<String Function(AppLocalizations l)> _szablonyWartosci = [
   (l) => l.normal,
   (l) => l.remove,
   (l) => l.delete,
+  //matka jest: (wolna wyżej)
+  (l) => l.inCage,
+  (l) => l.inInsulator,
+  (l) => l.isolated,
+  //stan rodziny (agresywna wyżej, "ok" bez tłumaczenia)
+  (l) => l.gentle,
+  (l) => l.swarmingMood,
+  (l) => l.inCluster,
+  (l) => l.droneBees, //_iStrutowiala
+  (l) => l.dead,
+  //siła rodziny (normalna wyżej)
+  (l) => l.veryStrong,
+  (l) => l.strong,
+  (l) => l.weak,
+  (l) => l.veryWeak,
+  //dennica
+  (l) => l.dirty,
+  (l) => l.clean,
+  //krata odgrodowa
+  (l) => l.onBodyNumber,
+  //znak matki: brak (znaki kolorów tłumaczy znakMatkiNaEkran)
+  (l) => l.missing,
+  (l) => l.gone,
+  //jakości matki CELOWO tu nie ma - patrz jakoscMatkiNaEkran w queen_helpers
 ];
+const int _iTrutowka = 3;
+const int _iStrutowiala = 20; //indeks l.droneBees w _szablonyWartosci
 
 //napis w dowolnym z siedmiu języków -> numer szablonu (liczone raz, leniwie)
 Map<String, int> _indeksSzablonow(List<String Function(AppLocalizations l)> szablony) {
@@ -134,13 +168,108 @@ final Map<String, int> _indeksWartosci = _indeksSzablonow(_szablonyWartosci);
 /// TYLKO do porównań i liczenia - nie zapisywać wyniku do bazy (id wpisu
 /// zawiera parametr w języku zapisu).
 String parametrWBiezacym(BuildContext context, String parametr) {
+  final l = AppLocalizations.of(context)!;
+  //już poprawny w bieżącym języku - bez zmian (przy napisie wspólnym dla dwóch
+  //szablonów nie wolno podmienić jednego na drugi)
+  if (_napisyBiezace(_szablonyParametrow, l, _biezaceParametry).contains(parametr)) return parametr;
   final i = _indeksParametrow[parametr];
-  return i == null ? parametr : _szablonyParametrow[i](AppLocalizations.of(context)!);
+  return i == null ? parametr : _szablonyParametrow[i](l);
 }
 
 /// To samo co [parametrWBiezacym] dla `info.wartosc` (stan matki, poławiacz,
 /// stan rodziny). Wartość spoza listy wraca bez zmian.
-String wartoscWBiezacym(BuildContext context, String wartosc) {
-  final i = _indeksWartosci[wartosc];
-  return i == null ? wartosc : _szablonyWartosci[i](AppLocalizations.of(context)!);
+String wartoscWBiezacym(BuildContext context, String wartosc, {String? parametr}) {
+  final l = AppLocalizations.of(context)!;
+  if (parametr != null) {
+    final p = parametrWBiezacym(context, parametr);
+    //jakość matki - własne tłumaczenie (dawna "zła" != "zła" agresywna rodzina)
+    if (p == l.queen + '  ' + l.isIs) return jakoscMatkiNaEkran(wartosc, l);
+    //znak matki - "ma biały znak", klucze "mark_white" itd.
+    if (p == " " + l.queen) wartosc = znakMatkiNaEkran(wartosc, l);
+  }
+  //np. francuskie "retirer" to i "usuń", i "zabierz" - wartość poprawna w bieżącym
+  //języku zostaje, inaczej edycja zamieniłaby jedno na drugie
+  if (_napisyBiezace(_szablonyWartosci, l, _biezaceWartosci).contains(wartosc)) return wartosc;
+  var i = _indeksWartosci[wartosc];
+  if (i == null) return wartosc;
+  //"drohnenbrütig" itp.: przy stanie rodziny to "strutowiała", nie "trutówka"
+  if (i == _iTrutowka && parametr != null &&
+      parametrWBiezacym(context, parametr) == l.colony + " " + l.isIs) {
+    i = _iStrutowiala;
+  }
+  return _szablonyWartosci[i](l);
 }
+
+//napisy szablonów w bieżącym języku - liczone raz na język (wołane w pętlach statystyk)
+final Map<String, Set<String>> _biezaceParametry = {};
+final Map<String, Set<String>> _biezaceWartosci = {};
+Set<String> _napisyBiezace(List<String Function(AppLocalizations l)> szablony,
+        AppLocalizations l, Map<String, Set<String>> pamiec) =>
+    pamiec.putIfAbsent(l.localeName, () => {for (final s in szablony) s(l)});
+
+/// Rodzaj ula (`ule.h1`, `info.pogoda` wpisu "liczba ramek =") w BIEŻĄCYM języku.
+///
+/// Rodzaj zapisuje się tekstem z chwili zapisu: `loc.hIve` ("Ul", "Hive",
+/// "Beute"...) albo `loc.nUc` ("Odkład", "Nuc", "Ableger"...), plus stałe
+/// "Mini". Rozpoznaje bez względu na wielkość liter (starsze dane: "UL").
+/// "Mini" i wartości nieznane wracają bez zmian. Do wyświetlania i formularza.
+String rodzajUlaWBiezacym(BuildContext context, String rodzaj) {
+  final r = rodzaj.trim().toLowerCase();
+  if (r.isEmpty) return rodzaj;
+  final l = AppLocalizations.of(context)!;
+  if (_rodzajeUl.contains(r)) return l.hIve;
+  if (_rodzajeOdklad.contains(r)) return l.nUc;
+  return rodzaj;
+}
+
+final Set<String> _rodzajeUl = wszystkieJezyki((l) => l.hIve.toLowerCase());
+final Set<String> _rodzajeOdklad = wszystkieJezyki((l) => l.nUc.toLowerCase());
+
+/// Jednostka (`info.miara`) w BIEŻĄCYM języku - do wyświetlania i formularza.
+///
+/// Zapisywane tekstem z chwili zapisu: `loc.dose` ("dawka"), `loc.mites`
+/// (warroza: "sztuk"/"mites") i `loc.pieces` (paski: "sztuk"/"units").
+/// mites i pieces mają w PL, DE, IT, ES i PT ten sam napis - rozstrzyga
+/// [parametr]: "varroa" to roztocza, reszta to sztuki. Jednostki uniwersalne
+/// (kg, l, ml, g), liczby i typy ula wracają bez zmian.
+String miaraWBiezacym(BuildContext context, String miara, {String? parametr}) {
+  if (miara.isEmpty) return miara;
+  final l = AppLocalizations.of(context)!;
+  final bool warroza = parametr?.trim() == 'varroa';
+  if (_dawki.contains(miara)) return l.dose;
+  if (_sztuki.contains(miara)) return warroza ? l.mites : l.pieces;
+  return miara;
+}
+
+final Set<String> _dawki = wszystkieJezyki((l) => l.dose);
+final Set<String> _sztuki = {
+  ...wszystkieJezyki((l) => l.mites),
+  ...wszystkieJezyki((l) => l.pieces),
+};
+
+/// Rok raportu/statystyk na ekran. `globals.rokRaportow` i `rokStatystyk` trzymają
+/// dla "wszystkich lat" KLUCZ 'wszystkie' (porównywany w kodzie), który szedł do
+/// tytułów i PDF po polsku w każdym języku (05.10.2026). Lata wracają bez zmian.
+String rokNaEkran(BuildContext context, String rok) =>
+    rok == 'wszystkie' ? AppLocalizations.of(context)!.aLl : rok;
+
+/// Zadanie/czynność ramki ("ramka pracy", "trzeba wirować"... - wartość zasobu
+/// 13/14, w belce `ule.todo`) w BIEŻĄCYM języku. Zapisywane tekstem z chwili
+/// zapisu; nieznane wraca bez zmian. Do wyświetlania ("Aktualności ula").
+String zadanieRamkiWBiezacym(BuildContext context, String zadanie) {
+  final i = _indeksZadan[zadanie];
+  return i == null ? zadanie : _szablonyZadan[i](AppLocalizations.of(context)!);
+}
+
+final List<String Function(AppLocalizations l)> _szablonyZadan = [
+  (l) => l.workFrame,
+  (l) => l.toExtraction,
+  (l) => l.toDelete,
+  (l) => l.toInsulate,
+  (l) => l.deleted,
+  (l) => l.inserted,
+  (l) => l.insulated,
+  (l) => l.movedLeft,
+  (l) => l.movedRight,
+];
+final Map<String, int> _indeksZadan = _indeksSzablonow(_szablonyZadan);

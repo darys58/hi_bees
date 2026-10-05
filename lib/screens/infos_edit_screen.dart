@@ -137,6 +137,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
         _liczbaPaskow.isEmpty ? '1' : _liczbaPaskow);
   }
 
+  //Lista rozwijana z wartością spoza pozycji wywraca ekran (asercja DropdownButton).
+  //Wpis zapisany przy innym języku albo wartość, której nie zna wartoscWBiezacym,
+  //dostaje tu własną pozycję na początku listy - jak _zBiezaca dla rodzaju/typu ula.
+  List<DropdownMenuItem<String>> _zWartoscia(String wartosc, List<DropdownMenuItem<String>> items) {
+    if (wartosc.isEmpty || items.any((i) => i.value == wartosc)) return items;
+    return [DropdownMenuItem(child: Text(wartosc), value: wartosc), ...items];
+  }
+
   List<String> _zBiezaca(List<String> lista, String biezaca) {
     if (biezaca.isNotEmpty && !lista.contains(biezaca)) lista.insert(0, biezaca);
     return lista;
@@ -161,6 +169,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     if (rodzajUla.isEmpty || rodzajUla == '0') {
       rodzajUla = AppLocalizations.of(ctx)!.hIve;
     }
+    //rodzaj zapisany przy innym języku ("Ul" oglądane po angielsku) - w bieżącym, żeby
+    //lista rozwijana nie dokładała obok "Hive" osobnej pozycji "Ul"
+    rodzajUla = rodzajUlaWBiezacym(ctx, rodzajUla);
     nowyMiara = typUla;
     globals.typUla = typUla;
   }
@@ -201,8 +212,12 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowaPasieka = info[0].pasiekaNr;
       nowyUl = info[0].ulNr;
       nowaKategoria = info[0].kategoria;
-      nowyParametr = info[0].parametr;
-      nowyWartosc = info[0].wartosc;
+      //Wpis zapisany przy INNYM języku interfejsu: parametr i wartość w bieżącym, żeby
+      //działały formularz i listy rozwijane (porównują z bieżącym l10n) - 05.10.2026,
+      //zamiast migracji bazy. Czego użytkownik nie zmieni, zapis edycji odda do bazy
+      //w ORYGINALNYM brzmieniu (parametrDoBazy/wartoscDoBazy), więc id wpisu zostaje.
+      nowyParametr = parametrWBiezacym(context, info[0].parametr);
+      nowyWartosc = wartoscWBiezacym(context, info[0].wartosc, parametr: info[0].parametr);
       //znak matki: wpisy sprzed 06.09.2026 trzymają KLUCZ ("mark_white"), a
       //lista rozwijana niżej ma wartości JĘZYKOWE - klucz nie pasowałby do
       //żadnej pozycji (DropdownButton wymaga dokładnie jednej zgodnej).
@@ -210,7 +225,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       if (nowaKategoria == 'queen') {
         nowyWartosc = znakMatkiNaEkran(nowyWartosc, AppLocalizations.of(context)!);
       }
-      nowyMiara = info[0].miara;
+      //jednostka z innego języka ("sztuk", "dawka") - w bieżącym; typ ula i liczby bez zmian
+      nowyMiara = miaraWBiezacym(context, info[0].miara, parametr: info[0].parametr);
       if(nowyParametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {
         typUla = info[0].miara; //dla iloscRamek =
         rodzajUla = info[0].pogoda; //dane tylko dla iloscRamek =
@@ -307,7 +323,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
         nowaPasieka = info[0].pasiekaNr;
         nowyUl = info[0].ulNr;
         nowaKategoria = info[0].kategoria;
-        nowyParametr = info[0].parametr;
+        nowyParametr = parametrWBiezacym(context, info[0].parametr); //przegląd z innego języka -> bieżący (patrz edycja wyżej)
         nowyWartosc = info[0].wartosc;
         nowyMiara = info[0].miara;
         nowyTemp = info[0].temp;
@@ -1562,7 +1578,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
-                                items: [
+                                items: _zWartoscia(nowyWartosc, [
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.unmarked1),
                                                   value:AppLocalizations.of(context)!.unmarked),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.markedWhite),
@@ -1581,7 +1597,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value:AppLocalizations.of(context)!.missing),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gone1),
                                                   value:AppLocalizations.of(context)!.gone),                                                                        
-                                ], //lista elementów do wyboru
+                                ]), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     nowyWartosc = newValue!.toString(); 
@@ -1619,7 +1635,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
-                                items: [
+                                items: _zWartoscia(nowyWartosc, [
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.virgine1),
                                                   value:AppLocalizations.of(context)!.virgine),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.naturallyMated1),
@@ -1628,7 +1644,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value:AppLocalizations.of(context)!.artificiallyInseminated),                                                                        
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.droneLaying),
                                                   value:AppLocalizations.of(context)!.droneLaying),                                                                         
-                                ], //lista elementów do wyboru
+                                ]), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     nowyWartosc = newValue!.toString(); 
@@ -1666,7 +1682,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
-                                items: [
+                                items: _zWartoscia(nowyWartosc, [
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.freed),
                                                   value:AppLocalizations.of(context)!.freed),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inCage),
@@ -1675,7 +1691,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value:AppLocalizations.of(context)!.inInsulator),                                                                        
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.isolated),
                                                   value:AppLocalizations.of(context)!.isolated),                                                                        
-                                ], //lista elementów do wyboru
+                                ]), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     nowyWartosc = newValue!.toString(); 
@@ -1715,7 +1731,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
-                                items: [
+                                items: _zWartoscia(nowyWartosc, [
                                    DropdownMenuItem(child: Text(AppLocalizations.of(context)!.aggressive1),
                                                   value:AppLocalizations.of(context)!.aggressive),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gentle),
@@ -1730,7 +1746,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value:AppLocalizations.of(context)!.droneBees),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.dead),
                                                   value:AppLocalizations.of(context)!.dead),                                                                        
-                                ], //lista elementów do wyboru
+                                ]), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     nowyWartosc = newValue!.toString(); 
@@ -1769,7 +1785,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
-                                items: [
+                                items: _zWartoscia(nowyWartosc, [
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.veryStrong),
                                                   value:AppLocalizations.of(context)!.veryStrong),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.strong),
@@ -1780,7 +1796,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                                   value:AppLocalizations.of(context)!.weak),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.veryWeak),
                                                   value:AppLocalizations.of(context)!.veryWeak),                                                                                                       
-                                ], //lista elementów do wyboru
+                                ]), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     nowyWartosc = newValue!.toString(); 
@@ -1892,14 +1908,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
-                                items: [
+                                items: _zWartoscia(nowyWartosc, [
                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.dirty),
                                                   value: AppLocalizations.of(context)!.dirty),
                                   DropdownMenuItem(child: Text('ok'),
                                                   value: 'ok'),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.clean),
                                                   value: AppLocalizations.of(context)!.clean),                                                                        
-                                ], //lista elementów do wyboru
+                                ]), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     nowyWartosc = newValue!.toString(); 
@@ -1937,7 +1953,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 isExpanded: true,
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
-                                items: [
+                                items: _zWartoscia(nowyWartosc, [
                                                                                                                                               
                                   // DropdownMenuItem(child: Text(AppLocalizations.of(context)!.open),
                                   //                 value: AppLocalizations.of(context)!.open),
@@ -1954,7 +1970,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.remove1),
                                                   value: AppLocalizations.of(context)!.remove),                                                                       
                                 
-                                ], //lista elementów do wyboru
+                                ]), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
                                     nowyWartosc = newValue!.toString(); 
@@ -2351,16 +2367,29 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                             //print('edycja info - rodzaj ula = $rodzajUla');
                             // Usunięcie starego powiadomienia indywidualnego
                             DBHelper.deletePowiadomienieByInfoId(info[0].id);
+                            //Parametr/wartość, których użytkownik NIE zmienił, idą do bazy w
+                            //oryginalnym brzmieniu (formularz dostał je przetłumaczone na bieżący
+                            //język - patrz wczytanie wpisu). Dzięki temu nie zmienia się id
+                            //wpisu: aplikacja nie wysyła usunięć do chmury, więc nowe id zostawiłoby
+                            //tam stary wpis obok nowego i po imporcie np. zbiór liczyłby się dwa razy.
+                            final String parametrDoBazy =
+                                nowyParametr == parametrWBiezacym(context, info[0].parametr)
+                                    ? info[0].parametr
+                                    : nowyParametr;
+                            final String wartoscDoBazy =
+                                nowyWartosc == wartoscWBiezacym(context, info[0].wartosc, parametr: info[0].parametr)
+                                    ? info[0].wartosc
+                                    : nowyWartosc;
                             DBHelper.deleteInfo(info[0].id).then((_) {
-                              final nowyInfoId = '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr';
+                              final nowyInfoId = '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$parametrDoBazy';
                               Infos.insertInfo(
                                 nowyInfoId,
                                 dateController.text,
                                 nowaPasieka,
                                 nowyUl,
                                 nowaKategoria,
-                                nowyParametr,
-                                nowyWartosc,
+                                parametrDoBazy,
+                                wartoscDoBazy,
                                 nowyMiara!, //ewentualny typ ula ustawiony wczesniej
 
                                 //pole pogoda moze mieć wartość "matkaID", "rodzaj ula", "dmRamki" lub nic

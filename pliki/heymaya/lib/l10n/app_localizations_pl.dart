@@ -1312,7 +1312,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get droneLaying => 'trutówka';
 
   @override
-  String get virgine1 => 'nieunasiennona';
+  String get virgine1 => 'nieunasienniona';
 
   @override
   String get artificiallyInseminated => 'sztuczna';

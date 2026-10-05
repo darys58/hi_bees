@@ -470,7 +470,7 @@ class _InfoScreenState extends State<InfoScreen> {
       final apiaryNr = globals.pasiekaID.toString();
       final tytul = rokStatystyk == 'wszystkie'
           ? loc.hiveHistoryTitleAll(hiveNr.toString(), apiaryNr)
-          : loc.hiveHistoryTitle(hiveNr.toString(), apiaryNr, rokStatystyk);
+          : loc.hiveHistoryTitle(hiveNr.toString(), apiaryNr, rokNaEkran(context, rokStatystyk));
 
       // Proporcje kolumn: L.p., Kat., Data, Czas, Temp., Informacja, Uwagi
       final columnWidths = {
@@ -528,15 +528,17 @@ class _InfoScreenState extends State<InfoScreen> {
       for (int i = 0; i < allInfos.length; i++) {
         final info = allInfos[i];
         String infoText;
-        if (info.wartosc == 'dziewica') {
-          infoText = '${info.parametr} nieunasienniona';
-        } else if (info.wartosc == 'virgine') {
-          infoText = '${info.parametr} virgine';
+        //parametr i wartość w BIEŻĄCYM języku, także dla wpisów zapisanych w innym
+        //(05.10.2026); "nieunasienniona" z tłumaczeń zamiast literału polskiego
+        final String paramPdf = nazwaParametru(context, info.parametr);
+        final String wartPdf = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
+        if (wartPdf == AppLocalizations.of(context)!.virgine) {
+          infoText = '$paramPdf ${AppLocalizations.of(context)!.virgine1}';
         } else {
-          infoText = '${info.parametr} ${info.wartosc}'.trim();
+          infoText = '$paramPdf $wartPdf'.trim();
         }
         if (info.miara.isNotEmpty && info.miara != '0') {
-          infoText = '$infoText ${info.miara}';
+          infoText = '$infoText ${miaraWBiezacym(context, info.miara, parametr: info.parametr)}';
         }
         if (info.pogoda.isNotEmpty && info.pogoda != '0' && info.kategoria == 'queen') {
           infoText = 'ID${info.pogoda} $infoText ';
@@ -809,7 +811,7 @@ class _InfoScreenState extends State<InfoScreen> {
       if (qualityIsBad(inf.wartosc))
         icon1 = Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),);
       else icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-      wartosc1 = 'ID' + inf.pogoda + ' ' + inf.wartosc +
+      wartosc1 = 'ID' + inf.pogoda + ' ' + wartoscWBiezacym(context, inf.wartosc, parametr: inf.parametr) +
           ' (${zmienDate_cala(inf.data)})';
     }
 
@@ -842,7 +844,7 @@ class _InfoScreenState extends State<InfoScreen> {
       if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.freed)
         image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
       else image4 = Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
-      wartosc4 = 'ID' + inf.pogoda + ' ' + inf.wartosc +
+      wartosc4 = 'ID' + inf.pogoda + ' ' + wartoscWBiezacym(context, inf.wartosc) +
           ' (${zmienDate_cala(inf.data)})';
     }
 
@@ -978,7 +980,7 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             wartosc1 = AppLocalizations.of(context)!.excluder + 
-                ' ' + AppLocalizations.of(context)!.on + ' ' + infos[i].miara +
+                ' ' + AppLocalizations.of(context)!.on + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
                 ' (${zmienDate_cala(infos[i].data)})'; //zamiana na polski format
           }
         }
@@ -994,7 +996,7 @@ class _InfoScreenState extends State<InfoScreen> {
         if (infos[i].wartosc.isNotEmpty && parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.bottomBoard + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
-            wartosc2 = infos[i].parametr + ' ' + infos[i].wartosc +
+            wartosc2 = nazwaParametru(context, infos[i].parametr) + ' ' + wartoscWBiezacym(context, infos[i].wartosc) +
                 ' (${zmienDate_cala(infos[i].data)})';
           }
         }
@@ -1024,7 +1026,7 @@ class _InfoScreenState extends State<InfoScreen> {
             typUla = infos[i].miara;
             rodzajUla = infos[i].pogoda;
             uwagiUla = infos[i].uwagi; 
-            wartosc4 = infos[i].parametr + ' ' + infos[i].wartosc +
+            wartosc4 = nazwaParametru(context, infos[i].parametr) + ' ' + infos[i].wartosc +
                 ' (${zmienDate_cala(infos[i].data)})';
           }
         }
@@ -1044,7 +1046,7 @@ class _InfoScreenState extends State<InfoScreen> {
               wartosc1 = AppLocalizations.of(context)!.normal1 +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
             }else{
-              wartosc1 = infos[i].wartosc +
+              wartosc1 = wartoscWBiezacym(context, infos[i].wartosc) +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
             }
           }
@@ -1059,7 +1061,7 @@ class _InfoScreenState extends State<InfoScreen> {
               wartosc2 = AppLocalizations.of(context)!.aggressive1 +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
             }else{
-              wartosc2 = infos[i].wartosc +
+              wartosc2 = wartoscWBiezacym(context, infos[i].wartosc, parametr: infos[i].parametr) +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
             }
           }
@@ -1070,7 +1072,7 @@ class _InfoScreenState extends State<InfoScreen> {
             parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.deadBees) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
-            wartosc3 = infos[i].wartosc + ' ' + infos[i].miara +
+            wartosc3 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
@@ -1145,7 +1147,8 @@ class _InfoScreenState extends State<InfoScreen> {
             final loc = AppLocalizations.of(context)!;
             //wpisy sprzed 06.09.2026 mają tu KLUCZ znaku ("mark_white") -
             //patrz znakMatkiNaEkran() w queen_helpers.dart
-            final wartoscZnaku = znakMatkiNaEkran(infos[i].wartosc, loc);
+            //znak (znakMatkiNaEkran w środku) ORAZ "brak"/"nie ma" z innego języka
+            final wartoscZnaku = wartoscWBiezacym(context, infos[i].wartosc, parametr: infos[i].parametr);
             if(wartoscZnaku == loc.unmarked)
               icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);
             else if(wartoscZnaku == loc.markedOther)
@@ -1172,7 +1175,7 @@ class _InfoScreenState extends State<InfoScreen> {
             if(wartoscZnaku == AppLocalizations.of(context)!.unmarked ) wartoscM2 = AppLocalizations.of(context)!.unmarked1; 
             else if(wartoscZnaku == AppLocalizations.of(context)!.missing ) wartoscM2 = AppLocalizations.of(context)!.missing1; 
             else if(wartoscZnaku == AppLocalizations.of(context)!.gone ) wartoscM2 = AppLocalizations.of(context)!.gone1;            
-            wartosc2 = 'ID' + infos[i].pogoda + ' ' + wartoscM2 + ' ' + infos[i].miara +
+            wartosc2 = 'ID' + infos[i].pogoda + ' ' + wartoscM2 + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
                 ' (${zmienDate_cala(infos[i].data)})';
                 //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -1188,8 +1191,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             globals.isEuropeanFormat()
-                ? wartosc1 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
-                : wartosc1 = infos[i].wartosc + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ? wartosc1 = infos[i].wartosc.replaceAll('.', ',') + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
+                : wartosc1 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
         //dla bierzącego roku i parametru syrup3to2I,syrup3to2D
@@ -1199,8 +1202,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
             globals.isEuropeanFormat()
-                ? wartosc2 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
-                : wartosc2 = infos[i].wartosc + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ? wartosc2 = infos[i].wartosc.replaceAll('.', ',') + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
+                : wartosc2 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
         //dla bierzącego roku i parametru invert
@@ -1210,8 +1213,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
             globals.isEuropeanFormat()
-                ? wartosc3 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
-                : wartosc3 = infos[i].wartosc + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ? wartosc3 = infos[i].wartosc.replaceAll('.', ',') + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
+                : wartosc3 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
         //dla bierzącego roku i parametru candy
@@ -1221,8 +1224,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
             globals.isEuropeanFormat()
-                ? wartosc4 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
-                : wartosc4 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ? wartosc4 = infos[i].wartosc.replaceAll('.', ',') + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
+                : wartosc4 = infos[i].wartosc +  ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
 
           }
         }
@@ -1233,8 +1236,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
             globals.isEuropeanFormat()
-                ? wartosc5 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'//' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
-                : wartosc5 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ? wartosc5 = infos[i].wartosc.replaceAll('.', ',') + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate_cala(infos[i].data)})'//' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
+                : wartosc5 = infos[i].wartosc +  ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
 
           }
         }
@@ -1245,8 +1248,8 @@ class _InfoScreenState extends State<InfoScreen> {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData6) && DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData6 = DateTime.parse(infos[i].data);
             globals.isEuropeanFormat()
-                ? wartosc6 = infos[i].wartosc.replaceAll('.', ',') + ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})' //' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
-                : wartosc6 = infos[i].wartosc +  ' ' + infos[i].miara + ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
+                ? wartosc6 = infos[i].wartosc.replaceAll('.', ',') + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate_cala(infos[i].data)})' //' (${zmienDate5_10(infos[i].data.substring(5, 10))})'
+                : wartosc6 = infos[i].wartosc +  ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) + ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
         }
       }
@@ -1258,7 +1261,7 @@ class _InfoScreenState extends State<InfoScreen> {
             parametrWBiezacym(context, infos[i].parametr) == "apivarol") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
-            wartosc1 = infos[i].wartosc + ' ' + infos[i].miara +
+            wartosc1 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
               ' (${zmienDate_cala(infos[i].data)})';
               //  ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -1268,7 +1271,7 @@ class _InfoScreenState extends State<InfoScreen> {
             parametrWBiezacym(context, infos[i].parametr) == "biovar") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
-            wartosc2 = infos[i].wartosc + ' ' + infos[i].miara +
+            wartosc2 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
             ' (${zmienDate_cala(infos[i].data)})';
                 //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -1278,7 +1281,7 @@ class _InfoScreenState extends State<InfoScreen> {
             parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.acid) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
-            wartosc3 = infos[i].wartosc + ' ' + infos[i].miara +
+            wartosc3 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
               ' (${zmienDate_cala(infos[i].data)})';
                // ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -1288,7 +1291,7 @@ class _InfoScreenState extends State<InfoScreen> {
             parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.acid) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
-            wartosc4 = infos[i].wartosc + ' ' + infos[i].miara +
+            wartosc4 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
               ' (${zmienDate_cala(infos[i].data)})';
               //  ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           }
@@ -1298,7 +1301,7 @@ class _InfoScreenState extends State<InfoScreen> {
             parametrWBiezacym(context, infos[i].parametr) == "varroa") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
-            wartosc5 = infos[i].wartosc + ' ' + infos[i].miara +
+            wartosc5 = infos[i].wartosc + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
                 ' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
           } //ostatnia wartość varroa (nieuzywana bo wyswietlana jest suma)
           varroa = varroa + int.parse(infos[i].wartosc); //sumowanie varroa w ulu
@@ -2806,7 +2809,7 @@ class _InfoScreenState extends State<InfoScreen> {
                   child: Column(
                     children: [
                       if (typUla != '' || rodzajUla != '')  
-                        Text('$rodzajUla  $typUla' + nazwaWl('$typUla'),style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text('${rodzajUlaWBiezacym(context, rodzajUla)}  $typUla' + nazwaWl('$typUla'),style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       if (uwagiUla != '')  
                         Text('$uwagiUla' ,style: const TextStyle(fontSize: 14)),
                       if (wartosc4 != '')
@@ -3198,7 +3201,7 @@ class _InfoScreenState extends State<InfoScreen> {
                   child: Column(
                     children: [
                       if (wartosc5 != '')
-                        Text('(5) varroa' + ' $rokStatystyk: ${(varroa).toString().replaceAll('.', ',')} ' + AppLocalizations.of(context)!.mites,
+                        Text('(5) varroa' + ' ${rokNaEkran(context, rokStatystyk)}: ${(varroa).toString().replaceAll('.', ',')} ' + AppLocalizations.of(context)!.mites,
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 94, 255))),
                       if (wartosc1 != '')
                         Text('(1) ' + nazwaParametru(context, 'apivarol') + ' $wartosc1',

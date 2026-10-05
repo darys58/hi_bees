@@ -10,6 +10,7 @@ import '../models/queen.dart';
 import '../models/info.dart';
 import '../helpers/db_helper.dart';
 import '../helpers/queen_helpers.dart';
+import '../helpers/parametr_nazwy.dart'; //nazwaParametru, wartoscWBiezacym
 import '../globals.dart' as globals;
 
 class QueenHistoryScreen extends StatefulWidget {
@@ -96,6 +97,17 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
     final numMatch = RegExp(r'-?\d+[.,]?\d*').firstMatch(temp);
     if (numMatch == null) return '';
     return '${numMatch.group(0)}\u00B0C';
+  }
+
+  //Parametr i wartość wpisu o matce w BIEŻĄCYM języku - także dla wpisów zapisanych
+  //przy innym języku, dawnej jakości "zła" i kluczy znaku ("mark_white"). Do 05.10.2026
+  //szły surowo z bazy, z wyjątkiem dwóch literałów ('dziewica', 'virgine').
+  String _opisWpisu(BuildContext context, Info info) {
+    final loc = AppLocalizations.of(context)!;
+    final String parametr = nazwaParametru(context, info.parametr);
+    final String wartosc = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
+    if (wartosc == loc.virgine) return '$parametr ${loc.virgine1}'; //"nieunasienniona"
+    return '$parametr $wartosc'.trim();
   }
 
   List<Widget> _buildMarkIcon(String znak, BuildContext context) {
@@ -265,12 +277,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
       List<List<pw.Widget>> tableData = [];
       for (int i = 0; i < _queenInfos.length; i++) {
         final info = _queenInfos[i];  
-        String? infoText;
-        info.wartosc == 'dziewica'
-        ? infoText = '${info.parametr} nieunasienniona'
-        : info.wartosc == 'virgine'
-          ? infoText = '${info.parametr} virgine'
-          : infoText = '${info.parametr} ${info.wartosc}'.trim();
+        final String infoText = _opisWpisu(context, info);
         
         // Czyść temperaturę - zostaw tylko cyfry, minus, kropkę i dodaj °C
         final tempClean = _cleanTemp(info.temp);
@@ -513,21 +520,10 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                     if (info.parametr.isNotEmpty || info.wartosc.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 2, left: 40),
-                        child: 
-                          info.wartosc == 'dziewica'
-                            ? Text(
-                                '${info.parametr} nieunasienniona',
-                                style: const TextStyle(fontSize: 14),
-                              )
-                            : info.wartosc == 'virgine'
-                              ? Text(
-                                  '${info.parametr} virgine',//jakby była własciwa nazwa po angielsku to tu mozna zmienić //${info.wartosc}'.trim(),
-                                  style: const TextStyle(fontSize: 14),
-                                )
-                              : Text(
-                                '${info.parametr} ${info.wartosc}'.trim(), //wszystkie inne wartości
-                                style: const TextStyle(fontSize: 14),
-                              ),
+                        child: Text(
+                          _opisWpisu(context, info),
+                          style: const TextStyle(fontSize: 14),
+                        ),
                       ),
                     // Wiersz 3: uwagi
                     if (info.uwagi.isNotEmpty)

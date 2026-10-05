@@ -241,6 +241,24 @@ bool qualityIsBad(String value) {
   }
 }
 
+/// Jakość matki z bazy na tekst w BIEŻĄCYM języku (pozycje listy w infos_edit_screen).
+/// Osobno od wartoscWBiezacym, bo dawna jakość "zła" to ten sam napis co polska
+/// "zła" (agresywna) przy rodzinie - ogólne tłumaczenie dałoby "aggressive".
+/// Wartość nieznana wraca bez zmian.
+String jakoscMatkiNaEkran(String wartosc, AppLocalizations loc) {
+  switch (qualityToKey(wartosc)) {
+    case kQualityVeryGood: return loc.veryGood;
+    case kQualityGood: return loc.good;
+    case kQualityBig: return loc.big;
+    case kQualityOk: return 'ok';
+    case kQualityToReplace: return loc.canceled;
+    case kQualitySmall: return loc.small;
+    case kQualityWeak: return loc.weak;
+    case kQualityOld: return loc.exchange;
+    default: return wartosc;
+  }
+}
+
 /// Czy jest co pokazywać - pusta jakość i '0' nie rysują kciuka w ogóle.
 bool qualityIsSet(String value) {
   final v = value.trim();

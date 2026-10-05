@@ -12,6 +12,7 @@ import '../globals.dart' as globals;
 import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
+import '../helpers/parametr_nazwy.dart'; //rokNaEkran
 
 // Raport leczenia (osyp varroa) z kolorowymi słupkami - rozwinięcie raport2_screen
 // na wzór raport_color_screen:
@@ -440,7 +441,7 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('PDF - ${loc.dEad} varroa $rok'),
+        title: Text('PDF - ${loc.dEad} varroa ${rokNaEkran(context, rok)}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -498,6 +499,7 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
     // Pobierz teksty lokalizacji przed async
     final loc = AppLocalizations.of(context)!;
     final String titleText = '${loc.dEad} varroa';
+    final String rokEkran = rokNaEkran(context, rok); //'wszystkie' -> loc.aLl, wyliczone przed await
     final String totalText = loc.total;
     final String pageText = loc.pAge;
     final String errorText = loc.error;
@@ -585,7 +587,7 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
                   // Tytuł
                   pw.Center(
                     child: pw.Text(
-                      '$titleText $rok - $pasiekaNazwa',
+                      '$titleText $rokEkran - $pasiekaNazwa',
                       style: pw.TextStyle(fontSize: 18, font: fontBold),
                     ),
                   ),
@@ -1084,7 +1086,7 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
                  _showAlertYear(),
            ),
         ],
-        title: Text('${AppLocalizations.of(context)!.dEad} varroa ${globals.rokRaportow}',
+        title: Text('${AppLocalizations.of(context)!.dEad} varroa ${rokNaEkran(context, globals.rokRaportow)}',
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
         bottom: PreferredSize(

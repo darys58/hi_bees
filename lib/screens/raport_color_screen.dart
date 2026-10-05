@@ -739,7 +739,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('PDF - ${typ == 'miod' ? loc.hOneyHarvest : loc.beePollen} $rok'),
+        title: Text('PDF - ${typ == 'miod' ? loc.hOneyHarvest : loc.beePollen} ${rokNaEkran(context, rok)}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -844,6 +844,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
     // Pobierz teksty lokalizacji przed async
     final loc = AppLocalizations.of(context)!;
     final String honeyHarvestText = loc.hOneyHarvest;
+    final String rokEkran = rokNaEkran(context, rok); //'wszystkie' -> loc.aLl, wyliczone przed await
     final String beePollenText = loc.beePollenHarvest; // "Zbiór pyłku" zamiast "pyłek"
     final String totalText = loc.total;
     final String pageText = loc.pAge;
@@ -1145,8 +1146,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                   pw.Center(
                     child: pw.Text(
                       typ == 'miod'
-                          ? '${honeyHarvestText} $rok - $pasiekaNazwa'
-                          : '${beePollenText} $rok - $pasiekaNazwa',
+                          ? '${honeyHarvestText} $rokEkran - $pasiekaNazwa'
+                          : '${beePollenText} $rokEkran - $pasiekaNazwa',
                       style: pw.TextStyle(fontSize: 18, font: fontBold),
                     ),
                   ),
@@ -1503,8 +1504,8 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
 
               // Przygotuj dane do emaila
               final String subject = typ == 'miod'
-                  ? '${honeyHarvestText} $rok - $pasiekaNazwa'
-                  : '${beePollenText} $rok - $pasiekaNazwa';
+                  ? '${honeyHarvestText} $rokEkran - $pasiekaNazwa'
+                  : '${beePollenText} $rokEkran - $pasiekaNazwa';
               final String body = typ == 'miod'
                   ? '${totalText}: ${(totalValue / 1000).toStringAsFixed(2)} kg (${(totalValue / 1000 / 1.45).toStringAsFixed(2)} l)'
                   : '${totalText}: ${(totalValue / 1000).toStringAsFixed(2)} l (${(totalValue / 1000 * 0.5).toStringAsFixed(2)} kg)';
@@ -2166,7 +2167,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                  _showAlertYear(),              
            ),
         ],
-        title: Text('${widget.typ == 'pylek' ? AppLocalizations.of(context)!.bEePollenHarvest : AppLocalizations.of(context)!.hOneyHarvest} ${globals.rokRaportow}',
+        title: Text('${widget.typ == 'pylek' ? AppLocalizations.of(context)!.bEePollenHarvest : AppLocalizations.of(context)!.hOneyHarvest} ${rokNaEkran(context, globals.rokRaportow)}',
           //AppLocalizations.of(context)!.pArameterization,
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),

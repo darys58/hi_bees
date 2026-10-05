@@ -1465,7 +1465,7 @@ class _RaportScreenState extends State<RaportScreen> {
                  _showAlertYear(),              
            ),
         ],
-        title: Text('${AppLocalizations.of(context)!.hArvestReports} ${globals.rokRaportow}',
+        title: Text('${AppLocalizations.of(context)!.hArvestReports} ${rokNaEkran(context, globals.rokRaportow)}',
           //AppLocalizations.of(context)!.pArameterization,
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),

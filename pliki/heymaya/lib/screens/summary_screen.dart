@@ -88,10 +88,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
             final infoDate = DateTime.parse(info.data);
             if (info.parametr.startsWith(' ') && infoDate.isAfter(latestColonyForce)) {
               latestColonyForce = infoDate;
-              _colonyForce = info.wartosc;
+              _colonyForce = wartoscWBiezacym(context, info.wartosc); //wpis z innego języka na ekran w bieżącym
             } else if (!info.parametr.startsWith(' ') && infoDate.isAfter(latestColonyState)) {
               latestColonyState = infoDate;
-              _colonyState = info.wartosc;
+              _colonyState = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
             }
           }
         }
@@ -386,7 +386,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                       const Icon(Icons.info_outline, size: 24),
                       const SizedBox(width: 12),
                       Text(
-                        '${hive.h1} ${hive.h2} (${hive.ramek})',
+                        '${rodzajUlaWBiezacym(context, hive.h1)} ${hive.h2} (${hive.ramek})',
                         style: const TextStyle(fontSize: 16),
                       ),
                     ],
@@ -532,7 +532,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                           ),
                           Expanded(
                             child: Text(
-                              hive.todo,
+                              zadanieRamkiWBiezacym(context, hive.todo), //zadanie z innego języka - w bieżącym
                               style: const TextStyle(fontSize: 14),
                             ),
                           ),
@@ -856,7 +856,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${_lastFeeding!.parametr} ${_lastFeeding!.wartosc} ${_lastFeeding!.miara} (${_zmienDateCala(_lastFeeding!.data)})',
+                            '${nazwaParametru(context, _lastFeeding!.parametr)} ${_lastFeeding!.wartosc} ${miaraWBiezacym(context, _lastFeeding!.miara, parametr: _lastFeeding!.parametr)} (${_zmienDateCala(_lastFeeding!.data)})',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -892,7 +892,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${nazwaParametru(context, _lastTreatment!.parametr)} ${_lastTreatment!.wartosc} ${_lastTreatment!.miara} (${_zmienDateCala(_lastTreatment!.data)})',
+                            '${nazwaParametru(context, _lastTreatment!.parametr)} ${_lastTreatment!.wartosc} ${miaraWBiezacym(context, _lastTreatment!.miara, parametr: _lastTreatment!.parametr)} (${_zmienDateCala(_lastTreatment!.data)})',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),

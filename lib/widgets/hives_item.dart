@@ -152,7 +152,7 @@ class HivesItem extends StatelessWidget {
                     Text(
                       // AppLocalizations.of(context)!.hIve + ' ${hive.ulNr}',
       //rodzaj ula                
-                      '${hive.h1} ',
+                      '${rodzajUlaWBiezacym(context, hive.h1)} ', //rodzaj z innego języka - w bieżącym
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -300,7 +300,7 @@ class HivesItem extends StatelessWidget {
                           (hive.kategoria == 'feeding' ||
                               hive.kategoria == 'treatment'))
                         Text(
-                          '${nazwaParametru(context, hive.parametr)} ${hive.wartosc} ${hive.miara}',
+                          '${nazwaParametru(context, hive.parametr)} ${hive.wartosc} ${miaraWBiezacym(context, hive.miara, parametr: hive.parametr)}',
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color.fromARGB(255, 69, 69, 69),

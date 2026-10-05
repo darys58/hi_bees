@@ -15,7 +15,6 @@ import '../screens/frames_screen.dart';
 import '../screens/infos_edit_screen.dart';
 import '../globals.dart' as globals;
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
-import '../helpers/queen_helpers.dart'; //klucz znaku matki -> napis na ekran
 
 class InfoItem extends StatelessWidget {
   String zmienDate(String data) {
@@ -774,10 +773,10 @@ class InfoItem extends StatelessWidget {
                             //wpisy o znaku matki sprzed 06.09.2026 mają
                             //w wartosci KLUCZ ("mark_white") zamiast napisu -
                             //patrz znakMatkiNaEkran() w queen_helpers.dart
-                            text: ((info.kategoria == 'queen'
-                                        ? znakMatkiNaEkran(info.wartosc,
-                                            AppLocalizations.of(context)!)
-                                        : info.wartosc)
+                            //wartość z innego języka na ekran w bieżącym; dla matki
+                                //w środku także znak (znakMatkiNaEkran) i jakość
+                                //(jakoscMatkiNaEkran) - parametr mówi, która to cecha
+                                text: (wartoscWBiezacym(context, info.wartosc, parametr: info.parametr)
                                     .replaceAll('.', ',') +
                                 ' '),
                             style: TextStyle(
@@ -794,7 +793,7 @@ class InfoItem extends StatelessWidget {
 // i warunek tak jak wyzej to: rodzaj ula i typ ula
                           parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.numberOfFrame + " = "
                           ? TextSpan(
-                            text: (info.pogoda + ' ' + info.miara ), //rodzaj ula
+                            text: (rodzajUlaWBiezacym(context, info.pogoda) + ' ' + info.miara ), //rodzaj ula w bieżącym języku
                               style: TextStyle(
                                 fontSize: 16,
                                 //fontWeight: FontWeight.bold,
@@ -816,7 +815,7 @@ class InfoItem extends StatelessWidget {
                                   text: (''), //nie wyświetlanie ilości dm2 węzy
                                 )
                             : TextSpan(
-                              text: (info.miara ), //np: bez rodzaju ula, bez 0 przy braku kraty,
+                              text: (miaraWBiezacym(context, info.miara, parametr: info.parametr) ), //np: bez rodzaju ula, bez 0 przy braku kraty, (jednostka w bieżącym języku)
                             style: TextStyle(
                                 fontSize: 16,
                                 //fontWeight: FontWeight.bold,
