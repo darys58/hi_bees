@@ -844,7 +844,13 @@ class DBHelper {
   static Future<List<Map<String, dynamic>>> getQueenID(int pasieka, int ul,) async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie ID matki dla ula x');
-    return db.rawQuery('SELECT id FROM matki WHERE pasieka=? and ul = ?',
+    //Matka utracona (dataStraty) zostaje w tabeli z numerem pasieki i ula, więc ul
+    //może mieć kilka matek. Bez ORDER BY SQLite zwracał najstarszą (zwykle pierwszą
+    //matkę ula), a nie aktualną. Najpierw żyjące, potem najnowsze - tak jak
+    //ekrany czytające z providera Queens (ORDER BY id DESC).
+    return db.rawQuery(
+        "SELECT id FROM matki WHERE pasieka=? and ul = ? "
+        "ORDER BY (dataStraty IS NULL OR dataStraty = '' OR dataStraty = '0') DESC, id DESC",
         [pasieka, ul]);
   }
 

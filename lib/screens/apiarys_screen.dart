@@ -156,7 +156,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
   final wersja = '1.13.3.101'; //wersja aplikacji na iOS
   final dataWersji = '2026-09-27';
-  final now = DateTime.now();
+  DateTime get now => DateTime.now(); //getter, nie pole - pole zapamiętywało datę utworzenia ekranu i po kilku dniach w tle pokazywało starą
   late DateFormat formatter;
   int aktywnosc = 0;
   List<Weather>? pogoda;
@@ -185,6 +185,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+    _zmianaDnia();
     if (globals.key == '' || globals.kod == '') return; //apka nieaktywowana
     final DateTime teraz = DateTime.now();
     if (_ostatniaSynchronizacja != null &&
@@ -196,6 +197,21 @@ class _ApiarysScreenState extends State<ApiarysScreen>
     _pobierzKonto(kod).then((odp) {
       if (odp != null) _synchronizujKonto(odp, kod);
     });
+  }
+
+  //Dzień, na który ustawione są domyślne daty wpisów (05.10.2026). Apka trzymana
+  //w tle przez kilka dni wracała z datą z dnia uruchomienia: na ekranie startowym
+  //i jako domyślna data w Kategoriach/przeglądzie (globals.dataWpisu).
+  String _dzien = DateTime.now().toString().substring(0, 10);
+
+  void _zmianaDnia() {
+    final String dzis = DateTime.now().toString().substring(0, 10);
+    if (dzis == _dzien) return;
+    //data ustawiona ręcznie (inna niż "dziś" z poprzedniego dnia) zostaje
+    if (globals.dataWpisu == _dzien) globals.dataWpisu = dzis;
+    if (globals.dataPrzeniesRamke == _dzien) globals.dataPrzeniesRamke = dzis;
+    _dzien = dzis;
+    if (mounted) setState(() {}); //przerysowanie daty na ekranie startowym
   }
 
   @override

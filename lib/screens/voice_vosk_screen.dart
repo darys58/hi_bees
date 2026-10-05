@@ -6777,6 +6777,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //jezeli info dotyczy matki
       if(kat == 'queen'){
         //pobranie ID matki przypisanej do tego ula
+        matkaID = 0; //pole stanu - bez zerowania ul bez matki dostałby ID z poprzedniego ula
         final data = await DBHelper.getQueenID(nrXXOfApiary, nrXXOfHive);
         if (data.isNotEmpty) {
           matkaID = data[0]['id'] as int; //numer id matki - index z tabeli "matka"
