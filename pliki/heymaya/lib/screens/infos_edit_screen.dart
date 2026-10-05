@@ -24,6 +24,7 @@ import '../models/infos.dart';
 import '../models/dodatki2.dart';
 import '../widgets/recording_player.dart'; //odtwarzacz nagrania notatki
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
+import '../helpers/powierzchnia_ramki.dart'; //dmRamkiUla - powierzchnia węzy wg typu ula
 
 class InfosEditScreen extends StatefulWidget {
   static const routeName = '/infos_edit';
@@ -259,96 +260,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       } else nowyMiara = '';
       
       
-      if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x" ){      
-                      //nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
-          switch (globals.typUla) {
-            case 'WIELKOPOLSKI': dmRamki = '35175'; //dm2, węza: 335x105 (mała ramka: 360x130)
-              break;
-            case 'DADANT': dmRamki = '49680';       //dm2, węza: 414x120 (mała ramka: 435x145)
-              break;
-            case 'OSTROWSKIEJ': dmRamki = '68675';  //dm2, węza: 335x205 (ramka: 360x230)
-              break;
-            case 'WARSZAWSKI ZWYKŁY': dmRamki = '28600';  //dm2, węza: 220x130 (mała ramka: 240x160)
-              break;
-            case 'WARSZAWSKI POSZERZANY': dmRamki = '35175';  //dm2, węza: 335x105 (mała ramka: 360x130)
-              break;
-            case 'APIPOL': dmRamki = '37260';  //dm2, węza: 414x90 (ramka: 435x115)
-              break;
-            case 'LANGSTROTH': dmRamki = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
-              break;
-            case 'ZANDER': dmRamki = '74100';  //dm2, węza: 390x190 (ramka: 420x220)
-              break;
-            case 'GERSTUNG': dmRamki = '39100';  //dm2, węza: 230x170 (mała ramka: 260x200)
-              break;
-            case 'APIMAYE': dmRamki = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
-              break;
-            case 'DEUTSCH NORMAL': dmRamki = '49680'; //dm2, węza: 414x120 (mała ramka: 435x145)
-              break;
-            case 'NORMALMASS': dmRamki = '84000';  //dm2, węza: 400x210 (ramka: 435x240)
-              break;
-            case 'FRANKENBEUTE': dmRamki = '50600';  //dm2, węza: 440x115 (mała ramka: 470x145)
-              break;
-            case 'NATIONAL': dmRamki = '88150';  //dm2, węza: 430x205 (ramka: 460x235)
-              break;
-            case 'WBC': dmRamki = '37260';  //dm2, węza: 414x90 (mała ramka: 435x115)
-              break;
-            case 'WIELKOPOLSKI GÓRSKI': dmRamki = '51925';  //dm2, węza: 335x155 (ramka: 360x180)
-              break;
-            case 'TYP A': dmRamki = dod2[0].z;  //dm2, ramka mała własna TYP A
-              break;
-            case 'TYP B': dmRamki = dod2[1].z;  //dm2, ramka mała własna TYP B
-              break;
-            case 'TYP C': dmRamki = dod2[2].z;  //dm2, ramka mała własna TYP C
-              break;
-            case 'TYP D': dmRamki = dod2[3].z;  //dm2, ramka mała własna TYP D
-              break;
-            default: dmRamki = '0';// dla typów innych niz powyzsze
-          }          
-      }else if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x"  ){                   
-          //print('globals.typUla = ${globals.typUla}');
-          switch (globals.typUla) {
-            case 'WIELKOPOLSKI': dmRamki = '78725'; //dm2, węza: 335x235 (duza ramka: 360x260)
-              break;
-            case 'DADANT': dmRamki = '109710'; //dm2, węza: 414x265 (duza ramka: 435x300)
-              break;
-            case 'OSTROWSKIEJ': dmRamki = '68675';  //dm2, węza: 335x205 (ramka: 360x230)
-              break;
-            case 'WARSZAWSKI ZWYKŁY': dmRamki = '88000';  //dm2, węza: 220x400 (duza ramka: 240x435)
-              break;
-            case 'WARSZAWSKI POSZERZANY': dmRamki = '112000';  //dm2, węza: 280x400 (duza ramka: 300x435)
-              break;
-            case 'APIPOL': dmRamki = '37260';  //dm2, węza: 414x90 (ramka: 435x115)
-              break;
-            case 'LANGSTROTH': dmRamki = '84870';  //dm2, węza: 414x205 (duza ramka: 435x230)
-              break;
-            case 'ZANDER': dmRamki = '74100';  //dm2, węza: 390x190 (ramka: 420x220)
-              break;
-            case 'GERSTUNG': dmRamki = '64400';  //dm2, węza: 280x230 (duza ramka: 410x260)
-              break;
-            case 'APIMAYE': dmRamki = '86820';  //dm2, węza: 424x205 (duza ramka: 448x232)
-              break;
-            case 'DEUTSCH NORMAL': dmRamki = '109710'; //dm2, węza: 414x265 (duza ramka: 435x300)
-              break;
-            case 'NORMALMASS': dmRamki = '84000';  //dm2, węza: 400x210 (ramka: 435x240)
-              break;
-            case 'FRANKENBEUTE': dmRamki = '118800';  //dm2, węza: 440x270 (duza ramka: 470x300)
-              break;
-            case 'NATIONAL': dmRamki = '88150';  //dm2, węza: 430x205 (ramka: 460x235)
-              break;
-            case 'WBC': dmRamki = '84870';  //dm2, węza: 414x205 (duza ramka: 435x230)
-              break;
-            case 'WIELKOPOLSKI GÓRSKI': dmRamki = '51925';  //dm2, węza: 335x155 (ramka: 360x180)
-              break;
-            case 'TYP A': dmRamki = dod2[0].u;  //dm2, ramka duza własna TYP A
-              break;
-            case 'TYP B': dmRamki = dod2[1].u;  //dm2, ramka duza własna TYP B
-              break;
-            case 'TYP C': dmRamki = dod2[2].u;  //dm2, ramka duza własna TYP C
-              break;
-            case 'TYP D': dmRamki = dod2[3].u;  //dm2, ramka duza własna TYP D
-              break;
-            default: dmRamki = '0';// dla typów innych niz powyzsze
-          }          
+      if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x" ){
+          dmRamki = dmRamkiUla(globals.typUla, mala: true, dod2: dod2); //helpers/powierzchnia_ramki.dart
+      }else if (nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x"  ){
+          dmRamki = dmRamkiUla(globals.typUla, mala: false, dod2: dod2); //helpers/powierzchnia_ramki.dart
       }
 //print('nowyMiara = $nowyMiara');
       nowyUwagi = '';

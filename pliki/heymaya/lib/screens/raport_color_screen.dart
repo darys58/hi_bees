@@ -20,6 +20,7 @@ import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/memory.dart';
+import '../helpers/parametr_nazwy.dart'; //parametrWBiezacym - wpisy z każdego języka
 
 class RaportColorScreen extends StatefulWidget {
   static const routeName = '/raport_color'; //zbiór miodu
@@ -146,28 +147,28 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
 
   // Pomocnicze funkcje do obliczania wartości miodu i pyłku
   double _obliczMiod(Info info, int b, String honeySmall, String honeyBig, String honeyKg) {
-    if (info.parametr == honeySmall && info.wartosc.isNotEmpty) {
+    if (parametrWBiezacym(context, info.parametr) == honeySmall && info.wartosc.isNotEmpty) {
       double dmVal = info.pogoda == '' ? 35175 : double.parse(info.pogoda);
       return double.parse(info.wartosc) * b * dmVal / 10000;
     }
-    if (info.parametr == honeyBig && info.wartosc.isNotEmpty) {
+    if (parametrWBiezacym(context, info.parametr) == honeyBig && info.wartosc.isNotEmpty) {
       double dmVal = info.pogoda == '' ? 78725 : double.parse(info.pogoda);
       return double.parse(info.wartosc) * b * dmVal / 10000;
     }
-    if (info.parametr == honeyKg && info.wartosc.isNotEmpty) {
+    if (parametrWBiezacym(context, info.parametr) == honeyKg && info.wartosc.isNotEmpty) {
       return double.parse(info.wartosc) * 1000;
     }
     return 0;
   }
 
   double _obliczPylek(Info info, int g, String pylekPorcja, String pylekMiarka, String pylekMl, String pylekL) {
-    if ((info.parametr == pylekPorcja || info.parametr == pylekMiarka) && info.wartosc.isNotEmpty) {
+    if ((parametrWBiezacym(context, info.parametr) == pylekPorcja || parametrWBiezacym(context, info.parametr) == pylekMiarka) && info.wartosc.isNotEmpty) {
       return (int.parse(info.wartosc) * g).toDouble();
     }
-    if (info.parametr == pylekMl && info.wartosc.isNotEmpty) {
+    if (parametrWBiezacym(context, info.parametr) == pylekMl && info.wartosc.isNotEmpty) {
       return int.parse(info.wartosc).toDouble();
     }
-    if (info.parametr == pylekL && info.wartosc.isNotEmpty) {
+    if (parametrWBiezacym(context, info.parametr) == pylekL && info.wartosc.isNotEmpty) {
       return double.parse(info.wartosc) * 1000;
     }
     return 0;
@@ -1665,15 +1666,15 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
       String honeyBig = AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x";
       String honeyKg = AppLocalizations.of(context)!.honey + " = ";
 
-      if (info.parametr == honeySmall && info.wartosc.isNotEmpty) {
+      if (parametrWBiezacym(context, info.parametr) == honeySmall && info.wartosc.isNotEmpty) {
         double dmVal = info.pogoda == '' ? 35175 : double.parse(info.pogoda);
         return double.parse(info.wartosc) * b * dmVal / 10000;
       }
-      if (info.parametr == honeyBig && info.wartosc.isNotEmpty) {
+      if (parametrWBiezacym(context, info.parametr) == honeyBig && info.wartosc.isNotEmpty) {
         double dmVal = info.pogoda == '' ? 78725 : double.parse(info.pogoda);
         return double.parse(info.wartosc) * b * dmVal / 10000;
       }
-      if (info.parametr == honeyKg && info.wartosc.isNotEmpty) {
+      if (parametrWBiezacym(context, info.parametr) == honeyKg && info.wartosc.isNotEmpty) {
         return double.parse(info.wartosc) * 1000;
       }
       return 0;
@@ -1686,13 +1687,13 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
       String pylekMl = AppLocalizations.of(context)!.beePollen + " = ";
       String pylekL = " " + AppLocalizations.of(context)!.beePollen + " =  ";
 
-      if ((info.parametr == pylekPorcja || info.parametr == pylekMiarka) && info.wartosc.isNotEmpty) {
+      if ((parametrWBiezacym(context, info.parametr) == pylekPorcja || parametrWBiezacym(context, info.parametr) == pylekMiarka) && info.wartosc.isNotEmpty) {
         return (int.parse(info.wartosc) * g).toDouble();
       }
-      if (info.parametr == pylekMl && info.wartosc.isNotEmpty) {
+      if (parametrWBiezacym(context, info.parametr) == pylekMl && info.wartosc.isNotEmpty) {
         return int.parse(info.wartosc).toDouble();
       }
-      if (info.parametr == pylekL && info.wartosc.isNotEmpty) {
+      if (parametrWBiezacym(context, info.parametr) == pylekL && info.wartosc.isNotEmpty) {
         return double.parse(info.wartosc) * 1000;
       }
       return 0;

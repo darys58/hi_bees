@@ -16,6 +16,7 @@ import 'dart:math'; //min()
 import 'package:provider/provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:heymaya/l10n/app_localizations.dart';
+import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki
 import '../models/frames.dart';
 import '../models/infos.dart';
 import '../models/hives.dart';
@@ -953,7 +954,7 @@ class _ImportScreenState extends State<ImportScreen> {
               };
               await DBHelper.applyInfoStateToHives(
                 liquidationValues: liquidationValues,
-                frameCountParam: loc.numberOfFrame + ' = ',
+                frameCountParams: wszystkieJezyki((l) => l.numberOfFrame + ' = '), //wpisy z każdego języka
                 formattedDate: formattedDate,
                 hiveLabel: loc.hIve,
               );
@@ -1182,7 +1183,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     };
                     await DBHelper.applyInfoStateToHives(
                       liquidationValues: liquidationValues,
-                      frameCountParam: loc.numberOfFrame + ' = ',
+                      frameCountParams: wszystkieJezyki((l) => l.numberOfFrame + ' = '), //wpisy z każdego języka
                       formattedDate: formattedDate,
                       hiveLabel: loc.hIve,
                     );

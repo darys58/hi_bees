@@ -11,6 +11,7 @@ import '../models/harvest.dart';
 import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
+import '../helpers/parametr_nazwy.dart'; //parametrWBiezacym - wpisy z każdego języka
 
 class RaportScreen extends StatefulWidget {
   static const routeName = '/raport';
@@ -525,30 +526,30 @@ class _RaportScreenState extends State<RaportScreen> {
       for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2023'){ //info z roku ...
           if(infos[i].ulNr == allHivesNumbers[j-1]) { //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2023 = allMiod2023 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);  
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2023 = allMiod2023 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);           
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
               allMiod2023 = allMiod2023 + (double.parse(infos[i].wartosc) * 1000).toInt(); //miód w kg           
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
             //i pyłku (dla miarki)
               allPylek2023 = allPylek2023 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
             //i pyłku (w ml)
               allPylek2023 = allPylek2023 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
             //i pyłku (w l)
               allPylek2023 = allPylek2023 + (double.parse(infos[i].wartosc) * 1000).toInt();            
             }
@@ -566,35 +567,35 @@ class _RaportScreenState extends State<RaportScreen> {
       for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2023'){ //info z roku ...
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000); 
               miod2023 = miod2023 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000); //suma zbioru za 2023
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2023 = miod2023 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);  //suma zbioru za 2023           
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
               miod2023 = miod2023 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2023 = pylek2023 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2023 = pylek2023 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2023 = pylek2023 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -628,30 +629,30 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2024'){ //info z roku ...
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2024 = allMiod2024 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2024 = allMiod2024 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
               allMiod2024 = allMiod2024 + (double.parse(infos[i].wartosc) * 1000).toInt(); //miód w kg           
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               allPylek2024 = allPylek2024 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               allPylek2024 = allPylek2024 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               allPylek2024 = allPylek2024 + (double.parse(infos[i].wartosc) * 1000).toInt();            
             }
@@ -668,35 +669,35 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2024'){ //info z roku ...
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2024 = miod2024 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2024 = miod2024 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
               miod2024 = miod2024 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2024 = pylek2024 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2024 = pylek2024 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2024 = pylek2024 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -727,30 +728,30 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2025'){ //info z roku ...
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2025 = allMiod2025 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2025 = allMiod2025 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000); //miód duza ramka            
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
               allMiod2025 = allMiod2025 + (double.parse(infos[i].wartosc) * 1000).toInt(); //miód w kg           
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               allPylek2025 = allPylek2025 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               allPylek2025 = allPylek2025 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               allPylek2025 = allPylek2025 + (double.parse(infos[i].wartosc) * 1000).toInt();            
             }
@@ -767,35 +768,35 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2025'){ //info z roku ...
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2025 = miod2025 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2025 = miod2025 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
               miod2025 = miod2025 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2025 = pylek2025 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2025 = pylek2025 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2025 = pylek2025 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -827,30 +828,30 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2026'){ //info z roku ...
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2026 = allMiod2026 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2026 = allMiod2026 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
               allMiod2026 = allMiod2026 + (double.parse(infos[i].wartosc) * 1000).toInt(); //miód w kg           
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               allPylek2026 = allPylek2026 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               allPylek2026 = allPylek2026 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               allPylek2026 = allPylek2026 + (double.parse(infos[i].wartosc) * 1000).toInt();            
             }
@@ -867,35 +868,35 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2026'){ //info z roku ...
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2026 = miod2026 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2026 = miod2026 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
               miod2026 = miod2026 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2026 = pylek2026 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2026 = pylek2026 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2026 = pylek2026 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -925,30 +926,30 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2027'){ //info z roku ...
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2027 = allMiod2027 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2027 = allMiod2027 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
               allMiod2027 = allMiod2027 + (double.parse(infos[i].wartosc) * 1000).toInt(); //miód w kg           
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               allPylek2027 = allPylek2027 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               allPylek2027 = allPylek2027 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               allPylek2027 = allPylek2027 + (double.parse(infos[i].wartosc) * 1000).toInt();            
             }
@@ -965,35 +966,35 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2027'){ //info z roku ...
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2027 = miod2027 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2027 = miod2027 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
               miod2027 = miod2027 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2027 = pylek2027 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2027 = pylek2027 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2027 = pylek2027 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -1024,30 +1025,30 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2028'){ //info z roku ...
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2028 = allMiod2028 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2028 = allMiod2028 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
               allMiod2028 = allMiod2028 + (double.parse(infos[i].wartosc) * 1000).toInt(); //miód w kg           
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               allPylek2028 = allPylek2028 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               allPylek2028 = allPylek2028 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               allPylek2028 = allPylek2028 + (double.parse(infos[i].wartosc) * 1000).toInt();            
             }
@@ -1064,35 +1065,35 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2028'){ //info z roku ...
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2028 = miod2028 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2028 = miod2028 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
               miod2028 = miod2028 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2028 = pylek2028 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2028 = pylek2028 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2028 = pylek2028 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -1122,30 +1123,30 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2029'){ //info z roku ...
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2029 = allMiod2029 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2029 = allMiod2029 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
               allMiod2029 = allMiod2029 + (double.parse(infos[i].wartosc) * 1000).toInt(); //miód w kg           
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               allPylek2029 = allPylek2029 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               allPylek2029 = allPylek2029 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               allPylek2029 = allPylek2029 + (double.parse(infos[i].wartosc) * 1000).toInt();            
             }
@@ -1162,35 +1163,35 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2029'){ //info z roku ...
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2029 = miod2029 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2029 = miod2029 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
               miod2029 = miod2029 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2029 = pylek2029 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2029 = pylek2029 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2029 = pylek2029 + (double.parse(infos[i].wartosc) * 1000).toInt();            
@@ -1220,30 +1221,30 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2030'){ //info z roku ...
           if(infos[i].ulNr == allHivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2030 = allMiod2030 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               allMiod2030 = allMiod2030 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = "  && infos[i].wartosc.isNotEmpty){
               allMiod2030 = allMiod2030 + (double.parse(infos[i].wartosc) * 1000).toInt(); //miód w kg           
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               allPylek2030 = allPylek2030 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty ){
              //i pyłku (w ml)
               allPylek2030 = allPylek2030 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               allPylek2030 = allPylek2030 + (double.parse(infos[i].wartosc) * 1000).toInt();            
             }
@@ -1260,35 +1261,35 @@ class _RaportScreenState extends State<RaportScreen> {
     for (var i = 0; i < infos.length; i++) {
         if (infos[i].data.substring(0, 4) == '2030'){ //info z roku ...
           if(infos[i].ulNr == hivesNumbers[j-1]) {  //dla ula nr ...
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){ 
               //i danego rodzaju zbioru (miód, mała ramka)
               if(infos[i].pogoda=='') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2030 = miod2030 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x" && infos[i].wartosc.isNotEmpty){
               if(infos[i].pogoda=='') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
               else dm = double.parse(infos[i].pogoda);
               miod = miod + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);
               miod2030 = miod2030 + (double.parse(infos[i].wartosc) * _getBForDate(infos[i].data, defaultB, zbioryMiodG) * dm/10000);             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " && infos[i].wartosc.isNotEmpty){
               miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
               miod2030 = miod2030 + (double.parse(infos[i].wartosc) * 1000).toInt();             
             }
-            if((infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
+            if((parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x") && infos[i].wartosc.isNotEmpty){
              //i pyłku (dla miarki)
               pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
               pylek2030 = pylek2030 + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));             
             }
-            if(infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w ml)
               pylek = pylek + int.parse(infos[i].wartosc);
               pylek2030 = pylek2030 + int.parse(infos[i].wartosc);             
             }
-            if(infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
+            if(parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  " && infos[i].wartosc.isNotEmpty){
              //i pyłku (w l)
               pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
               pylek2030 = pylek2030 + (double.parse(infos[i].wartosc) * 1000).toInt();            

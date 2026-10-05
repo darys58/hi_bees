@@ -69,6 +69,7 @@ import '../models/hives.dart';
 import '../models/apiarys.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
+import '../models/dodatki2.dart'; //typy własne uli - powierzchnia ramek przy zbiorze
 import '../models/note.dart'; //Notes - notatka dyktowana do Notesu
 import '../models/recording.dart'; //Recordings - nagrania dyktowanych notatek
 import '../helpers/recording_helper.dart'; //zapis WAV + cykl życia nagrań
@@ -78,6 +79,7 @@ import '../models/weather.dart';
 import '../models/weathers.dart';
 //import '../models/dodatki1.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
+import '../helpers/powierzchnia_ramki.dart'; //dmRamkiUla - powierzchnia węzy wg typu ula
 //void main() {
 //  runApp(MyApp());
 //}
@@ -6645,6 +6647,21 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //gubił słowo "Odkład", a ulik weselny skrót typu.
     final bool toLiczbaRamek =
         param == AppLocalizations.of(context)!.numberOfFrame + " = ";
+    //Zbiór miodu "z małych/dużych ramek": pole pogoda = powierzchnia węzy w ramce
+    //wg typu ula (tak samo jak przy wpisie ręcznym w infos_edit_screen). Do 05.10.2026
+    //szedł tu pusty tekst albo ID matki z poprzedniej komendy, a statystyka i raport
+    //liczą zbiór jako ramki x waga 1 dm2 x pogoda/10000 - wychodziło 0.
+    final l10n = AppLocalizations.of(context)!;
+    final bool toMiodMalaRamka = kat == 'harvest' &&
+        param == l10n.honey + " = " + l10n.small + " " + l10n.frame + " x";
+    final bool toMiodDuzaRamka = kat == 'harvest' &&
+        param == l10n.honey + " = " + l10n.big + " " + l10n.frame + " x";
+    final dod2 = Provider.of<Dodatki2>(context, listen: false).items;
+    //'0' = typ ula nieznany - wtedy pusto, czyli ramka wielkopolska jak dla starych wpisów
+    String dmRamkiDoInfo(String typ) {
+      final dm = dmRamkiUla(typ, mala: toMiodMalaRamka, dod2: dod2);
+      return dm == '0' ? '' : dm;
+    }
     if (ustawianaData != '')
       formattedDate = ustawianaData;
     else
@@ -6676,7 +6693,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               param, //parametr
               wart, //wartosc
               toLiczbaRamek ? hives[i].h2 : miar, //miara (dla ramek: typ ula)
-              toLiczbaRamek ? hives[i].h1 : icon, //ikona pogody (dla ramek: rodzaj ula)
+              toLiczbaRamek //ikona pogody (dla ramek: rodzaj ula, dla zbioru z ramek: dm2 węzy)
+                ? hives[i].h1
+                : (toMiodMalaRamka || toMiodDuzaRamka)
+                  ? dmRamkiDoInfo(hives[i].h2)
+                  : icon,
               '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
               formatedTime, //czas
               '', //uwagi
@@ -6786,13 +6807,15 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       //rodzaj i typ ula do wpisu "liczba ramek =" - patrz komentarz na początku metody
       String rodzajDoInfo = '';
       String typDoInfo = miar;
-      if (toLiczbaRamek) {
+      String dmDoInfo = '';
+      if (toLiczbaRamek || toMiodMalaRamka || toMiodDuzaRamka) {
         final ule = Provider.of<Hives>(context, listen: false).items.where((element) {
           return element.id == ('$nrXXOfApiary.$nrXXOfHive');
         }).toList();
         if (ule.isNotEmpty) {
           rodzajDoInfo = ule[0].h1;
           typDoInfo = ule[0].h2;
+          if (toMiodMalaRamka || toMiodDuzaRamka) dmDoInfo = dmRamkiDoInfo(ule[0].h2);
         }
       }
       Infos.insertInfo(
@@ -6806,9 +6829,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           toLiczbaRamek ? typDoInfo : miar, //miara (dla ramek: typ ula)
           toLiczbaRamek //ikona pogody (dla ramek: rodzaj ula)
             ? rodzajDoInfo
-            : matkaID > 0 //jezeli jest ID matki a jak nie ma to ''
-              ?  matkaID.toString()
-              :'',
+            : (toMiodMalaRamka || toMiodDuzaRamka) //dla zbioru z ramek: dm2 węzy
+              ? dmDoInfo
+              //ID matki TYLKO dla wpisów o matce - matkaID to pole stanu i zostawało
+              //po komendzie o matce, trafiając do pogoda np. przy zbiorze miodu
+              : (kat == 'queen' && matkaID > 0)
+                ? matkaID.toString()
+                : '',
           '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
           formatedTime, //czas
           '', //uwagi
@@ -8482,11 +8509,14 @@ print('openDialog = $openDialog');
                       children: [
   //wolna                      
                         if(hive.isNotEmpty && hive[0].matka4 == 'wolna')
-                            Image.asset('assets/image/matka1.png',
-                                width: 30, height: 20, fit: BoxFit.fill)
+                            //matka12, nie matka1: matka1.png to KWADRATOWA ikona kategorii
+                            //i przy 30x20 + BoxFit.fill wychodziła spłaszczona; matka12
+                            //ma proporcje klateczki (matka11) - tak jak w belce ula
+                            Image.asset('assets/image/matka12.png',
+                                width: 30, height: 18, fit: BoxFit.fill)
                         else if(hive[0].matka4 == 'ograniczona')
                           Image.asset('assets/image/matka11.png',
-                              width: 30, height: 20, fit: BoxFit.fill),
+                              width: 30, height: 18, fit: BoxFit.fill),
                         if(hive.isNotEmpty && hive[0].matka4 != '' && hive[0].matka4 != '0')
                           SizedBox(width: 8),
   //ok //brak                    

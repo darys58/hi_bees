@@ -251,7 +251,7 @@ class _FramesScreenState extends State<FramesScreen> {
   Future<List<Frame>> getDaty(pasieka, ul, String parametrPrzegladu) async {
     final dataList = await DBHelper.getDate(pasieka, ul); //daty z ramek
     final infoList = await DBHelper.getDateInfo(
-        pasieka, ul, 'inspection', parametrPrzegladu); //daty samych przeglądów
+        pasieka, ul, 'inspection', [parametrPrzegladu]); //daty samych przeglądów
     final Set<String> unikalneDaty = <String>{
       for (final item in dataList) '${item['data']}',
       for (final item in infoList) '${item['data']}',

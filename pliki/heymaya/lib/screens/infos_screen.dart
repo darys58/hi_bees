@@ -776,7 +776,7 @@ class _InfoScreenState extends State<InfoScreen> {
       var dataZnakuMatki = DateTime.parse('2022-01-01 00:00');
       for (var i = 0; i < infos.length; i++) {
         if (infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == " " + AppLocalizations.of(context)!.queen &&
+            parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.queen &&
             DateTime.parse(infos[i].data).isAfter(dataZnakuMatki)) {
           dataZnakuMatki = DateTime.parse(infos[i].data);
           idMatkiWUlu = infos[i].pogoda;
@@ -820,16 +820,16 @@ class _InfoScreenState extends State<InfoScreen> {
 
     void ustawUnasiennienie(Info inf) {
       String wartoscM3 = '';
-      if(inf.wartosc == AppLocalizations.of(context)!.virgine){
+      if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.virgine){
         icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
         wartoscM3 = AppLocalizations.of(context)!.virgine1;
-      } else if(inf.wartosc == AppLocalizations.of(context)!.naturallyMated){
+      } else if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.naturallyMated){
         icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
         wartoscM3 = AppLocalizations.of(context)!.naturallyMated1;
-      } else if(inf.wartosc == AppLocalizations.of(context)!.artificiallyInseminated){
+      } else if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.artificiallyInseminated){
         icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
         wartoscM3 = AppLocalizations.of(context)!.artificiallyInseminated1;
-      } else if(inf.wartosc == AppLocalizations.of(context)!.droneLaying){
+      } else if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.droneLaying){
         icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),);
         wartoscM3 = AppLocalizations.of(context)!.droneLaying;
       }
@@ -838,7 +838,7 @@ class _InfoScreenState extends State<InfoScreen> {
     }
 
     void ustawOgraniczenie(Info inf) {
-      if(inf.wartosc == AppLocalizations.of(context)!.freed)
+      if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.freed)
         image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
       else image4 = Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
       wartosc4 = 'ID' + inf.pogoda + ' ' + inf.wartosc +
@@ -866,7 +866,7 @@ class _InfoScreenState extends State<InfoScreen> {
         double dm = 0; //rozmiar węzy w dm2
         //dla bierzącego roku i danego rodzaju zbioru (miód, mała ramka)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x") {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.small + " " + AppLocalizations.of(context)!.frame + " x") {
           
           if(infos[i].pogoda == '') dm = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
           else dm = double.parse(infos[i].pogoda);
@@ -889,7 +889,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i danego rodzaju zbioru (miód, duza ramka)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x") {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = " + AppLocalizations.of(context)!.big + " " + AppLocalizations.of(context)!.frame + " x") {
           
           if(infos[i].pogoda == '') dm = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
           else dm = double.parse(infos[i].pogoda);
@@ -912,7 +912,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i danego rodzaju zbioru (miód w kg)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.honey + " = ") {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.honey + " = ") {
           miod = miod + (double.parse(infos[i].wartosc) * 1000).toInt();
           //dane do wykresu
           if(tempDataZbioru != infos[i].data){ //jezeli data aktualnego wpisu o zbioze miodu jeszcze nie wystąpiła
@@ -932,8 +932,8 @@ class _InfoScreenState extends State<InfoScreen> {
         
         //dla bierzącego roku i danego rodzaju zbioru (pyłek, miarka)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            (infos[i].parametr == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x")) {
+            (parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen +  "  = " + AppLocalizations.of(context)!.portion + " x" ||
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + "  = " + AppLocalizations.of(context)!.miarka + " x")) {
           pylek = pylek + (int.parse(infos[i].wartosc) * int.parse(dod1[0].g));
           //dane do wykresu
           daneZbioruPylkuDoWykresu.add({
@@ -945,7 +945,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i danego rodzaju zbioru (pyłek w ml)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.beePollen + " = ") {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollen + " = ") {
           pylek = pylek + (int.parse(infos[i].wartosc));
           //dane do wykresu
           daneZbioruPylkuDoWykresu.add({
@@ -958,7 +958,7 @@ class _InfoScreenState extends State<InfoScreen> {
 
         //dla bierzącego roku i danego rodzaju zbioru (pyłek w l)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == " " + AppLocalizations.of(context)!.beePollen + " =  ") {
+            parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.beePollen + " =  ") {
           pylek = pylek + (double.parse(infos[i].wartosc) * 1000).toInt();
           //dane do wykresu
           daneZbioruPylkuDoWykresu.add({
@@ -974,8 +974,8 @@ class _InfoScreenState extends State<InfoScreen> {
       if (wybranaKategoria == 'equipment') {
         //dla wszystkich lat i parametru excluder
         // if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-        //     infos[i].parametr == AppLocalizations.of(context)!.excluder) {
-        if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.excluder) {
+        //     parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.excluder) {
+        if (infos[i].wartosc.isNotEmpty && parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.excluder) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             wartosc1 = AppLocalizations.of(context)!.excluder + 
@@ -984,7 +984,7 @@ class _InfoScreenState extends State<InfoScreen> {
           }
         }
         //dla wszystkich lat i parametru excluder - usuń
-        if ( infos[i].miara.isNotEmpty && infos[i].parametr == " " + AppLocalizations.of(context)!.excluder + " -") {
+        if ( infos[i].miara.isNotEmpty && parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.excluder + " -") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             wartosc1 = AppLocalizations.of(context)!.excluder + ' - ' + AppLocalizations.of(context)!.lack +
@@ -992,7 +992,7 @@ class _InfoScreenState extends State<InfoScreen> {
           }
         }
         //dla wszystkich lat i parametru bottomBoard
-        if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.bottomBoard + " " + AppLocalizations.of(context)!.isIs) {
+        if (infos[i].wartosc.isNotEmpty && parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.bottomBoard + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
             wartosc2 = infos[i].parametr + ' ' + infos[i].wartosc +
@@ -1000,14 +1000,14 @@ class _InfoScreenState extends State<InfoScreen> {
           }
         }
         //dla wszystkich lat i parametru beePolenTrap
-        if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs) {
+        if (infos[i].wartosc.isNotEmpty && parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
             
-            if(infos[i].wartosc == AppLocalizations.of(context)!.zalacz || infos[i].wartosc == AppLocalizations.of(context)!.set || infos[i].wartosc == AppLocalizations.of(context)!.close){
+            if(wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.zalacz || wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.set || wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.close){
               wartosc3 = AppLocalizations.of(context)!.zalacz1 +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
-            }else if(infos[i].wartosc == AppLocalizations.of(context)!.off || infos[i].wartosc == AppLocalizations.of(context)!.open){
+            }else if(wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.off || wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.open){
               wartosc3 = AppLocalizations.of(context)!.off1 +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
             }else{
@@ -1019,7 +1019,7 @@ class _InfoScreenState extends State<InfoScreen> {
         
  
         //dla wszystkich lat i parametru numberOfFrame
-        if (infos[i].wartosc.isNotEmpty && infos[i].parametr == AppLocalizations.of(context)!.numberOfFrame + " = ") {
+        if (infos[i].wartosc.isNotEmpty && parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.numberOfFrame + " = ") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
             typUla = infos[i].miara;
@@ -1036,11 +1036,13 @@ class _InfoScreenState extends State<InfoScreen> {
         //dla wszystkich lat i parametru colonyForce
         //if (infos[i].data.substring(0, 4) == rokStatystyk && 
         if(infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == " " + AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) {
+            parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
-            if(infos[i].wartosc == 'norma'){
-              wartosc1 = 'normalna' +
+            //po bieżącym l10n, nie po polskich literałach - inaczej wpis z innego
+            //języka szedł surowo, a polski zawsze po polsku ("normalna")
+            if(wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.normal){
+              wartosc1 = AppLocalizations.of(context)!.normal1 +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
             }else{
               wartosc1 = infos[i].wartosc +
@@ -1051,11 +1053,11 @@ class _InfoScreenState extends State<InfoScreen> {
         //dla wszystkich lat i cechy colony colonyState
         //if (infos[i].data.substring(0, 4) == rokStatystyk && 
         if (infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
-            if(infos[i].wartosc == "zła"){
-              wartosc2 = 'agresywna' +
+            if(wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.aggressive){
+              wartosc2 = AppLocalizations.of(context)!.aggressive1 +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
             }else{
               wartosc2 = infos[i].wartosc +
@@ -1066,7 +1068,7 @@ class _InfoScreenState extends State<InfoScreen> {
         //dla wszystkich lat i cechy colony deadBees
         //if (infos[i].data.substring(0, 4) == rokStatystyk && 
         if(infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.deadBees) {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.deadBees) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
             wartosc3 = infos[i].wartosc + ' ' + infos[i].miara +
@@ -1098,7 +1100,7 @@ class _InfoScreenState extends State<InfoScreen> {
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == paramJakosc) {
+            parametrWBiezacym(context, infos[i].parametr) == paramJakosc) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             ustawJakosc(infos[i]);
@@ -1108,7 +1110,7 @@ class _InfoScreenState extends State<InfoScreen> {
         if (//infos[i].data.substring(0, 4) == rokStatystyk &&
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == paramRocznik) {
+            parametrWBiezacym(context, infos[i].parametr) == paramRocznik) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
             ustawRocznik(infos[i]);
@@ -1118,7 +1120,7 @@ class _InfoScreenState extends State<InfoScreen> {
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == paramUnasiennienie) {
+            parametrWBiezacym(context, infos[i].parametr) == paramUnasiennienie) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
             ustawUnasiennienie(infos[i]);
@@ -1128,7 +1130,7 @@ class _InfoScreenState extends State<InfoScreen> {
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == paramOgraniczenie) {
+            parametrWBiezacym(context, infos[i].parametr) == paramOgraniczenie) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
             ustawOgraniczenie(infos[i]);
@@ -1138,7 +1140,7 @@ class _InfoScreenState extends State<InfoScreen> {
         if (//infos[i].data.substring(0, 4) == rokStatystyk && 
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == " " + AppLocalizations.of(context)!.queen) {
+            parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.queen) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
             final loc = AppLocalizations.of(context)!;
@@ -1182,7 +1184,7 @@ class _InfoScreenState extends State<InfoScreen> {
       if (wybranaKategoria == 'feeding') {
         //dla bierzącego roku i parametru syrup1to1I,syrup1to1D
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.syrup + " 1:1") {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.syrup + " 1:1") {
           suma1 = suma1 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
@@ -1193,7 +1195,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru syrup3to2I,syrup3to2D
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-                 infos[i].parametr == AppLocalizations.of(context)!.syrup + " 3:2") {
+                 parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.syrup + " 3:2") {
           suma2 = suma2 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
@@ -1204,7 +1206,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru invert
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.invert) {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.invert) {
           suma3 = suma3 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
@@ -1215,7 +1217,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru candy
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.candy) {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.candy) {
           suma4 = suma4 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
@@ -1227,7 +1229,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru removeFood
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.removedFood) {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.removedFood) {
           //suma5 = suma5 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
@@ -1239,7 +1241,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru leftFood
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.leftFood) {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.leftFood) {
           //suma5 = suma5 + double.parse(infos[i].wartosc);
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData6) && DateTime.parse(infos[i].data).isAfter(ostatniaData5) && DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData6 = DateTime.parse(infos[i].data);
@@ -1254,7 +1256,7 @@ class _InfoScreenState extends State<InfoScreen> {
       if (wybranaKategoria == 'treatment') {
         //dla bierzącego roku i parametru apivarol
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == "apivarol") {
+            parametrWBiezacym(context, infos[i].parametr) == "apivarol") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
             wartosc1 = infos[i].wartosc + ' ' + infos[i].miara +
@@ -1264,7 +1266,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru biovar
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == "biovar") {
+            parametrWBiezacym(context, infos[i].parametr) == "biovar") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
             wartosc2 = infos[i].wartosc + ' ' + infos[i].miara +
@@ -1274,7 +1276,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru acid (ml)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == AppLocalizations.of(context)!.acid) {
+            parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.acid) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
             ostatniaData3 = DateTime.parse(infos[i].data);
             wartosc3 = infos[i].wartosc + ' ' + infos[i].miara +
@@ -1284,7 +1286,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru acid (g)
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == " " + AppLocalizations.of(context)!.acid) {
+            parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.acid) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
             ostatniaData4 = DateTime.parse(infos[i].data);
             wartosc4 = infos[i].wartosc + ' ' + infos[i].miara +
@@ -1294,7 +1296,7 @@ class _InfoScreenState extends State<InfoScreen> {
         }
         //dla bierzącego roku i parametru varroa
         if (infos[i].data.substring(0, 4) == rokStatystyk && infos[i].wartosc.isNotEmpty &&
-            infos[i].parametr == "varroa") {
+            parametrWBiezacym(context, infos[i].parametr) == "varroa") {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
             ostatniaData5 = DateTime.parse(infos[i].data);
             wartosc5 = infos[i].wartosc + ' ' + infos[i].miara +
@@ -1327,7 +1329,7 @@ class _InfoScreenState extends State<InfoScreen> {
       //(_infoTejMatki przychodzi z bazy posortowane malejąco po dacie i czasie)
       Info? przeniesiony(String parametr) {
         for (final inf in _infoTejMatki) {
-          if (inf.parametr == parametr &&
+          if (parametrWBiezacym(context, inf.parametr) == parametr &&
               inf.wartosc.isNotEmpty &&
               (inf.ulNr != globals.ulID || inf.pasiekaNr != globals.pasiekaID)) return inf;
         }

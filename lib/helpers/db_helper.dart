@@ -640,13 +640,18 @@ class DBHelper {
         [pasieka, ul]);
   }
 
+  //znaki zapytania dla "parametr IN (...)"
+  static String _znakiZapytania(int ile) => List.filled(ile, '?').join(',');
+
   //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki, kategorii, parametru - dla hives_screen
-  static Future<List<Map<String, dynamic>>> getDateInfo(int pasieka, int ul, String kategoria, String parametr) async {
+  //parametry: WSZYSTKIE wersje językowe parametru (wszystkieJezyki z parametr_nazwy.dart),
+  //bo info.parametr jest zapisany w języku z chwili zapisu
+  static Future<List<Map<String, dynamic>>> getDateInfo(int pasieka, int ul, String kategoria, Iterable<String> parametry) async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie dat info dla ula nr $ul');
     return db.rawQuery(
-        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr = ? ORDER BY data DESC',
-        [pasieka, ul, kategoria, parametr]);
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr IN (${_znakiZapytania(parametry.length)}) ORDER BY data DESC',
+        [pasieka, ul, kategoria, ...parametry]);
   }
 
   //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii feeding lub treatment - dla hives_screen
@@ -666,30 +671,30 @@ class DBHelper {
   }
 
   //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii harvest - dla hives_screen
-  static Future<List<Map<String, dynamic>>> getDateInfoZkg(int pasieka, int ul, String parametr) async {
+  static Future<List<Map<String, dynamic>>> getDateInfoZkg(int pasieka, int ul, Iterable<String> parametry) async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie dat infoDL dla ula nr $ul');
     return db.rawQuery(
-        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr = ? ORDER BY data DESC',
-        [pasieka, ul,'harvest', parametr]);
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr IN (${_znakiZapytania(parametry.length)}) ORDER BY data DESC',
+        [pasieka, ul,'harvest', ...parametry]);
   } 
 
   //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii harvest - dla hives_screen
-  static Future<List<Map<String, dynamic>>> getDateInfoZmr(int pasieka, int ul, String parametr) async {
+  static Future<List<Map<String, dynamic>>> getDateInfoZmr(int pasieka, int ul, Iterable<String> parametry) async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie dat infoDL dla ula nr $ul');
     return db.rawQuery(
-        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr = ? ORDER BY data DESC',
-        [pasieka, ul,'harvest', parametr]);
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr IN (${_znakiZapytania(parametry.length)}) ORDER BY data DESC',
+        [pasieka, ul,'harvest', ...parametry]);
   }
 
    //odczyt z bazy info z unikalnymi datami dla danego ula, pasieki i kategorii harvest - dla hives_screen
-  static Future<List<Map<String, dynamic>>> getDateInfoZdr(int pasieka, int ul, String parametr) async {
+  static Future<List<Map<String, dynamic>>> getDateInfoZdr(int pasieka, int ul, Iterable<String> parametry) async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie dat infoDL dla ula nr $ul');
     return db.rawQuery(
-        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr = ? ORDER BY data DESC',
-        [pasieka, ul,'harvest', parametr]);
+        'SELECT DISTINCT data FROM info WHERE pasiekaNr=? and ulNr = ? and kategoria = ? and parametr IN (${_znakiZapytania(parametry.length)}) ORDER BY data DESC',
+        [pasieka, ul,'harvest', ...parametry]);
   }
 
   //pobieranie ramek dla danego ula i pasieki - dla frames
@@ -1322,22 +1327,24 @@ class DBHelper {
   }
 
   //aktualizacja stanu uli na podstawie najnowszego chronologicznie wpisu info
-  //parametr == frameCountParam -> ikona 'green', ramek = wartosc, h1 = pogoda, h2 = miara
+  //parametr ∈ frameCountParams -> ikona 'green', ramek = wartosc, h1 = pogoda, h2 = miara
+  //(frameCountParams = "liczba ramek = " we WSZYSTKICH językach - do 05.10.2026 szedł tylko
+  //bieżący i wpis zapisany w innym języku dawał po imporcie ramek=10 i domyślny rodzaj ula)
   //parametr ∈ liquidationValues -> ikona 'black', reszta (ramek, h1, h2) z ostatniego
   //wpisu "liczba ramek =" tego ula, a dopiero w jego braku wartości domyślne
   static Future<void> applyInfoStateToHives({
     required Set<String> liquidationValues,
-    required String frameCountParam,
+    required Set<String> frameCountParams,
     required String formattedDate,
     required String hiveLabel,
   }) async {
-    if (liquidationValues.isEmpty) return;
+    if (liquidationValues.isEmpty || frameCountParams.isEmpty) return;
     final db = await DBHelper.database();
-    final placeholders = List.filled(liquidationValues.length, '?').join(',');
-    final args = <Object?>[frameCountParam, ...liquidationValues];
+    final args = <Object?>[...frameCountParams, ...liquidationValues];
     final rows = await db.rawQuery(
       'SELECT pasiekaNr, ulNr, parametr, wartosc, pogoda, miara, data, czas '
-      'FROM info WHERE parametr = ? OR parametr IN ($placeholders)',
+      'FROM info WHERE parametr IN (${_znakiZapytania(frameCountParams.length)}) '
+      'OR parametr IN (${_znakiZapytania(liquidationValues.length)})',
       args,
     );
     if (rows.isEmpty) return;
@@ -1360,7 +1367,7 @@ class DBHelper {
       final key = '${row['pasiekaNr']}.${row['ulNr']}';
       final cur = latest[key];
       if (cur == null || nowszy(row, cur)) latest[key] = row;
-      if ((row['parametr'] as String? ?? '') == frameCountParam) {
+      if (frameCountParams.contains(row['parametr'] as String? ?? '')) {
         final curF = latestFrames[key];
         if (curF == null || nowszy(row, curF)) latestFrames[key] = row;
       }
@@ -1374,7 +1381,7 @@ class DBHelper {
       final parametr = r['parametr'] as String? ?? '';
 
       final Map<String, Object?> record;
-      if (parametr == frameCountParam) {
+      if (frameCountParams.contains(parametr)) {
         record = {
           'id': entry.key,
           'pasiekaNr': p, 'ulNr': u,

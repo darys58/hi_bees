@@ -1,18 +1,19 @@
 
 import 'dart:convert'; //obsługa json'a
 
-//import 'package:hi_bees/screens/apiarys_weather_edit_screen.dart';
+//import 'package:heymaya/screens/apiarys_weather_edit_screen.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; //czy jest Internet
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:heymaya/l10n/app_localizations.dart';
-import '../helpers/queen_helpers.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
+import '../helpers/queen_helpers.dart';
+import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki
 import '../models/apiarys.dart';
 import '../models/dodatki1.dart';
 import '../models/frame.dart';
@@ -207,27 +208,28 @@ class _HivesScreenState extends State<HivesScreen> {
       .then((_) async { 
       final infosUla = Provider.of<Infos>(context, listen: false);   
       final hivesInfo = infosUla.items; //przypisanie tutaj bo inaczej nie działa tworzenie list: np List<Info> infosIleRamek = hivesInfo.where a nie List<Info> infosIleRamek = infosUla.items.where
+
+      //parametry zbiorów we WSZYSTKICH językach - info.parametr jest w języku z chwili
+      //zapisu; z samym bieżącym językiem po zmianie języka belka zbioru szła na '0'
+      final pMiodKg = wszystkieJezyki((l) => l.honey + " = ");
+      final pMiodMalaRamka = wszystkieJezyki((l) => l.honey + " = " + l.small + " " + l.frame + " x");
+      final pMiodDuzaRamka = wszystkieJezyki((l) => l.honey + " = " + l.big + " " + l.frame + " x");
                  
         //ZBIORY //lista dat info ula zeby uzyskac datę ostatniego wpisu o zbiorach w kg
         //lista jest tworzona od razu dla wszystkich uli i później porównywana z datami dla duzych ramek
-          return getDatyInfoZkg(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey + " = ")
+          return getDatyInfoZkg(globals.pasiekaID, numerUla, pMiodKg)
             .then((_) {
             //print('');
             if(_datyInfoZkg.isNotEmpty){
               listaDatZkg.addAll({numerUla : _datyInfoZkg[0].data});
               tempDataZkg = _datyInfoZkg[0].data; //data ostatniego wpisu o zbiorach w kg              
             } else tempDataZkg = '0000-00-00'; 
-             //print(' ul = $numerUla, tempDataZkg = $tempDataZkg, getDatyInfoZkg _____________ ile dat  = ${_datyInfoZkg.length}');
+              //print(' ul = $numerUla, tempDataZkg = $tempDataZkg, getDatyInfoZkg _____________ ile dat  = ${_datyInfoZkg.length}');
               //print('listaDatZkg $listaDatZkg');
       
           //ZBIORY //lista dat info ula zeby uzyskac datę ostatniego wpisu o zbiorach z małej ramki
           //lista jest tworzona od razu dla wszystkich uli i później porównywana z datami dla duzych ramek
-            return getDatyInfoZmr(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey +
-                                  " = " +
-                                  AppLocalizations.of(context)!.small +
-                                  " " +
-                                  AppLocalizations.of(context)!.frame +
-                                  " x" ).then((_) {
+            return getDatyInfoZmr(globals.pasiekaID, numerUla, pMiodMalaRamka).then((_) {
               //print('_datyInfoZmr_po = $_datyInfoZmr');
               if(_datyInfoZmr.isNotEmpty){
                 listaDatZmr.addAll({numerUla : _datyInfoZmr[0].data});
@@ -237,12 +239,7 @@ class _HivesScreenState extends State<HivesScreen> {
                 //print('listaDatZmr $listaDatZmr');
             
                 //ZBIORY //lista dat info ula zeby uzyskac datę ostatniego wpisu o zbiorach z duzej ramki
-               return getDatyInfoZdr(globals.pasiekaID, numerUla, AppLocalizations.of(context)!.honey +
-                                    " = " +
-                                    AppLocalizations.of(context)!.big +
-                                    " " +
-                                    AppLocalizations.of(context)!.frame +
-                                    " x" ).then((_) {
+               return getDatyInfoZdr(globals.pasiekaID, numerUla, pMiodDuzaRamka).then((_) {
                   if(_datyInfoZdr.isNotEmpty){
                     tempDataZdr = _datyInfoZdr[0].data; //data ostatniego wpisu o zbiorach duzych ramek
                   } else tempDataZdr = '0000-00-00';
@@ -287,12 +284,7 @@ class _HivesScreenState extends State<HivesScreen> {
           if((DateTime.parse(dataZmrOK)).compareTo(DateTime.parse(tempDataZdr)) > 0){ //są tylko małe ramki z ostatnich zbiorów
             //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach małych ramek
             List<Info> infosZ_mr = hivesInfo.where((inf_mr) {
-              return  inf_mr.data == dataZmrOK && inf_mr.kategoria == 'harvest' && inf_mr.parametr ==  AppLocalizations.of(context)!.honey +
-                            " = " +
-                            AppLocalizations.of(context)!.small +
-                            " " +
-                            AppLocalizations.of(context)!.frame +
-                            " x" ; 
+              return  inf_mr.data == dataZmrOK && inf_mr.kategoria == 'harvest' && pMiodMalaRamka.contains(inf_mr.parametr); 
             }).toList();
             //print('ul = $numerUla, wartość tylko mr = ${infosZ_mr[0].wartosc}');
             if(infosZ_mr[0].miara == '') dm_mr = 35175; //dla starszych wpisów przyjąć ze jest to mała ramka wielkopolska
@@ -304,12 +296,7 @@ class _HivesScreenState extends State<HivesScreen> {
           } else if((DateTime.parse(dataZmrOK)).compareTo(DateTime.parse(tempDataZdr)) < 0){ //sa to tylko duze ramki z ostatnich zbiorów
             //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach duzych ramek
             List<Info> infosZ_dr = hivesInfo.where((inf_dr) {
-              return  inf_dr.data == tempDataZdr && inf_dr.kategoria == 'harvest' && inf_dr.parametr ==  AppLocalizations.of(context)!.honey +
-                            " = " +
-                            AppLocalizations.of(context)!.big +
-                            " " +
-                            AppLocalizations.of(context)!.frame +
-                            " x" ; 
+              return  inf_dr.data == tempDataZdr && inf_dr.kategoria == 'harvest' && pMiodDuzaRamka.contains(inf_dr.parametr); 
             }).toList();
             //print('ul = $numerUla, wartość tylko dr = ${infosZ_dr[0].wartosc}');
             if(infosZ_dr[0].miara == '') dm_dr = 78725; //dla starszych wpisów przyjąć ze jest to duza ramka wielkopolska
@@ -321,21 +308,11 @@ class _HivesScreenState extends State<HivesScreen> {
           } else { //są to małe i duze ramki z ostatnich zbiorów 
             //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach małych ramek 
             List<Info> infosZ_mr = hivesInfo.where((inf_mr) {
-              return  inf_mr.data == dataZmrOK && inf_mr.kategoria == 'harvest' && inf_mr.parametr ==  AppLocalizations.of(context)!.honey +
-                            " = " +
-                            AppLocalizations.of(context)!.small +
-                            " " +
-                            AppLocalizations.of(context)!.frame +
-                            " x" ; 
+              return  inf_mr.data == dataZmrOK && inf_mr.kategoria == 'harvest' && pMiodMalaRamka.contains(inf_mr.parametr); 
             }).toList();  
             //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach duzych ramek
             List<Info> infosZ_dr = hivesInfo.where((inf_dr) {
-              return  inf_dr.data == tempDataZdr && inf_dr.kategoria == 'harvest' && inf_dr.parametr ==  AppLocalizations.of(context)!.honey +
-                            " = " +
-                            AppLocalizations.of(context)!.big +
-                            " " +
-                            AppLocalizations.of(context)!.frame +
-                            " x" ; 
+              return  inf_dr.data == tempDataZdr && inf_dr.kategoria == 'harvest' && pMiodDuzaRamka.contains(inf_dr.parametr); 
             }).toList();
             
             //wartość sumy małych i duzych ramek
@@ -369,7 +346,7 @@ class _HivesScreenState extends State<HivesScreen> {
             //print('tylko kg - nie ma ramek');
             //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach w kg
             List<Info> infosZ_kg = hivesInfo.where((inf_kg) {
-              return  inf_kg.data == dataZkgOK && inf_kg.kategoria == 'harvest' && inf_kg.parametr ==  AppLocalizations.of(context)!.honey + " = "; 
+              return  inf_kg.data == dataZkgOK && inf_kg.kategoria == 'harvest' && pMiodKg.contains(inf_kg.parametr); 
             }).toList();
             //print('ul = $numerUla, wartość tylko kg = ${infosZ_kg[0].wartosc}');
             wartosc = (double.parse(infosZ_kg[0].wartosc)).toString(); // zbiór tylko w kg
@@ -380,7 +357,7 @@ class _HivesScreenState extends State<HivesScreen> {
               //print('są ramki i kg');
               //pobranie info dla ula i dla daty ostatniego wpisu o zbiorach w kg
               List<Info> infosZ_kg = hivesInfo.where((inf_kg) {
-                return  inf_kg.data == dataZkgOK && inf_kg.kategoria == 'harvest' && inf_kg.parametr ==  AppLocalizations.of(context)!.honey + " = "; 
+                return  inf_kg.data == dataZkgOK && inf_kg.kategoria == 'harvest' && pMiodKg.contains(inf_kg.parametr); 
               }).toList();
                        
               if(wartoscDouble != 0 || infosZ_kg.isNotEmpty){
@@ -842,10 +819,20 @@ class _HivesScreenState extends State<HivesScreen> {
       //wystarczy pierwszy pasujący wpis. Kolumna info.pogoda niesie dla
       //kategorii "queen" matkaID (wpisują je queen_item, infos_edit_screen
       //i sterowanie głosem).
+      //parametry wpisów o matce we WSZYSTKICH językach. info.parametr jest w języku
+      //z chwili zapisu; z samym bieżącym językiem po zmianie języka nic się nie
+      //dopasowywało, a matka1..5 szły do tabeli "ule" PUSTE (analiza 05.10.2026)
+      final pJakosc = wszystkieJezyki((l) => l.queen + '  ' + l.isIs); //matka1
+      final pZnak = wszystkieJezyki((l) => " " + l.queen); //matka2
+      final pStan = wszystkieJezyki((l) => l.queen + " -"); //matka3
+      final pStart = wszystkieJezyki((l) => l.queenIs); //matka4
+      final pRocznik = wszystkieJezyki((l) => l.queenWasBornIn); //matka5
+      final pIleRamek = wszystkieJezyki((l) => l.numberOfFrame + " = ");
+
       String idMatkiWUlu = '';
       for (final inf in hivesInfo) {
         if (inf.kategoria == 'queen' &&
-            inf.parametr == " " + AppLocalizations.of(context)!.queen &&
+            pZnak.contains(inf.parametr) &&
             inf.wartosc.isNotEmpty) {
           idMatkiWUlu = inf.pogoda;
           break;
@@ -873,9 +860,9 @@ class _HivesScreenState extends State<HivesScreen> {
       }
       //najnowszy wpis TEJ matki o danym parametrze, zrobiony w INNYM ulu
       //(lista przychodzi posortowana malejąco po dacie i czasie)
-      Info? przeniesiony(String parametr) {
+      Info? przeniesiony(Set<String> parametry) {
         for (final inf in wpisyMatki) {
-          if (inf.parametr == parametr &&
+          if (parametry.contains(inf.parametr) &&
               inf.wartosc.isNotEmpty &&
               (inf.ulNr != numerUla || inf.pasiekaNr != globals.pasiekaID)) return inf;
         }
@@ -883,30 +870,30 @@ class _HivesScreenState extends State<HivesScreen> {
       }
 
      //ILOŚĆ RAMEK   //lista dat info ula zeby uzyskac datę ostatniego wpisu ilości ramek w wybranym ulu
-      getDatyInfo(globals.pasiekaID, numerUla,'equipment',AppLocalizations.of(context)!.numberOfFrame + " = ").then((_) async {
+      getDatyInfo(globals.pasiekaID, numerUla,'equipment',pIleRamek).then((_) async {
         if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o ilości ramek 
           final tempDataIleRamek = _datyInfo[0].data; //data oststniego wpisu ile ramek
           //pobranie info dla ula i dla daty ostatniego wpisu o ilosci ramek 
           List<Info> infosIleRamek = hivesInfo.where((inf) {
-              return  inf.data == tempDataIleRamek && inf.kategoria == 'equipment' &&  inf.parametr == AppLocalizations.of(context)!.numberOfFrame + " = "; 
+              return  inf.data == tempDataIleRamek && inf.kategoria == 'equipment' &&  pIleRamek.contains(inf.parametr); 
             }).toList();        
             ileRamek = int.parse(infosIleRamek[0].wartosc); 
         } else {ileRamek = 10;} //domyślna ilość ramek jezeli nie ma odpowiedniego wpisu w info dla ula
         
         //MATKA1 - queenQuality (dobra, OK)
-        getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs).then((_) async {
+        getDatyInfo(globals.pasiekaID, numerUla,'queen',pJakosc).then((_) async {
           //wpis z TEGO ula, a gdy go nie ma - PRZENIESIONY z ula poprzedniego
           Info? wpisMatka1;
           if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce1
             tempDataMatka1 = _datyInfo[0].data; //data ostatniego wpisu matka1
             //pobranie info dla ula i dla daty ostatniego wpisu o matce1
             List<Info> infosMatka1 = hivesInfo.where((m1) {
-                return  m1.data == tempDataMatka1 && m1.kategoria == 'queen' &&  m1.parametr == AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs && tejMatki(m1); 
+                return  m1.data == tempDataMatka1 && m1.kategoria == 'queen' &&  pJakosc.contains(m1.parametr) && tejMatki(m1); 
               }).toList();
             //pusto = wpis z tej daty należy do POPRZEDNIEJ matki (odsiał go tejMatki)
             if (infosMatka1.isNotEmpty) wpisMatka1 = infosMatka1[0];
           }
-          wpisMatka1 ??= przeniesiony(AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs);
+          wpisMatka1 ??= przeniesiony(pJakosc);
           if (wpisMatka1 == null) {
             matka1 = '';
           //jakość matki znają queen_helpers - lista literałów łapała tylko polski
@@ -929,29 +916,31 @@ class _HivesScreenState extends State<HivesScreen> {
         DBHelper.updateUleMatka1('${globals.pasiekaID}.$numerUla',matka1);
           
             //MATKA3 - queenState (dziewica, naturalna, trutówka)
-            getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queen + " -").then((_) async {
+            getDatyInfo(globals.pasiekaID, numerUla,'queen',pStan).then((_) async {
               //wpis z TEGO ula, a gdy go nie ma - PRZENIESIONY z ula poprzedniego
               Info? wpisMatka3;
               if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce3
                 tempDataMatka3 = _datyInfo[0].data; //data ostatniego wpisu matka3
                 //pobranie info dla ula i dla daty ostatniego wpisu o matce3
                 List<Info> infosMatka3 = hivesInfo.where((m3) {
-                    return  m3.data == tempDataMatka3 && m3.kategoria == 'queen' &&  m3.parametr == AppLocalizations.of(context)!.queen + " -" && tejMatki(m3); 
+                    return  m3.data == tempDataMatka3 && m3.kategoria == 'queen' &&  pStan.contains(m3.parametr) && tejMatki(m3); 
                   }).toList();
                 //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
                 if (infosMatka3.isNotEmpty) wpisMatka3 = infosMatka3[0];
               }
-              wpisMatka3 ??= przeniesiony(AppLocalizations.of(context)!.queen + " -");
+              wpisMatka3 ??= przeniesiony(pStan);
               if (wpisMatka3 == null) {
                 matka3 = '';
-              } else if (wpisMatka3.wartosc == 'dziewica' || wpisMatka3.wartosc == 'virgine') {
+              //wartości we wszystkich językach - do 05.10.2026 tylko pl/en, więc np.
+              //niemieckie "unbegattet" dawało w belce "unasienniona"
+              } else if (wszystkieJezyki((l) => l.virgine).contains(wpisMatka3.wartosc) || wpisMatka3.wartosc == 'virgin') {
                 matka3 = 'nieunasienniona';
                 if (ikona == 'red') { //bo był brak matki
                   ikona = 'orange';
                   //globals.ikonaPasieki = 'orange';
                 }
                 if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
-              } else if (wpisMatka3.wartosc == 'trutówka' || wpisMatka3.wartosc == 'drone laying') {
+              } else if (wszystkieJezyki((l) => l.droneLaying).contains(wpisMatka3.wartosc)) {
                 matka3 = 'trutowa';
                 if (ikona == 'red') { //bo był brak matki
                   ikona = 'orange';
@@ -969,19 +958,19 @@ class _HivesScreenState extends State<HivesScreen> {
             DBHelper.updateUleMatka3('${globals.pasiekaID}.$numerUla',matka3);
            
               //MATKA4 - queenStart (wolna, w klatce)
-              getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queenIs).then((_) async {
+              getDatyInfo(globals.pasiekaID, numerUla,'queen',pStart).then((_) async {
                 //wpis z TEGO ula, a gdy go nie ma - PRZENIESIONY z ula poprzedniego
                 Info? wpisMatka4;
                 if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce4
                   tempDataMatka4 = _datyInfo[0].data; //data ostatniego wpisu matka4
                   //pobranie info dla ula i dla daty ostatniego wpisu o matce4
                   List<Info> infosMatka4 = hivesInfo.where((m4) {
-                      return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  m4.parametr == AppLocalizations.of(context)!.queenIs && tejMatki(m4); 
+                      return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  pStart.contains(m4.parametr) && tejMatki(m4); 
                     }).toList();
                   //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
                   if (infosMatka4.isNotEmpty) wpisMatka4 = infosMatka4[0];
                 }
-                wpisMatka4 ??= przeniesiony(AppLocalizations.of(context)!.queenIs);
+                wpisMatka4 ??= przeniesiony(pStart);
                 if (wpisMatka4 == null) {
                   matka4 = '';
                 } else if (wpisMatka4.wartosc == 'wolna' || wpisMatka4.wartosc == 'freed' || wpisMatka4.wartosc  == 'frei' || wpisMatka4.wartosc  == 'libre' || wpisMatka4.wartosc  == 'libera' || wpisMatka4.wartosc  == 'livre'){
@@ -1002,30 +991,30 @@ class _HivesScreenState extends State<HivesScreen> {
                 DBHelper.updateUleMatka4('${globals.pasiekaID}.$numerUla',matka4);
                   
                 //MATKA5 - queenBorn
-                getDatyInfo(globals.pasiekaID, numerUla,'queen',AppLocalizations.of(context)!.queenWasBornIn).then((_) async {
+                getDatyInfo(globals.pasiekaID, numerUla,'queen',pRocznik).then((_) async {
                   //wpis z TEGO ula, a gdy go nie ma - PRZENIESIONY z ula poprzedniego
                   Info? wpisMatka5;
                   if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce5
                    tempDataMatka5 = _datyInfo[0].data; //data oststniego wpisu matka5
                     //pobranie info dla ula i dla daty ostatniego wpisu o matce5
                     List<Info> infosMatka5 = hivesInfo.where((m5) {
-                        return  m5.data == tempDataMatka5 && m5.kategoria == 'queen' &&  m5.parametr == AppLocalizations.of(context)!.queenWasBornIn && tejMatki(m5); 
+                        return  m5.data == tempDataMatka5 && m5.kategoria == 'queen' &&  pRocznik.contains(m5.parametr) && tejMatki(m5); 
                       }).toList();
                     //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
                     if (infosMatka5.isNotEmpty) wpisMatka5 = infosMatka5[0];
                   }
-                  wpisMatka5 ??= przeniesiony(AppLocalizations.of(context)!.queenWasBornIn);
+                  wpisMatka5 ??= przeniesiony(pRocznik);
                   matka5 = wpisMatka5 == null ? '' : wpisMatka5.wartosc;
                 DBHelper.updateUleMatka5('${globals.pasiekaID}.$numerUla',matka5);
 
     //MATKA2 - queenMark (ma znak, brak)
-          getDatyInfo(globals.pasiekaID, numerUla,'queen'," " + AppLocalizations.of(context)!.queen).then((_) async {
+          getDatyInfo(globals.pasiekaID, numerUla,'queen',pZnak).then((_) async {
             if(_datyInfo.isNotEmpty){ //jezeli są jakieś wpisy o matce2
             dataPrzegladu =  _datyInfo[0].data; //data oststniego przeglądu do danych o pasiece
             tempDataMatka2 = _datyInfo[0].data; //data ostatniego wpisu matka2
               //pobranie info dla ula i dla daty ostatniego wpisu o matce2
               List<Info> infosMatka2 = hivesInfo.where((m2) {
-                  return  m2.data == tempDataMatka2 && m2.kategoria == 'queen' &&  m2.parametr == " " + AppLocalizations.of(context)!.queen; 
+                  return  m2.data == tempDataMatka2 && m2.kategoria == 'queen' &&  pZnak.contains(m2.parametr); 
                 }).toList();
                 //markToKey sprowadza wartość do KLUCZA, więc jedna gałąź
                 //obsługuje wszystkie siedem języków ORAZ same klucze
@@ -1077,7 +1066,7 @@ class _HivesScreenState extends State<HivesScreen> {
               DBHelper.updateUleMatka3('${globals.pasiekaID}.$numerUla',matka3);
               DBHelper.updateUleMatka4('${globals.pasiekaID}.$numerUla',matka4);
               DBHelper.updateUleMatka5('${globals.pasiekaID}.$numerUla',matka5);
-            }    
+            }
             //zerowanie parametrów info zeby usunać dane o zbiorach, leczeniu i dokarmianiu    
             DBHelper.updateUle('${globals.pasiekaID}.$numerUla', 'kategoria', '0');
             DBHelper.updateUle('${globals.pasiekaID}.$numerUla', 'parametr', '0');
@@ -1119,12 +1108,12 @@ class _HivesScreenState extends State<HivesScreen> {
                 final hiveZlikwidowane = hivesData.items.where((element) {
                         return element.ikona == ('black');
                       });       
-                    //zapis do tabeli "pasieki"
-                    Apiarys.insertApiary(
-                      '${globals.pasiekaID}',
-                      globals.pasiekaID, //pasieka nr
+                //zapis do tabeli "pasieki"
+                Apiarys.insertApiary(
+                  '${globals.pasiekaID}',
+                  globals.pasiekaID, //pasieka nr
                   ileUli - hiveZlikwidowane.length, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
-                      dataPrzegladu, //przeglad
+                  dataPrzegladu, //przeglad
                       globals.ikonaPasieki, //ikona
                       '??', //opis
                     ).then((_) {
@@ -1270,7 +1259,7 @@ class _HivesScreenState extends State<HivesScreen> {
               if ((todo != '' && todo != '0') && (ikona != 'red' || ikona != 'orange')) {
                 ikona = 'yellow';
               }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';                
-               //print('${globals.pasiekaID}.${numerUla} = ');   
+              //print('${globals.pasiekaID}.${numerUla} = ');   
 //ZAPIS DANYCH O ULU              
                 Hives.insertHive(
                   '${globals.pasiekaID}.${numerUla}',
@@ -1325,12 +1314,12 @@ class _HivesScreenState extends State<HivesScreen> {
                 final hiveZlikwidowane = hivesData.items.where((element) {
                         return element.ikona == ('black');
                       });       
-                    //zapis do tabeli "pasieki"
-                    Apiarys.insertApiary(
-                      '${globals.pasiekaID}',
-                      globals.pasiekaID, //pasieka nr
+                //zapis do tabeli "pasieki"
+                Apiarys.insertApiary(
+                  '${globals.pasiekaID}',
+                  globals.pasiekaID, //pasieka nr
                   ileUli - hiveZlikwidowane.length, //ile uli - obliczone przy wstawianiu/zapisywaniu info o ulach insertHive
-                      dataPrzegladu,//[0].data, //przeglad
+                  dataPrzegladu,//[0].data, //przeglad
                       globals.ikonaPasieki, //ikona
                       '??', //opis
                     ).then((_) {
@@ -1377,8 +1366,8 @@ class _HivesScreenState extends State<HivesScreen> {
   }
 
    //pobranie listy info z unikalnymi datami dla wybranego ula, pasieki, harvest i parametru z bazy lokalnej dla zbiorów w kg
-  Future<List<Info>> getDatyInfoZkg(pasieka, ul, parametr) async {
-    final dataList = await DBHelper.getDateInfoZkg(pasieka, ul, parametr); //numer wybranego ula
+  Future<List<Info>> getDatyInfoZkg(pasieka, ul, Set<String> parametry) async {
+    final dataList = await DBHelper.getDateInfoZkg(pasieka, ul, parametry); //numer wybranego ula
     //print('getDatyInfo: pasieka=$pasieka ul=$ul katagoria=$kategoria parametr=$parametr');
     _datyInfoZkg = dataList
         .map(
@@ -1404,8 +1393,8 @@ class _HivesScreenState extends State<HivesScreen> {
   }
 
    //pobranie listy info z unikalnymi datami dla wybranego ula, pasieki, harvest i parametru z bazy lokalnej dla małej ramki
-  Future<List<Info>> getDatyInfoZmr(pasieka, ul, parametr) async {
-    final dataList = await DBHelper.getDateInfoZmr(pasieka, ul, parametr); //numer wybranego ula
+  Future<List<Info>> getDatyInfoZmr(pasieka, ul, Set<String> parametry) async {
+    final dataList = await DBHelper.getDateInfoZmr(pasieka, ul, parametry); //numer wybranego ula
     //print('getDatyInfo: pasieka=$pasieka ul=$ul katagoria=$kategoria parametr=$parametr');
     _datyInfoZmr = dataList
         .map(
@@ -1431,8 +1420,8 @@ class _HivesScreenState extends State<HivesScreen> {
   }
 
    //pobranie listy info z unikalnymi datami dla wybranego ula, pasieki, harvest i parametru z bazy lokalnej - dla duzej ramki
-  Future<List<Info>> getDatyInfoZdr(pasieka, ul, parametr) async {
-    final dataList = await DBHelper.getDateInfoZdr(pasieka, ul, parametr); //numer wybranego ula
+  Future<List<Info>> getDatyInfoZdr(pasieka, ul, Set<String> parametry) async {
+    final dataList = await DBHelper.getDateInfoZdr(pasieka, ul, parametry); //numer wybranego ula
     //print('getDatyInfo: pasieka=$pasieka ul=$ul katagoria=$kategoria parametr=$parametr');
     _datyInfoZdr = dataList
         .map(
@@ -1458,8 +1447,8 @@ class _HivesScreenState extends State<HivesScreen> {
   }
 
   //pobranie listy info z unikalnymi datami dla wybranego ula, pasieki, kategorii i parametru z bazy lokalnej
-  Future<List<Info>> getDatyInfo(pasieka, ul, kategoria, parametr) async {
-    final dataList = await DBHelper.getDateInfo(pasieka, ul, kategoria, parametr); //numer wybranego ula
+  Future<List<Info>> getDatyInfo(pasieka, ul, kategoria, Set<String> parametry) async {
+    final dataList = await DBHelper.getDateInfo(pasieka, ul, kategoria, parametry); //numer wybranego ula
     //print('getDatyInfo: pasieka=$pasieka ul=$ul katagoria=$kategoria parametr=$parametr');
     _datyInfo = dataList
         .map(

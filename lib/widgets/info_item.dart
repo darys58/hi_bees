@@ -676,7 +676,7 @@ class InfoItem extends StatelessWidget {
                                       color: Color.fromARGB(255, 0, 0, 0)),
                                 ),
 //jezeli to matka (3)unasiennienie to: wartość zmieniana                             
-                            info.parametr == AppLocalizations.of(context)!.queen + " -"
+                            parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.queen + " -"
                               ? info.wartosc == 'dziewica' || info.wartosc == 'virgine' || info.wartosc == 'unbegattet' || info.wartosc == 'virgen' || info.wartosc == 'vierge' || info.wartosc == 'vergine' || info.wartosc == 'virgem'
                                 ? TextSpan(
                                   text: (AppLocalizations.of(context)!.virgine1), //nieunasienniona
@@ -709,7 +709,7 @@ class InfoItem extends StatelessWidget {
                                             color: Color.fromARGB(255, 0, 0, 0)),
                                         )
 //to jezeli to stan rodziny i wartość "zła"  (agresywna)                                                              
-                              : (info.parametr == AppLocalizations.of(context)!.colony + ' ' + AppLocalizations.of(context)!.isIs) && (info.wartosc == AppLocalizations.of(context)!.aggressive)
+                              : (parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.colony + ' ' + AppLocalizations.of(context)!.isIs) && (wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.aggressive)
                                 ? TextSpan(
                                   text: (AppLocalizations.of(context)!.aggressive1), //agresywna
                                   style: TextStyle(
@@ -717,7 +717,7 @@ class InfoItem extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     color: Color.fromARGB(255, 0, 0, 0)),
                                   )
-                                : (info.parametr == " " + AppLocalizations.of(context)!.colony + ' ' + AppLocalizations.of(context)!.isIs) && (info.wartosc == AppLocalizations.of(context)!.normal)
+                                : (parametrWBiezacym(context, info.parametr) == " " + AppLocalizations.of(context)!.colony + ' ' + AppLocalizations.of(context)!.isIs) && (wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.normal)
                                   ? TextSpan(
                                     text: (AppLocalizations.of(context)!.normal1), //normalna
                                     style: TextStyle(
@@ -727,7 +727,7 @@ class InfoItem extends StatelessWidget {
                                     )
                                     //to jezeli to stan rodziny i wartość "zła"  (agresywna)                                                              
 //to jezeli to poławiacz pyłku i wartość                               
-                              : (info.parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (info.wartosc == AppLocalizations.of(context)!.zalacz || info.wartosc == AppLocalizations.of(context)!.set || info.wartosc == AppLocalizations.of(context)!.close))
+                              : (parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.zalacz || wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.set || wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.close))
                                 ? TextSpan(
                                   text: (AppLocalizations.of(context)!.zalacz1), //załaczony
                                   style: TextStyle(
@@ -735,7 +735,7 @@ class InfoItem extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     color: Color.fromARGB(255, 0, 0, 0)),
                                   )
-                                : (info.parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (info.wartosc == AppLocalizations.of(context)!.off || info.wartosc == AppLocalizations.of(context)!.open))
+                                : (parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.off || wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.open))
                                   ? TextSpan(
                                     text: (AppLocalizations.of(context)!.off1), //normalna
                                     style: TextStyle(
@@ -743,7 +743,7 @@ class InfoItem extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                       color: Color.fromARGB(255, 0, 0, 0)),
                                     )
-                                  : (info.parametr == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (info.wartosc == AppLocalizations.of(context)!.remove || info.wartosc == AppLocalizations.of(context)!.delete))
+                                  : (parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.beePollenTrap + " " + AppLocalizations.of(context)!.isIs && (wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.remove || wartoscWBiezacym(context, info.wartosc) == AppLocalizations.of(context)!.delete))
                                     ? TextSpan(
                                       text: (AppLocalizations.of(context)!.remove1), //normalna
                                       style: TextStyle(
@@ -780,10 +780,10 @@ class InfoItem extends StatelessWidget {
  
  //drugi wiersz cd.: miara lub inne teksty w zalezności od parametru                        
                           //jezeli to "ileRamek =" to nowa linia bo bedzie typ i rodzaj ula
-                          if(info.parametr == AppLocalizations.of(context)!.numberOfFrame + " = ")
+                          if(parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.numberOfFrame + " = ")
                             TextSpan(text: ('\n')),
 // i warunek tak jak wyzej to: rodzaj ula i typ ula
-                          info.parametr == AppLocalizations.of(context)!.numberOfFrame + " = "
+                          parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.numberOfFrame + " = "
                           ? TextSpan(
                             text: (info.pogoda + ' ' + info.miara ), //rodzaj ula
                               style: TextStyle(
@@ -792,7 +792,7 @@ class InfoItem extends StatelessWidget {
                                 color: Color.fromARGB(255, 0, 0, 0)),
                             )
 //jezeli to "krata odgrodowa - brak" to zamiast "0" będzie "brak"
-                          :info.parametr == " " + AppLocalizations.of(context)!.excluder + " -"
+                          :parametrWBiezacym(context, info.parametr) == " " + AppLocalizations.of(context)!.excluder + " -"
                             ? TextSpan(
                               text: AppLocalizations.of(context)!.lack, //brak kraty
                               style: TextStyle(
@@ -801,8 +801,8 @@ class InfoItem extends StatelessWidget {
                                 color: Color.fromARGB(255, 0, 0, 0)),
                               )
 //miara                            
-                            : info.parametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"  ||     
-                              info.parametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
+                            : parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.small +  " " + AppLocalizations.of(context)!.frame +  " x"  ||     
+                              parametrWBiezacym(context, info.parametr) == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
                               ? TextSpan(
                                   text: (''), //nie wyświetlanie ilości dm2 węzy
                                 )

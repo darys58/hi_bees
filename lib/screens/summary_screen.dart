@@ -137,12 +137,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
           String latestPollenDate = '';
           for (final info in infosData.items) {
             if (info.kategoria == 'harvest' && info.wartosc.isNotEmpty) {
-              if (info.parametr == paramHoneySmall || info.parametr == paramHoneyBig || info.parametr == paramHoneyKg) {
+              if (parametrWBiezacym(context, info.parametr) == paramHoneySmall || parametrWBiezacym(context, info.parametr) == paramHoneyBig || parametrWBiezacym(context, info.parametr) == paramHoneyKg) {
                 if (latestHoneyDate.isEmpty || info.data.compareTo(latestHoneyDate) > 0) {
                   latestHoneyDate = info.data;
                 }
-              } else if (info.parametr == paramPollenPortion || info.parametr == paramPollenMiarka ||
-                         info.parametr == paramPollenMl || info.parametr == paramPollenL) {
+              } else if (parametrWBiezacym(context, info.parametr) == paramPollenPortion || parametrWBiezacym(context, info.parametr) == paramPollenMiarka ||
+                         parametrWBiezacym(context, info.parametr) == paramPollenMl || parametrWBiezacym(context, info.parametr) == paramPollenL) {
                 if (latestPollenDate.isEmpty || info.data.compareTo(latestPollenDate) > 0) {
                   latestPollenDate = info.data;
                 }
@@ -169,13 +169,13 @@ class _SummaryScreenState extends State<SummaryScreen> {
             }
             for (final info in infosData.items) {
               if (info.kategoria == 'harvest' && info.data == latestHoneyDate && info.wartosc.isNotEmpty) {
-                if (info.parametr == paramHoneySmall) {
+                if (parametrWBiezacym(context, info.parametr) == paramHoneySmall) {
                   double dm = info.miara.isEmpty ? 35175 : double.parse(info.miara);
                   totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
-                } else if (info.parametr == paramHoneyBig) {
+                } else if (parametrWBiezacym(context, info.parametr) == paramHoneyBig) {
                   double dm = info.miara.isEmpty ? 78725 : double.parse(info.miara);
                   totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
-                } else if (info.parametr == paramHoneyKg) {
+                } else if (parametrWBiezacym(context, info.parametr) == paramHoneyKg) {
                   totalGrams += double.parse(info.wartosc) * 1000;
                 }
               }
@@ -190,11 +190,11 @@ class _SummaryScreenState extends State<SummaryScreen> {
             final mlPerMiarka = int.tryParse(dod1[0].g) ?? 0;
             for (final info in infosData.items) {
               if (info.kategoria == 'harvest' && info.data == latestPollenDate && info.wartosc.isNotEmpty) {
-                if (info.parametr == paramPollenPortion || info.parametr == paramPollenMiarka) {
+                if (parametrWBiezacym(context, info.parametr) == paramPollenPortion || parametrWBiezacym(context, info.parametr) == paramPollenMiarka) {
                   totalMl += (double.tryParse(info.wartosc) ?? 0) * mlPerMiarka;
-                } else if (info.parametr == paramPollenMl) {
+                } else if (parametrWBiezacym(context, info.parametr) == paramPollenMl) {
                   totalMl += double.tryParse(info.wartosc) ?? 0;
-                } else if (info.parametr == paramPollenL) {
+                } else if (parametrWBiezacym(context, info.parametr) == paramPollenL) {
                   totalMl += (double.tryParse(info.wartosc) ?? 0) * 1000;
                 }
               }

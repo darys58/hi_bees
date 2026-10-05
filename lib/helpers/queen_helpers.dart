@@ -52,6 +52,10 @@ const Map<String, String> _allSourceTranslations = {
   'Comprada': kSourceBought, 'Capturada': kSourceCaught, 'Propia': kSourceOwn,
   // Portuguese
   //'Comprada': kSourceBought, 'Capturada': kSourceCaught, 'Própria': kSourceOwn,
+  //"Comprada" i "Capturada" są identyczne z hiszpańskimi (zdublowany klucz mapy nie
+  //przejdzie), ale "Própria" jest tylko portugalska - bez niej matka z tym źródłem
+  //wywracała listę rozwijaną w queen_edit_screen (05.10.2026)
+  'Própria': kSourceOwn,
   // Italian
   'Acquistata': kSourceBought, 'Catturata': kSourceCaught, 'Propria': kSourceOwn,
   // Canonical keys map to themselves
