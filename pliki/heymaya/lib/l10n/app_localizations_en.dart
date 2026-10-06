@@ -2894,4 +2894,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String voiceSavedOnFrames(String saved, String all) {
     return 'Saved on $saved of $all frames - no room on the rest';
   }
+
+  @override
+  String get voiceNoQueenInHive =>
+      'No queen in this hive - add the queen in the app first';
+
+  @override
+  String voiceQueenSavedInHives(String saved, String all) {
+    return 'Saved in $saved of $all hives - no queen in the rest';
+  }
 }

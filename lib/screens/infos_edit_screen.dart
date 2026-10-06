@@ -2484,7 +2484,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                       || nowyParametr == AppLocalizations.of(context)!.honey +  " = " + AppLocalizations.of(context)!.big +  " " + AppLocalizations.of(context)!.frame +  " x" 
                                         ? dmRamki //ilość dm2 ramki zalezna od typu ula i wielkosci ramki
                                         : '',
-                                '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                 formatterHm.format(DateTime.now()),
                                 nowyUwagi!,
                                 0, //info[0].arch,
@@ -2502,7 +2502,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                     '', //nowyWartosc,
                                     '', //nowyMiara!
                                     '',
-                                    '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                    globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                     formatterHm.format(DateTime.now()),
                                     nowyUwagi!,
                                     0, //info[0].arch,
@@ -2517,7 +2517,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                       '', //nowyWartosc,
                                       '', //nowyMiara!
                                       '',
-                                      '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                      globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                       formatterHm.format(DateTime.now()),
                                       nowyUwagi!,
                                       0, //info[0].arch,
@@ -2539,7 +2539,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                         '', //nowyWartosc,
                                         '', //nowyMiara!
                                         '${matkaIdUla ?? ''}', //ID matki a jak nie ma to ''
-                                        '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                        globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                         formatterHm.format(DateTime.now()),
                                         nowyUwagi!,
                                         0, //info[0].arch,
@@ -2554,7 +2554,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                           '', //nowyWartosc,
                                           '', //nowyMiara!
                                           '',
-                                          '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                          globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                           formatterHm.format(DateTime.now()),
                                           nowyUwagi!,
                                           0, //info[0].arch,
@@ -2569,7 +2569,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                             '', //nowyWartosc,
                                             '', //nowyMiara!
                                             '',
-                                            '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                            globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                             formatterHm.format(DateTime.now()),
                                             nowyUwagi!,
                                             0, //info[0].arch,
@@ -2584,7 +2584,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                               '',//nowyWartosc,
                                               '', //nowyMiara!
                                               '',
-                                              '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                              globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                               formatterHm.format(DateTime.now()),
                                               nowyUwagi!,
                                               0, //info[0].arch,
@@ -2655,7 +2655,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                       nowyWartosc,
                                       nowyMiara!,
                                       '',//info[0].pogoda,
-                                      '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                      globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                       formatterHm.format(DateTime.now()),
                                       nowyUwagi!,
                                       0, //info[0].arch,
@@ -2679,7 +2679,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                   nowyWartosc,
                                   nowyMiara!,
                                   '',//info[0].pogoda,
-                                  '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+                                  globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
                                   formatterHm.format(DateTime.now()),
                                   nowyUwagi!,
                                   0, //info[0].arch,

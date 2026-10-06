@@ -1111,5 +1111,17 @@
                 "type": "String"
             }
         }
+    },
+    "voiceNoQueenInHive": "Não há rainha nesta colmeia - adicione primeiro a rainha na aplicação",
+    "voiceQueenSavedInHives": "Guardado em {saved} de {all} colmeias - nas restantes não há rainha",
+    "@voiceQueenSavedInHives": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "all": {
+                "type": "String"
+            }
+        }
     }
 }

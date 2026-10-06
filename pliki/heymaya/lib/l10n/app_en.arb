@@ -1933,5 +1933,17 @@
                 "type": "String"
             }
         }
+    },
+    "voiceNoQueenInHive": "No queen in this hive - add the queen in the app first",
+    "voiceQueenSavedInHives": "Saved in {saved} of {all} hives - no queen in the rest",
+    "@voiceQueenSavedInHives": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "all": {
+                "type": "String"
+            }
+        }
     }
 }

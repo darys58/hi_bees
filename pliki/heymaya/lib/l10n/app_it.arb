@@ -1111,5 +1111,17 @@
                 "type": "String"
             }
         }
+    },
+    "voiceNoQueenInHive": "Nessuna regina in questa arnia - aggiungi prima la regina nell'app",
+    "voiceQueenSavedInHives": "Salvato in {saved} arnie su {all} - nelle altre non c'è la regina",
+    "@voiceQueenSavedInHives": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "all": {
+                "type": "String"
+            }
+        }
     }
 }

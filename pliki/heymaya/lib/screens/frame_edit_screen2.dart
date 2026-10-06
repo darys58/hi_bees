@@ -1703,7 +1703,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
               ikona, //wartosc
               '', //miara
               '$ramek',//pole "pogoda" (nieużywane dla rekordu inspection) -> snapshot liczby ramek korpusu, by stare przeglądy zachowały rozmiar ula nawet po likwidacji i ponownym utworzeniu ula o tym samym numerze
-              '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+              globals.tempNaWpis(globals.aktualTemp, globals.stopnie), //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
               formatterHm.format(DateTime.now()), //formatedTime, //czas
               '', //uwagi
               0 //arch
@@ -2190,7 +2190,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
               ikona, //wartosc
               '', //miara
               '$ramek',//pole "pogoda" (nieużywane dla rekordu inspection) -> snapshot liczby ramek korpusu, by stare przeglądy zachowały rozmiar ula nawet po likwidacji i ponownym utworzeniu ula o tym samym numerze
-              '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+              globals.tempNaWpis(globals.aktualTemp, globals.stopnie), //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
               formatterHm.format(DateTime.now()), //formatedTime, //czas
               '', //uwagi
               0 //arch

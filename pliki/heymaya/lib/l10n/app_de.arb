@@ -1111,5 +1111,17 @@
                 "type": "String"
             }
         }
+    },
+    "voiceNoQueenInHive": "In diesem Volk ist keine Königin - zuerst die Königin in der App hinzufügen",
+    "voiceQueenSavedInHives": "In {saved} von {all} Völkern gespeichert - in den übrigen keine Königin",
+    "@voiceQueenSavedInHives": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "all": {
+                "type": "String"
+            }
+        }
     }
 }

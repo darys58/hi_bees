@@ -2902,4 +2902,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String voiceSavedOnFrames(String saved, String all) {
     return 'Zapisano na $saved z $all ramek - na pozostałych brak miejsca';
   }
+
+  @override
+  String get voiceNoQueenInHive =>
+      'W ulu nie ma matki - najpierw dodaj matkę w aplikacji';
+
+  @override
+  String voiceQueenSavedInHives(String saved, String all) {
+    return 'Zapisano w $saved z $all uli - w pozostałych nie ma matki';
+  }
 }

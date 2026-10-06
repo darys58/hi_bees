@@ -1782,7 +1782,7 @@ class _HivesScreenState extends State<HivesScreen> {
     } else {
       //print('dane o pogodzie pobrane z bazy lolalnej!!!!!!!!!!!!!!!!');
       //pobranie danych z bazy lokalnej na wypadek gdyby nie było internetu lub dane byłyby świeze
-      pogoda![0].temp != '' ? temp = double.parse(pogoda![0].temp) : temp = 500; //500 - fikcyjna temp zeby jej nie wyswietlać
+      pogoda![0].temp != '' ? temp = double.parse(pogoda![0].temp) : temp = globals.tempNieznana; //500 - fikcyjna temp zeby jej nie wyswietlać (i nie zapisywać we wpisach)
       pogoda![0].icon != '' ? icon = pogoda![0].icon : icon = '';
       globals.aktualTemp = temp;
      // print( 'pobranie z bazy w hives =================${pogoda![0].id},${pogoda![0].miasto},${pogoda![0].pobranie},${pogoda![0].temp},${pogoda![0].icon},${pogoda![0].miasto},');
@@ -1927,7 +1927,7 @@ class _HivesScreenState extends State<HivesScreen> {
                 onPressed: () => Navigator.of(context).pushNamed(Weather5DaysScreen.routeName),
               ),
   //aktualna temperatura          
-            if(globals.aktualTemp != 500) //bo była np zmiana lokalizacji
+            if(globals.aktualTemp != globals.tempNieznana) //bo była np zmiana lokalizacji albo pogoda jeszcze niepobrana
             Center(
                 child: Text('${globals.aktualTemp.toStringAsFixed(0)}$stopnie',
                     style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)))),

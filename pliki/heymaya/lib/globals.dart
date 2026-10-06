@@ -12,7 +12,15 @@ String aktualnaKategoriaInfo = 'inspection'; //aktualnie wybrana kategoria Info
 String dataAktualnegoPrzegladu = ''; //zeby nie nadpisywać info o przeglądzie by nie usuwać godziny rozpoczęcia przegladu i notatki
 String rokStatystyk = DateTime.now().toString().substring(0, 4); //rok wybrany w Info do ststystyk\
 String rokMatek = '20'; //rok wybrany w ZARZADZANIE MATKAMI
-double aktualTemp = 0.0; //aktualna temperatura
+//500 = temperatura NIEZNANA (pogoda jeszcze niepobrana) - ta sama wartość, której hives_screen
+//używa do ukrycia temperatury na pasku. Do 06.10.2026 start od 0.0: wpisy zrobione przed pobraniem
+//pogody (np. nowy użytkownik, pierwsze wejście do pasieki) dostawały "0°C".
+const double tempNieznana = 500;
+double aktualTemp = tempNieznana; //aktualna temperatura
+
+//temperatura do zapisu we wpisie: pusto, gdy nieznana (zamiast fałszywego "0°C" albo "500°C")
+String tempNaWpis(double t, String jednostka) =>
+    t == tempNieznana ? '' : '${t.toStringAsFixed(0)}$jednostka';
 String stopnie = '\u2103'; //nazwa jednostki temperatury
 
 //Klucz aktywacyjny apki. Historycznie był to accessKey Picovoice; po przejściu

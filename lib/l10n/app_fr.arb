@@ -1111,5 +1111,17 @@
                 "type": "String"
             }
         }
+    },
+    "voiceNoQueenInHive": "Aucune reine dans cette ruche - ajoutez d'abord la reine dans l'application",
+    "voiceQueenSavedInHives": "Enregistré dans {saved} ruches sur {all} - pas de reine dans les autres",
+    "@voiceQueenSavedInHives": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "all": {
+                "type": "String"
+            }
+        }
     }
 }

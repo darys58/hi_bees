@@ -97,7 +97,7 @@ class _NfcHiveSelectionDialogState extends State<NfcHiveSelectionDialog> {
       widget.tagId,
       '',
       '',//info[0].pogoda,
-      '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',//info[0].temp,
+      globals.tempNaWpis(globals.aktualTemp, globals.stopnie),//info[0].temp,
       DateFormat('H:mm').format(DateTime.now()),
       '',
       0, //info[0].arch,

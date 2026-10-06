@@ -2915,4 +2915,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String voiceSavedOnFrames(String saved, String all) {
     return 'Guardado en $saved de $all cuadros - sin espacio en el resto';
   }
+
+  @override
+  String get voiceNoQueenInHive =>
+      'No hay reina en esta colmena - primero añade la reina en la aplicación';
+
+  @override
+  String voiceQueenSavedInHives(String saved, String all) {
+    return 'Guardado en $saved de $all colmenas - en las demás no hay reina';
+  }
 }

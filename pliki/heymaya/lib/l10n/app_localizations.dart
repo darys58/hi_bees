@@ -5724,6 +5724,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved on {saved} of {all} frames - no room on the rest'**
   String voiceSavedOnFrames(String saved, String all);
+
+  /// No description provided for @voiceNoQueenInHive.
+  ///
+  /// In en, this message translates to:
+  /// **'No queen in this hive - add the queen in the app first'**
+  String get voiceNoQueenInHive;
+
+  /// No description provided for @voiceQueenSavedInHives.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved in {saved} of {all} hives - no queen in the rest'**
+  String voiceQueenSavedInHives(String saved, String all);
 }
 
 class _AppLocalizationsDelegate

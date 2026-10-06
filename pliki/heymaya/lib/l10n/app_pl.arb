@@ -1126,5 +1126,17 @@
                 "type": "String"
             }
         }
+    },
+    "voiceNoQueenInHive": "W ulu nie ma matki - najpierw dodaj matkę w aplikacji",
+    "voiceQueenSavedInHives": "Zapisano w {saved} z {all} uli - w pozostałych nie ma matki",
+    "@voiceQueenSavedInHives": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "all": {
+                "type": "String"
+            }
+        }
     }
 }

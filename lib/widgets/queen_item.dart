@@ -240,7 +240,7 @@ class _QueenItemState extends State<QueenItem> {
                     znakMatkiNaEkran(matki.znak, AppLocalizations.of(context)!),
                     matki.napis,
                     matki.id.toString(), //pogoda - tu matkaID
-                    '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}',
+                    globals.tempNaWpis(globals.aktualTemp, globals.stopnie),
                     formatterHm.format(DateTime.now()),
                     matki.uwagi,
                     0, //info[0].arch,

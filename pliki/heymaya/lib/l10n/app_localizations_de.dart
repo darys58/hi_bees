@@ -2907,4 +2907,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String voiceSavedOnFrames(String saved, String all) {
     return 'Auf $saved von $all Waben gespeichert - auf den übrigen kein Platz';
   }
+
+  @override
+  String get voiceNoQueenInHive =>
+      'In diesem Volk ist keine Königin - zuerst die Königin in der App hinzufügen';
+
+  @override
+  String voiceQueenSavedInHives(String saved, String all) {
+    return 'In $saved von $all Völkern gespeichert - in den übrigen keine Königin';
+  }
 }

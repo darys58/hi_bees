@@ -2907,4 +2907,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String voiceSavedOnFrames(String saved, String all) {
     return 'Salvato su $saved di $all telaini - spazio esaurito sugli altri';
   }
+
+  @override
+  String get voiceNoQueenInHive =>
+      'Nessuna regina in questa arnia - aggiungi prima la regina nell\'app';
+
+  @override
+  String voiceQueenSavedInHives(String saved, String all) {
+    return 'Salvato in $saved arnie su $all - nelle altre non c\'è la regina';
+  }
 }

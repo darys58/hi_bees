@@ -145,7 +145,7 @@ class _MoveHiveScreenState extends State<MoveHiveScreen> {
     final loc = AppLocalizations.of(context)!;
     final parametr = loc.hiveTransfer;
     final uwagi = loc.movedFrom(srcP, srcU);
-    final temp = '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}';
+    final temp = globals.tempNaWpis(globals.aktualTemp, globals.stopnie);
 
     //inspection
     await Infos.insertInfo(
@@ -318,7 +318,7 @@ class _MoveHiveScreenState extends State<MoveHiveScreen> {
       final loc = AppLocalizations.of(context)!;
       final parametr = loc.hiveLiquidation;
       final uwagiOld = loc.movedTo(_dstPasieka, _dstUl);
-      final temp = '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}';
+      final temp = globals.tempNaWpis(globals.aktualTemp, globals.stopnie);
 
       //inspection
       await Infos.insertInfo(

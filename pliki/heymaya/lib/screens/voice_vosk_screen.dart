@@ -75,6 +75,7 @@ import '../models/recording.dart'; //Recordings - nagrania dyktowanych notatek
 import '../helpers/recording_helper.dart'; //zapis WAV + cykl życia nagrań
 import '../helpers/undo_helper.dart'; //cofanie ("Hej Maja cofnij ostatni zapis")
 import 'voice_help_dialogs.dart'; //okna pomocy - wydzielone z tego pliku
+import '../models/queen.dart'; //Queens - czy ul ma matkę (komendy o cechach matki)
 import '../models/weather.dart';
 import '../models/weathers.dart';
 //import '../models/dodatki1.dart';
@@ -473,7 +474,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
   //zmienne pogodowe
   String pobranie = '';
-  double temp = 0.0;
+  double temp = globals.tempNieznana; //nieznana do pobrania pogody - wpisy dostają wtedy pustą temperaturę, nie 0
   String icon = '';
   String units = 'metric';
   String stopnie = '\u2103';
@@ -487,6 +488,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this); //przerwania: telefon, tło, Siri
     _sound.init(); //preload dźwięków
+    //matki - komendy o cechach matki sprawdzają SYNCHRONICZNIE, czy ul ma matkę (_idMatkiUla)
+    Provider.of<Queens>(context, listen: false).fetchAndSetQueens();
     // Orientacja zależy od trybu pracy ekranu: podgląd korpusu na żywo
     // potrzebuje poziomu, podpowiedzi komend czytelniejsze są w pionie.
     SystemChrome.setPreferredOrientations([
@@ -838,6 +841,30 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       '${readyFrames ? "$nrXXOdFrame-$nrXXDoFrame" : "$nrXXOfFrame/$nrXXOfFramePo"}|'
       '$siteOfFrame';
 
+  //wartości slotu queenMark oznaczające BRAK matki w ulu - jak w switchu belki matki (matka2 = 'brak')
+  static const Set<String> _wartosciBrakuMatki = {'brak', 'nie ma', 'missing', 'gone'};
+
+  //ID matki podłączonej do ula albo 0, gdy ul nie ma matki. Ten sam warunek co w trybie
+  //ręcznym (infos_screen: „+” przy braku matki prowadzi do dodania matki) i ta sama kolejność
+  //co DBHelper.getQueenID: najpierw żyjące, potem najnowsze.
+  //SYNCHRONICZNIE z providera Queens (czytany w initState; matki dodaje się poza tym ekranem),
+  //bo odmowa musi zapaść PRZED odczytem `_zapisWTejKomendzie` zaraz po switchu komendy -
+  //inaczej „cofnij” zdejmowałoby krok, który niczego nie zapisał (patrz _czyCokolwiekSieZmiesci).
+  int _idMatkiUla(int pasieka, int ul) {
+    final matki = Provider.of<Queens>(context, listen: false)
+        .items
+        .where((q) => q.pasieka == pasieka && q.ul == ul)
+        .toList();
+    if (matki.isEmpty) return 0;
+    bool zywa(Queen q) =>
+        q.dataStraty == '' || q.dataStraty == '0';
+    matki.sort((a, b) {
+      if (zywa(a) != zywa(b)) return zywa(a) ? -1 : 1;
+      return b.id.compareTo(a.id);
+    });
+    return matki.first.id;
+  }
+
   void _powiedzOZapisie(String tekst) {
     _timerKomunikatuZapisu?.cancel();
     if (!mounted) return;
@@ -1177,7 +1204,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           _ikonaUla(), //wartosc
           '', //miara
           '', //ikona pogody
-          '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //temp
+          globals.tempNaWpis(globals.aktualTemp, globals.stopnie), //temp
           godzina, //czas
           wpis, //uwagi
           0, //arch
@@ -5918,7 +5945,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     var body = jsonDecode(response.body);
     //print('dane o pogodzie z miasta -----------------------');
     //print(body);
-    temp = body["main"]["temp"];
+    temp = (body["main"]["temp"] as num).toDouble(); //pełne stopnie (np. 12) przychodzą jako int - samo przypisanie do double rzucało błąd
     icon = body["weather"][0]["icon"];
     //print('$temp, $icon');
     String teraz = formatterPogoda.format(now);
@@ -5935,7 +5962,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     var body = jsonDecode(response.body);
     //print('dane o pogodzie z koordynatów -----------------------');
     //print(body);
-    temp = body["main"]["temp"];
+    temp = (body["main"]["temp"] as num).toDouble(); //pełne stopnie (np. 12) przychodzą jako int - samo przypisanie do double rzucało błąd
     icon = body["weather"][0]["icon"];
     //print('$temp, $icon');
     String teraz = formatterPogoda.format(now);
@@ -5960,7 +5987,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         //jezeli nie ma danych dla wybranej pasieki
         //print('brak danych o lokalizacji pasieki');
         pobranie = '';
-        temp = 0.0;
+        temp = globals.tempNieznana; //brak danych o pogodzie pasieki
         icon = '';
         units = 'metric';
       } else {
@@ -6004,14 +6031,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               } else {
                 // print('braaaaaak internetu');
                 //dane o pogodzie nie będą aktualizowane a pobrane z bazy
-                temp = double.parse(pogoda[0].temp);
+                temp = double.tryParse(pogoda[0].temp) ?? globals.tempNieznana; //pusta temp (nowa pasieka) wywracała double.parse
                 icon = pogoda[0].icon;
               }
             },
           );
         } else {
           //to pobranie z bazy lokalnej
-          temp = double.parse(pogoda[0].temp);
+          temp = double.tryParse(pogoda[0].temp) ?? globals.tempNieznana; //pusta temp (nowa pasieka) wywracała double.parse
           icon = pogoda[0].icon;
         }
         //print('${pogoda[0].id}, ${pogoda[0].miasto}, ${pogoda[0].latitude}');
@@ -6618,7 +6645,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               //nim ten przegląd także po późniejszej zmianie liczby ramek ula. Do 05.10.2026
               //szło '' i przegląd głosowy brał aktualną liczbę ramek ula.
               ramekPrzegladu, //ikona pogody -> dla przeglądu: liczba ramek korpusu
-              '${globals.aktualTemp.toStringAsFixed(0)}${globals.stopnie}', //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+              globals.tempNaWpis(globals.aktualTemp, globals.stopnie), //'${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
               formatterHm.format(DateTime.now()), //formatedTime, //czas
               '', //uwagi
               0 //arch
@@ -6659,6 +6686,27 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
   //info(id TEXT PRIMARY KEY, pasiekaNr INTEGER, ileUli INTEGER, data TEXT, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, uwagi TEXT)');
   zapisInfoDoBazy(String kat, String param, String wart, String miar) async {
+    //CECHY MATKI TYLKO DLA ULA Z MATKĄ (06.10.2026) - tak jak w trybie ręcznym.
+    //Wcześniej głos zapisywał je także w ulu bez matki, bez ID matki (info.pogoda
+    //puste), więc po podłączeniu matki nie były do niej przypisane.
+    //Przed ustawieniem flagi cofania i przed pierwszym await - patrz _idMatkiUla.
+    //Dla wszystkich uli (i zakresu) odmowa tylko, gdy w pasiece nie ma ŻADNEJ matki;
+    //pojedyncze ule bez matki pomija pętla zapisu niżej.
+    //WYJĄTEK: "matka brak / nie ma / missing / gone" to wpis o ulu BEZ matki
+    //(czerwona ikona na belce) - musi przejść właśnie wtedy, gdy matki nie ma.
+    final bool toBrakMatki = kat == 'queen' && _wartosciBrakuMatki.contains(wart);
+    if (kat == 'queen' && !toBrakMatki) {
+      final bool brakMatki = readyAllHives
+          ? !Provider.of<Queens>(context, listen: false)
+              .items
+              .any((q) => q.pasieka == nrXXOfApiary)
+          : _idMatkiUla(nrXXOfApiary, nrXXOfHive) == 0;
+      if (brakMatki) {
+        beep('error');
+        _powiedzOZapisie(AppLocalizations.of(context)!.voiceNoQueenInHive);
+        return;
+      }
+    }
     _zapisWTejKomendzie = true; //migawka do cofania trafi na stos po switchu
     //Wpis "liczba ramek =" jest JEDYNYM, z którego import odtwarza belkę ula:
     //pole pogoda = rodzaj ula (h1), pole miara = typ ula (h2). Dla niego muszą tam
@@ -6701,8 +6749,15 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         final hives = _uleObjeteZapisem(hivesData.items);
         //print('ilość uli do wpisania info = ${hives.length}');
 
+        int pominieteBezMatki = 0; //cechy matki: ule bez matki
         for (var i = 0; i < hives.length; i++) {
           //print('wpis nr $i');
+          final int matkaUla =
+              kat == 'queen' ? _idMatkiUla(nrXXOfApiary, hives[i].ulNr) : 0;
+          if (kat == 'queen' && !toBrakMatki && matkaUla == 0) {
+            pominieteBezMatki++;
+            continue;
+          }
           Infos.insertInfo(
               '$formattedDate.$nrXXOfApiary.${hives[i].ulNr}.$kat.$param', //id
               formattedDate, //data
@@ -6716,8 +6771,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                 ? hives[i].h1
                 : (toMiodMalaRamka || toMiodDuzaRamka)
                   ? dmRamkiDoInfo(hives[i].h2)
-                  : icon,
-              '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+                  : kat == 'queen'
+                    ? (matkaUla > 0 ? matkaUla.toString() : '') //ID matki TEGO ula (było: ikona pogody)
+                    : icon,
+              globals.tempNaWpis(temp, stopnie), //temperatura zaokrąglona do 1 stopnia
               formatedTime, //czas
               '', //uwagi
               0); //niezarchiwizowane
@@ -6807,8 +6864,19 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
             );
           }
         }
+        //cechy matki: gdy któryś ul nie miał matki - komunikat zamiast potwierdzenia
+        if (kat == 'queen') {
+          if (pominieteBezMatki > 0) {
+            beep('error');
+            _powiedzOZapisie(AppLocalizations.of(context)!.voiceQueenSavedInHives(
+                '${hives.length - pominieteBezMatki}', '${hives.length}'));
+          } else {
+            _playSuccess();
+          }
+        }
       });
-      _playSuccess();
+      //dla matki dźwięk dopiero w .then - tam wiadomo, czy któryś ul nie miał matki
+      if (kat != 'queen') _playSuccess();
       //print('beep - success - zapis ula do bazy');
 
     } else {
@@ -6863,7 +6931,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               : (kat == 'queen' && matkaID > 0)
                 ? matkaID.toString()
                 : '',
-          '${temp.toStringAsFixed(0)}$stopnie', //temperatura zaokrąglona do 1 stopnia
+          globals.tempNaWpis(temp, stopnie), //temperatura zaokrąglona do 1 stopnia
           formatedTime, //czas
           '', //uwagi
           0); //niezarchiwizowane
