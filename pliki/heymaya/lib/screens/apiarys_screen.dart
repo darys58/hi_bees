@@ -288,6 +288,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
           globals.wersja = wersja;
 
           //uaktualnienie wersji apki na serwerze www po np. aktualizacji apki
+          //token urządzenia PRZED wyslijKod - ten przy zmianie wersji wysyła stary token do odwołania
+          if (mem.isNotEmpty) globals.token = mem[0].token; //etap 1b pkt 3
           if (mem.isNotEmpty && mem[0].wer != wersja) wyslijKod(mem[0].kod);
 
           //jezeli jest wpis w bazie to znaczy ze była juz akywacja kiedyś (wpis moze być ale accessKey niekoniecznie!!!)
@@ -1068,6 +1070,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         "deviceId": globals.deviceId,
         "wersja": wersja,
         "jezyk": globals.jezyk,
+        "chce_token": "1", //etap 1b pkt 3: po poprawnym kodzie serwer wyda token urządzenia
+        "token": globals.token, //stary token tej instalacji - serwer go odwoła
       }),
     );
     //print('$kod ${globals.deviceId} $wersja ${globals.jezyk}');
@@ -1087,6 +1091,10 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         _showAlertOK(context, AppLocalizations.of(context)!.success,
             AppLocalizations.of(context)!.willBeActiveUntil );//+ odpPost['be_do']);
         //zapis do bazy lokalnej z bazy www
+        //token urządzenia (etap 1b pkt 3); stary serwer go nie przyśle - wtedy zostaje dotychczasowy
+        final String nowyToken = (odpPost['be_token'] ?? globals.token).toString();
+        globals.token = nowyToken;
+        globals.kod = (odpPost['be_kod'] ?? globals.kod).toString(); //kanoniczny kod z serwera, nie wpisany tekst
         DBHelper.deleteTable('memory').then((_) {
           //kasowanie tabeli bo będzie nowy wpis
           Memory.insertMemory(
@@ -1104,6 +1112,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
             '', //globals.memJezyk, //memjezyk - język ustawiony w Ustawienia/Język apki
             '', //zapas
             '', //zapas
+            token: nowyToken,
           );
         });
       } else {
@@ -1154,7 +1163,11 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   //zapytanie do cbt_hi_kod_v2.php - wspólne dla sprawdzNowaWersje (start apki)
   //i synchronizacji konta po powrocie z tła (didChangeAppLifecycleState).
   //null = brak sieci / timeout / błąd serwera / zły JSON - obie ścieżki są ciche.
-  Future<Map<String, dynamic>?> _pobierzKonto(String kod) async {
+  //Etap 1b pkt 3 (06.10.2026): z tokenem urządzenia - synchronizacja TOKENEM (serwer pomija kod);
+  //bez tokenu - kodem z prośbą o token (tak dostają go telefony aktywowane przed tą wersją).
+  //Token odrzucony ("error - token": wygasł albo odwołany) - kasowany i JEDNO ponowienie kodem.
+  //W odpowiedzi znacznik '_przezToken' dla _synchronizujKonto.
+  Future<Map<String, dynamic>?> _pobierzKonto(String kod, {bool ponowienie = false}) async {
     try {
       final http.Response response = await http
           .post(
@@ -1167,12 +1180,22 @@ class _ApiarysScreenState extends State<ApiarysScreen>
               "deviceId": globals.deviceId,
               "wersja": wersja,
               "jezyk": globals.jezyk,
+              if (globals.token.isNotEmpty) "token": globals.token
+              else "chce_token": "1",
             }),
           )
           .timeout(const Duration(seconds: 8));
       if (response.statusCode < 200 || response.statusCode > 400) return null;
       final odp = json.decode(response.body);
-      return odp is Map<String, dynamic> ? odp : null;
+      if (odp is! Map<String, dynamic>) return null;
+      final bool przezToken = globals.token.isNotEmpty;
+      if (przezToken && odp['success'] == 'error - token' && !ponowienie) {
+        globals.token = '';
+        await _zapiszToken('');
+        return _pobierzKonto(kod, ponowienie: true);
+      }
+      odp['_przezToken'] = przezToken;
+      return odp;
     } catch (_) {
       return null;
     }
@@ -1189,15 +1212,30 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   Future<void> _synchronizujKonto(Map<String, dynamic> odp, String kod) async {
     try {
       if (odp['success'] != 'ok') return;
-      //odpowiedź musi dotyczyć tego konta
-      if ((odp['be_kod'] ?? '').toString() != kod) return;
+      //odpowiedź musi dotyczyć tego konta. Przy synchronizacji TOKENEM konto wskazuje token,
+      //a kod mógł się zmienić na serwerze (wymiana starych kodów, faza T3) - wtedy przyjmujemy nowy.
+      final String beKod = (odp['be_kod'] ?? '').toString();
+      final bool przezToken = odp['_przezToken'] == true;
+      if (beKod.isEmpty || (!przezToken && beKod != kod)) return;
       globals.ustawPrefiksSerwera(odp['be_prefiks']); //etap 1b pkt 2 - przed returnem "bez zmian" niżej
       if (!mounted) return;
       final memData = Provider.of<Memory>(context, listen: false);
       if (memData.items.isEmpty) return;
       final mem = memData.items[0];
 
+      //token urządzenia z serwera (pierwsza synchronizacja kodem) - osobno, bo przy nieudanej
+      //migracji v6 (brak kolumny token) błąd nie może zablokować key/od/do niżej
+      final String beToken = (odp['be_token'] ?? '').toString();
+      if (RegExp(r'^[0-9a-f]{64}$').hasMatch(beToken) && beToken != mem.token) {
+        globals.token = beToken;
+        await _zapiszToken(beToken);
+      }
+
       final Map<String, String> zmiany = {};
+      //nowy kod konta (T3) - tylko po synchronizacji tokenem
+      if (przezToken && beKod != mem.kod && RegExp(r'^[0-9A-Za-z_-]{4,32}$').hasMatch(beKod)) {
+        zmiany['kod'] = beKod;
+      }
       //pusty key = apka nieaktywowana (ekran aktywacji) - synchronizacja nie może
       //tego wymusić, więc pustego klucza nie przepisujemy
       final String key = (odp['be_key'] ?? '').toString();
@@ -1217,10 +1255,24 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         globals.key = key;
         globals.keyMemory = key;
       }
+      if (zmiany.containsKey('kod')) globals.kod = zmiany['kod']!;
       if (!mounted) return;
       setState(() {}); //przycisk sterowania głosem zależy od globals.key
     } catch (_) {
       //synchronizacja nie może blokować startu ani sprawdzania wersji
+    }
+  }
+
+  //zapis tokenu urządzenia w memory.token (etap 1b pkt 3); '' = skasowanie odrzuconego.
+  //Błąd (np. brak kolumny po nieudanej migracji v6) tylko w konsoli - token zostaje w globals do końca sesji.
+  Future<void> _zapiszToken(String token) async {
+    try {
+      final memData = Provider.of<Memory>(context, listen: false);
+      if (memData.items.isEmpty) return;
+      await DBHelper.updateKonto(memData.items[0].id, {'token': token});
+      await memData.fetchAndSetMemory2();
+    } catch (e) {
+      debugPrint('_zapiszToken: $e');
     }
   }
 

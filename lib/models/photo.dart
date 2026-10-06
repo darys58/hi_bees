@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/serwer_token.dart'; //nagłówek X-HB-Token przy imporcie
 
 class Photo with ChangeNotifier {
   final String id;
@@ -99,7 +100,7 @@ class Photos with ChangeNotifier {
   //import zdjęć z serwera
   static Future<void> fetchZdjeciaFromSerwer(String url) async {
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url), headers: naglowkiSerwera()) /*token urządzenia*/;
 
       //serwer moze zwrócić dodatkowy tekst po JSON np. {"brak":"brak"}Nie ma nic do wyswietlenia...
       //wycinamy sam JSON z odpowiedzi

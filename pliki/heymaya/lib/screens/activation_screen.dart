@@ -35,6 +35,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
         "deviceId": globals.deviceId,
         "wersja": globals.wersja,
         "jezyk": globals.jezyk,
+        "chce_token": "1", //etap 1b pkt 3: po poprawnym kodzie serwer wyda token urządzenia
+        "token": globals.token, //stary token tej instalacji - serwer go odwoła
       }),
     );
     //print(response.body);
@@ -52,6 +54,10 @@ class _ActivationScreenState extends State<ActivationScreen> {
         _showAlertOK(context, AppLocalizations.of(context)!.success,
             AppLocalizations.of(context)!.willBeActiveUntil); // + odpPost['be_do']);
         //zapis do bazy lokalnej z bazy www
+        //token urządzenia (etap 1b pkt 3); stary serwer go nie przyśle - wtedy zostaje dotychczasowy
+        final String nowyToken = (odpPost['be_token'] ?? globals.token).toString();
+        globals.token = nowyToken;
+        globals.kod = (odpPost['be_kod'] ?? globals.kod).toString(); //kanoniczny kod z serwera, nie wpisany tekst
         DBHelper.deleteTable('memory').then((_) {
           //kasowanie tabeli bo będzie nowy wpis
           Memory.insertMemory(
@@ -69,6 +75,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
             '', //globals.memJezyk, //memjezyk - język ustawiony w Ustawienia/Język apki
             '', //zapas
             '', //zapas
+            token: nowyToken,
           );
         });
       } else {

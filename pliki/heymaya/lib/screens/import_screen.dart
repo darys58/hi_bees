@@ -2965,6 +2965,7 @@ class _ImportScreenState extends State<ImportScreen> {
       },
       body: jsonEncode(<String, String>{
         "kod_mobile": globals.kod,
+        "token": globals.token, //etap 1b pkt 3: serwer sprawdza token przed kodem
         "deviceId": globals.deviceId,
         "wersja": globals.wersja,
         "jezyk": globals.jezyk,

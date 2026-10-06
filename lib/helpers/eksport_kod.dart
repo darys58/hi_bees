@@ -10,6 +10,7 @@ import 'db_helper.dart';
 //Kod doklejany tylko, gdy jego 4 pierwsze znaki zgadzają się z prefiksem tabeli. W każdym innym
 //przypadku JSON idzie bez zmian - serwer w okresie przejściowym przyjmuje eksport bez kodu,
 //a eksport ze złym kodem by odrzucił (i doliczył nieudaną próbę).
+//Od pkt 3 (06.10.2026) obok kodu idzie token urządzenia z memory.token, gdy już jest.
 Future<String> eksportZKodem(String jsonData) async {
   try {
     final mem = await DBHelper.getData('memory');
@@ -28,7 +29,10 @@ Future<String> eksportZKodem(String jsonData) async {
     }
     final koniec = jsonData.lastIndexOf('}');
     if (koniec < poz) return jsonData;
-    return '${jsonData.substring(0, koniec)}, "kod":${jsonEncode(kod)}}';
+    //token urządzenia (etap 1b pkt 3) - serwer sprawdza go PRZED kodem
+    final token = (mem.first['token'] ?? '').toString();
+    final dodatek = token.isEmpty ? '' : ', "token":${jsonEncode(token)}';
+    return '${jsonData.substring(0, koniec)}, "kod":${jsonEncode(kod)}$dodatek}';
   } catch (_) {
     return jsonData;
   }

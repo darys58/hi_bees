@@ -28,7 +28,7 @@ class DBHelper {
       await db.execute(
           'CREATE TABLE info(id TEXT PRIMARY KEY, data TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, pogoda TEXT, temp TEXT, czas TEXT, uwagi TEXT, arch INTEGER)');
       await db.execute(
-          'CREATE TABLE memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT, od TEXT, do TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT)');
+          'CREATE TABLE memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT, od TEXT, do TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT, token TEXT)');
       await db.execute(
           'CREATE TABLE dodatki1(id TEXT PRIMARY KEY, a TEXT, b TEXT, c TEXT, d TEXT, e TEXT, f TEXT, g TEXT, h TEXT)');
       await db.execute(
@@ -71,10 +71,14 @@ class DBHelper {
           //nagrania dyktowanych notatek - patrz RecordingHelper
           await db.execute(_createNagrania);
         }
+        if (oldVersion < 6) {
+          //token urządzenia (etap 1b pkt 3, 06.10.2026) - zastępuje kod w żądaniach do chmury
+          await db.execute('ALTER TABLE memory ADD COLUMN token TEXT');
+        }
       } catch (e) {
         debugPrint('Błąd migracji bazy danych (v$oldVersion -> v$newVersion): $e');
       }
-    }, version: 5);
+    }, version: 6);
   }
 
   //Nagrania dyktowanych notatek. Zbudowane jak "zdjecia" (ten sam zestaw pól

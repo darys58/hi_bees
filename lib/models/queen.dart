@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
+import '../helpers/serwer_token.dart'; //nagłówek X-HB-Token przy imporcie
 
 //import '../globals.dart' as globals;
 
@@ -111,7 +112,7 @@ class Queens with ChangeNotifier {
 //pobranie matki z serwera www - batch SQLite
   static Future<void> fetchQueensFromSerwer(String url) async {
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url), headers: naglowkiSerwera()) /*token urządzenia*/;
       //wycinamy sam JSON z odpowiedzi (serwer moze dodać tekst po JSON)
       String body = response.body.trim();
       final jsonEnd = body.lastIndexOf('}');

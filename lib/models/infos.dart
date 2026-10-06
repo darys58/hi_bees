@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
+import '../helpers/serwer_token.dart'; //nagłówek X-HB-Token przy imporcie
 import './info.dart';
 
 class Infos with ChangeNotifier {
@@ -16,7 +17,7 @@ class Infos with ChangeNotifier {
 
    //pobranie info z serwera www - tylko download (HTTP GET + JSON decode)
   static Future<List<MapEntry<String, dynamic>>> downloadInfosFromSerwer(String url) async {
-    final response = await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url), headers: naglowkiSerwera()) /*token urządzenia*/;
     //wycinamy sam JSON z odpowiedzi (serwer moze dodać tekst po JSON)
     String body = response.body.trim();
     final jsonEnd = body.lastIndexOf('}');

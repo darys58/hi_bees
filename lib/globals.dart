@@ -35,6 +35,11 @@ String kod = ''; //kod do pobrania klucza aktywacyjnego z bazy www
 //dziś to ta sama wartość, bo serwer też liczy prefiks z 4 pierwszych znaków kodu konta.
 //Jedno miejsce na zmianę, gdy kod przestanie zaczynać się od prefiksu (token, etap 1b pkt 3).
 String prefiksSerwera = '';
+
+//TOKEN URZĄDZENIA (etap 1b pkt 3, 06.10.2026) - 64 znaki z serwera, jeden na instalację aplikacji.
+//Zapisany w memory.token; idzie w każdym żądaniu do chmury zamiast samego kodu.
+//'' = jeszcze nie pobrany (pobiera go cicha synchronizacja konta kodem przy starcie).
+String token = '';
 String prefiksTabel(String kodKonta) {
   if (prefiksSerwera.isNotEmpty) return prefiksSerwera;
   final k = kodKonta.trim();

@@ -18,6 +18,7 @@ class MemoryItem with ChangeNotifier {
   final String memjezyk; //ustawienie jezyka w Ustawienia/Jezyk w apce
   final String mem1; //na zapas
   final String mem2; //na zapas
+  final String token; //token urządzenia z serwera (etap 1b pkt 3) - '' przed pierwszą synchronizacją
 
   MemoryItem({
     required this.id,
@@ -31,6 +32,7 @@ class MemoryItem with ChangeNotifier {
     required this.memjezyk,
     required this.mem1,
     required this.mem2,
+    this.token = '',
   });
 }
 
@@ -58,6 +60,7 @@ class Memory with ChangeNotifier {
             memjezyk: item['memjezyk'],
             mem1: item['mem1'],
             mem2: item['mem2'],
+            token: (item['token'] ?? '').toString(), //null przed migracją v6 i w starych wpisach
           ),
         )
         .toList();
@@ -84,6 +87,7 @@ class Memory with ChangeNotifier {
               memjezyk: item['memjezyk'],
               mem1: item['mem1'],
               mem2: item['mem2'],
+              token: (item['token'] ?? '').toString(), //null przed migracją v6 i w starych wpisach
             ),
           )
           .toList();
@@ -109,9 +113,10 @@ class Memory with ChangeNotifier {
     String ddo,
     String memjezyk,
     String mem1,
-    String mem2,
-  ) async {
-    await DBHelper.insert('memory', {
+    String mem2, {
+    String token = '', //token urządzenia (etap 1b pkt 3)
+  }) async {
+    final Map<String, Object> wiersz = {
       'id': id,
       'email': email,
       'dev': dev,
@@ -123,6 +128,15 @@ class Memory with ChangeNotifier {
       'memjezyk': memjezyk,
       'mem1': mem1,
       'mem2': mem2,
-    });
+      'token': token,
+    };
+    try {
+      await DBHelper.insert('memory', wiersz);
+    } catch (e) {
+      //gdyby migracja v6 się nie udała (brak kolumny token) - aktywacja nie może przez to stanąć
+      debugPrint('insertMemory bez kolumny token: $e');
+      wiersz.remove('token');
+      await DBHelper.insert('memory', wiersz);
+    }
   }
 }
