@@ -422,7 +422,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                         if (ramki.length > i) jsonData += ',';
                       }
                       jsonData +=
-                          '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu XXXX_ramka
+                          '],"total":${ramki.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_ramka"}'; //pierwsze cztery cyfry kodu XXXX_ramka
 
                       //print(jsonData);
                       _isInternet().then(
@@ -476,7 +476,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                         if (info.length > i) jsonData += ',';
                       }
                       jsonData +=
-                          '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu XXXX_ramka
+                          '],"total":${info.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_info"}'; //pierwsze cztery cyfry kodu XXXX_ramka
 
                       //print(jsonData);
                       _isInternet().then(
@@ -538,7 +538,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                         if (matki.length > i) jsonData += ',';
                       }
                       jsonData +=
-                          '],"total":${matki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_matki"}'; //pierwsze cztery cyfry kodu XXXX_ramka
+                          '],"total":${matki.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_matki"}'; //pierwsze cztery cyfry kodu XXXX_ramka
 
                       //print(jsonData);
                       _isInternet().then(
@@ -857,6 +857,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
             AppLocalizations.of(context)!.sendAgain);
         // print('wysłano e-mail ale nie zapisał się');
       } else if (odpPost['success'] == 'ok') {
+        globals.ustawPrefiksSerwera(odpPost['be_prefiks']); //etap 1b pkt 2: prefiks tabel nowego konta
         _showAlertOK(context, AppLocalizations.of(context)!.success,
             AppLocalizations.of(context)!.willBeActiveUntil );//+ odpPost['be_do']);
         //zapis do bazy lokalnej z bazy www
@@ -964,6 +965,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
       if (odp['success'] != 'ok') return;
       //odpowiedź musi dotyczyć tego konta
       if ((odp['be_kod'] ?? '').toString() != kod) return;
+      globals.ustawPrefiksSerwera(odp['be_prefiks']); //etap 1b pkt 2 - przed returnem "bez zmian" niżej
       if (!mounted) return;
       final memData = Provider.of<Memory>(context, listen: false);
       if (memData.items.isEmpty) return;

@@ -433,7 +433,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               // Faza 1: Pobranie wszystkich danych z lokalnej bazy
               await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
@@ -582,7 +582,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               // Faza 1: Pobranie danych do archiwizacji (arch=0)
               await Provider.of<Notes>(context, listen: false).fetchAndSetNotatkiToArch();
@@ -864,7 +864,7 @@ class _ImportScreenState extends State<ImportScreen> {
               // 1. Import notatek
               _updateProgress(loc.nOtes + '...');
               await Notes.fetchNotatkiFromSerwer(
-                  'https://darys.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_notatki');
+                  'https://darys.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_notatki');
               await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
               final notatki = Provider.of<Notes>(context, listen: false).items;
               _progressLabelNotifier.value = '${loc.nOtes}: ${notatki.length}';
@@ -872,7 +872,7 @@ class _ImportScreenState extends State<ImportScreen> {
               // 2. Import zakupów
               _updateProgress(loc.pUrchase + '...');
               await Purchases.fetchZakupyFromSerwer(
-                  'https://darys.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zakupy');
+                  'https://darys.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_zakupy');
               await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupy();
               final zakupy = Provider.of<Purchases>(context, listen: false).items;
               _progressLabelNotifier.value = '${loc.pUrchase}: ${zakupy.length}';
@@ -880,7 +880,7 @@ class _ImportScreenState extends State<ImportScreen> {
               // 3. Import sprzedaży
               _updateProgress(loc.sAle + '...');
               await Sales.fetchSprzedazFromSerwer(
-                  'https://darys.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_sprzedaz');
+                  'https://darys.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_sprzedaz');
               await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedaz();
               final sprzedaz = Provider.of<Sales>(context, listen: false).items;
               _progressLabelNotifier.value = '${loc.sAle}: ${sprzedaz.length}';
@@ -888,7 +888,7 @@ class _ImportScreenState extends State<ImportScreen> {
               // 4. Import matek
               _updateProgress(loc.queens + '...');
               await Queens.fetchQueensFromSerwer(
-                  'https://darys.pl/cbt.php?d=f_matki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_matki');
+                  'https://darys.pl/cbt.php?d=f_matki&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_matki');
               await Provider.of<Queens>(context, listen: false).fetchAndSetQueens();
               final matki = Provider.of<Queens>(context, listen: false).items;
               _progressLabelNotifier.value = '${loc.queens}: ${matki.length}';
@@ -896,7 +896,7 @@ class _ImportScreenState extends State<ImportScreen> {
               // 5. Import zbiorów
               _updateProgress(loc.harvest + '...');
               await Harvests.fetchZbioryFromSerwer(
-                  'https://darys.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zbiory');
+                  'https://darys.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_zbiory');
               await Provider.of<Harvests>(context, listen: false).fetchAndSetZbiory();
               final zbiory = Provider.of<Harvests>(context, listen: false).items;
               _progressLabelNotifier.value = '${loc.harvest}: ${zbiory.length}';
@@ -904,14 +904,14 @@ class _ImportScreenState extends State<ImportScreen> {
               // 6. Import zdjęć
               _updateProgress(loc.pHotos + '...');
               await Photos.fetchZdjeciaFromSerwer(
-                  'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia');
+                  'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_zdjecia');
               await Provider.of<Photos>(context, listen: false).fetchAndSetPhotosForHive(0, 0);
               _progressLabelNotifier.value = loc.pHotos;
 
               // 7. Pobieranie ramek z serwera
               _updateProgress('${loc.downloading} ${loc.frames}...');
               final ramkiEntries = await Frames.downloadFramesFromSerwer(
-                  'https://darys.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_ramka');
+                  'https://darys.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_ramka');
               _progressLabelNotifier.value = '${loc.downloading} ${loc.frames}: ${ramkiEntries.length} 7';
 
               // 8. Zapis ramek do bazy z sub-progressem
@@ -934,7 +934,7 @@ class _ImportScreenState extends State<ImportScreen> {
               // 10. Pobieranie info z serwera
               _updateProgress('${loc.downloading} Info...');
               final infoEntries = await Infos.downloadInfosFromSerwer(
-                  'https://darys.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_info');
+                  'https://darys.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_info');
               _progressLabelNotifier.value = '${loc.downloading} Info: ${infoEntries.length}';
 
               // 11. Zapis info do bazy z sub-progressem
@@ -1093,7 +1093,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     // 1. Import notatek
                     _updateProgress(loc.nOtes + '...');
                     await Notes.fetchNotatkiFromSerwer(
-                        'https://darys.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_notatki$rokParam');
+                        'https://darys.pl/cbt.php?d=f_notatki&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_notatki$rokParam');
                     await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
                     final notatki = Provider.of<Notes>(context, listen: false).items;
                     _progressLabelNotifier.value = '${loc.nOtes}: ${notatki.length}';
@@ -1101,7 +1101,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     // 2. Import zakupów
                     _updateProgress(loc.pUrchase + '...');
                     await Purchases.fetchZakupyFromSerwer(
-                        'https://darys.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zakupy$rokParam');
+                        'https://darys.pl/cbt.php?d=f_zakupy&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_zakupy$rokParam');
                     await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupy();
                     final zakupy = Provider.of<Purchases>(context, listen: false).items;
                     _progressLabelNotifier.value = '${loc.pUrchase}: ${zakupy.length}';
@@ -1109,7 +1109,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     // 3. Import sprzedaży
                     _updateProgress(loc.sAle + '...');
                     await Sales.fetchSprzedazFromSerwer(
-                        'https://darys.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_sprzedaz$rokParam');
+                        'https://darys.pl/cbt.php?d=f_sprzedaz&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_sprzedaz$rokParam');
                     await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedaz();
                     final sprzedaz = Provider.of<Sales>(context, listen: false).items;
                     _progressLabelNotifier.value = '${loc.sAle}: ${sprzedaz.length}';
@@ -1117,7 +1117,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     // 4. Import matek
                     _updateProgress(loc.queens + '...');
                     await Queens.fetchQueensFromSerwer(
-                        'https://darys.pl/cbt.php?d=f_matki&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_matki$rokParam');
+                        'https://darys.pl/cbt.php?d=f_matki&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_matki$rokParam');
                     await Provider.of<Queens>(context, listen: false).fetchAndSetQueens();
                     final matki = Provider.of<Queens>(context, listen: false).items;
                     _progressLabelNotifier.value = '${loc.queens}: ${matki.length}';
@@ -1125,7 +1125,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     // 5. Import zbiorów
                     _updateProgress(loc.harvest + '...');
                     await Harvests.fetchZbioryFromSerwer(
-                        'https://darys.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zbiory$rokParam');
+                        'https://darys.pl/cbt.php?d=f_zbiory&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_zbiory$rokParam');
                     await Provider.of<Harvests>(context, listen: false).fetchAndSetZbiory();
                     final zbiory = Provider.of<Harvests>(context, listen: false).items;
                     _progressLabelNotifier.value = '${loc.harvest}: ${zbiory.length}';
@@ -1133,14 +1133,14 @@ class _ImportScreenState extends State<ImportScreen> {
                     // 6. Import zdjęć
                     _updateProgress(loc.pHotos + '...');
                     await Photos.fetchZdjeciaFromSerwer(
-                        'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia$rokParam');
+                        'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_zdjecia$rokParam');
                     await Provider.of<Photos>(context, listen: false).fetchAndSetPhotosForHive(0, 0);
                     _progressLabelNotifier.value = loc.pHotos;
 
                     // 7. Pobieranie ramek z serwera
                     _updateProgress('${loc.downloading} ${loc.frames}...');
                     final ramkiEntries = await Frames.downloadFramesFromSerwer(
-                        'https://darys.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_ramka$rokParam');
+                        'https://darys.pl/cbt.php?d=f_ramka&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_ramka$rokParam');
                     _progressLabelNotifier.value = '${loc.downloading} ${loc.frames}: ${ramkiEntries.length}';
 
                     // 8. Zapis ramek do bazy z sub-progressem
@@ -1163,7 +1163,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     // 10. Pobieranie info z serwera
                     _updateProgress('${loc.downloading} Info...');
                     final infoEntries = await Infos.downloadInfosFromSerwer(
-                        'https://darys.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_info$rokParam');
+                        'https://darys.pl/cbt.php?d=f_info&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_info$rokParam');
                     _progressLabelNotifier.value = '${loc.downloading} Info: ${infoEntries.length}';
 
                     // 11. Zapis info do bazy z sub-progressem
@@ -1296,7 +1296,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
               final notatki = Provider.of<Notes>(context, listen: false).items;
@@ -1366,7 +1366,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupy();
               final zakupy = Provider.of<Purchases>(context, listen: false).items;
@@ -1436,7 +1436,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedaz();
               final sprzedaz = Provider.of<Sales>(context, listen: false).items;
@@ -1506,7 +1506,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Queens>(context, listen: false).fetchAndSetQueens();
               final matki = Provider.of<Queens>(context, listen: false).items;
@@ -1576,7 +1576,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Harvests>(context, listen: false).fetchAndSetZbiory();
               final zbiory = Provider.of<Harvests>(context, listen: false).items;
@@ -1648,7 +1648,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
               final info = Provider.of<Infos>(context, listen: false).items.where((inf) {
@@ -1698,7 +1698,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
               final info = Provider.of<Infos>(context, listen: false).items;
@@ -1774,7 +1774,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
               final ramki = Provider.of<Frames>(context, listen: false).items.where((ra) {
@@ -1824,7 +1824,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
               final ramki = Provider.of<Frames>(context, listen: false).items;
@@ -1933,7 +1933,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (notatki.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${notatki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_notatki"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                        '],"total":${notatki.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_notatki"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
                     //print(jsonData); //json przygotowany poprawnie
                     _isInternet().then(
@@ -1990,7 +1990,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (zakupy.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${zakupy.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zakupy"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                        '],"total":${zakupy.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_zakupy"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
                     //print(jsonData);
                     _isInternet().then(
@@ -2046,7 +2046,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (sprzedaz.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${sprzedaz.length}, "tabela":"${mem[0].kod.substring(0, 4)}_sprzedaz"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${sprzedaz.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_sprzedaz"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                     //print(jsonData);
                     _isInternet().then(
@@ -2105,7 +2105,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (matki.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${matki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_matki"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${matki.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_matki"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                     //print(jsonData);
                     _isInternet().then(
@@ -2160,7 +2160,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (zbiory.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${zbiory.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zbiory"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${zbiory.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_zbiory"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                     //print(jsonData);
                     _isInternet().then(
@@ -2216,7 +2216,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (info.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${info.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_info"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                     //print(jsonData);
                     _isInternet().then(
@@ -2300,7 +2300,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       if (ramki.length > i) jsonData += ',';
                     }
                     jsonData +=
-                        '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                        '],"total":${ramki.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_ramka"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                     //print(jsonData);
                     _isInternet().then(
@@ -2402,7 +2402,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (notatki.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${notatki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_notatki"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                      '],"total":${notatki.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_notatki"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
                   //print(jsonData);
                   _isInternet().then(
@@ -2467,7 +2467,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (zakupy.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${zakupy.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zakupy"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
+                      '],"total":${zakupy.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_zakupy"}'; //pierwsze cztery cyfry kodu zakupy_XXXX
 
                   //print(jsonData);
                   _isInternet().then(
@@ -2532,7 +2532,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (sprzedaz.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${sprzedaz.length}, "tabela":"${mem[0].kod.substring(0, 4)}_sprzedaz"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${sprzedaz.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_sprzedaz"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                   //print(jsonData);
                   _isInternet().then(
@@ -2600,7 +2600,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (matki.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${matki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_matki"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${matki.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_matki"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                   //print(jsonData);
                   _isInternet().then(
@@ -2654,7 +2654,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (zbiory.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${zbiory.length}, "tabela":"${mem[0].kod.substring(0, 4)}_zbiory"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${zbiory.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_zbiory"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                   //print(jsonData);
                   _isInternet().then(
@@ -2719,7 +2719,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (info.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${info.length}, "tabela":"${mem[0].kod.substring(0, 4)}_info"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${info.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_info"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                   //print(jsonData);
                   _isInternet().then(
@@ -2805,7 +2805,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     if (ramki.length > i) jsonData += ',';
                   }
                   jsonData +=
-                      '],"total":${ramki.length}, "tabela":"${mem[0].kod.substring(0, 4)}_ramka"}'; //pierwsze cztery cyfry kodu ramka_XXXX
+                      '],"total":${ramki.length}, "tabela":"${globals.prefiksTabel(mem[0].kod)}_ramka"}'; //pierwsze cztery cyfry kodu ramka_XXXX
 
                   //print(jsonData);
                   _isInternet().then(
@@ -3393,7 +3393,7 @@ class _ImportScreenState extends State<ImportScreen> {
     jsonData += '"uwagi": "${photo.uwagi}",';
     jsonData += '"arch": ${photo.arch},';
     jsonData += '"base64": "$base64Data"}';
-    jsonData += '],"total":1, "tabela":"${mem[0].kod.substring(0, 4)}_zdjecia"}';
+    jsonData += '],"total":1, "tabela":"${globals.prefiksTabel(mem[0].kod)}_zdjecia"}';
 
     _isInternet().then((inter) {
       if (inter) {
@@ -3449,7 +3449,7 @@ class _ImportScreenState extends State<ImportScreen> {
               iloscDoWyslania = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
-              final prefix = mem[0].kod.substring(0, 4);
+              final prefix = globals.prefiksTabel(mem[0].kod);
 
               await Provider.of<Photos>(context, listen: false).fetchAndSetPhotos();
               final zdjecia = Provider.of<Photos>(context, listen: false).items;
@@ -3752,7 +3752,7 @@ class _ImportScreenState extends State<ImportScreen> {
             // GestureDetector(
             //   onTap: () {
             //       Photos.fetchZdjeciaFromSerwer(
-            //       'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.kod.substring(0, 4)}_zdjecia')
+            //       'https://darys.pl/cbt.php?d=f_zdjecia&kod=${globals.kod}&tab=${globals.prefiksTabel(globals.kod)}_zdjecia')
             //         .then((_) {
             //           Provider.of<Photos>(context, listen: false)
             //               .fetchAndSetPhotosForHive(0, 0); //odswiezenie - nie jest kluczowe

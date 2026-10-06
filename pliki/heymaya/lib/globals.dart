@@ -27,6 +27,25 @@ String stopnie = '\u2103'; //nazwa jednostki temperatury
 //na Vosk (03.08.2026) silnik głosowy go NIE potrzebuje, ale klucz został jako
 //bramka licencyjna - pusty key ('bez_klucza') = brak sterowania głosem.
 String kod = ''; //kod do pobrania klucza aktywacyjnego z bazy www
+
+//PREFIKS TABEL KONTA W CHMURZE (np. "0001", od konta nr 10000 "A000") - etap 1b pkt 2, 06.10.2026.
+//Podaje go serwer: be_prefiks w odpowiedzi cbt_hi_kod_v2.php (aktywacja i synchronizacja konta
+//przy starcie / po powrocie z tła). Trzymany tylko w pamięci - tabela memory nie ma wolnej kolumny.
+//Zanim przyjdzie odpowiedź (start bez sieci, stary serwer) - 4 pierwsze znaki kodu, jak dotąd;
+//dziś to ta sama wartość, bo serwer też liczy prefiks z 4 pierwszych znaków kodu konta.
+//Jedno miejsce na zmianę, gdy kod przestanie zaczynać się od prefiksu (token, etap 1b pkt 3).
+String prefiksSerwera = '';
+String prefiksTabel(String kodKonta) {
+  if (prefiksSerwera.isNotEmpty) return prefiksSerwera;
+  final k = kodKonta.trim();
+  return k.length >= 4 ? k.substring(0, 4).toUpperCase() : k; //krótszy kod: dotąd RangeError
+}
+
+//be_prefiks z odpowiedzi serwera - przyjmowany tylko w poprawnym formacie (4 znaki [0-9A-Z])
+void ustawPrefiksSerwera(dynamic bePrefiks) {
+  final p = (bePrefiks ?? '').toString();
+  if (RegExp(r'^[0-9A-Z]{4}$').hasMatch(p)) prefiksSerwera = p;
+}
 String key = ''; //klucz aktywacyjny
 String keyMemory = ''; //klucz aktywacyjny - gdyby wycofanie sie z aktywacji i powrót do tego co było
 String deviceId = ''; //Id telefonu - identyfikator apki/uzytkownika
