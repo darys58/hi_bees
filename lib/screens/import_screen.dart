@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hi_bees/helpers/db_helper.dart';
+import '../helpers/eksport_kod.dart'; //etap 1b: kod konta w eksporcie
 //import 'package:hi_bees/models/purchase.dart';
 // import 'package:url_launcher/url_launcher.dart';
 // import '../all_translations.dart';
@@ -172,7 +173,7 @@ class _ImportScreenState extends State<ImportScreen> {
       final response = await http.post(
         Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonData,
+        body: await eksportZKodem(jsonData), //etap 1b: + kod konta
       );
       if (response.statusCode >= 200 && response.statusCode <= 400) {
         final odpPost = json.decode(response.body);
@@ -3021,7 +3022,7 @@ class _ImportScreenState extends State<ImportScreen> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela ramka w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela ramka w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
@@ -3071,7 +3072,7 @@ class _ImportScreenState extends State<ImportScreen> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela info w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela info w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
@@ -3120,7 +3121,7 @@ class _ImportScreenState extends State<ImportScreen> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela info w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela info w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
@@ -3168,7 +3169,7 @@ class _ImportScreenState extends State<ImportScreen> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela info w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela info w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
@@ -3216,7 +3217,7 @@ class _ImportScreenState extends State<ImportScreen> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela info w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela info w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
@@ -3265,7 +3266,7 @@ class _ImportScreenState extends State<ImportScreen> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela info w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela info w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
@@ -3313,7 +3314,7 @@ class _ImportScreenState extends State<ImportScreen> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela info w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela info w postaci jsona //etap 1b: + kod konta
     );
     //print("notatki - response.body:");
     //print(response.body);
@@ -3408,7 +3409,7 @@ class _ImportScreenState extends State<ImportScreen> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1,
+      body: await eksportZKodem(jsonData1), //etap 1b: + kod konta
     );
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);

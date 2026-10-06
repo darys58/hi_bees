@@ -16,6 +16,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
 import 'dart:io';
 import '../helpers/db_helper.dart';
+import '../helpers/eksport_kod.dart'; //etap 1b: kod konta w eksporcie
 import '../helpers/notification_helper.dart';
 import '../models/dodatki1.dart';
 import '../models/dodatki2.dart';
@@ -692,7 +693,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela ramka w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela ramka w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
@@ -740,7 +741,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela ramka w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela ramka w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
@@ -787,7 +788,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonData1, //tabela info w postaci jsona
+      body: await eksportZKodem(jsonData1), //tabela info w postaci jsona //etap 1b: + kod konta
     );
     //print("response.body:");
     //print(response.body);
