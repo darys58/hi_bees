@@ -155,8 +155,9 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   //1.13.2.100 17.09.2026 - kafelki ul/korpus/ramka w pionie nie są juz zmniejszane na ekranach, na których jest dla nich miejsce (własny próg, niezalezny od pozostałych wierszy - iPhone 6S Plus), linki w "O aplikacji" i przycisk "Aktualizuj" otwierane bez canLaunchUrl i z komunikatem, gdy otwarcie się nie uda (dotąd nieudany link nie robił nic i nie informował o tym), adres heymaya.eu na ekranie "Aktywacja" jest teraz klikalnym linkiem, deklaracja <queries> w manifeście Androida (otwieranie stron i poczty na Androidzie 11+), przycisk sterowania głosem nie znika juz przy angielskim języku i wyłączonej obsłudze NFC
   //1.13.3.101 27.09.2026 - raporty tylko w wersji kolorowej, w menu trzy raporty: "Zbiór miodu", "Zbiór pyłku" (dotąd razem w "Raporty zbiorów") i "Osyp varroa" (dotąd "Raporty leczenia") - słupki osypu podzielone na kolorowe segmenty wg dat liczenia (daty odległe o 0-3 dni łączone), legenda z sumą osypu dla każdej daty, PDF osypu (bieżąca strona lub wszystkie ule, z uwagami z wpisów), legendy wszystkich raportów od najnowszej daty (kolejność jak na słupku)
 
-  final wersja = '1.13.3.101'; //wersja aplikacji na iOS
-  final dataWersji = '2026-09-27';
+  //1.13.4.102 07.10.2026 - bezpieczniejsza chmura: token urządzenia zamiast samego kodu w imporcie, eksporcie i kasowaniu bazy (baza v6), kod konta w eksporcie, prefiks tabel z serwera; dane niezależne od języka (belki, import, statystyki, raporty, wpisy z innego języka w bieżącym); suma zbiorów dnia i liczba ramek z historii na belce; synchronizacja konta przy starcie i po powrocie z tła (+ data wpisów po powrocie); linki heymaya.eu wg języka; temperatura pusta zamiast 0° przed pobraniem pogody; głos nie zapisuje cech matki w ulu bez matki, poprawne ID matki we wpisach głosowych; ukryty link suppi.pl w O aplikacji
+  final wersja = '1.13.4.102'; //wersja aplikacji na iOS
+  final dataWersji = '2026-10-07';
   DateTime get now => DateTime.now(); //getter, nie pole - pole zapamiętywało datę utworzenia ekranu i po kilku dniach w tle pokazywało starą
   late DateFormat formatter;
   int aktywnosc = 0;
