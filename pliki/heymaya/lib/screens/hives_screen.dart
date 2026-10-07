@@ -852,6 +852,21 @@ class _HivesScreenState extends State<HivesScreen> {
       bool tejMatki(Info inf) =>
           idMatkiWUlu.isEmpty || inf.pogoda.isEmpty || inf.pogoda == idMatkiWUlu;
 
+      //MATKA JEST TERAZ W INNYM ULU (07.10.2026). Dwa telefony mogą podłączyć tę samą matkę
+      //do różnych uli; po wymianie przez chmurę tabela matek ma ją w JEDNYM ulu (wygrywa ostatni
+      //eksport), a wpisy o znaku zostają w obu - belka pokazywała tę samą matkę w dwóch ulach.
+      //O tym, gdzie siedzi matka, decyduje tabela matek (tak samo panel w infos_screen):
+      //w tym ulu belka nie pokazuje cudzej matki. Wpisy (historia) zostają bez zmian.
+      bool matkaGdzieIndziej = false;
+      final int? idMatkiLiczba = int.tryParse(idMatkiWUlu);
+      if (idMatkiLiczba != null && idMatkiLiczba > 0) {
+        final miejsce = await DBHelper.getMiejsceMatki(idMatkiLiczba);
+        if (miejsce.isNotEmpty &&
+            (miejsce[0]['pasieka'] != globals.pasiekaID || miejsce[0]['ul'] != numerUla)) {
+          matkaGdzieIndziej = true;
+        }
+      }
+
       //Cechy PRZENIESIONE z poprzedniego ula. Po przełożeniu matki nowy ul ma
       //na starcie tylko wpis o znaku, a jakość, unasiennienie, ograniczenie
       //i rocznik zostały przy wpisach z ula poprzedniego - belka brała je
@@ -1063,10 +1078,12 @@ class _HivesScreenState extends State<HivesScreen> {
                 //print('matka2 = ${infosMatka2[0].wartosc}'); 
             } else {matka2 = ''; dataPrzegladu = DateTime.now().toString().substring(0, 10);} //dataPrzeglądu ustawiona dla pasieki
              
+             //matka z ostatniego wpisu siedzi dziś w innym ulu - belka bez matki (patrz matkaGdzieIndziej)
+             if (matkaGdzieIndziej) { matka1 = ''; matka2 = ''; matka3 = ''; matka4 = ''; matka5 = ''; }
              DBHelper.updateUleMatka2('${globals.pasiekaID}.$numerUla',matka2);
             
-            //jezeli matki brak to kasowanie innych parametrów matki w tabeli "ule" 
-            if(matka2 == 'brak'){
+            //jezeli matki brak (albo jest w innym ulu) to kasowanie innych parametrów matki w tabeli "ule" 
+            if(matka2 == 'brak' || matkaGdzieIndziej){
               DBHelper.updateUleMatka1('${globals.pasiekaID}.$numerUla',matka1);
               DBHelper.updateUleMatka3('${globals.pasiekaID}.$numerUla',matka3);
               DBHelper.updateUleMatka4('${globals.pasiekaID}.$numerUla',matka4);

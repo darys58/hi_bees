@@ -896,6 +896,12 @@ class DBHelper {
   }
 
   //odczyt z tabeli matki  - dla apiary_screen, infos_screen
+  //gdzie siedzi matka wg tabeli matek (pasieka, ul) - pusta lista, gdy nie ma takiej matki
+  static Future<List<Map<String, dynamic>>> getMiejsceMatki(int id) async {
+    final db = await DBHelper.database();
+    return db.rawQuery('SELECT pasieka, ul FROM matki WHERE id = ?', [id]);
+  }
+
   static Future<List<Map<String, dynamic>>> getQueens() async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie matek');
