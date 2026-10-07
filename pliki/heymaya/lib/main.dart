@@ -40,6 +40,8 @@ import './screens/note_edit_screen.dart';
 import './screens/queens_screen.dart';
 import './screens/queen_edit_screen.dart';
 import './screens/queen_history_screen.dart';
+import './screens/team_screen.dart'; //praca zespołowa (etap 2)
+import './helpers/baza_zespolu.dart'; //wczytajAktywnaBaze
 import './screens/add_hive_screen.dart';
 import './screens/add_queen_screen.dart';
 import './screens/apiary_weather_5days.dart';
@@ -110,6 +112,7 @@ void main() async {
   }
 
   // then start the application
+  await wczytajAktywnaBaze(); //etap 2: własna baza albo baza właściciela - przed pierwszym otwarciem bazy
   return runApp(MyApp());
 }
 
@@ -377,6 +380,7 @@ class _MyAppState extends State<MyApp> {
           QueenScreen.routeName: (ctx) => QueenScreen(),
           QueenEditScreen.routeName: (ctx) => QueenEditScreen(),
           QueenHistoryScreen.routeName: (ctx) => QueenHistoryScreen(),
+          TeamScreen.routeName: (ctx) => const TeamScreen(), //praca zespołowa (etap 2)
           AddHiveScreen.routeName: (ctx) => AddHiveScreen(),
           AddQueenScreen.routeName: (ctx) => AddQueenScreen(),
           Weather5DaysScreen.routeName: (ctx) => Weather5DaysScreen(),

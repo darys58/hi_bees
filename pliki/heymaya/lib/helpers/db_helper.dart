@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:path/path.dart';
 import 'package:sqflite/sqlite_api.dart';
+import '../globals.dart' as globals; //plikBazy() - własna baza albo baza właściciela (etap 2)
 
 //metody statyczne w klasie są po to, zeby nie tworzyć instancji tej klasy
 //ale pracować z tymi metodami jak z funkcjami. Klasa jest opakowaniem dla metod,
@@ -13,7 +14,7 @@ class DBHelper {
 
   static Future<Database> database() async {
     final dbPath = await sql.getDatabasesPath();
-    final path = join(dbPath, "hibees.db"); //ściekzka do bazy i nazwa bazy
+    final path = join(dbPath, globals.plikBazy()); //ściekzka do bazy i nazwa bazy (hibees.db albo hibees_XXXX.db - etap 2)
 
 //print('openDatabase !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     return sql.openDatabase(path, onCreate: (db, version) async {
@@ -101,7 +102,7 @@ class DBHelper {
   static Future<void> deleteBase() async {
     final dbPath = await sql.getDatabasesPath();
    // print('DBHelper - kasowanie bazy danych');
-    await sql.deleteDatabase(join(dbPath, "hibees.db"));
+    await sql.deleteDatabase(join(dbPath, globals.plikBazy()));
   }
 
 //zapis do bazy
@@ -139,6 +140,16 @@ class DBHelper {
       wiersz['id'] = id;
       await txn.insert(table, wiersz, conflictAlgorithm: ConflictAlgorithm.abort);
       return id;
+    });
+  }
+
+  //podmiana wiersza konta w memory BIEŻĄCEGO pliku bazy (przełączanie baz, etap 2) - w jednej transakcji,
+  //bo deleteTable nie czeka na skasowanie
+  static Future<void> zastapKonto(Map<String, Object?> wiersz) async {
+    final db = await DBHelper.database();
+    await db.transaction((txn) async {
+      await txn.delete('memory');
+      await txn.insert('memory', wiersz);
     });
   }
 

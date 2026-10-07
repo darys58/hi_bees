@@ -1945,5 +1945,76 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "teamWork": "Team work",
+    "teamWorkSubtitle": "Workers and databases you work in",
+    "teamBases": "Database you work in",
+    "teamMyBase": "My database",
+    "teamCurrent": "current",
+    "teamSwitch": "Switch",
+    "teamSwitchConfirm": "Switch to this database?",
+    "teamSwitchInfo": "On first entry the database is empty - import data from the cloud: Data management → Import.",
+    "teamWorkingIn": "Working in the database of: {email}",
+    "@teamWorkingIn": {
+        "placeholders": {
+            "email": {
+                "type": "String"
+            }
+        }
+    },
+    "teamInvitations": "Invitations",
+    "teamAccept": "Accept",
+    "teamReject": "Reject",
+    "teamValidUntil": "valid until {date}",
+    "@teamValidUntil": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "teamLeave": "Leave",
+    "teamLeaveConfirm": "Stop working in this database?",
+    "teamMyWorkers": "My workers",
+    "teamInvite": "Invite a worker",
+    "teamEditWorker": "Worker rights",
+    "teamNeedsSubscription": "Inviting workers and granting rights requires a subscription.",
+    "teamOnlyFromOwnBase": "You invite workers from your own database.",
+    "teamEmail": "Worker's e-mail (their Hey Maya account)",
+    "teamAllApiaries": "All apiaries",
+    "teamApiaries": "Apiaries: {list}",
+    "@teamApiaries": {
+        "placeholders": {
+            "list": {
+                "type": "String"
+            }
+        }
+    },
+    "teamRead": "read",
+    "teamWrite": "write",
+    "teamSave": "Save",
+    "teamRevoke": "Revoke access",
+    "teamRevokeConfirm": "Revoke this worker's access?",
+    "teamStatusInvited": "invited",
+    "teamStatusActive": "active",
+    "teamStatusExpired": "invitation expired",
+    "teamNone": "None",
+    "teamInvitationSent": "Invitation sent.",
+    "teamNoToken": "No connection to your account. Restart the app with internet access and try again.",
+    "teamNoConnection": "No connection to the server.",
+    "teamError": "Failed: {msg}",
+    "@teamError": {
+        "placeholders": {
+            "msg": {
+                "type": "String"
+            }
+        }
+    },
+    "teamErrNoAccount": "No account with this e-mail. The worker must activate Hey Maya first.",
+    "teamErrLimit": "The limit of 10 workers has been reached.",
+    "teamErrOwnAccount": "This is your own account.",
+    "teamErrAlready": "This person is already a worker - change their rights in the list.",
+    "teamErrNoRights": "Select at least one right.",
+    "teamWriteBlocked": "owner's subscription expired - writing paused",
+    "teamReadBlocked": "owner's subscription expired - access paused"
 }

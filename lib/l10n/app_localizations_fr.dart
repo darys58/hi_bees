@@ -2934,4 +2934,150 @@ class AppLocalizationsFr extends AppLocalizations {
   String voiceQueenSavedInHives(String saved, String all) {
     return 'Enregistré dans $saved ruches sur $all - pas de reine dans les autres';
   }
+
+  @override
+  String get teamWork => 'Travail d\'équipe';
+
+  @override
+  String get teamWorkSubtitle =>
+      'Collaborateurs et bases dans lesquelles vous travaillez';
+
+  @override
+  String get teamBases => 'Base dans laquelle vous travaillez';
+
+  @override
+  String get teamMyBase => 'Ma base';
+
+  @override
+  String get teamCurrent => 'actuelle';
+
+  @override
+  String get teamSwitch => 'Changer';
+
+  @override
+  String get teamSwitchConfirm => 'Passer à cette base ?';
+
+  @override
+  String get teamSwitchInfo =>
+      'Au premier accès la base est vide - importez les données du cloud : Gestion des données → Import.';
+
+  @override
+  String teamWorkingIn(String email) {
+    return 'Vous travaillez dans la base de : $email';
+  }
+
+  @override
+  String get teamInvitations => 'Invitations';
+
+  @override
+  String get teamAccept => 'Accepter';
+
+  @override
+  String get teamReject => 'Refuser';
+
+  @override
+  String teamValidUntil(String date) {
+    return 'valable jusqu\'au $date';
+  }
+
+  @override
+  String get teamLeave => 'Quitter';
+
+  @override
+  String get teamLeaveConfirm => 'Arrêter de travailler dans cette base ?';
+
+  @override
+  String get teamMyWorkers => 'Mes collaborateurs';
+
+  @override
+  String get teamInvite => 'Inviter un collaborateur';
+
+  @override
+  String get teamEditWorker => 'Droits du collaborateur';
+
+  @override
+  String get teamNeedsSubscription =>
+      'Inviter des collaborateurs et attribuer des droits nécessite un abonnement.';
+
+  @override
+  String get teamOnlyFromOwnBase =>
+      'Vous invitez des collaborateurs depuis votre propre base.';
+
+  @override
+  String get teamEmail => 'E-mail du collaborateur (son compte Hey Maya)';
+
+  @override
+  String get teamAllApiaries => 'Tous les ruchers';
+
+  @override
+  String teamApiaries(String list) {
+    return 'Ruchers : $list';
+  }
+
+  @override
+  String get teamRead => 'lecture';
+
+  @override
+  String get teamWrite => 'écriture';
+
+  @override
+  String get teamSave => 'Enregistrer';
+
+  @override
+  String get teamRevoke => 'Retirer l\'accès';
+
+  @override
+  String get teamRevokeConfirm => 'Retirer l\'accès de ce collaborateur ?';
+
+  @override
+  String get teamStatusInvited => 'invité';
+
+  @override
+  String get teamStatusActive => 'actif';
+
+  @override
+  String get teamStatusExpired => 'invitation expirée';
+
+  @override
+  String get teamNone => 'Aucun';
+
+  @override
+  String get teamInvitationSent => 'Invitation envoyée.';
+
+  @override
+  String get teamNoToken =>
+      'Pas de connexion au compte. Redémarrez l\'application avec Internet et réessayez.';
+
+  @override
+  String get teamNoConnection => 'Pas de connexion au serveur.';
+
+  @override
+  String teamError(String msg) {
+    return 'Échec : $msg';
+  }
+
+  @override
+  String get teamErrNoAccount =>
+      'Aucun compte avec cet e-mail. Le collaborateur doit d\'abord activer Hey Maya.';
+
+  @override
+  String get teamErrLimit => 'La limite de 10 collaborateurs est atteinte.';
+
+  @override
+  String get teamErrOwnAccount => 'C\'est votre propre compte.';
+
+  @override
+  String get teamErrAlready =>
+      'Cette personne est déjà collaborateur - modifiez ses droits dans la liste.';
+
+  @override
+  String get teamErrNoRights => 'Sélectionnez au moins un droit.';
+
+  @override
+  String get teamWriteBlocked =>
+      'abonnement du propriétaire expiré - écriture suspendue';
+
+  @override
+  String get teamReadBlocked =>
+      'abonnement du propriétaire expiré - accès suspendu';
 }

@@ -5735,6 +5735,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved in {saved} of {all} hives - no queen in the rest'**
   String voiceQueenSavedInHives(String saved, String all);
+
+  /// No description provided for @teamWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Team work'**
+  String get teamWork;
+
+  /// No description provided for @teamWorkSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workers and databases you work in'**
+  String get teamWorkSubtitle;
+
+  /// No description provided for @teamBases.
+  ///
+  /// In en, this message translates to:
+  /// **'Database you work in'**
+  String get teamBases;
+
+  /// No description provided for @teamMyBase.
+  ///
+  /// In en, this message translates to:
+  /// **'My database'**
+  String get teamMyBase;
+
+  /// No description provided for @teamCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'current'**
+  String get teamCurrent;
+
+  /// No description provided for @teamSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get teamSwitch;
+
+  /// No description provided for @teamSwitchConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to this database?'**
+  String get teamSwitchConfirm;
+
+  /// No description provided for @teamSwitchInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'On first entry the database is empty - import data from the cloud: Data management → Import.'**
+  String get teamSwitchInfo;
+
+  /// No description provided for @teamWorkingIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Working in the database of: {email}'**
+  String teamWorkingIn(String email);
+
+  /// No description provided for @teamInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations'**
+  String get teamInvitations;
+
+  /// No description provided for @teamAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get teamAccept;
+
+  /// No description provided for @teamReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get teamReject;
+
+  /// No description provided for @teamValidUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'valid until {date}'**
+  String teamValidUntil(String date);
+
+  /// No description provided for @teamLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get teamLeave;
+
+  /// No description provided for @teamLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop working in this database?'**
+  String get teamLeaveConfirm;
+
+  /// No description provided for @teamMyWorkers.
+  ///
+  /// In en, this message translates to:
+  /// **'My workers'**
+  String get teamMyWorkers;
+
+  /// No description provided for @teamInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a worker'**
+  String get teamInvite;
+
+  /// No description provided for @teamEditWorker.
+  ///
+  /// In en, this message translates to:
+  /// **'Worker rights'**
+  String get teamEditWorker;
+
+  /// No description provided for @teamNeedsSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Inviting workers and granting rights requires a subscription.'**
+  String get teamNeedsSubscription;
+
+  /// No description provided for @teamOnlyFromOwnBase.
+  ///
+  /// In en, this message translates to:
+  /// **'You invite workers from your own database.'**
+  String get teamOnlyFromOwnBase;
+
+  /// No description provided for @teamEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Worker\'s e-mail (their Hey Maya account)'**
+  String get teamEmail;
+
+  /// No description provided for @teamAllApiaries.
+  ///
+  /// In en, this message translates to:
+  /// **'All apiaries'**
+  String get teamAllApiaries;
+
+  /// No description provided for @teamApiaries.
+  ///
+  /// In en, this message translates to:
+  /// **'Apiaries: {list}'**
+  String teamApiaries(String list);
+
+  /// No description provided for @teamRead.
+  ///
+  /// In en, this message translates to:
+  /// **'read'**
+  String get teamRead;
+
+  /// No description provided for @teamWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'write'**
+  String get teamWrite;
+
+  /// No description provided for @teamSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get teamSave;
+
+  /// No description provided for @teamRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke access'**
+  String get teamRevoke;
+
+  /// No description provided for @teamRevokeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke this worker\'s access?'**
+  String get teamRevokeConfirm;
+
+  /// No description provided for @teamStatusInvited.
+  ///
+  /// In en, this message translates to:
+  /// **'invited'**
+  String get teamStatusInvited;
+
+  /// No description provided for @teamStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'active'**
+  String get teamStatusActive;
+
+  /// No description provided for @teamStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'invitation expired'**
+  String get teamStatusExpired;
+
+  /// No description provided for @teamNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get teamNone;
+
+  /// No description provided for @teamInvitationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent.'**
+  String get teamInvitationSent;
+
+  /// No description provided for @teamNoToken.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to your account. Restart the app with internet access and try again.'**
+  String get teamNoToken;
+
+  /// No description provided for @teamNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to the server.'**
+  String get teamNoConnection;
+
+  /// No description provided for @teamError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {msg}'**
+  String teamError(String msg);
+
+  /// No description provided for @teamErrNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'No account with this e-mail. The worker must activate Hey Maya first.'**
+  String get teamErrNoAccount;
+
+  /// No description provided for @teamErrLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'The limit of 10 workers has been reached.'**
+  String get teamErrLimit;
+
+  /// No description provided for @teamErrOwnAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your own account.'**
+  String get teamErrOwnAccount;
+
+  /// No description provided for @teamErrAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'This person is already a worker - change their rights in the list.'**
+  String get teamErrAlready;
+
+  /// No description provided for @teamErrNoRights.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one right.'**
+  String get teamErrNoRights;
+
+  /// No description provided for @teamWriteBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'owner\'s subscription expired - writing paused'**
+  String get teamWriteBlocked;
+
+  /// No description provided for @teamReadBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'owner\'s subscription expired - access paused'**
+  String get teamReadBlocked;
 }
 
 class _AppLocalizationsDelegate

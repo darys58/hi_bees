@@ -28,6 +28,15 @@ String stopnie = '\u2103'; //nazwa jednostki temperatury
 //bramka licencyjna - pusty key ('bez_klucza') = brak sterowania głosem.
 String kod = ''; //kod do pobrania klucza aktywacyjnego z bazy www
 
+//BAZA, NA KTÓREJ PRACUJE APLIKACJA (etap 2 - praca zespołowa, 07.10.2026).
+//'' = własna baza (plik hibees.db); 'XXXX' = baza WŁAŚCICIELA o tym prefiksie (plik hibees_XXXX.db),
+//w której ten użytkownik jest pracownikiem. Zapamiętana w SharedPreferences (helpers/baza_zespolu.dart),
+//wczytywana w main() przed pierwszym otwarciem bazy. Konto (memory) zawsze należy do użytkownika -
+//przy przełączeniu przechodzi do pliku docelowego; prefiks tabel i stanowisko są z bazy docelowej.
+String aktywnaBaza = '';
+String aktywnaBazaEmail = ''; //e-mail właściciela - pasek "Pracujesz w bazie..." na ekranie startowym
+String plikBazy() => aktywnaBaza.isEmpty ? 'hibees.db' : 'hibees_$aktywnaBaza.db';
+
 //PREFIKS TABEL KONTA W CHMURZE (np. "0001", od konta nr 10000 "A000") - etap 1b pkt 2, 06.10.2026.
 //Podaje go serwer: be_prefiks w odpowiedzi cbt_hi_kod_v2.php (aktywacja i synchronizacja konta
 //przy starcie / po powrocie z tła). Trzymany tylko w pamięci - tabela memory nie ma wolnej kolumny.
@@ -53,6 +62,7 @@ bool ustawStanowisko(dynamic wartosc) {
   return true;
 }
 String prefiksTabel(String kodKonta) {
+  if (aktywnaBaza.isNotEmpty) return aktywnaBaza; //praca w bazie właściciela (etap 2)
   if (prefiksSerwera.isNotEmpty) return prefiksSerwera;
   final k = kodKonta.trim();
   return k.length >= 4 ? k.substring(0, 4).toUpperCase() : k; //krótszy kod: dotąd RangeError

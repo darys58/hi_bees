@@ -1123,5 +1123,76 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "teamWork": "Teamarbeit",
+    "teamWorkSubtitle": "Mitarbeiter und Datenbanken, in denen Sie arbeiten",
+    "teamBases": "Datenbank, in der Sie arbeiten",
+    "teamMyBase": "Meine Datenbank",
+    "teamCurrent": "aktuell",
+    "teamSwitch": "Wechseln",
+    "teamSwitchConfirm": "Zu dieser Datenbank wechseln?",
+    "teamSwitchInfo": "Beim ersten Öffnen ist die Datenbank leer - importieren Sie die Daten aus der Cloud: Datenverwaltung → Import.",
+    "teamWorkingIn": "Sie arbeiten in der Datenbank von: {email}",
+    "@teamWorkingIn": {
+        "placeholders": {
+            "email": {
+                "type": "String"
+            }
+        }
+    },
+    "teamInvitations": "Einladungen",
+    "teamAccept": "Annehmen",
+    "teamReject": "Ablehnen",
+    "teamValidUntil": "gültig bis {date}",
+    "@teamValidUntil": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "teamLeave": "Austreten",
+    "teamLeaveConfirm": "Die Arbeit in dieser Datenbank beenden?",
+    "teamMyWorkers": "Meine Mitarbeiter",
+    "teamInvite": "Mitarbeiter einladen",
+    "teamEditWorker": "Mitarbeiterrechte",
+    "teamNeedsSubscription": "Das Einladen von Mitarbeitern und Vergeben von Rechten erfordert ein Abonnement.",
+    "teamOnlyFromOwnBase": "Mitarbeiter laden Sie aus Ihrer eigenen Datenbank ein.",
+    "teamEmail": "E-Mail des Mitarbeiters (sein Hey-Maya-Konto)",
+    "teamAllApiaries": "Alle Bienenstände",
+    "teamApiaries": "Bienenstände: {list}",
+    "@teamApiaries": {
+        "placeholders": {
+            "list": {
+                "type": "String"
+            }
+        }
+    },
+    "teamRead": "lesen",
+    "teamWrite": "schreiben",
+    "teamSave": "Speichern",
+    "teamRevoke": "Zugriff entziehen",
+    "teamRevokeConfirm": "Den Zugriff dieses Mitarbeiters entziehen?",
+    "teamStatusInvited": "eingeladen",
+    "teamStatusActive": "aktiv",
+    "teamStatusExpired": "Einladung abgelaufen",
+    "teamNone": "Keine",
+    "teamInvitationSent": "Einladung gesendet.",
+    "teamNoToken": "Keine Verbindung zum Konto. Starten Sie die App mit Internet neu und versuchen Sie es erneut.",
+    "teamNoConnection": "Keine Verbindung zum Server.",
+    "teamError": "Fehlgeschlagen: {msg}",
+    "@teamError": {
+        "placeholders": {
+            "msg": {
+                "type": "String"
+            }
+        }
+    },
+    "teamErrNoAccount": "Kein Konto mit dieser E-Mail. Der Mitarbeiter muss Hey Maya zuerst aktivieren.",
+    "teamErrLimit": "Das Limit von 10 Mitarbeitern ist erreicht.",
+    "teamErrOwnAccount": "Das ist Ihr eigenes Konto.",
+    "teamErrAlready": "Diese Person ist bereits Mitarbeiter - ändern Sie die Rechte in der Liste.",
+    "teamErrNoRights": "Wählen Sie mindestens ein Recht.",
+    "teamWriteBlocked": "Abonnement des Besitzers abgelaufen - Schreiben angehalten",
+    "teamReadBlocked": "Abonnement des Besitzers abgelaufen - Zugriff angehalten"
 }

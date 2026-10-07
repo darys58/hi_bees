@@ -1138,5 +1138,76 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "teamWork": "Praca zespołowa",
+    "teamWorkSubtitle": "Pracownicy i bazy, w których pracujesz",
+    "teamBases": "Baza, na której pracujesz",
+    "teamMyBase": "Moja baza",
+    "teamCurrent": "aktualna",
+    "teamSwitch": "Przełącz",
+    "teamSwitchConfirm": "Przełączyć na tę bazę?",
+    "teamSwitchInfo": "Przy pierwszym wejściu baza jest pusta - zaimportuj dane z chmury: Zarządzanie danymi → Import.",
+    "teamWorkingIn": "Pracujesz w bazie: {email}",
+    "@teamWorkingIn": {
+        "placeholders": {
+            "email": {
+                "type": "String"
+            }
+        }
+    },
+    "teamInvitations": "Zaproszenia",
+    "teamAccept": "Przyjmij",
+    "teamReject": "Odrzuć",
+    "teamValidUntil": "ważne do {date}",
+    "@teamValidUntil": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "teamLeave": "Zrezygnuj",
+    "teamLeaveConfirm": "Zrezygnować z pracy w tej bazie?",
+    "teamMyWorkers": "Moi pracownicy",
+    "teamInvite": "Zaproś pracownika",
+    "teamEditWorker": "Prawa pracownika",
+    "teamNeedsSubscription": "Zapraszanie pracowników i nadawanie praw wymaga abonamentu.",
+    "teamOnlyFromOwnBase": "Pracowników zapraszasz ze swojej bazy.",
+    "teamEmail": "E-mail pracownika (jego konto w Hey Maya)",
+    "teamAllApiaries": "Wszystkie pasieki",
+    "teamApiaries": "Pasieki: {list}",
+    "@teamApiaries": {
+        "placeholders": {
+            "list": {
+                "type": "String"
+            }
+        }
+    },
+    "teamRead": "odczyt",
+    "teamWrite": "zapis",
+    "teamSave": "Zapisz",
+    "teamRevoke": "Odwołaj dostęp",
+    "teamRevokeConfirm": "Odwołać dostęp tego pracownika?",
+    "teamStatusInvited": "zaproszony",
+    "teamStatusActive": "aktywny",
+    "teamStatusExpired": "zaproszenie wygasło",
+    "teamNone": "Brak",
+    "teamInvitationSent": "Zaproszenie wysłane.",
+    "teamNoToken": "Brak połączenia z kontem. Uruchom aplikację ponownie z internetem i spróbuj jeszcze raz.",
+    "teamNoConnection": "Brak połączenia z serwerem.",
+    "teamError": "Nie udało się: {msg}",
+    "@teamError": {
+        "placeholders": {
+            "msg": {
+                "type": "String"
+            }
+        }
+    },
+    "teamErrNoAccount": "Nie ma konta z tym e-mailem. Pracownik musi najpierw aktywować Hey Maya.",
+    "teamErrLimit": "Osiągnięto limit 10 pracowników.",
+    "teamErrOwnAccount": "To jest Twoje konto.",
+    "teamErrAlready": "Ta osoba już jest pracownikiem - zmień jej prawa na liście.",
+    "teamErrNoRights": "Zaznacz przynajmniej jedno prawo.",
+    "teamWriteBlocked": "abonament właściciela wygasł - zapis wstrzymany",
+    "teamReadBlocked": "abonament właściciela wygasł - dostęp wstrzymany"
 }

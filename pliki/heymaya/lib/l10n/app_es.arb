@@ -1123,5 +1123,76 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "teamWork": "Trabajo en equipo",
+    "teamWorkSubtitle": "Trabajadores y bases en las que trabajas",
+    "teamBases": "Base en la que trabajas",
+    "teamMyBase": "Mi base",
+    "teamCurrent": "actual",
+    "teamSwitch": "Cambiar",
+    "teamSwitchConfirm": "¿Cambiar a esta base?",
+    "teamSwitchInfo": "La primera vez la base está vacía: importa los datos de la nube: Gestión de datos → Importar.",
+    "teamWorkingIn": "Trabajas en la base de: {email}",
+    "@teamWorkingIn": {
+        "placeholders": {
+            "email": {
+                "type": "String"
+            }
+        }
+    },
+    "teamInvitations": "Invitaciones",
+    "teamAccept": "Aceptar",
+    "teamReject": "Rechazar",
+    "teamValidUntil": "válida hasta {date}",
+    "@teamValidUntil": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "teamLeave": "Abandonar",
+    "teamLeaveConfirm": "¿Dejar de trabajar en esta base?",
+    "teamMyWorkers": "Mis trabajadores",
+    "teamInvite": "Invitar a un trabajador",
+    "teamEditWorker": "Derechos del trabajador",
+    "teamNeedsSubscription": "Invitar trabajadores y asignar derechos requiere una suscripción.",
+    "teamOnlyFromOwnBase": "Invitas a trabajadores desde tu propia base.",
+    "teamEmail": "E-mail del trabajador (su cuenta de Hey Maya)",
+    "teamAllApiaries": "Todos los colmenares",
+    "teamApiaries": "Colmenares: {list}",
+    "@teamApiaries": {
+        "placeholders": {
+            "list": {
+                "type": "String"
+            }
+        }
+    },
+    "teamRead": "lectura",
+    "teamWrite": "escritura",
+    "teamSave": "Guardar",
+    "teamRevoke": "Revocar acceso",
+    "teamRevokeConfirm": "¿Revocar el acceso de este trabajador?",
+    "teamStatusInvited": "invitado",
+    "teamStatusActive": "activo",
+    "teamStatusExpired": "invitación caducada",
+    "teamNone": "Ninguno",
+    "teamInvitationSent": "Invitación enviada.",
+    "teamNoToken": "Sin conexión con la cuenta. Reinicia la aplicación con internet e inténtalo de nuevo.",
+    "teamNoConnection": "Sin conexión con el servidor.",
+    "teamError": "Error: {msg}",
+    "@teamError": {
+        "placeholders": {
+            "msg": {
+                "type": "String"
+            }
+        }
+    },
+    "teamErrNoAccount": "No hay ninguna cuenta con este e-mail. El trabajador debe activar primero Hey Maya.",
+    "teamErrLimit": "Se ha alcanzado el límite de 10 trabajadores.",
+    "teamErrOwnAccount": "Esta es tu propia cuenta.",
+    "teamErrAlready": "Esta persona ya es trabajador: cambia sus derechos en la lista.",
+    "teamErrNoRights": "Selecciona al menos un derecho.",
+    "teamWriteBlocked": "la suscripción del propietario ha caducado: escritura en pausa",
+    "teamReadBlocked": "la suscripción del propietario ha caducado: acceso en pausa"
 }

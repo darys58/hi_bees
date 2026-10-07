@@ -2911,4 +2911,141 @@ class AppLocalizationsPl extends AppLocalizations {
   String voiceQueenSavedInHives(String saved, String all) {
     return 'Zapisano w $saved z $all uli - w pozostałych nie ma matki';
   }
+
+  @override
+  String get teamWork => 'Praca zespołowa';
+
+  @override
+  String get teamWorkSubtitle => 'Pracownicy i bazy, w których pracujesz';
+
+  @override
+  String get teamBases => 'Baza, na której pracujesz';
+
+  @override
+  String get teamMyBase => 'Moja baza';
+
+  @override
+  String get teamCurrent => 'aktualna';
+
+  @override
+  String get teamSwitch => 'Przełącz';
+
+  @override
+  String get teamSwitchConfirm => 'Przełączyć na tę bazę?';
+
+  @override
+  String get teamSwitchInfo => 'Przy pierwszym wejściu baza jest pusta - zaimportuj dane z chmury: Zarządzanie danymi → Import.';
+
+  @override
+  String teamWorkingIn(String email) {
+    return 'Pracujesz w bazie: $email';
+  }
+
+  @override
+  String get teamInvitations => 'Zaproszenia';
+
+  @override
+  String get teamAccept => 'Przyjmij';
+
+  @override
+  String get teamReject => 'Odrzuć';
+
+  @override
+  String teamValidUntil(String date) {
+    return 'ważne do $date';
+  }
+
+  @override
+  String get teamLeave => 'Zrezygnuj';
+
+  @override
+  String get teamLeaveConfirm => 'Zrezygnować z pracy w tej bazie?';
+
+  @override
+  String get teamMyWorkers => 'Moi pracownicy';
+
+  @override
+  String get teamInvite => 'Zaproś pracownika';
+
+  @override
+  String get teamEditWorker => 'Prawa pracownika';
+
+  @override
+  String get teamNeedsSubscription => 'Zapraszanie pracowników i nadawanie praw wymaga abonamentu.';
+
+  @override
+  String get teamOnlyFromOwnBase => 'Pracowników zapraszasz ze swojej bazy.';
+
+  @override
+  String get teamEmail => 'E-mail pracownika (jego konto w Hey Maya)';
+
+  @override
+  String get teamAllApiaries => 'Wszystkie pasieki';
+
+  @override
+  String teamApiaries(String list) {
+    return 'Pasieki: $list';
+  }
+
+  @override
+  String get teamRead => 'odczyt';
+
+  @override
+  String get teamWrite => 'zapis';
+
+  @override
+  String get teamSave => 'Zapisz';
+
+  @override
+  String get teamRevoke => 'Odwołaj dostęp';
+
+  @override
+  String get teamRevokeConfirm => 'Odwołać dostęp tego pracownika?';
+
+  @override
+  String get teamStatusInvited => 'zaproszony';
+
+  @override
+  String get teamStatusActive => 'aktywny';
+
+  @override
+  String get teamStatusExpired => 'zaproszenie wygasło';
+
+  @override
+  String get teamNone => 'Brak';
+
+  @override
+  String get teamInvitationSent => 'Zaproszenie wysłane.';
+
+  @override
+  String get teamNoToken => 'Brak połączenia z kontem. Uruchom aplikację ponownie z internetem i spróbuj jeszcze raz.';
+
+  @override
+  String get teamNoConnection => 'Brak połączenia z serwerem.';
+
+  @override
+  String teamError(String msg) {
+    return 'Nie udało się: $msg';
+  }
+
+  @override
+  String get teamErrNoAccount => 'Nie ma konta z tym e-mailem. Pracownik musi najpierw aktywować Hey Maya.';
+
+  @override
+  String get teamErrLimit => 'Osiągnięto limit 10 pracowników.';
+
+  @override
+  String get teamErrOwnAccount => 'To jest Twoje konto.';
+
+  @override
+  String get teamErrAlready => 'Ta osoba już jest pracownikiem - zmień jej prawa na liście.';
+
+  @override
+  String get teamErrNoRights => 'Zaznacz przynajmniej jedno prawo.';
+
+  @override
+  String get teamWriteBlocked => 'abonament właściciela wygasł - zapis wstrzymany';
+
+  @override
+  String get teamReadBlocked => 'abonament właściciela wygasł - dostęp wstrzymany';
 }

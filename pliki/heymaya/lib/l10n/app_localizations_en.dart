@@ -2903,4 +2903,141 @@ class AppLocalizationsEn extends AppLocalizations {
   String voiceQueenSavedInHives(String saved, String all) {
     return 'Saved in $saved of $all hives - no queen in the rest';
   }
+
+  @override
+  String get teamWork => 'Team work';
+
+  @override
+  String get teamWorkSubtitle => 'Workers and databases you work in';
+
+  @override
+  String get teamBases => 'Database you work in';
+
+  @override
+  String get teamMyBase => 'My database';
+
+  @override
+  String get teamCurrent => 'current';
+
+  @override
+  String get teamSwitch => 'Switch';
+
+  @override
+  String get teamSwitchConfirm => 'Switch to this database?';
+
+  @override
+  String get teamSwitchInfo => 'On first entry the database is empty - import data from the cloud: Data management → Import.';
+
+  @override
+  String teamWorkingIn(String email) {
+    return 'Working in the database of: $email';
+  }
+
+  @override
+  String get teamInvitations => 'Invitations';
+
+  @override
+  String get teamAccept => 'Accept';
+
+  @override
+  String get teamReject => 'Reject';
+
+  @override
+  String teamValidUntil(String date) {
+    return 'valid until $date';
+  }
+
+  @override
+  String get teamLeave => 'Leave';
+
+  @override
+  String get teamLeaveConfirm => 'Stop working in this database?';
+
+  @override
+  String get teamMyWorkers => 'My workers';
+
+  @override
+  String get teamInvite => 'Invite a worker';
+
+  @override
+  String get teamEditWorker => 'Worker rights';
+
+  @override
+  String get teamNeedsSubscription => 'Inviting workers and granting rights requires a subscription.';
+
+  @override
+  String get teamOnlyFromOwnBase => 'You invite workers from your own database.';
+
+  @override
+  String get teamEmail => 'Worker\'s e-mail (their Hey Maya account)';
+
+  @override
+  String get teamAllApiaries => 'All apiaries';
+
+  @override
+  String teamApiaries(String list) {
+    return 'Apiaries: $list';
+  }
+
+  @override
+  String get teamRead => 'read';
+
+  @override
+  String get teamWrite => 'write';
+
+  @override
+  String get teamSave => 'Save';
+
+  @override
+  String get teamRevoke => 'Revoke access';
+
+  @override
+  String get teamRevokeConfirm => 'Revoke this worker\'s access?';
+
+  @override
+  String get teamStatusInvited => 'invited';
+
+  @override
+  String get teamStatusActive => 'active';
+
+  @override
+  String get teamStatusExpired => 'invitation expired';
+
+  @override
+  String get teamNone => 'None';
+
+  @override
+  String get teamInvitationSent => 'Invitation sent.';
+
+  @override
+  String get teamNoToken => 'No connection to your account. Restart the app with internet access and try again.';
+
+  @override
+  String get teamNoConnection => 'No connection to the server.';
+
+  @override
+  String teamError(String msg) {
+    return 'Failed: $msg';
+  }
+
+  @override
+  String get teamErrNoAccount => 'No account with this e-mail. The worker must activate Hey Maya first.';
+
+  @override
+  String get teamErrLimit => 'The limit of 10 workers has been reached.';
+
+  @override
+  String get teamErrOwnAccount => 'This is your own account.';
+
+  @override
+  String get teamErrAlready => 'This person is already a worker - change their rights in the list.';
+
+  @override
+  String get teamErrNoRights => 'Select at least one right.';
+
+  @override
+  String get teamWriteBlocked => 'owner\'s subscription expired - writing paused';
+
+  @override
+  String get teamReadBlocked => 'owner\'s subscription expired - access paused';
 }

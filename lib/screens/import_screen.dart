@@ -3594,6 +3594,8 @@ class _ImportScreenState extends State<ImportScreen> {
                 // });
 
 //eksport wwszystkich danych teraz         
+            //etap 2: w bazie właściciela pełny eksport i kasowanie w chmurze - tylko właściciel (U4)
+            if (globals.aktywnaBaza.isEmpty)
             GestureDetector(
               onTap: () {
                 _showAlertExportAllV3(
@@ -3790,6 +3792,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ),
 
 //usunięcie wszystkich danych w chmurze (zmiany nazw tabeli na" data_czas_prefix_nazwaTabeli"
+            if (globals.aktywnaBaza.isEmpty) //etap 2: kasowałoby WŁASNĄ bazę pracownika w chmurze, nie bazę właściciela
             GestureDetector(
               onTap: () {
                 _showAlertDeleteDataOnSerwer(

@@ -14,6 +14,7 @@ import '../screens/queen_rearing_screen.dart';
 import '../screens/nfc_settings_screen.dart';
 import '../screens/apiarys_all_map_screen.dart';
 import '../screens/notification_settings_screen.dart';
+import '../screens/team_screen.dart'; //praca zespołowa (etap 2)
 
 class SettingsScreen extends StatelessWidget {
   static const routeName = '/settings';
@@ -246,6 +247,22 @@ class SettingsScreen extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(Icons.storage),
                   title: Text(AppLocalizations.of(context)!.zarzadzanieDanymi),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
+//praca zespołowa (etap 2) - pracownicy, zaproszenia, przełączanie baz
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushNamed(TeamScreen.routeName);
+              },
+              child: Card(
+                child: ListTile(
+                  leading: Icon(Icons.groups),
+                  title: Text(AppLocalizations.of(context)!.teamWork),
+                  subtitle: Text(globals.aktywnaBaza.isEmpty
+                      ? AppLocalizations.of(context)!.teamWorkSubtitle
+                      : AppLocalizations.of(context)!.teamWorkingIn(globals.aktywnaBazaEmail)),
                   trailing: Icon(Icons.chevron_right),
                 ),
               ),

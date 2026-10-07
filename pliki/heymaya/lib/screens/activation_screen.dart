@@ -57,8 +57,10 @@ class _ActivationScreenState extends State<ActivationScreen> {
         //token urządzenia (etap 1b pkt 3); stary serwer go nie przyśle - wtedy zostaje dotychczasowy
         final String nowyToken = (odpPost['be_token'] ?? globals.token).toString();
         globals.token = nowyToken;
-        globals.stanowisko = 0; //nowa aktywacja = stanowisko z serwera (albo nieznane), nie z poprzedniego konta
-        globals.ustawStanowisko(odpPost['be_stanowisko']); //etap 2: unikalne id wpisów
+        if (globals.aktywnaBaza.isEmpty) { //w bazie właściciela stanowisko zostaje z listy zespołu
+          globals.stanowisko = 0; //nowa aktywacja = stanowisko z serwera (albo nieznane), nie z poprzedniego konta
+          globals.ustawStanowisko(odpPost['be_stanowisko']); //etap 2: unikalne id wpisów
+        }
         globals.kod = (odpPost['be_kod'] ?? globals.kod).toString(); //kanoniczny kod z serwera, nie wpisany tekst
         DBHelper.deleteTable('memory').then((_) {
           //kasowanie tabeli bo będzie nowy wpis

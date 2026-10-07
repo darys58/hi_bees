@@ -19,6 +19,7 @@ import 'dart:typed_data';
 import 'dart:io';
 import '../helpers/db_helper.dart';
 import '../helpers/eksport_kod.dart'; //etap 1b: kod konta w eksporcie
+import 'team_screen.dart'; //pasek bazy właściciela (etap 2)
 import '../helpers/notification_helper.dart';
 import '../models/dodatki1.dart';
 import '../models/dodatki2.dart';
@@ -1096,8 +1097,10 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         //token urządzenia (etap 1b pkt 3); stary serwer go nie przyśle - wtedy zostaje dotychczasowy
         final String nowyToken = (odpPost['be_token'] ?? globals.token).toString();
         globals.token = nowyToken;
-        globals.stanowisko = 0; //nowa aktywacja = stanowisko z serwera (albo nieznane), nie z poprzedniego konta
-        globals.ustawStanowisko(odpPost['be_stanowisko']); //etap 2: unikalne id wpisów
+        if (globals.aktywnaBaza.isEmpty) { //w bazie właściciela stanowisko zostaje z listy zespołu
+          globals.stanowisko = 0; //nowa aktywacja = stanowisko z serwera (albo nieznane), nie z poprzedniego konta
+          globals.ustawStanowisko(odpPost['be_stanowisko']); //etap 2: unikalne id wpisów
+        }
         globals.kod = (odpPost['be_kod'] ?? globals.kod).toString(); //kanoniczny kod z serwera, nie wpisany tekst
         DBHelper.deleteTable('memory').then((_) {
           //kasowanie tabeli bo będzie nowy wpis
@@ -1237,7 +1240,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
       }
 
       //stanowisko instalacji (etap 2) - też osobno, z tego samego powodu co token
-      if (globals.ustawStanowisko(odp['be_stanowisko'])) {
+      //w bazie właściciela stanowisko jest z listy zespołu, nie z własnej bazy (be_stanowisko)
+      if (globals.aktywnaBaza.isEmpty && globals.ustawStanowisko(odp['be_stanowisko'])) {
         await _zapiszPoleKonta('stanowisko', '${globals.stanowisko}');
       }
 
@@ -1821,13 +1825,26 @@ class _ApiarysScreenState extends State<ApiarysScreen>
             )
         ],
         
+         //etap 2: w bazie właściciela pasek "Pracujesz w bazie: ..." (dotknięcie - Praca zespołowa)
          bottom: PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Container(
-            color: Colors.grey[300], // kolor linii
-            height: 1.0,
-          ),
-        ),
+           preferredSize: Size.fromHeight(globals.aktywnaBaza.isEmpty ? 1.0 : 26.0),
+           child: globals.aktywnaBaza.isEmpty
+               ? Container(
+                   color: Colors.grey[300], // kolor linii
+                   height: 1.0,
+                 )
+               : GestureDetector(
+                   onTap: () => Navigator.of(context).pushNamed(TeamScreen.routeName).then((_) { if (mounted) setState(() {}); }),
+                   child: Container(
+                     height: 26.0,
+                     width: double.infinity,
+                     color: const Color(0xFFFFE082),
+                     alignment: Alignment.center,
+                     child: Text(AppLocalizations.of(context)!.teamWorkingIn(globals.aktywnaBazaEmail),
+                         style: const TextStyle(fontSize: 13, color: Colors.black)),
+                   ),
+                 ),
+         ),
       ),
 
       body: _isLoading //jezeli dane są ładowane
