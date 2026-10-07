@@ -291,6 +291,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
           //uaktualnienie wersji apki na serwerze www po np. aktualizacji apki
           //token urządzenia PRZED wyslijKod - ten przy zmianie wersji wysyła stary token do odwołania
           if (mem.isNotEmpty) globals.token = mem[0].token; //etap 1b pkt 3
+          if (mem.isNotEmpty) globals.ustawStanowisko(mem[0].stanowisko); //etap 2: unikalne id wpisów
           if (mem.isNotEmpty && mem[0].wer != wersja) wyslijKod(mem[0].kod);
 
           //jezeli jest wpis w bazie to znaczy ze była juz akywacja kiedyś (wpis moze być ale accessKey niekoniecznie!!!)
@@ -1095,6 +1096,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         //token urządzenia (etap 1b pkt 3); stary serwer go nie przyśle - wtedy zostaje dotychczasowy
         final String nowyToken = (odpPost['be_token'] ?? globals.token).toString();
         globals.token = nowyToken;
+        globals.stanowisko = 0; //nowa aktywacja = stanowisko z serwera (albo nieznane), nie z poprzedniego konta
+        globals.ustawStanowisko(odpPost['be_stanowisko']); //etap 2: unikalne id wpisów
         globals.kod = (odpPost['be_kod'] ?? globals.kod).toString(); //kanoniczny kod z serwera, nie wpisany tekst
         DBHelper.deleteTable('memory').then((_) {
           //kasowanie tabeli bo będzie nowy wpis
@@ -1114,6 +1117,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
             '', //zapas
             '', //zapas
             token: nowyToken,
+            stanowisko: globals.stanowisko > 0 ? '${globals.stanowisko}' : '',
           );
         });
       } else {
@@ -1232,6 +1236,11 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         await _zapiszToken(beToken);
       }
 
+      //stanowisko instalacji (etap 2) - też osobno, z tego samego powodu co token
+      if (globals.ustawStanowisko(odp['be_stanowisko'])) {
+        await _zapiszPoleKonta('stanowisko', '${globals.stanowisko}');
+      }
+
       final Map<String, String> zmiany = {};
       //nowy kod konta (T3) - tylko po synchronizacji tokenem
       if (przezToken && beKod != mem.kod && RegExp(r'^[0-9A-Za-z_-]{4,32}$').hasMatch(beKod)) {
@@ -1266,14 +1275,18 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
   //zapis tokenu urządzenia w memory.token (etap 1b pkt 3); '' = skasowanie odrzuconego.
   //Błąd (np. brak kolumny po nieudanej migracji v6) tylko w konsoli - token zostaje w globals do końca sesji.
-  Future<void> _zapiszToken(String token) async {
+  Future<void> _zapiszToken(String token) => _zapiszPoleKonta('token', token);
+
+  //zapis jednego pola konta w memory (token, stanowisko) - błąd (np. brak kolumny po nieudanej
+  //migracji) tylko w konsoli; wartość zostaje w globals do końca sesji
+  Future<void> _zapiszPoleKonta(String pole, String wartosc) async {
     try {
       final memData = Provider.of<Memory>(context, listen: false);
       if (memData.items.isEmpty) return;
-      await DBHelper.updateKonto(memData.items[0].id, {'token': token});
+      await DBHelper.updateKonto(memData.items[0].id, {pole: wartosc});
       await memData.fetchAndSetMemory2();
     } catch (e) {
-      debugPrint('_zapiszToken: $e');
+      debugPrint('_zapiszPoleKonta($pole): $e');
     }
   }
 

@@ -19,6 +19,7 @@ class MemoryItem with ChangeNotifier {
   final String mem1; //na zapas
   final String mem2; //na zapas
   final String token; //token urządzenia z serwera (etap 1b pkt 3) - '' przed pierwszą synchronizacją
+  final String stanowisko; //numer instalacji w bazie 1..99 (etap 2) - '' przed pierwszą synchronizacją
 
   MemoryItem({
     required this.id,
@@ -33,6 +34,7 @@ class MemoryItem with ChangeNotifier {
     required this.mem1,
     required this.mem2,
     this.token = '',
+    this.stanowisko = '',
   });
 }
 
@@ -61,6 +63,7 @@ class Memory with ChangeNotifier {
             mem1: item['mem1'],
             mem2: item['mem2'],
             token: (item['token'] ?? '').toString(), //null przed migracją v6 i w starych wpisach
+            stanowisko: (item['stanowisko'] ?? '').toString(), //null przed migracją v7
           ),
         )
         .toList();
@@ -88,6 +91,7 @@ class Memory with ChangeNotifier {
             mem1: item['mem1'],
             mem2: item['mem2'],
             token: (item['token'] ?? '').toString(), //null przed migracją v6 i w starych wpisach
+            stanowisko: (item['stanowisko'] ?? '').toString(), //null przed migracją v7
           ),
         )
         .toList();
@@ -115,6 +119,7 @@ class Memory with ChangeNotifier {
     String mem1,
     String mem2, {
     String token = '', //token urządzenia (etap 1b pkt 3)
+    String stanowisko = '', //stanowisko instalacji (etap 2)
   }) async {
     final Map<String, Object> wiersz = {
       'id': id,
@@ -129,13 +134,15 @@ class Memory with ChangeNotifier {
       'mem1': mem1,
       'mem2': mem2,
       'token': token,
+      'stanowisko': stanowisko,
     };
     try {
       await DBHelper.insert('memory', wiersz);
     } catch (e) {
-      //gdyby migracja v6 się nie udała (brak kolumny token) - aktywacja nie może przez to stanąć
+      //gdyby migracja v6/v7 się nie udała (brak kolumny token/stanowisko) - aktywacja nie może przez to stanąć
       debugPrint('insertMemory bez kolumny token: $e');
       wiersz.remove('token');
+      wiersz.remove('stanowisko');
       await DBHelper.insert('memory', wiersz);
     }
   }

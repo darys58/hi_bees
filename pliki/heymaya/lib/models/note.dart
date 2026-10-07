@@ -1,6 +1,7 @@
 import 'dart:convert'; //obsługa json'a
 import 'package:flutter/material.dart';
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
+import '../globals.dart' as globals; //globals.stanowisko - unikalne id nowych wpisów
 import '../helpers/serwer_token.dart'; //nagłówek X-HB-Token przy imporcie
 import 'package:http/http.dart' as http;
 
@@ -185,7 +186,8 @@ class Notes with ChangeNotifier {
     String uwagi,
     int arch,
   ) async {
-    return DBHelper.insertZwrocId('notatki', {
+    //id = licznik * 100 + stanowisko - unikalne między telefonami (DBHelper.insertZNowymId)
+    return DBHelper.insertZNowymId('notatki', {
       // 'id': id,
       'data': data,
       'tytul': tytul,
@@ -199,6 +201,6 @@ class Notes with ChangeNotifier {
       'pole3': pole3,
       'uwagi': uwagi,
       'arch': arch,
-    });
+    }, globals.stanowisko);
   }
 }

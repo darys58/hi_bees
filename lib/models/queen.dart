@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
+import '../globals.dart' as globals; //globals.stanowisko - unikalne id nowych wpisów
 import '../helpers/serwer_token.dart'; //nagłówek X-HB-Token przy imporcie
 
 //import '../globals.dart' as globals;
@@ -169,7 +170,8 @@ class Queens with ChangeNotifier {
     String c,
     String arch, //arch
   ) async {
-    await DBHelper.insert('matki', {
+    //id = licznik * 100 + stanowisko - unikalne między telefonami (DBHelper.insertZNowymId)
+    await DBHelper.insertZNowymId('matki', {
       //'id': id,
       'data': data,
       'zrodlo': zrodlo,
@@ -185,7 +187,7 @@ class Queens with ChangeNotifier {
       'b': b,
       'c': c,
       'arch': arch,
-    });
+    }, globals.stanowisko);
   }
 
   //edycja (nadpisanie) matki w bazie lokalnej

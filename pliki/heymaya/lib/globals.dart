@@ -40,6 +40,18 @@ String prefiksSerwera = '';
 //Zapisany w memory.token; idzie w każdym żądaniu do chmury zamiast samego kodu.
 //'' = jeszcze nie pobrany (pobiera go cicha synchronizacja konta kodem przy starcie).
 String token = '';
+
+//STANOWISKO (etap 2, 07.10.2026) - numer tej instalacji w bazie w chmurze, 1..99, z serwera
+//(be_stanowisko przy aktywacji i synchronizacji z tokenem). Ostatnie dwie cyfry id nowych notatek,
+//zbiorów, zakupów, sprzedaży i matek - patrz DBHelper.insertZNowymId. 0 = jeszcze nieznane.
+int stanowisko = 0;
+//be_stanowisko z serwera albo memory.stanowisko - przyjmowane tylko 1..99; zwraca, czy się zmieniło
+bool ustawStanowisko(dynamic wartosc) {
+  final int? nr = int.tryParse('${wartosc ?? ''}');
+  if (nr == null || nr < 1 || nr > 99 || nr == stanowisko) return false;
+  stanowisko = nr;
+  return true;
+}
 String prefiksTabel(String kodKonta) {
   if (prefiksSerwera.isNotEmpty) return prefiksSerwera;
   final k = kodKonta.trim();

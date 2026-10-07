@@ -28,7 +28,7 @@ class DBHelper {
       await db.execute(
           'CREATE TABLE info(id TEXT PRIMARY KEY, data TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, wartosc TEXT, miara TEXT, pogoda TEXT, temp TEXT, czas TEXT, uwagi TEXT, arch INTEGER)');
       await db.execute(
-          'CREATE TABLE memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT, od TEXT, do TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT, token TEXT)');
+          'CREATE TABLE memory(id TEXT PRIMARY KEY, email TEXT, dev TEXT, wer TEXT, kod TEXT, key TEXT, od TEXT, do TEXT, memjezyk TEXT, mem1 Text, mem2 TEXT, token TEXT, stanowisko TEXT)');
       await db.execute(
           'CREATE TABLE dodatki1(id TEXT PRIMARY KEY, a TEXT, b TEXT, c TEXT, d TEXT, e TEXT, f TEXT, g TEXT, h TEXT)');
       await db.execute(
@@ -75,10 +75,14 @@ class DBHelper {
           //token urządzenia (etap 1b pkt 3, 06.10.2026) - zastępuje kod w żądaniach do chmury
           await db.execute('ALTER TABLE memory ADD COLUMN token TEXT');
         }
+        if (oldVersion < 7) {
+          //stanowisko instalacji w bazie (etap 2, 07.10.2026) - do unikalnych id wpisów, patrz insertZNowymId
+          await db.execute('ALTER TABLE memory ADD COLUMN stanowisko TEXT');
+        }
       } catch (e) {
         debugPrint('Błąd migracji bazy danych (v$oldVersion -> v$newVersion): $e');
       }
-    }, version: 6);
+    }, version: 7);
   }
 
   //Nagrania dyktowanych notatek. Zbudowane jak "zdjecia" (ten sam zestaw pól
@@ -116,6 +120,28 @@ class DBHelper {
   //zapis zwracający id wstawionego rekordu (rowid). Potrzebny tam, gdzie klucz
   //jest AUTOINCREMENT i dopiero po zapisie wiadomo, do czego przypiąć załącznik
   //- np. nagranie dyktowanej notatki w Notesie (patrz RecordingHelper).
+  //NOWY WPIS Z UNIKALNYM ID - notatki, zbiory, zakupy, sprzedaż, matki (etap 2, 07.10.2026).
+  //Dotąd id nadawał SQLite (największe + 1), więc dwa telefony piszące do jednej bazy w chmurze
+  //nadawały te same numery, a eksport (DELETE + INSERT po id na serwerze) nadpisywał cudze wpisy.
+  //    id = (największe id w tabeli div 100 + 1) * 100 + stanowisko
+  //stanowisko 1..99 = numer tej instalacji w bazie, z serwera (be_stanowisko); 0 = jeszcze nieznany.
+  //Ostatnie dwie cyfry różnią instalacje, licznik rośnie z czasem (także po imporcie cudzych wpisów),
+  //więc "aktualna matka = największe id" działa dalej. Stare wpisy zostają ze starymi numerami -
+  //nowe są zawsze większe. Odczyt MAX i zapis w jednej transakcji.
+  static Future<int> insertZNowymId(String table, Map<String, Object> data, int stanowisko) async {
+    final db = await DBHelper.database();
+    return db.transaction((txn) async {
+      final wynik = await txn.rawQuery('SELECT MAX(id) AS m FROM $table');
+      final int max = int.tryParse('${wynik.first['m'] ?? 0}') ?? 0;
+      final int st = (stanowisko >= 0 && stanowisko <= 99) ? stanowisko : 0;
+      final int id = (max ~/ 100 + 1) * 100 + st;
+      final Map<String, Object> wiersz = Map<String, Object>.from(data);
+      wiersz['id'] = id;
+      await txn.insert(table, wiersz, conflictAlgorithm: ConflictAlgorithm.abort);
+      return id;
+    });
+  }
+
   static Future<int> insertZwrocId(String table, Map<String, Object> data) async {
     final db = await DBHelper.database();
     return db.insert(
