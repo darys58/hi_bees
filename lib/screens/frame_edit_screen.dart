@@ -17,6 +17,7 @@ import '../models/infos.dart';
 import '../models/frames.dart';
 import '../models/hive.dart';
 import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki, parametrWBiezacym
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 // import 'package:flutter/services.dart';
 //import 'frames_detail_screen.dart';
 
@@ -2757,6 +2758,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
                                 ),
                               onPressed: () {
+                                if (!mogeZapisac(context, [czRamka, czInfo], edycja: true, wyslany: ramka[0].arch != 0, pasieka: nowyNrPasieki ?? 0)) return; //etap 2 część B: ramki + wpis przeglądu (info)
                                 DBHelper.deleteFrame(ramka[0].id).then((_) {  //kasowanie ramki bo będzie nowa                                
                                 
                                 if(nowyZasob! < 13) {  
@@ -2844,6 +2846,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
+                                 if (!mogeZapisac(context, [czRamka, czInfo], pasieka: nowyNrPasieki ?? 0)) return; //etap 2 część B: ramki + wpis przeglądu (info)
                                  //suma zasobów strony nie może przekroczyć 100%
                                  final String? bladSumy = _bladSumyPrzedZapisem();
                                  if (bladSumy != null) {

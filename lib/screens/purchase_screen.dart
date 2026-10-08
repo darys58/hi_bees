@@ -10,6 +10,7 @@ import '../models/purchase.dart';
 import '../widgets/purchase_item.dart';
 import '../screens/purchase_edit_screen.dart';
 import '../globals.dart' as globals;
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class PurchaseScreen extends StatefulWidget {
   const PurchaseScreen({super.key});
@@ -665,11 +666,10 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
-              onPressed: () =>
-                  Navigator.of(context).pushNamed(
-                PurchaseEditScreen.routeName,
-                arguments: {'temp': 1},
-              ),
+              onPressed: () {
+                if (!mogeZapisac(context, [czZakupy])) return; //etap 2 część B
+                Navigator.of(context).pushNamed(PurchaseEditScreen.routeName, arguments: {'temp': 1});
+              },
             ),
             IconButton(
               icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),

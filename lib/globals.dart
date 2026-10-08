@@ -37,6 +37,24 @@ String aktywnaBaza = '';
 String aktywnaBazaEmail = ''; //e-mail właściciela - pasek "Pracujesz w bazie..." na ekranie startowym
 String plikBazy() => aktywnaBaza.isEmpty ? 'hibees.db' : 'hibees_$aktywnaBaza.db';
 
+//PRAWA W BAZIE WŁAŚCICIELA (etap 2 część B, 07.10.2026) - z listy zespołu na serwerze (cbt_hi_zespol.php),
+//zapamiętane w SharedPreferences (helpers/baza_zespolu.dart), odświeżane przy starcie i na ekranie zespołu.
+//Klucze części jak na serwerze: notatki, zbiory, zakupy, sprzedaz, matki, ramka, info, zdjecia.
+//We WŁASNEJ bazie wszystko wolno. Zasady (U4, U13): odczyt+zapis = wszystko; sam zapis = tylko
+//dopisywanie nowych wpisów; sam odczyt = przeglądanie (edycja zablokowana); nic = część niedostępna.
+//Serwer i tak odrzuca zapis bez prawa - blokady w aplikacji tylko oszczędzają pracy, która by przepadła.
+Map<String, Map<String, bool>> prawaBazy = {};
+String pasiekiBazy = '*'; //'*' = wszystkie pasieki właściciela, albo np. '1,3'
+bool zapisBazyWstrzymany = false; //abonament właściciela wygasł - serwer nie przyjmie eksportu (U9)
+bool _prawoBazy(String czesc, String rodzaj) => prawaBazy[czesc]?[rodzaj] == true;
+bool mogeCzytac(String czesc) => aktywnaBaza.isEmpty || _prawoBazy(czesc, 'odczyt');
+bool mogeDopisac(String czesc) => aktywnaBaza.isEmpty || (!zapisBazyWstrzymany && _prawoBazy(czesc, 'zapis'));
+bool mogeEdytowac(String czesc) =>
+    aktywnaBaza.isEmpty || (!zapisBazyWstrzymany && _prawoBazy(czesc, 'zapis') && _prawoBazy(czesc, 'odczyt'));
+//pasieka 0 (matki nieprzypisane, zakupy i sprzedaż ogólne) - dla każdego z prawem do części (U11)
+bool pasiekaWZakresie(int nr) =>
+    aktywnaBaza.isEmpty || nr == 0 || pasiekiBazy == '*' || pasiekiBazy.split(',').contains('$nr');
+
 //PREFIKS TABEL KONTA W CHMURZE (np. "0001", od konta nr 10000 "A000") - etap 1b pkt 2, 06.10.2026.
 //Podaje go serwer: be_prefiks w odpowiedzi cbt_hi_kod_v2.php (aktywacja i synchronizacja konta
 //przy starcie / po powrocie z tła). Trzymany tylko w pamięci - tabela memory nie ma wolnej kolumny.

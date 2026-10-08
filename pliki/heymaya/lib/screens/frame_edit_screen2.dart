@@ -17,6 +17,7 @@ import '../models/info.dart';
 import '../models/frames.dart';
 import '../models/hive.dart';
 import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki, parametrWBiezacym
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 // import 'package:flutter/services.dart';
 //import 'frames_detail_screen.dart';
 
@@ -2734,6 +2735,7 @@ class _FrameEditScreen2State extends State<FrameEditScreen2> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
+                                 if (!mogeZapisac(context, [czRamka, czInfo], pasieka: nowyNrPasieki ?? 0)) return; //etap 2 część B: ramki + wpis przeglądu (info)
                                  //suma zasobów strony nie może przekroczyć 100%
                                  final String? bladSumy = _bladSumyPrzedZapisem();
                                  if (bladSumy != null) {

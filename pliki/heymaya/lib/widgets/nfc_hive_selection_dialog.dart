@@ -10,6 +10,7 @@ import '../models/apiary.dart';
 import '../models/infos.dart';
 import '../globals.dart' as globals;
 import '../screens/infos_screen.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class NfcHiveSelectionDialog extends StatefulWidget {
   final String tagId;
@@ -62,6 +63,7 @@ class _NfcHiveSelectionDialogState extends State<NfcHiveSelectionDialog> {
 
   Future<void> _assignTagToHive() async {
     if (_selectedHiveId == null) return;
+    if (!mogeZapisac(context, [czInfo])) return; //etap 2 część B: przypisanie tagu = wpis wyposażenia (info)
 
     // Zapisanie tagu do bazy
     await DBHelper.updateUle(_selectedHiveId!, 'h3', widget.tagId);

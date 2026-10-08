@@ -1194,5 +1194,45 @@
     "teamErrAlready": "Diese Person ist bereits Mitarbeiter - ändern Sie die Rechte in der Liste.",
     "teamErrNoRights": "Wählen Sie mindestens ein Recht.",
     "teamWriteBlocked": "Abonnement des Besitzers abgelaufen - Schreiben angehalten",
-    "teamReadBlocked": "Abonnement des Besitzers abgelaufen - Zugriff angehalten"
+    "teamReadBlocked": "Abonnement des Besitzers abgelaufen - Zugriff angehalten",
+    "teamBlockedWrite": "Sie haben in der Datenbank des Besitzers kein Schreibrecht: {part}",
+    "@teamBlockedWrite": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedEdit": "Sie können nur neue Einträge hinzufügen - bereits in die Cloud gesendete können nicht geändert oder gelöscht werden: {part}",
+    "@teamBlockedEdit": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedApiary": "Bienenstand {nr} liegt außerhalb Ihres Bereichs in der Datenbank des Besitzers",
+    "@teamBlockedApiary": {
+        "placeholders": {
+            "nr": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedSubscription": "Das Abonnement des Besitzers ist abgelaufen - in seiner Datenbank können Sie Daten nur ansehen",
+    "teamBlockedOwnerOnly": "In der Datenbank des Besitzers kann das nur der Besitzer tun",
+    "teamExportRejected": "Export in die Cloud: Der Server hat {saved} von {total} Einträgen angenommen ({part}) - der Rest wurde abgelehnt: keine Berechtigung",
+    "@teamExportRejected": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            },
+            "part": {
+                "type": "String"
+            }
+        }
+    }
 }

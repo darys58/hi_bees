@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../models/harvest.dart';
 import '../models/dodatki1.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class HarvestEditScreen extends StatefulWidget {
   static const routeName = '/harvest_edit';
@@ -410,6 +411,8 @@ class _HarvestEditScreenState extends State<HarvestEditScreen> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
+                                  //etap 2 część B: prawa w bazie właściciela (druga linia - wejścia spoza listy)
+                                  if (!mogeZapisac(context, [czZbiory], edycja: edycja, wyslany: edycja && zbior[0].arch != 0, pasieka: nowyNrPasieki ?? 0)) return;
                                   if (nowyZasobId! >= 4) nowyMiara = 2;
                                   if (edycja) {
                                     DBHelper.updateZbiory(zbior[0].id, 

@@ -3048,4 +3048,30 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get teamReadBlocked => 'abonament właściciela wygasł - dostęp wstrzymany';
+
+  @override
+  String teamBlockedWrite(String part) {
+    return 'W bazie właściciela nie masz prawa zapisu: $part';
+  }
+
+  @override
+  String teamBlockedEdit(String part) {
+    return 'Możesz tylko dopisywać nowe wpisy - wysłanych do chmury nie poprawisz ani nie usuniesz: $part';
+  }
+
+  @override
+  String teamBlockedApiary(String nr) {
+    return 'Pasieka $nr jest poza Twoim zakresem w bazie właściciela';
+  }
+
+  @override
+  String get teamBlockedSubscription => 'Abonament właściciela wygasł - w jego bazie możesz tylko przeglądać dane';
+
+  @override
+  String get teamBlockedOwnerOnly => 'W bazie właściciela tę operację może wykonać tylko właściciel';
+
+  @override
+  String teamExportRejected(String saved, String total, String part) {
+    return 'Eksport do chmury: serwer przyjął $saved z $total wpisów ($part) - pozostałe odrzucone: brak uprawnień';
+  }
 }

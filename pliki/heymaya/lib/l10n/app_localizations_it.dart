@@ -3053,4 +3053,30 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get teamReadBlocked => 'abbonamento del proprietario scaduto - accesso sospeso';
+
+  @override
+  String teamBlockedWrite(String part) {
+    return 'Non hai il permesso di scrittura nella base del proprietario: $part';
+  }
+
+  @override
+  String teamBlockedEdit(String part) {
+    return 'Puoi solo aggiungere nuove voci - quelle già inviate al cloud non possono essere modificate né eliminate: $part';
+  }
+
+  @override
+  String teamBlockedApiary(String nr) {
+    return 'L\'apiario $nr è fuori dal tuo ambito nella base del proprietario';
+  }
+
+  @override
+  String get teamBlockedSubscription => 'L\'abbonamento del proprietario è scaduto - nella sua base puoi solo visualizzare i dati';
+
+  @override
+  String get teamBlockedOwnerOnly => 'Nella base del proprietario solo il proprietario può farlo';
+
+  @override
+  String teamExportRejected(String saved, String total, String part) {
+    return 'Esportazione nel cloud: il server ha accettato $saved di $total voci ($part) - le altre sono state rifiutate: nessun permesso';
+  }
 }

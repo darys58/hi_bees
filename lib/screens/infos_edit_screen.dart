@@ -25,6 +25,7 @@ import '../models/dodatki2.dart';
 import '../widgets/recording_player.dart'; //odtwarzacz nagrania notatki
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmRamkiUla - powierzchnia węzy wg typu ula
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class InfosEditScreen extends StatefulWidget {
   static const routeName = '/infos_edit';
@@ -2362,6 +2363,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                       ),                
                     onPressed: () {
                       if (_formKey1.currentState!.validate()) {
+                        //etap 2 część B: prawa w bazie właściciela (też zapis dla wszystkich / wybranych uli)
+                        if (!mogeZapisac(context, [czInfo], edycja: edycja, wyslany: edycja && info.isNotEmpty && info[0].arch != 0, pasieka: nowaPasieka)) return;
                         if(nowyParametr != '') //było: jezeli wartość nie jest pusta, jest: jezeli parametr...
                           if (edycja) {
                             //print('edycja info - rodzaj ula = $rodzajUla');

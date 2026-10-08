@@ -8,6 +8,7 @@ import '../models/queen.dart';
 import '../widgets/queen_item.dart';
 //import '../screens/note_edit_screen.dart';
 import '../globals.dart' as globals;
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class QueenScreen extends StatefulWidget {
   const QueenScreen({super.key});
@@ -320,9 +321,10 @@ class _QueenScreenState extends State<QueenScreen> {
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
-              onPressed: () =>
-                  //_showAlert(context, frames[0].pasiekaNr, frames[0].ulNr)
-                  Navigator.of(context).pushNamed(AddQueenScreen.routeName),
+              onPressed: () {
+                if (!mogeZapisac(context, [czMatki])) return; //etap 2 część B
+                Navigator.of(context).pushNamed(AddQueenScreen.routeName);
+              },
               //     Navigator.of(context).pushNamed(
               //   AddQueenScreen.routeName.routeName,
               //   arguments: {'temp': 1},

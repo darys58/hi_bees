@@ -18,6 +18,7 @@ import '../models/purchase.dart';
 import '../models/queen.dart';
 import '../models/recording.dart';
 import '../models/sale.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 //PRACA ZESPOŁOWA (etap 2, 07.10.2026) - sekcja w Zarządzaniu danymi.
 //Właściciel (z abonamentem): zaprasza pracowników e-mailem, nadaje pasieki i prawa odczyt/zapis
@@ -50,19 +51,7 @@ class _TeamScreenState extends State<TeamScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _wczytaj());
   }
 
-  String _nazwaCzesci(AppLocalizations l, String c) {
-    switch (c) {
-      case 'notatki': return l.nOtes;
-      case 'zbiory': return l.hArvests;
-      case 'zakupy': return l.pUrchase;
-      case 'sprzedaz': return l.sAle;
-      case 'matki': return l.qUeens;
-      case 'ramka': return l.fRames;
-      case 'info': return l.iNfos;
-      case 'zdjecia': return l.pHotos;
-    }
-    return c;
-  }
+  String _nazwaCzesci(AppLocalizations l, String c) => nazwaCzesci(l, c);
 
   //zapytanie do serwera zespołu; null = brak połączenia / zła odpowiedź
   Future<Map<String, dynamic>?> _zapytaj(Map<String, dynamic> dane) async {
@@ -111,6 +100,7 @@ class _TeamScreenState extends State<TeamScreen> {
         _blad = '';
       }
     });
+    if (o != null && o['success'] == 'ok') await odswiezPrawaBazy(o); //część B: aktualne prawa w bazie właściciela
   }
 
   //akcja na serwerze + komunikat błędu + odświeżenie listy; true = ok
@@ -169,10 +159,10 @@ class _TeamScreenState extends State<TeamScreen> {
 
   //---------- przełączanie baz ----------
 
-  Future<void> _przelacz(String prefiks, String email, int stanowisko) async {
+  Future<void> _przelacz(String prefiks, String email, int stanowisko, [Map? baza]) async {
     final l = AppLocalizations.of(context)!;
     if (!await _potwierdz(l.teamSwitchConfirm, prefiks.isEmpty ? '' : l.teamSwitchInfo)) return;
-    await przelaczBaze(prefiks, email, stanowisko);
+    await przelaczBaze(prefiks, email, stanowisko, baza);
     if (!mounted) return;
     await _odswiezDostawcow();
     if (!mounted) return;
@@ -366,7 +356,7 @@ class _TeamScreenState extends State<TeamScreen> {
                         isThreeLine: true,
                         onTap: globals.aktywnaBaza == b['prefiks']
                             ? null
-                            : () => _przelacz('${b['prefiks']}', '${b['email']}', int.tryParse('${b['stanowisko']}') ?? 0),
+                            : () => _przelacz('${b['prefiks']}', '${b['email']}', int.tryParse('${b['stanowisko']}') ?? 0, b),
                         trailing: IconButton(
                           icon: const Icon(Icons.logout),
                           tooltip: l.teamLeave,

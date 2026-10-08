@@ -8,6 +8,7 @@ import '../screens/frame_edit_screen.dart';
 import '../screens/frame_move_screen.dart';
 //import '../screens/frame_edit_screen2.dart';
 import '../globals.dart' as globals;
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class FramesDetailScreen extends StatefulWidget {
   const FramesDetailScreen({super.key});
@@ -129,8 +130,9 @@ class _FramesDetailScreenState extends State<FramesDetailScreen> {
           actions: <Widget>[
           IconButton(
             icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => 
-                _showAlert(context, frames[0].pasiekaNr, frames[0].ulNr)
+            onPressed: () => !mogeZapisac(context, [czRamka, czInfo], pasieka: frames[0].pasiekaNr) //etap 2 część B
+                ? null
+                : _showAlert(context, frames[0].pasiekaNr, frames[0].ulNr)
                
           ),
           // IconButton(

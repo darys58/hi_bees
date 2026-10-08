@@ -13,6 +13,7 @@ import '../models/frames.dart';
 import '../models/frame.dart';
 import '../models/hives.dart';
 import '../models/hive.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class FramesDetailItem extends StatefulWidget {
   @override
@@ -586,6 +587,7 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (DismissDirection direction) async {
+        if (!mogeZapisac(context, [czRamka, czInfo], edycja: true, wyslany: frame.arch != 0)) return false; //etap 2 część B: ramki + wpis przeglądu (info)
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -833,6 +835,7 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                 onTap: () {
                   //_showAlert(context, 'Edycja', '${frame.id}');
                   // globals.dataInspekcji = frame.data;
+                  if (!mogeZapisac(context, [czRamka, czInfo], edycja: true, wyslany: frame.arch != 0)) return; //etap 2 część B: ramki + wpis przeglądu (info)
                   Navigator.of(context).pushNamed(
                     FrameEditScreen.routeName,
                     arguments: {'idRamki': frame.id},

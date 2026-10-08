@@ -2016,5 +2016,45 @@
     "teamErrAlready": "This person is already a worker - change their rights in the list.",
     "teamErrNoRights": "Select at least one right.",
     "teamWriteBlocked": "owner's subscription expired - writing paused",
-    "teamReadBlocked": "owner's subscription expired - access paused"
+    "teamReadBlocked": "owner's subscription expired - access paused",
+    "teamBlockedWrite": "You have no write permission in the owner's database: {part}",
+    "@teamBlockedWrite": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedEdit": "You can only add new entries - entries already sent to the cloud cannot be changed or deleted: {part}",
+    "@teamBlockedEdit": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedApiary": "Apiary {nr} is outside your range in the owner's database",
+    "@teamBlockedApiary": {
+        "placeholders": {
+            "nr": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedSubscription": "The owner's subscription has expired - you can only view data in their database",
+    "teamBlockedOwnerOnly": "In the owner's database only the owner can do this",
+    "teamExportRejected": "Cloud export: the server accepted {saved} of {total} entries ({part}) - the rest were rejected: no permission",
+    "@teamExportRejected": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            },
+            "part": {
+                "type": "String"
+            }
+        }
+    }
 }

@@ -1194,5 +1194,45 @@
     "teamErrAlready": "Esta persona ya es trabajador: cambia sus derechos en la lista.",
     "teamErrNoRights": "Selecciona al menos un derecho.",
     "teamWriteBlocked": "la suscripción del propietario ha caducado: escritura en pausa",
-    "teamReadBlocked": "la suscripción del propietario ha caducado: acceso en pausa"
+    "teamReadBlocked": "la suscripción del propietario ha caducado: acceso en pausa",
+    "teamBlockedWrite": "No tienes permiso de escritura en la base del propietario: {part}",
+    "@teamBlockedWrite": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedEdit": "Solo puedes añadir entradas nuevas - las ya enviadas a la nube no se pueden modificar ni eliminar: {part}",
+    "@teamBlockedEdit": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedApiary": "El colmenar {nr} está fuera de tu ámbito en la base del propietario",
+    "@teamBlockedApiary": {
+        "placeholders": {
+            "nr": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedSubscription": "La suscripción del propietario ha caducado - en su base solo puedes ver los datos",
+    "teamBlockedOwnerOnly": "En la base del propietario solo el propietario puede hacerlo",
+    "teamExportRejected": "Exportación a la nube: el servidor aceptó {saved} de {total} entradas ({part}) - el resto fue rechazado: sin permiso",
+    "@teamExportRejected": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            },
+            "part": {
+                "type": "String"
+            }
+        }
+    }
 }

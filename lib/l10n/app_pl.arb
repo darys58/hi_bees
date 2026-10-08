@@ -1209,5 +1209,45 @@
     "teamErrAlready": "Ta osoba już jest pracownikiem - zmień jej prawa na liście.",
     "teamErrNoRights": "Zaznacz przynajmniej jedno prawo.",
     "teamWriteBlocked": "abonament właściciela wygasł - zapis wstrzymany",
-    "teamReadBlocked": "abonament właściciela wygasł - dostęp wstrzymany"
+    "teamReadBlocked": "abonament właściciela wygasł - dostęp wstrzymany",
+    "teamBlockedWrite": "W bazie właściciela nie masz prawa zapisu: {part}",
+    "@teamBlockedWrite": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedEdit": "Możesz tylko dopisywać nowe wpisy - wysłanych do chmury nie poprawisz ani nie usuniesz: {part}",
+    "@teamBlockedEdit": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedApiary": "Pasieka {nr} jest poza Twoim zakresem w bazie właściciela",
+    "@teamBlockedApiary": {
+        "placeholders": {
+            "nr": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedSubscription": "Abonament właściciela wygasł - w jego bazie możesz tylko przeglądać dane",
+    "teamBlockedOwnerOnly": "W bazie właściciela tę operację może wykonać tylko właściciel",
+    "teamExportRejected": "Eksport do chmury: serwer przyjął {saved} z {total} wpisów ({part}) - pozostałe odrzucone: brak uprawnień",
+    "@teamExportRejected": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            },
+            "part": {
+                "type": "String"
+            }
+        }
+    }
 }

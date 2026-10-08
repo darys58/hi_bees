@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 //import '../models/dodatki2.dart';
 import '../models/harvest.dart';
 import 'package:flutter/services.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class AddHiveScreen extends StatefulWidget {
   static const routeName = '/add_hive';
@@ -486,6 +487,7 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                                 side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),),                    
                               onPressed: () async {
                                 if (_formKey1.currentState!.validate()) {
+                                  if (!mogeZapisac(context, [czInfo], pasieka: nowyNrPasieki)) return; //etap 2 część B
                                    
                                    List<int> items = []; 
                                     for (var i = nowyNrUla; i < nowyNrUla + iloscUli; i++) { 

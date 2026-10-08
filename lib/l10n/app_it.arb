@@ -1194,5 +1194,45 @@
     "teamErrAlready": "Questa persona è già un collaboratore - modifica i diritti nell'elenco.",
     "teamErrNoRights": "Seleziona almeno un diritto.",
     "teamWriteBlocked": "abbonamento del proprietario scaduto - scrittura sospesa",
-    "teamReadBlocked": "abbonamento del proprietario scaduto - accesso sospeso"
+    "teamReadBlocked": "abbonamento del proprietario scaduto - accesso sospeso",
+    "teamBlockedWrite": "Non hai il permesso di scrittura nella base del proprietario: {part}",
+    "@teamBlockedWrite": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedEdit": "Puoi solo aggiungere nuove voci - quelle già inviate al cloud non possono essere modificate né eliminate: {part}",
+    "@teamBlockedEdit": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedApiary": "L'apiario {nr} è fuori dal tuo ambito nella base del proprietario",
+    "@teamBlockedApiary": {
+        "placeholders": {
+            "nr": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedSubscription": "L'abbonamento del proprietario è scaduto - nella sua base puoi solo visualizzare i dati",
+    "teamBlockedOwnerOnly": "Nella base del proprietario solo il proprietario può farlo",
+    "teamExportRejected": "Esportazione nel cloud: il server ha accettato {saved} di {total} voci ({part}) - le altre sono state rifiutate: nessun permesso",
+    "@teamExportRejected": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            },
+            "part": {
+                "type": "String"
+            }
+        }
+    }
 }

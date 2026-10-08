@@ -30,6 +30,7 @@ import '../helpers/db_helper.dart'; //getInfosOfQueen - cechy matki z poprzednie
 //import '../screens/add_queen_screen.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class InfoScreen extends StatefulWidget {
   static const routeName = '/screen-infos';
@@ -203,6 +204,7 @@ class _InfoScreenState extends State<InfoScreen> {
 
   //zrobienie zdjęcia aparatem lub pobranie z galerii
   Future<void> _pickImage(ImageSource source) async {
+    if (!mogeZapisac(context, [czZdjecia], pasieka: globals.pasiekaID)) return; //etap 2 część B
     final XFile? image = await _picker.pickImage(
       source: source,
       maxWidth: 800,
@@ -269,7 +271,8 @@ class _InfoScreenState extends State<InfoScreen> {
                     icon: Icon(Icons.close, color: Colors.white, size: 30),
                     onPressed: () => Navigator.of(ctx).pop(),
                   ),
-                  //usuń
+                  //usuń - etap 2 część B: bez prawa edycji zdjęć przycisku nie ma
+                  if (powodBlokady(AppLocalizations.of(context)!, [czZdjecia], edycja: true, wyslany: photo.arch != 0) == null)
                   IconButton(
                     icon: Icon(Icons.delete, color: Colors.red, size: 30),
                     onPressed: () async {
@@ -2234,7 +2237,9 @@ class _InfoScreenState extends State<InfoScreen> {
             icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
             onPressed: () => 
                //print('${globals.pasiekaID}, $hiveNr')
-               wybranaKategoria == 'queen' && queens.length == 0 //jezeli brak wybranej matki dla ula
+               !mogeZapisac(context, [czInfo], pasieka: globals.pasiekaID) //etap 2 część B
+                  ? null
+                  : wybranaKategoria == 'queen' && queens.length == 0 //jezeli brak wybranej matki dla ula
                   ? Navigator.of(context).pushNamed(
                     QueenScreen.routeName, 
                       arguments: {'idInfo': '',

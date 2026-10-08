@@ -3050,4 +3050,30 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get teamReadBlocked => 'la suscripción del propietario ha caducado: acceso en pausa';
+
+  @override
+  String teamBlockedWrite(String part) {
+    return 'No tienes permiso de escritura en la base del propietario: $part';
+  }
+
+  @override
+  String teamBlockedEdit(String part) {
+    return 'Solo puedes añadir entradas nuevas - las ya enviadas a la nube no se pueden modificar ni eliminar: $part';
+  }
+
+  @override
+  String teamBlockedApiary(String nr) {
+    return 'El colmenar $nr está fuera de tu ámbito en la base del propietario';
+  }
+
+  @override
+  String get teamBlockedSubscription => 'La suscripción del propietario ha caducado - en su base solo puedes ver los datos';
+
+  @override
+  String get teamBlockedOwnerOnly => 'En la base del propietario solo el propietario puede hacerlo';
+
+  @override
+  String teamExportRejected(String saved, String total, String part) {
+    return 'Exportación a la nube: el servidor aceptó $saved de $total entradas ($part) - el resto fue rechazado: sin permiso';
+  }
 }

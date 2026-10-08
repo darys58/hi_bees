@@ -24,6 +24,7 @@ import '../screens/frame_move_screen.dart';
 import '../screens/infos_edit_screen.dart';
 import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki, parametrWBiezacym
 import '../helpers/powierzchnia_ramki.dart'; //ramekKorpusuPrzegladu
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class FramesScreen extends StatefulWidget {
   static const routeName = '/screen-frames'; //nazwa trasy do tego ekranu
@@ -748,8 +749,9 @@ class _FramesScreenState extends State<FramesScreen> {
             icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
             //numery bierzemy z globals, a NIE z frames[0]: przegląd założony samą
             //notatką nie ma ani jednej ramki i lista byłaby pusta (wyjątek zamiast okna)
-            onPressed: () =>
-                _showAlert(context, globals.pasiekaID, globals.ulID)
+            onPressed: () => !mogeZapisac(context, [czRamka, czInfo], pasieka: globals.pasiekaID) //etap 2 część B
+                ? null
+                : _showAlert(context, globals.pasiekaID, globals.ulID)
 
           ),
           IconButton(

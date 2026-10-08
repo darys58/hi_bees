@@ -18,6 +18,7 @@ import '../models/hive.dart';
 import '../screens/frames_screen.dart';
 import '../screens/infos_screen.dart';
 import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki, parametrWBiezacym
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 // import 'package:flutter/services.dart';
 
 
@@ -1102,6 +1103,7 @@ class _FrameMoveScreenState extends State<FrameMoveScreen> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
+                                if (!mogeZapisac(context, [czRamka, czInfo], edycja: true, pasieka: globals.pasiekaID)) return; //etap 2 część B: przeniesienie zmienia istniejące ramki
                                 //  print('data = ${dateController.text}');
                                 //  print('nrPasieki = $nrPasieki, nrUlaZ = ${globals.nrUlaPrzeniesZ}, nrUlaDo = ${globals.nrUlaPrzeniesDo}, nrKorpusuZ = ${globals.nrKorpusuPrzeniesZ}, nrKorpusuDo = ${globals.nrKorpusuPrzeniesDo}');
                                 //  print (' nrRamkiZ = ${globals.nrRamkiPrzeniesZ}, nrRamkiDo = ${globals.nrRamkiPrzeniesDo}; korpus = $korpus');

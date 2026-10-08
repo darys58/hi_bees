@@ -3080,4 +3080,32 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get teamReadBlocked =>
       'abonnement du propriétaire expiré - accès suspendu';
+
+  @override
+  String teamBlockedWrite(String part) {
+    return 'Vous n\'avez pas le droit d\'écriture dans la base du propriétaire : $part';
+  }
+
+  @override
+  String teamBlockedEdit(String part) {
+    return 'Vous pouvez seulement ajouter de nouvelles entrées - celles déjà envoyées vers le cloud ne peuvent être ni modifiées ni supprimées : $part';
+  }
+
+  @override
+  String teamBlockedApiary(String nr) {
+    return 'Le rucher $nr est hors de votre périmètre dans la base du propriétaire';
+  }
+
+  @override
+  String get teamBlockedSubscription =>
+      'L\'abonnement du propriétaire a expiré - vous pouvez seulement consulter les données de sa base';
+
+  @override
+  String get teamBlockedOwnerOnly =>
+      'Dans la base du propriétaire, seul le propriétaire peut faire cela';
+
+  @override
+  String teamExportRejected(String saved, String total, String part) {
+    return 'Export vers le cloud : le serveur a accepté $saved sur $total entrées ($part) - les autres ont été refusées : pas d\'autorisation';
+  }
 }

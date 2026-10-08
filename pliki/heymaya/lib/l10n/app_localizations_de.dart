@@ -3053,4 +3053,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get teamReadBlocked => 'Abonnement des Besitzers abgelaufen - Zugriff angehalten';
+
+  @override
+  String teamBlockedWrite(String part) {
+    return 'Sie haben in der Datenbank des Besitzers kein Schreibrecht: $part';
+  }
+
+  @override
+  String teamBlockedEdit(String part) {
+    return 'Sie können nur neue Einträge hinzufügen - bereits in die Cloud gesendete können nicht geändert oder gelöscht werden: $part';
+  }
+
+  @override
+  String teamBlockedApiary(String nr) {
+    return 'Bienenstand $nr liegt außerhalb Ihres Bereichs in der Datenbank des Besitzers';
+  }
+
+  @override
+  String get teamBlockedSubscription => 'Das Abonnement des Besitzers ist abgelaufen - in seiner Datenbank können Sie Daten nur ansehen';
+
+  @override
+  String get teamBlockedOwnerOnly => 'In der Datenbank des Besitzers kann das nur der Besitzer tun';
+
+  @override
+  String teamExportRejected(String saved, String total, String part) {
+    return 'Export in die Cloud: Der Server hat $saved von $total Einträgen angenommen ($part) - der Rest wurde abgelehnt: keine Berechtigung';
+  }
 }

@@ -3040,4 +3040,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get teamReadBlocked => 'owner\'s subscription expired - access paused';
+
+  @override
+  String teamBlockedWrite(String part) {
+    return 'You have no write permission in the owner\'s database: $part';
+  }
+
+  @override
+  String teamBlockedEdit(String part) {
+    return 'You can only add new entries - entries already sent to the cloud cannot be changed or deleted: $part';
+  }
+
+  @override
+  String teamBlockedApiary(String nr) {
+    return 'Apiary $nr is outside your range in the owner\'s database';
+  }
+
+  @override
+  String get teamBlockedSubscription => 'The owner\'s subscription has expired - you can only view data in their database';
+
+  @override
+  String get teamBlockedOwnerOnly => 'In the owner\'s database only the owner can do this';
+
+  @override
+  String teamExportRejected(String saved, String total, String part) {
+    return 'Cloud export: the server accepted $saved of $total entries ($part) - the rest were rejected: no permission';
+  }
 }

@@ -1194,5 +1194,45 @@
     "teamErrAlready": "Cette personne est déjà collaborateur - modifiez ses droits dans la liste.",
     "teamErrNoRights": "Sélectionnez au moins un droit.",
     "teamWriteBlocked": "abonnement du propriétaire expiré - écriture suspendue",
-    "teamReadBlocked": "abonnement du propriétaire expiré - accès suspendu"
+    "teamReadBlocked": "abonnement du propriétaire expiré - accès suspendu",
+    "teamBlockedWrite": "Vous n'avez pas le droit d'écriture dans la base du propriétaire : {part}",
+    "@teamBlockedWrite": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedEdit": "Vous pouvez seulement ajouter de nouvelles entrées - celles déjà envoyées vers le cloud ne peuvent être ni modifiées ni supprimées : {part}",
+    "@teamBlockedEdit": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedApiary": "Le rucher {nr} est hors de votre périmètre dans la base du propriétaire",
+    "@teamBlockedApiary": {
+        "placeholders": {
+            "nr": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedSubscription": "L'abonnement du propriétaire a expiré - vous pouvez seulement consulter les données de sa base",
+    "teamBlockedOwnerOnly": "Dans la base du propriétaire, seul le propriétaire peut faire cela",
+    "teamExportRejected": "Export vers le cloud : le serveur a accepté {saved} sur {total} entrées ({part}) - les autres ont été refusées : pas d'autorisation",
+    "@teamExportRejected": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            },
+            "part": {
+                "type": "String"
+            }
+        }
+    }
 }

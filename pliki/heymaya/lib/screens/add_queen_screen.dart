@@ -16,6 +16,7 @@ import '../models/queen.dart';
 // import '../models/hive.dart';
 // import 'frames_detail_screen.dart';
 import '../models/harvest.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 //import 'package:flutter/services.dart';
 
 class AddQueenScreen extends StatefulWidget {
@@ -446,6 +447,7 @@ class _AddQueenScreenState extends State<AddQueenScreen> {
                                 side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),),                    
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
+                                  if (!mogeZapisac(context, [czMatki], pasieka: pasieka)) return; //etap 2 część B
                                   
                                   Queens.insertQueen(
                                     dateController.text,

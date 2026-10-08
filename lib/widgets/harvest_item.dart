@@ -12,6 +12,7 @@ import '../globals.dart' as globals;
 import '../models/harvest.dart';
 //import '../models/hives.dart';
 import '../models/hive.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 //import '../models/infos.dart';
 
 class HarvestItem extends StatefulWidget {
@@ -105,6 +106,7 @@ class _HarvestItemState extends State<HarvestItem> {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (DismissDirection direction) async {
+        if (!mogeZapisac(context, [czZbiory], edycja: true, wyslany: zbior.arch != 0)) return false; //etap 2 część B
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -157,6 +159,7 @@ class _HarvestItemState extends State<HarvestItem> {
               onTap: () {
                 //_showAlert(context, 'Edycja', '${frame.id}');
                 // globals.dataInspekcji = frame.data;
+                if (!mogeZapisac(context, [czZbiory], edycja: true, wyslany: zbior.arch != 0)) return; //etap 2 część B (B2: podgląd bez edycji)
                 Navigator.of(context).pushNamed(
                   HarvestEditScreen.routeName,
                   arguments: {'idZbioru': zbior.id},

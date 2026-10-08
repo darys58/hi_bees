@@ -17,6 +17,7 @@ import '../helpers/queen_helpers.dart';
 import '../models/hives.dart';
 import '../models/hive.dart';
 import '../models/infos.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class QueenItem extends StatefulWidget {
   @override
@@ -119,12 +120,16 @@ class _QueenItemState extends State<QueenItem> {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (DismissDirection direction) async {
+        //etap 2 część B: bez prawa edycji zostaje tylko Historia, w treści - powód
+        final String? blokadaMatki = powodBlokady(AppLocalizations.of(context)!, [czMatki], edycja: true, wyslany: matki.arch != 0);
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text(AppLocalizations.of(context)!.wHatDoYouWant),
-              content: matki.dataStraty == '' && matki.ul != 0
+              content: blokadaMatki != null
+                        ? Text(blokadaMatki)
+                        : matki.dataStraty == '' && matki.ul != 0
                         ? Text(AppLocalizations.of(context)!.dIsconnectOrEdit)
                         : Text(AppLocalizations.of(context)!.eDitQueen),
               
@@ -140,7 +145,7 @@ class _QueenItemState extends State<QueenItem> {
                   child: Text(AppLocalizations.of(context)!.queenHistory),
                 ),
                 //Odłacz matkę - jezeli matka zyje
-                if(matki.dataStraty == '' && matki.ul != 0)
+                if(matki.dataStraty == '' && matki.ul != 0 && blokadaMatki == null)
                   TextButton(
                     onPressed: () => {
                       DBHelper.updateQueen(matki.id, 'pasieka', 0).then((_) {
@@ -170,6 +175,7 @@ class _QueenItemState extends State<QueenItem> {
                   ),
                 
                 //Edytuj
+                if (blokadaMatki == null)
                 TextButton(
                   onPressed: () => {Navigator.of(context).pop(false),
                     Navigator.of(context).pushNamed(
@@ -221,6 +227,9 @@ class _QueenItemState extends State<QueenItem> {
                 //jezeli matka jest stracona to nie mozna jej dołączyć do ula
                 //musi nie mieć dataStraty i nie być podłaczona do innego ula
                 if(matki.dataStraty == '' && matki.ul == 0 && globals.ulID != 0){
+                  //etap 2 część B: podłączenie zmienia matkę i dopisuje wpis do historii ula (info)
+                  if (!mogeZapisac(context, [czMatki], edycja: true, wyslany: matki.arch != 0) ||
+                      !mogeZapisac(context, [czInfo], pasieka: globals.pasiekaID)) return;
                   DBHelper.updateQueen(matki.id, 'pasieka', globals.pasiekaID);
                   DBHelper.updateQueen(matki.id, 'ul', globals.ulID);
                   DBHelper.updateQueen(matki.id, 'arch', 0);

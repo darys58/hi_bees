@@ -11,6 +11,7 @@ import '../globals.dart' as globals;
 //import '../globals.dart' as globals;
 //import '../models/frames.dart';
 import '../models/purchase.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 //import '../models/hives.dart';
 //import '../models/hive.dart';
 //import '../models/infos.dart';
@@ -124,6 +125,7 @@ class _PurchaseItemState extends State<PurchaseItem> {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (DismissDirection direction) async {
+        if (!mogeZapisac(context, [czZakupy], edycja: true, wyslany: zakup.arch != 0)) return false; //etap 2 część B
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -175,6 +177,7 @@ class _PurchaseItemState extends State<PurchaseItem> {
               onTap: () {
                 //_showAlert(context, 'Edycja', '${frame.id}');
                 // globals.dataInspekcji = frame.data;
+                if (!mogeZapisac(context, [czZakupy], edycja: true, wyslany: zakup.arch != 0)) return; //etap 2 część B (B2: podgląd bez edycji)
                 Navigator.of(context).pushNamed(
                   PurchaseEditScreen.routeName,
                   arguments: {'idZakupy': zakup.id},

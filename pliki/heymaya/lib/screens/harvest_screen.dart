@@ -10,6 +10,7 @@ import '../models/harvest.dart';
 import '../widgets/harvest_item.dart';
 import '../screens/harvest_edit_screen.dart';
 import '../globals.dart' as globals;
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class HarvestScreen extends StatefulWidget {
   const HarvestScreen({super.key});
@@ -428,11 +429,10 @@ class _HarvestScreenState extends State<HarvestScreen> {
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
-              onPressed: () =>
-                  Navigator.of(context).pushNamed(
-                HarvestEditScreen.routeName,
-                arguments: {'temp': 1},
-              ),
+              onPressed: () {
+                if (!mogeZapisac(context, [czZbiory])) return; //etap 2 część B
+                Navigator.of(context).pushNamed(HarvestEditScreen.routeName, arguments: {'temp': 1});
+              },
             ),
             IconButton(
               icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),

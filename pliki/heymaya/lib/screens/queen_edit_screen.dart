@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 //import 'package:flutter/services.dart';
 import '../models/queen.dart';
 import '../helpers/queen_helpers.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class QueenEditScreen extends StatefulWidget {
   static const routeName = '/queen_edit';
@@ -509,6 +510,8 @@ class _QueenEditScreenState extends State<QueenEditScreen> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
+                                  //etap 2 część B: prawa w bazie właściciela
+                                  if (!mogeZapisac(context, [czMatki], edycja: edycja, wyslany: edycja && queens[0].arch != 0, pasieka: pasieka)) return;
                                   // if (nowyZasobId! >= 4) nowyMiara = 2;
                                   if (edycja) {
                                     Queens.editQueen(

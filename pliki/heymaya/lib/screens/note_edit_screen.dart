@@ -15,6 +15,7 @@ import '../models/apiarys.dart';
 import '../models/hive.dart';
 import '../models/hives.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class NoteEditScreen extends StatefulWidget {
   static const routeName = '/note_edit';
@@ -838,6 +839,8 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                                 ),
                               onPressed: () async {
                                 if (_formKey1.currentState!.validate()) {
+                                  //etap 2 część B: prawa w bazie właściciela (druga linia - wejścia spoza listy)
+                                  if (!mogeZapisac(context, [czNotatki], edycja: edycja, wyslany: edycja && notatki[0].arch != 0, pasieka: nowyNrPasieki ?? 0)) return;
                                   // if (nowyZasobId! >= 4) nowyMiara = 2;
                                   if (edycja) {
                                     DBHelper.updateNotatki(

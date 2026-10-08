@@ -8,6 +8,7 @@ import '../helpers/db_helper.dart';
 import '../globals.dart' as globals;
 
 import '../models/purchase.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class PurchaseEditScreen extends StatefulWidget {
   static const routeName = '/purchase_edit';
@@ -510,6 +511,8 @@ class _PurchaseEditScreenState extends State<PurchaseEditScreen> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
+                                  //etap 2 część B: prawa w bazie właściciela (druga linia - wejścia spoza listy)
+                                  if (!mogeZapisac(context, [czZakupy], edycja: edycja, wyslany: edycja && zakupy[0].arch != 0, pasieka: nowyNrPasieki ?? 0)) return;
                                   //if (nowaKategoriaId! >= 4) nowyMiara = 2;
                                   if (edycja) {
                                     

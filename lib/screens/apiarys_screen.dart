@@ -17,6 +17,7 @@ import 'dart:convert'; //obsługa json'a
 import 'dart:io';
 import '../helpers/db_helper.dart';
 import '../helpers/eksport_kod.dart'; //etap 1b: kod konta w eksporcie
+import '../helpers/baza_zespolu.dart'; //odswiezPrawaBazy (etap 2 część B)
 import 'team_screen.dart'; //pasek bazy właściciela (etap 2)
 import '../helpers/notification_helper.dart';
 import '../models/dodatki1.dart';
@@ -42,6 +43,7 @@ import '../models/queen.dart';
 import '../helpers/nfc_helper.dart';
 import '../models/hives.dart';
 import '../screens/move_hive_screen.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 //import '../screens/vosk_poc_screen.dart'; //POC Faza 0 - test Vosk-PL. Zaremowany
 //razem z ikoną POC niżej w actions (inaczej flutter analyze zgłasza unused_import).
 //Odkomentować oba naraz, jeżeli ekran POC ma znów być dostępny.
@@ -189,6 +191,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     _zmianaDnia();
+    //etap 2 część B: prawa w bazie właściciela - częściej niż synchronizacja konta (co 30 s, nie co godzinę)
+    odswiezPrawaJesliTrzeba().then((_) { if (mounted) setState(() {}); });
     if (globals.key == '' || globals.kod == '') return; //apka nieaktywowana
     final DateTime teraz = DateTime.now();
     if (_ostatniaSynchronizacja != null &&
@@ -289,6 +293,10 @@ class _ApiarysScreenState extends State<ApiarysScreen>
           //token urządzenia PRZED wyslijKod - ten przy zmianie wersji wysyła stary token do odwołania
           if (mem.isNotEmpty) globals.token = mem[0].token; //etap 1b pkt 3
           if (mem.isNotEmpty) globals.ustawStanowisko(mem[0].stanowisko); //etap 2: unikalne id wpisów
+          //etap 2 część B: aktualne prawa w bazie właściciela od razu przy starcie (token już jest)
+          if (mem.isNotEmpty && globals.aktywnaBaza.isNotEmpty) {
+            odswiezPrawaJesliTrzeba(odstep: Duration.zero).then((_) { if (mounted) setState(() {}); });
+          }
           if (mem.isNotEmpty && mem[0].wer != wersja) wyslijKod(mem[0].kod);
 
           //jezeli jest wpis w bazie to znaczy ze była juz akywacja kiedyś (wpis moze być ale accessKey niekoniecznie!!!)
@@ -691,6 +699,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
   //wysyłanie backupu ramka
   Future<void> wyslijBackupRamka(String jsonData1) async {
+    await odswiezPrawaJesliTrzeba(); //etap 2 część B: prawa sprzed eksportu
     //String jsonData1
     //print("z funkcji wysyłania");
     final http.Response response = await http.post(
@@ -704,7 +713,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czRamka, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
@@ -740,6 +749,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
   //wysyłanie backupu info
   Future<void> wyslijBackupInfo(String jsonData1) async {
+    await odswiezPrawaJesliTrzeba(); //etap 2 część B: prawa sprzed eksportu
     //String jsonData1
     final http.Response response = await http.post(
       Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
@@ -752,7 +762,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czInfo, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
@@ -787,6 +797,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
   //wysyłanie backupu matki
   Future<void> wyslijBackupMatki(String jsonData1) async {
+    await odswiezPrawaJesliTrzeba(); //etap 2 część B: prawa sprzed eksportu
     //String jsonData1
     final http.Response response = await http.post(
       Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
@@ -799,7 +810,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czMatki, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
@@ -1211,6 +1222,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 //dodawanie ula
             TextButton(onPressed: (){
               Navigator.of(dialogCtx).pop();
+              if (!mogeZapisac(context, [czInfo])) return; //etap 2 część B: nowy ul = wpis wyposażenia (info)
               Navigator.of(context).pushNamed(AddHiveScreen.routeName);
             }, child: Text((AppLocalizations.of(context)!.aDdHive),style: TextStyle(fontSize: 18)) //zasoby
             ),
@@ -1218,6 +1230,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
             TextButton(onPressed: (){
               Navigator.of(dialogCtx).pop();
+              if (!mogeZapisac(context, [czMatki])) return; //etap 2 część B
               Navigator.of(context).pushNamed(AddQueenScreen.routeName);
             }, child: Text((AppLocalizations.of(context)!.aDdQueen),style: TextStyle(fontSize: 18)) //zasoby +
             ),
@@ -1236,6 +1249,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
             }, child: Text((AppLocalizations.of(context)!.aDdingQueen),style: TextStyle(fontSize: 18)) //zasoby +
             ),
 
+            //etap 2 część B (B3): przeniesienie i usunięcie ula ruszają wszystkie części bazy - tylko właściciel
+            if (globals.aktywnaBaza.isEmpty) ...[
             Divider(),
 
 //przenieś ul
@@ -1251,6 +1266,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
               _showDeleteHiveDialog(context);
             }, child: Text((AppLocalizations.of(context)!.deleteHive),style: TextStyle(fontSize: 18, color: Colors.red))
             ),
+            ],
 
           ],
         ),
@@ -1572,7 +1588,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
               onPressed: () =>
                 apiarys.length == 0 
-                  ? Navigator.of(context).pushNamed(AddHiveScreen.routeName)
+                  ? (mogeZapisac(context, [czInfo]) ? Navigator.of(context).pushNamed(AddHiveScreen.routeName) : null) //etap 2 część B
                   : _showAlertAdd(context),
             ),
           

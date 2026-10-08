@@ -32,6 +32,8 @@ import '../models/note.dart';
 import '../models/photo.dart';
 import 'dart:io';
 import '../screens/apiarys_screen.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/baza_zespolu.dart'; //odswiezPrawaBazy (etap 2 część B)
 
 class ImportScreen extends StatefulWidget {
   static const routeName = '/import';
@@ -168,7 +170,9 @@ class _ImportScreenState extends State<ImportScreen> {
   static const int _batchSize = 500;
 
   //generyczne wysyłanie JSON do serwera - zwraca true jeśli sukces
-  Future<bool> _wyslijBatch(String jsonData) async {
+  //etap 2 część B: wynik wg eksportDoOznaczenia (w bazie właściciela częściowo przyjęte = do oznaczenia,
+  //cała część odrzucona = nie); [komunikaty] - zbierane do podsumowania eksportu
+  Future<bool> _wyslijBatch(String jsonData, [List<String>? komunikaty]) async {
     try {
       final response = await http.post(
         Uri.parse('https://darys.pl/cbt_hi_backup_v8.php'),
@@ -177,7 +181,9 @@ class _ImportScreenState extends State<ImportScreen> {
       );
       if (response.statusCode >= 200 && response.statusCode <= 400) {
         final odpPost = json.decode(response.body);
-        return odpPost['success'] == 'ok';
+        final String czesc = RegExp(r'^\{"(\w+)":').firstMatch(jsonData)?.group(1) ?? '';
+        if (!mounted) return odpPost['success'] == 'ok';
+        return eksportDoOznaczenia(context, odpPost['success'], czesc, jsonData, komunikaty: komunikaty);
       }
       return false;
     } catch (e) {
@@ -186,7 +192,7 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   //wysyłanie jednego zdjęcia (wersja await)
-  Future<bool> _wyslijJednoZdjecieAwait(dynamic photo, String prefix) async {
+  Future<bool> _wyslijJednoZdjecieAwait(dynamic photo, String prefix, [List<String>? komunikaty]) async {
     String base64Data = '';
     try {
       final file = File(photo.sciezka);
@@ -209,7 +215,7 @@ class _ImportScreenState extends State<ImportScreen> {
     jsonData += '"arch": ${photo.arch},';
     jsonData += '"base64": "$base64Data"}';
     jsonData += '],"total":1, "tabela":"${prefix}_zdjecia"}';
-    bool ok = await _wyslijBatch(jsonData);
+    bool ok = await _wyslijBatch(jsonData, komunikaty);
     if (ok) {
       DBHelper.updatePhotoArch(photo.id);
     }
@@ -375,35 +381,51 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   //oznaczanie arch=1 po eksporcie
-  Future<void> _markArchAll() async {
+  //[czesci] - tylko te części (etap 2 część B: części odrzucone przez serwer zostają do wysłania); null = wszystkie
+  Future<void> _markArchAll([Set<String>? czesci]) async {
+    bool oznacz(String c) => czesci == null || czesci.contains(c);
     //notatki
-    await Provider.of<Notes>(context, listen: false).fetchAndSetNotatkiToArch();
-    final notatkiArch = Provider.of<Notes>(context, listen: false).items;
-    for (var n in notatkiArch) { DBHelper.updateNotatkiArch(n.id); }
+    if (oznacz(czNotatki)) {
+      await Provider.of<Notes>(context, listen: false).fetchAndSetNotatkiToArch();
+      final notatkiArch = Provider.of<Notes>(context, listen: false).items;
+      for (var n in notatkiArch) { DBHelper.updateNotatkiArch(n.id); }
+    }
     //zakupy
-    await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupyToArch();
-    final zakupyArch = Provider.of<Purchases>(context, listen: false).items;
-    for (var z in zakupyArch) { DBHelper.updateZakupyArch(z.id); }
+    if (oznacz(czZakupy)) {
+      await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupyToArch();
+      final zakupyArch = Provider.of<Purchases>(context, listen: false).items;
+      for (var z in zakupyArch) { DBHelper.updateZakupyArch(z.id); }
+    }
     //sprzedaz
-    await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedazToArch();
-    final sprzedazArch = Provider.of<Sales>(context, listen: false).items;
-    for (var s in sprzedazArch) { DBHelper.updateSprzedazArch(s.id); }
+    if (oznacz(czSprzedaz)) {
+      await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedazToArch();
+      final sprzedazArch = Provider.of<Sales>(context, listen: false).items;
+      for (var s in sprzedazArch) { DBHelper.updateSprzedazArch(s.id); }
+    }
     //matki
-    await Provider.of<Queens>(context, listen: false).fetchAndSetQueensToArch();
-    final matkiArch = Provider.of<Queens>(context, listen: false).items;
-    for (var m in matkiArch) { DBHelper.updateMatkiArch(m.id); }
+    if (oznacz(czMatki)) {
+      await Provider.of<Queens>(context, listen: false).fetchAndSetQueensToArch();
+      final matkiArch = Provider.of<Queens>(context, listen: false).items;
+      for (var m in matkiArch) { DBHelper.updateMatkiArch(m.id); }
+    }
     //zbiory
-    await Provider.of<Harvests>(context, listen: false).fetchAndSetZbioryToArch();
-    final zbioryArch = Provider.of<Harvests>(context, listen: false).items;
-    for (var z in zbioryArch) { DBHelper.updateZbioryArch(z.id); }
+    if (oznacz(czZbiory)) {
+      await Provider.of<Harvests>(context, listen: false).fetchAndSetZbioryToArch();
+      final zbioryArch = Provider.of<Harvests>(context, listen: false).items;
+      for (var z in zbioryArch) { DBHelper.updateZbioryArch(z.id); }
+    }
     //info
-    await Provider.of<Infos>(context, listen: false).fetchAndSetInfosToArch();
-    final infoArch = Provider.of<Infos>(context, listen: false).items;
-    for (var inf in infoArch) { DBHelper.updateInfoArch(inf.id); }
+    if (oznacz(czInfo)) {
+      await Provider.of<Infos>(context, listen: false).fetchAndSetInfosToArch();
+      final infoArch = Provider.of<Infos>(context, listen: false).items;
+      for (var inf in infoArch) { DBHelper.updateInfoArch(inf.id); }
+    }
     //ramki
-    await Provider.of<Frames>(context, listen: false).fetchAndSetFramesToArch();
-    final ramkiArch = Provider.of<Frames>(context, listen: false).items;
-    for (var r in ramkiArch) { DBHelper.updateRamkaArch(r.id); }
+    if (oznacz(czRamka)) {
+      await Provider.of<Frames>(context, listen: false).fetchAndSetFramesToArch();
+      final ramkiArch = Provider.of<Frames>(context, listen: false).items;
+      for (var r in ramkiArch) { DBHelper.updateRamkaArch(r.id); }
+    }
     //zdjecia - arch oznaczane per zdjęcie w _wyslijJednoZdjecieAwait
   }
 
@@ -580,6 +602,12 @@ class _ImportScreenState extends State<ImportScreen> {
               }
 
               iloscDoWyslania = 0;
+              //etap 2 część B: prawa sprzed eksportu (właściciel mógł je zmienić)
+              await odswiezPrawaBazy();
+              if (!context.mounted) return;
+              final Set<String> przyjete = {}; //części do oznaczenia jako wysłane
+              final List<String> komunikaty = []; //odrzucone przez serwer - do podsumowania
+              int wyslane = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
@@ -626,63 +654,83 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // 1. Notatki
               _updateProgress(AppLocalizations.of(context)!.nOtes + '...');
-              if (notatki.isNotEmpty) {
-                await _wyslijBatch(_buildNotatkiJson(notatki, '${prefix}_notatki'));
+              if (notatki.isNotEmpty &&
+                  await _wyslijBatch(_buildNotatkiJson(notatki, '${prefix}_notatki'), komunikaty)) {
+                przyjete.add(czNotatki);
+                wyslane += notatki.length;
               }
 
               // 2. Zakupy
               _updateProgress(AppLocalizations.of(context)!.pUrchase + '...');
-              if (zakupy.isNotEmpty) {
-                await _wyslijBatch(_buildZakupyJson(zakupy, '${prefix}_zakupy'));
+              if (zakupy.isNotEmpty &&
+                  await _wyslijBatch(_buildZakupyJson(zakupy, '${prefix}_zakupy'), komunikaty)) {
+                przyjete.add(czZakupy);
+                wyslane += zakupy.length;
               }
 
               // 3. Sprzedaż
               _updateProgress(AppLocalizations.of(context)!.sAle + '...');
-              if (sprzedaz.isNotEmpty) {
-                await _wyslijBatch(_buildSprzedazJson(sprzedaz, '${prefix}_sprzedaz'));
+              if (sprzedaz.isNotEmpty &&
+                  await _wyslijBatch(_buildSprzedazJson(sprzedaz, '${prefix}_sprzedaz'), komunikaty)) {
+                przyjete.add(czSprzedaz);
+                wyslane += sprzedaz.length;
               }
 
               // 4. Matki
               _updateProgress(AppLocalizations.of(context)!.queens + '...');
-              if (matki.isNotEmpty) {
-                await _wyslijBatch(_buildMatkiJson(matki, '${prefix}_matki'));
+              if (matki.isNotEmpty &&
+                  await _wyslijBatch(_buildMatkiJson(matki, '${prefix}_matki'), komunikaty)) {
+                przyjete.add(czMatki);
+                wyslane += matki.length;
               }
 
               // 5. Zbiory
               _updateProgress(AppLocalizations.of(context)!.harvest + '...');
-              if (zbiory.isNotEmpty) {
-                await _wyslijBatch(_buildZbioryJson(zbiory, '${prefix}_zbiory'));
+              if (zbiory.isNotEmpty &&
+                  await _wyslijBatch(_buildZbioryJson(zbiory, '${prefix}_zbiory'), komunikaty)) {
+                przyjete.add(czZbiory);
+                wyslane += zbiory.length;
               }
 
               // 6. Info w paczkach po _batchSize
+              bool infoOk = true;
               for (int b = 0; b < infoBatches; b++) {
                 int start = b * _batchSize;
                 int end = min(start + _batchSize, info.length);
                 _updateProgress('Info ${b + 1}/$infoBatches...');
-                await _wyslijBatch(_buildInfoJson(info.sublist(start, end), '${prefix}_info'));
+                if (!await _wyslijBatch(_buildInfoJson(info.sublist(start, end), '${prefix}_info'), komunikaty)) infoOk = false;
+              }
+              if (info.isNotEmpty && infoOk) {
+                przyjete.add(czInfo);
+                wyslane += info.length;
               }
 
               // 7. Zdjęcia po jednym
               for (int i = 0; i < zdjecia.length; i++) {
                 _updateProgress('${AppLocalizations.of(context)!.pHotos} ${i + 1}/${zdjecia.length}...');
-                await _wyslijJednoZdjecieAwait(zdjecia[i], prefix);
+                if (await _wyslijJednoZdjecieAwait(zdjecia[i], prefix, komunikaty)) wyslane++;
               }
 
               // 8. Ramki w paczkach po _batchSize
+              bool ramkiOk = true;
               for (int b = 0; b < frameBatches; b++) {
                 int start = b * _batchSize;
                 int end = min(start + _batchSize, ramki.length);
                 _updateProgress('${AppLocalizations.of(context)!.frames} ${b + 1}/$frameBatches...');
-                await _wyslijBatch(_buildRamkiJson(ramki.sublist(start, end), '${prefix}_ramka'));
+                if (!await _wyslijBatch(_buildRamkiJson(ramki.sublist(start, end), '${prefix}_ramka'), komunikaty)) ramkiOk = false;
+              }
+              if (ramki.isNotEmpty && ramkiOk) {
+                przyjete.add(czRamka);
+                wyslane += ramki.length;
               }
 
               // Faza 4: Oznaczenie arch=1
-              await _markArchAll();
+              await _markArchAll(przyjete); //etap 2 część B: tylko części przyjęte przez serwer
 
-              // Faza 5: Podsumowanie
+              // Faza 5: Podsumowanie - liczba PRZYJĘTYCH + komunikaty o odrzuconych
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
-                    AppLocalizations.of(context)!.dataToSend + ' = $iloscDoWyslania');
+                    [AppLocalizations.of(context)!.dataToSend + ' = $wyslane', ...komunikaty].join('\n\n'));
               else
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
                     AppLocalizations.of(context)!.noDataToSend);
@@ -3029,7 +3077,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czRamka, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
@@ -3079,7 +3127,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czInfo, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
@@ -3128,7 +3176,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czZbiory, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
@@ -3176,7 +3224,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czSprzedaz, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
@@ -3224,7 +3272,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czMatki, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
@@ -3273,7 +3321,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czZakupy, jsonData1)) { //etap 2 część B (B4)
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
   //zapis do bazy lokalnej
@@ -3321,7 +3369,7 @@ class _ImportScreenState extends State<ImportScreen> {
     //print(response.body);
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') { //jezeli wysyłka się powiodła
+      if (eksportDoOznaczenia(context, odpPost['success'], czNotatki, jsonData1)) { //etap 2 część B (B4) //jezeli wysyłka się powiodła
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         
@@ -3414,7 +3462,7 @@ class _ImportScreenState extends State<ImportScreen> {
     );
     if (response.statusCode >= 200 && response.statusCode <= 400) {
       Map<String, dynamic> odpPost = json.decode(response.body);
-      if (odpPost['success'] == 'ok') {
+      if (eksportDoOznaczenia(context, odpPost['success'], czZdjecia, jsonData1)) { //etap 2 część B (B4)
         //oznaczenie zdjęcia jako zarchiwizowane
         DBHelper.updatePhotoArch(zdjecia[index].id);
         //wysłanie następnego zdjęcia
@@ -3617,6 +3665,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
 
 //eksport wybranych danych Notatki
+            if (globals.aktywnaBaza.isEmpty) //etap 2: pełne nadpisanie części w chmurze - tylko właściciel
             GestureDetector(
               onTap: () {               
                 _showAlertExportAllNotatki(
@@ -3634,6 +3683,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ),
 
 //eksport wybranych danych Zbiory
+            if (globals.aktywnaBaza.isEmpty) //etap 2: pełne nadpisanie części w chmurze - tylko właściciel
             GestureDetector(
               onTap: () {               
                 _showAlertExportAllZbiory(
@@ -3651,6 +3701,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ),          
 
 //eksport wybranych danych Zakupy
+            if (globals.aktywnaBaza.isEmpty) //etap 2: pełne nadpisanie części w chmurze - tylko właściciel
             GestureDetector(
               onTap: () {               
                 _showAlertExportAllZakupy(
@@ -3668,6 +3719,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ), 
 
 //eksport wybranych danych Sprzedaz
+            if (globals.aktywnaBaza.isEmpty) //etap 2: pełne nadpisanie części w chmurze - tylko właściciel
             GestureDetector(
               onTap: () {               
                 _showAlertExportAllSprzedaz(
@@ -3685,6 +3737,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ),  
 
 //eksport wybranych danych Matki
+            if (globals.aktywnaBaza.isEmpty) //etap 2: pełne nadpisanie części w chmurze - tylko właściciel
             GestureDetector(
               onTap: () {               
                 _showAlertExportAllMatki(
@@ -3702,6 +3755,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ), 
 
 //eksport wybranych danych Ramki
+            if (globals.aktywnaBaza.isEmpty) //etap 2: pełne nadpisanie części w chmurze - tylko właściciel
             GestureDetector(
               onTap: () {               
                 _showAlertExportAllRamki(
@@ -3719,6 +3773,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ),  
 
 //eksport wybranych danych Info
+            if (globals.aktywnaBaza.isEmpty) //etap 2: pełne nadpisanie części w chmurze - tylko właściciel
             GestureDetector(
               onTap: () {
                 _showAlertExportAllInfo(
@@ -3736,6 +3791,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ),
 
 //eksport wybranych danych Zdjecia
+            if (globals.aktywnaBaza.isEmpty) //etap 2: pełne nadpisanie części w chmurze - tylko właściciel
             GestureDetector(
               onTap: () {
                 _showAlertExportAllZdjecia(

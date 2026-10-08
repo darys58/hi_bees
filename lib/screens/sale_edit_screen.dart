@@ -16,6 +16,7 @@ import '../globals.dart' as globals;
 // import 'frames_detail_screen.dart';
 import '../models/sale.dart';
 import 'package:flutter/services.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class SaleEditScreen extends StatefulWidget {
   static const routeName = '/sale_edit';
@@ -515,6 +516,8 @@ class _SaleEditScreenState extends State<SaleEditScreen> {
                                 ),
                               onPressed: () {
                                 if (_formKey1.currentState!.validate()) {
+                                  //etap 2 część B: prawa w bazie właściciela (druga linia - wejścia spoza listy)
+                                  if (!mogeZapisac(context, [czSprzedaz], edycja: edycja, wyslany: edycja && zbior[0].arch != 0, pasieka: nowyNrPasieki ?? 0)) return;
                                   //if (nowaKategoriaId! >= 4) nowyMiara = 2;
                                   if (edycja) {
                                    

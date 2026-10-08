@@ -8,6 +8,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../models/note.dart';
 import '../widgets/note_item.dart';
 import '../screens/note_edit_screen.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 //import '../globals.dart' as globals;
 
 class NoteScreen extends StatefulWidget {
@@ -245,12 +246,10 @@ class _NoteScreenState extends State<NoteScreen> {
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.add, color: Color.fromARGB(255, 0, 0, 0)),
-              onPressed: () =>
-                  //_showAlert(context, frames[0].pasiekaNr, frames[0].ulNr)
-                  Navigator.of(context).pushNamed(
-                NoteEditScreen.routeName,
-                arguments: {'temp': 1},
-              ),
+              onPressed: () {
+                if (!mogeZapisac(context, [czNotatki])) return; //etap 2 część B
+                Navigator.of(context).pushNamed(NoteEditScreen.routeName, arguments: {'temp': 1});
+              },
               //print('dodaj zbior'),
             ),
             IconButton(

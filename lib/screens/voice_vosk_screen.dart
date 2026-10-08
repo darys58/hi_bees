@@ -81,6 +81,7 @@ import '../models/weathers.dart';
 //import '../models/dodatki1.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmRamkiUla - powierzchnia węzy wg typu ula
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 //void main() {
 //  runApp(MyApp());
 //}
@@ -717,6 +718,15 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //nie robi" sprowadza się do zgadywania.
     debugPrint('VOSK fraza: „${f.tekst}" → ${f.inference.intent} '
         '${f.inference.slots}');
+
+    //3a. PRAWA W BAZIE WŁAŚCICIELA (etap 2 część B) - jedna bramka dla komend,
+    //dyktowania i cofania. Odmowa jak przy matce: sygnał błędu + komunikat zapisu.
+    final String? blokada = _blokadaPraw(f.inference.intent);
+    if (blokada != null) {
+      beep('error');
+      _powiedzOZapisie(blokada);
+      return;
+    }
 
     //4. dyktowanie notatki - przechwytywane przed switchem pasiecznym, ale
     //DOPIERO PO bramce (inaczej niż voiceStart/voiceStop, które ją omijają):
@@ -1689,6 +1699,33 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //czyszczenia stosu: migawka sprzed zmiany zakresu dotyczy innych uli.
     'setHivesRange',
   };
+
+  //Powód odmowy zapisu w bazie właściciela albo null (własna baza, komenda bez zapisu).
+  //Ramki zapisują też wpis przeglądu (info). Przenumerowanie i przeniesienie ramek
+  //zmieniają istniejące wpisy - potrzebny odczyt+zapis. Cofanie dotyczy zapisów
+  //z tej sesji (jeszcze niewysłanych) - wystarczy zapis.
+  String? _blokadaPraw(String? intent) {
+    if (globals.aktywnaBaza.isEmpty || intent == null) return null;
+    final l = AppLocalizations.of(context)!;
+    final int? pasieka = nrXXOfApiary != 0 ? nrXXOfApiary : null;
+    switch (intent) {
+      case 'voiceNotepad':
+        return powodBlokady(l, [czNotatki], pasieka: pasieka);
+      case 'voiceNote':
+        return powodBlokady(l, [czInfo], pasieka: pasieka);
+      case 'voiceUndo':
+        return powodBlokady(l, [czRamka, czInfo], edycja: true, wyslany: false);
+      case 'setChange':
+      case 'setMoveBody':
+        return powodBlokady(l, [czRamka, czInfo], edycja: true, pasieka: pasieka);
+      case 'setStore':
+      case 'setFrames':
+      case 'setFrame':
+        return powodBlokady(l, [czRamka, czInfo], pasieka: pasieka);
+    }
+    if (_intentyZapisujace.contains(intent)) return powodBlokady(l, [czInfo], pasieka: pasieka);
+    return null;
+  }
 
   //KOMENDA PASIECZNA. VoskInference ma ten sam kształt co dawny RhinoInference
   //({isUnderstood, intent, slots}), więc prettyPrintInference i cały switch

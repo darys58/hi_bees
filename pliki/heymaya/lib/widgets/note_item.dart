@@ -15,6 +15,7 @@ import '../globals.dart' as globals;
 import '../models/note.dart';
 //import '../models/hives.dart';
 import '../models/hive.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 //import '../models/infos.dart';
 
 class NoteItem extends StatefulWidget {
@@ -120,6 +121,7 @@ class _NoteItemState extends State<NoteItem> {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (DismissDirection direction) async {
+        if (!mogeZapisac(context, [czNotatki], edycja: true, wyslany: notatki.arch != 0)) return false; //etap 2 część B
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -179,6 +181,7 @@ class _NoteItemState extends State<NoteItem> {
               onTap: () {
                 //_showAlert(context, 'Edycja', '${frame.id}');
                 // globals.dataInspekcji = frame.data;
+                if (!mogeZapisac(context, [czNotatki], edycja: true, wyslany: notatki.arch != 0)) return; //etap 2 część B (B2: podgląd bez edycji)
                 Navigator.of(context).pushNamed(
                   NoteEditScreen.routeName,
                   arguments: {'idNotatki': notatki.id},

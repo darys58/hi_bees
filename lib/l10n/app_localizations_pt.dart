@@ -3070,4 +3070,32 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get teamReadBlocked =>
       'assinatura do proprietário expirada - acesso suspenso';
+
+  @override
+  String teamBlockedWrite(String part) {
+    return 'Não tem permissão de escrita na base do proprietário: $part';
+  }
+
+  @override
+  String teamBlockedEdit(String part) {
+    return 'Só pode adicionar novas entradas - as já enviadas para a nuvem não podem ser alteradas nem eliminadas: $part';
+  }
+
+  @override
+  String teamBlockedApiary(String nr) {
+    return 'O apiário $nr está fora do seu âmbito na base do proprietário';
+  }
+
+  @override
+  String get teamBlockedSubscription =>
+      'A subscrição do proprietário expirou - na base dele só pode ver os dados';
+
+  @override
+  String get teamBlockedOwnerOnly =>
+      'Na base do proprietário só o proprietário pode fazer isto';
+
+  @override
+  String teamExportRejected(String saved, String total, String part) {
+    return 'Exportação para a nuvem: o servidor aceitou $saved de $total entradas ($part) - as restantes foram rejeitadas: sem permissão';
+  }
 }

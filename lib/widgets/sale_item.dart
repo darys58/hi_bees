@@ -11,6 +11,7 @@ import '../globals.dart' as globals;
 //import '../globals.dart' as globals;
 //import '../models/frames.dart';
 import '../models/sale.dart';
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 //import '../models/hives.dart';
 //import '../models/hive.dart';
 //import '../models/infos.dart';
@@ -151,6 +152,7 @@ class _SaleItemState extends State<SaleItem> {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (DismissDirection direction) async {
+        if (!mogeZapisac(context, [czSprzedaz], edycja: true, wyslany: sprzedaz.arch != 0)) return false; //etap 2 część B
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -202,6 +204,7 @@ class _SaleItemState extends State<SaleItem> {
               onTap: () {
                 //_showAlert(context, 'Edycja', '${frame.id}');
                 // globals.dataInspekcji = frame.data;
+                if (!mogeZapisac(context, [czSprzedaz], edycja: true, wyslany: sprzedaz.arch != 0)) return; //etap 2 część B (B2: podgląd bez edycji)
                 Navigator.of(context).pushNamed(
                   SaleEditScreen.routeName,
                   arguments: {'idSprzedazy': sprzedaz.id},

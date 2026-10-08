@@ -1194,5 +1194,45 @@
     "teamErrAlready": "Esta pessoa já é trabalhador - altere os seus direitos na lista.",
     "teamErrNoRights": "Selecione pelo menos um direito.",
     "teamWriteBlocked": "assinatura do proprietário expirada - escrita suspensa",
-    "teamReadBlocked": "assinatura do proprietário expirada - acesso suspenso"
+    "teamReadBlocked": "assinatura do proprietário expirada - acesso suspenso",
+    "teamBlockedWrite": "Não tem permissão de escrita na base do proprietário: {part}",
+    "@teamBlockedWrite": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedEdit": "Só pode adicionar novas entradas - as já enviadas para a nuvem não podem ser alteradas nem eliminadas: {part}",
+    "@teamBlockedEdit": {
+        "placeholders": {
+            "part": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedApiary": "O apiário {nr} está fora do seu âmbito na base do proprietário",
+    "@teamBlockedApiary": {
+        "placeholders": {
+            "nr": {
+                "type": "String"
+            }
+        }
+    },
+    "teamBlockedSubscription": "A subscrição do proprietário expirou - na base dele só pode ver os dados",
+    "teamBlockedOwnerOnly": "Na base do proprietário só o proprietário pode fazer isto",
+    "teamExportRejected": "Exportação para a nuvem: o servidor aceitou {saved} de {total} entradas ({part}) - as restantes foram rejeitadas: sem permissão",
+    "@teamExportRejected": {
+        "placeholders": {
+            "saved": {
+                "type": "String"
+            },
+            "total": {
+                "type": "String"
+            },
+            "part": {
+                "type": "String"
+            }
+        }
+    }
 }

@@ -15,6 +15,7 @@ import '../screens/frames_screen.dart';
 import '../screens/infos_edit_screen.dart';
 import '../globals.dart' as globals;
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class InfoItem extends StatelessWidget {
   String zmienDate(String data) {
@@ -68,6 +69,9 @@ class InfoItem extends StatelessWidget {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (DismissDirection direction) async {
+        //etap 2 część B: usunięcie przeglądu kasuje też jego ramki
+        if (!mogeZapisac(context, info.kategoria == 'inspection' ? [czInfo, czRamka] : [czInfo],
+            edycja: true, wyslany: info.arch != 0)) return false;
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -468,6 +472,7 @@ class InfoItem extends StatelessWidget {
                     onTap: () {
                       //_showAlert(context, 'Edycja', '${frame.id}');
                       // globals.dataInspekcji = frame.data;
+                      if (!mogeZapisac(context, [czInfo], edycja: true, wyslany: info.arch != 0)) return; //etap 2 część B
                       Navigator.of(context).pushNamed(
                         InfosEditScreen.routeName,
                         arguments: {'idInfo': info.id},
@@ -621,7 +626,7 @@ class InfoItem extends StatelessWidget {
                     onTap: () {
                       //_showAlert(context, 'Edycja', '${frame.id}');
                       // globals.dataInspekcji = frame.data;
-                     info.parametr == 'tag NFC'
+                     info.parametr == 'tag NFC' || !mogeZapisac(context, [czInfo], edycja: true, wyslany: info.arch != 0) //etap 2 część B
                       ? null
                       : Navigator.of(context).pushNamed(
                           InfosEditScreen.routeName,

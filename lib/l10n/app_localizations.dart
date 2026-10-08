@@ -5993,6 +5993,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'owner\'s subscription expired - access paused'**
   String get teamReadBlocked;
+
+  /// No description provided for @teamBlockedWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no write permission in the owner\'s database: {part}'**
+  String teamBlockedWrite(String part);
+
+  /// No description provided for @teamBlockedEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only add new entries - entries already sent to the cloud cannot be changed or deleted: {part}'**
+  String teamBlockedEdit(String part);
+
+  /// No description provided for @teamBlockedApiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Apiary {nr} is outside your range in the owner\'s database'**
+  String teamBlockedApiary(String nr);
+
+  /// No description provided for @teamBlockedSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'The owner\'s subscription has expired - you can only view data in their database'**
+  String get teamBlockedSubscription;
+
+  /// No description provided for @teamBlockedOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'In the owner\'s database only the owner can do this'**
+  String get teamBlockedOwnerOnly;
+
+  /// No description provided for @teamExportRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud export: the server accepted {saved} of {total} entries ({part}) - the rest were rejected: no permission'**
+  String teamExportRejected(String saved, String total, String part);
 }
 
 class _AppLocalizationsDelegate
