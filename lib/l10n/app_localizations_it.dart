@@ -3168,4 +3168,32 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get subBillingProblem =>
       'Lo store segnala un problema di pagamento - controlla il metodo di pagamento nelle impostazioni dello store.';
+
+  @override
+  String get accDelete => 'Elimina account';
+
+  @override
+  String get accDeleteInfo =>
+      'Verranno eliminati definitivamente dal server: l\'account, il backup nel cloud con le foto, le posizioni degli apiari e i tipi di arnia e il lavoro di squadra (i tuoi collaboratori perderanno l\'accesso alla tua base e tu alle basi dei proprietari). I dati su questo telefono rimarranno e l\'app tornerà alla schermata di attivazione. L\'operazione non può essere annullata.';
+
+  @override
+  String get accDeleteSubscription =>
+      'L\'eliminazione dell\'account non annulla l\'abbonamento nello store. Annullalo nelle impostazioni dell\'App Store o di Google Play.';
+
+  @override
+  String get accDeleteConfirm => 'Vuoi davvero eliminare l\'account?';
+
+  @override
+  String get accDeleteButton => 'Elimina';
+
+  @override
+  String get accDeleted => 'L\'account è stato eliminato.';
+
+  @override
+  String get accDeleteError =>
+      'Impossibile eliminare l\'account. Controlla la connessione a internet e riprova.';
+
+  @override
+  String get accDeleteNoToken =>
+      'Per eliminare l\'account, l\'app deve prima connettersi al server. Riavviala con l\'accesso a internet e riprova.';
 }

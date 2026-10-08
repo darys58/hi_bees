@@ -3146,4 +3146,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get subBillingProblem => 'La boutique signale un problème de paiement - vérifiez le moyen de paiement dans les réglages de la boutique.';
+
+  @override
+  String get accDelete => 'Supprimer le compte';
+
+  @override
+  String get accDeleteInfo => 'Seront définitivement supprimés du serveur : le compte, la sauvegarde dans le cloud avec les photos, les emplacements des ruchers et les types de ruches ainsi que le travail d\'équipe (vos collaborateurs perdront l\'accès à votre base et vous l\'accès aux bases des propriétaires). Les données de ce téléphone seront conservées et l\'application reviendra à l\'écran d\'activation. Cette opération est irréversible.';
+
+  @override
+  String get accDeleteSubscription => 'La suppression du compte n\'annule pas l\'abonnement dans la boutique. Annulez-le dans les réglages de l\'App Store ou de Google Play.';
+
+  @override
+  String get accDeleteConfirm => 'Voulez-vous vraiment supprimer le compte ?';
+
+  @override
+  String get accDeleteButton => 'Supprimer';
+
+  @override
+  String get accDeleted => 'Le compte a été supprimé.';
+
+  @override
+  String get accDeleteError => 'Impossible de supprimer le compte. Vérifiez votre connexion Internet et réessayez.';
+
+  @override
+  String get accDeleteNoToken => 'Pour supprimer le compte, l\'application doit d\'abord se connecter au serveur. Redémarrez-la avec un accès à Internet et réessayez.';
 }

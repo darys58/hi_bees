@@ -70,6 +70,21 @@ class Subskrypcja {
     }
   }
 
+  //po usunięciu konta (usun_konto.dart): SDK na konto anonimowe, zapomniany stan subskrypcji;
+  //następna aktywacja zaloguje nowe konto w init()
+  static Future<void> wyloguj() async {
+    if (_skonfigurowane && _konto.isNotEmpty) {
+      try {
+        await Purchases.logOut();
+      } catch (e) {
+        debugPrint('Subskrypcja.wyloguj: $e');
+      }
+    }
+    _konto = '';
+    _info = null;
+    zmiana.value++;
+  }
+
   static void _odczytaj(CustomerInfo info) {
     _info = info;
     zmiana.value++;

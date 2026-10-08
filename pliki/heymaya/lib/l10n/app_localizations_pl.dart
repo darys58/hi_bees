@@ -3134,4 +3134,28 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get subBillingProblem => 'Sklep zgłasza problem z płatnością - sprawdź metodę płatności w ustawieniach sklepu.';
+
+  @override
+  String get accDelete => 'Usuń konto';
+
+  @override
+  String get accDeleteInfo => 'Z serwera zostaną trwale usunięte: konto, kopia danych w chmurze ze zdjęciami, lokalizacje pasiek i typy uli oraz praca zespołowa (Twoi pracownicy stracą dostęp do Twojej bazy, a Ty – do baz właścicieli). Dane pasiek na tym telefonie zostaną, a aplikacja wróci do ekranu aktywacji. Tej operacji nie można cofnąć.';
+
+  @override
+  String get accDeleteSubscription => 'Usunięcie konta nie anuluje subskrypcji w sklepie. Anuluj ją w ustawieniach App Store lub Google Play.';
+
+  @override
+  String get accDeleteConfirm => 'Czy na pewno usunąć konto?';
+
+  @override
+  String get accDeleteButton => 'Usuń';
+
+  @override
+  String get accDeleted => 'Konto zostało usunięte.';
+
+  @override
+  String get accDeleteError => 'Nie udało się usunąć konta. Sprawdź połączenie z internetem i spróbuj ponownie.';
+
+  @override
+  String get accDeleteNoToken => 'Aby usunąć konto, aplikacja musi najpierw połączyć się z serwerem. Uruchom ją ponownie z dostępem do internetu i spróbuj jeszcze raz.';
 }

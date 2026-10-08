@@ -6138,6 +6138,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The store reports a payment problem - check the payment method in the store settings.'**
   String get subBillingProblem;
+
+  /// No description provided for @accDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get accDelete;
+
+  /// No description provided for @accDeleteInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'The following will be permanently deleted from the server: the account, the cloud backup with photos, apiary locations and hive types, and team work (your workers will lose access to your database, and you will lose access to the owners\' databases). The apiary data on this phone will stay, and the app will return to the activation screen. This cannot be undone.'**
+  String get accDeleteInfo;
+
+  /// No description provided for @accDeleteSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting the account does not cancel the subscription in the store. Cancel it in the App Store or Google Play settings.'**
+  String get accDeleteSubscription;
+
+  /// No description provided for @accDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the account?'**
+  String get accDeleteConfirm;
+
+  /// No description provided for @accDeleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get accDeleteButton;
+
+  /// No description provided for @accDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'The account has been deleted.'**
+  String get accDeleted;
+
+  /// No description provided for @accDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'The account could not be deleted. Check your internet connection and try again.'**
+  String get accDeleteError;
+
+  /// No description provided for @accDeleteNoToken.
+  ///
+  /// In en, this message translates to:
+  /// **'To delete the account, the app must first connect to the server. Restart it with internet access and try again.'**
+  String get accDeleteNoToken;
 }
 
 class _AppLocalizationsDelegate

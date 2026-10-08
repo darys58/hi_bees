@@ -3154,4 +3154,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subBillingProblem =>
       'The store reports a payment problem - check the payment method in the store settings.';
+
+  @override
+  String get accDelete => 'Delete account';
+
+  @override
+  String get accDeleteInfo =>
+      'The following will be permanently deleted from the server: the account, the cloud backup with photos, apiary locations and hive types, and team work (your workers will lose access to your database, and you will lose access to the owners\' databases). The apiary data on this phone will stay, and the app will return to the activation screen. This cannot be undone.';
+
+  @override
+  String get accDeleteSubscription =>
+      'Deleting the account does not cancel the subscription in the store. Cancel it in the App Store or Google Play settings.';
+
+  @override
+  String get accDeleteConfirm => 'Are you sure you want to delete the account?';
+
+  @override
+  String get accDeleteButton => 'Delete';
+
+  @override
+  String get accDeleted => 'The account has been deleted.';
+
+  @override
+  String get accDeleteError =>
+      'The account could not be deleted. Check your internet connection and try again.';
+
+  @override
+  String get accDeleteNoToken =>
+      'To delete the account, the app must first connect to the server. Restart it with internet access and try again.';
 }

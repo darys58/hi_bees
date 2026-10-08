@@ -9,6 +9,7 @@ import '../globals.dart' as globals;
 import '../screens/activation_screen.dart';
 import '../models/memory.dart';
 import '../helpers/subskrypcja.dart';
+import '../helpers/usun_konto.dart';
 import '../screens/voice_subscription_screen.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -209,6 +210,18 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
              ),
+  //usuń konto (08.10.2026) - wymóg Apple 5.1.1(v); okna potwierdzenia i sprzątanie w helpers/usun_konto.dart
+            if (mem.isNotEmpty && globals.key != '')
+              GestureDetector(
+                onTap: () => pokazUsuwanieKonta(context),
+                child: Card(
+                  child: ListTile(
+                    title: Text(AppLocalizations.of(context)!.accDelete,
+                        style: const TextStyle(color: Colors.red)),
+                    trailing: Icon(Icons.chevron_right),
+                  ),
+                ),
+              ),
 
             SizedBox(height: 50),
 

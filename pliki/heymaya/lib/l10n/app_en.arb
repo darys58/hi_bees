@@ -2095,5 +2095,13 @@
     "subPending": "The payment is waiting for confirmation by the store. Voice control will turn on once it is approved.",
     "subRestoreNone": "No active subscription was found for this store account.",
     "subWillNotRenew": "The subscription will not renew - access until the end of the paid period.",
-    "subBillingProblem": "The store reports a payment problem - check the payment method in the store settings."
+    "subBillingProblem": "The store reports a payment problem - check the payment method in the store settings.",
+    "accDelete": "Delete account",
+    "accDeleteInfo": "The following will be permanently deleted from the server: the account, the cloud backup with photos, apiary locations and hive types, and team work (your workers will lose access to your database, and you will lose access to the owners' databases). The apiary data on this phone will stay, and the app will return to the activation screen. This cannot be undone.",
+    "accDeleteSubscription": "Deleting the account does not cancel the subscription in the store. Cancel it in the App Store or Google Play settings.",
+    "accDeleteConfirm": "Are you sure you want to delete the account?",
+    "accDeleteButton": "Delete",
+    "accDeleted": "The account has been deleted.",
+    "accDeleteError": "The account could not be deleted. Check your internet connection and try again.",
+    "accDeleteNoToken": "To delete the account, the app must first connect to the server. Restart it with internet access and try again."
 }

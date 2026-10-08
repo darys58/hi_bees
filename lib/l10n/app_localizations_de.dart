@@ -3169,4 +3169,32 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get subBillingProblem =>
       'Der Store meldet ein Zahlungsproblem - prüfen Sie die Zahlungsmethode in den Store-Einstellungen.';
+
+  @override
+  String get accDelete => 'Konto löschen';
+
+  @override
+  String get accDeleteInfo =>
+      'Folgendes wird dauerhaft vom Server gelöscht: das Konto, die Cloud-Sicherung mit Fotos, Standorte der Bienenstände und Beutentypen sowie die Teamarbeit (Ihre Mitarbeiter verlieren den Zugang zu Ihrer Datenbank und Sie den Zugang zu den Datenbanken der Besitzer). Die Daten auf diesem Telefon bleiben erhalten, und die App kehrt zum Aktivierungsbildschirm zurück. Dies kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get accDeleteSubscription =>
+      'Das Löschen des Kontos kündigt das Abonnement im Store nicht. Kündigen Sie es in den Einstellungen von App Store oder Google Play.';
+
+  @override
+  String get accDeleteConfirm => 'Möchten Sie das Konto wirklich löschen?';
+
+  @override
+  String get accDeleteButton => 'Löschen';
+
+  @override
+  String get accDeleted => 'Das Konto wurde gelöscht.';
+
+  @override
+  String get accDeleteError =>
+      'Das Konto konnte nicht gelöscht werden. Prüfen Sie die Internetverbindung und versuchen Sie es erneut.';
+
+  @override
+  String get accDeleteNoToken =>
+      'Um das Konto zu löschen, muss sich die App zuerst mit dem Server verbinden. Starten Sie sie mit Internetzugang neu und versuchen Sie es erneut.';
 }

@@ -1273,5 +1273,13 @@
     "subPending": "El pago está pendiente de confirmación por la tienda. El control de voz se activará cuando se apruebe.",
     "subRestoreNone": "No se encontró ninguna suscripción activa para esta cuenta de la tienda.",
     "subWillNotRenew": "La suscripción no se renovará - acceso hasta el final del periodo pagado.",
-    "subBillingProblem": "La tienda informa de un problema con el pago - revisa el método de pago en los ajustes de la tienda."
+    "subBillingProblem": "La tienda informa de un problema con el pago - revisa el método de pago en los ajustes de la tienda.",
+    "accDelete": "Eliminar cuenta",
+    "accDeleteInfo": "Se eliminarán definitivamente del servidor: la cuenta, la copia en la nube con las fotos, las ubicaciones de los colmenares y los tipos de colmena, y el trabajo en equipo (tus colaboradores perderán el acceso a tu base y tú a las bases de los propietarios). Los datos de este teléfono se conservarán y la aplicación volverá a la pantalla de activación. Esta operación no se puede deshacer.",
+    "accDeleteSubscription": "Eliminar la cuenta no cancela la suscripción en la tienda. Cancélala en los ajustes de App Store o Google Play.",
+    "accDeleteConfirm": "¿Seguro que quieres eliminar la cuenta?",
+    "accDeleteButton": "Eliminar",
+    "accDeleted": "La cuenta ha sido eliminada.",
+    "accDeleteError": "No se pudo eliminar la cuenta. Comprueba la conexión a internet e inténtalo de nuevo.",
+    "accDeleteNoToken": "Para eliminar la cuenta, la aplicación debe conectarse primero al servidor. Reiníciala con acceso a internet e inténtalo de nuevo."
 }

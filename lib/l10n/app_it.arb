@@ -1273,5 +1273,13 @@
     "subPending": "Il pagamento è in attesa di conferma da parte dello store. Il controllo vocale si attiverà dopo l'approvazione.",
     "subRestoreNone": "Nessun abbonamento attivo trovato per questo account dello store.",
     "subWillNotRenew": "L'abbonamento non si rinnoverà - accesso fino alla fine del periodo pagato.",
-    "subBillingProblem": "Lo store segnala un problema di pagamento - controlla il metodo di pagamento nelle impostazioni dello store."
+    "subBillingProblem": "Lo store segnala un problema di pagamento - controlla il metodo di pagamento nelle impostazioni dello store.",
+    "accDelete": "Elimina account",
+    "accDeleteInfo": "Verranno eliminati definitivamente dal server: l'account, il backup nel cloud con le foto, le posizioni degli apiari e i tipi di arnia e il lavoro di squadra (i tuoi collaboratori perderanno l'accesso alla tua base e tu alle basi dei proprietari). I dati su questo telefono rimarranno e l'app tornerà alla schermata di attivazione. L'operazione non può essere annullata.",
+    "accDeleteSubscription": "L'eliminazione dell'account non annulla l'abbonamento nello store. Annullalo nelle impostazioni dell'App Store o di Google Play.",
+    "accDeleteConfirm": "Vuoi davvero eliminare l'account?",
+    "accDeleteButton": "Elimina",
+    "accDeleted": "L'account è stato eliminato.",
+    "accDeleteError": "Impossibile eliminare l'account. Controlla la connessione a internet e riprova.",
+    "accDeleteNoToken": "Per eliminare l'account, l'app deve prima connettersi al server. Riavviala con l'accesso a internet e riprova."
 }

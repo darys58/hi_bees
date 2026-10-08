@@ -1273,5 +1273,13 @@
     "subPending": "Die Zahlung wartet auf die Bestätigung durch den Store. Die Sprachsteuerung wird nach der Freigabe aktiviert.",
     "subRestoreNone": "Für dieses Store-Konto wurde kein aktives Abonnement gefunden.",
     "subWillNotRenew": "Das Abonnement wird nicht verlängert - Zugang bis zum Ende des bezahlten Zeitraums.",
-    "subBillingProblem": "Der Store meldet ein Zahlungsproblem - prüfen Sie die Zahlungsmethode in den Store-Einstellungen."
+    "subBillingProblem": "Der Store meldet ein Zahlungsproblem - prüfen Sie die Zahlungsmethode in den Store-Einstellungen.",
+    "accDelete": "Konto löschen",
+    "accDeleteInfo": "Folgendes wird dauerhaft vom Server gelöscht: das Konto, die Cloud-Sicherung mit Fotos, Standorte der Bienenstände und Beutentypen sowie die Teamarbeit (Ihre Mitarbeiter verlieren den Zugang zu Ihrer Datenbank und Sie den Zugang zu den Datenbanken der Besitzer). Die Daten auf diesem Telefon bleiben erhalten, und die App kehrt zum Aktivierungsbildschirm zurück. Dies kann nicht rückgängig gemacht werden.",
+    "accDeleteSubscription": "Das Löschen des Kontos kündigt das Abonnement im Store nicht. Kündigen Sie es in den Einstellungen von App Store oder Google Play.",
+    "accDeleteConfirm": "Möchten Sie das Konto wirklich löschen?",
+    "accDeleteButton": "Löschen",
+    "accDeleted": "Das Konto wurde gelöscht.",
+    "accDeleteError": "Das Konto konnte nicht gelöscht werden. Prüfen Sie die Internetverbindung und versuchen Sie es erneut.",
+    "accDeleteNoToken": "Um das Konto zu löschen, muss sich die App zuerst mit dem Server verbinden. Starten Sie sie mit Internetzugang neu und versuchen Sie es erneut."
 }
