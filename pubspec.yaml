@@ -46,6 +46,7 @@ dependencies:
   device_info_plus: ^11.2.0
   connectivity_plus: ^6.1.1
   # in_app_purchase: ^3.1.5
+  purchases_flutter: ^10.15.0 #subskrypcja sterowania głosem przez RevenueCat (08.10.2026)
   shared_preferences: ^2.1.0
   flutter_slidable: ^3.1.1
   url_launcher: ^6.1.10

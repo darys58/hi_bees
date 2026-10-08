@@ -781,7 +781,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activationCode => 'Activation code: ';
 
   @override
-  String get subscryptionTo => 'Subscryption to: ';
+  String get subscryptionTo => 'Subscription until: ';
 
   @override
   String get voiceControlTo => 'Voice control until: ';
@@ -3066,4 +3066,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String teamExportRejected(String saved, String total, String part) {
     return 'Cloud export: the server accepted $saved of $total entries ($part) - the rest were rejected: no permission';
   }
+
+  @override
+  String get subTitle => 'Subscription';
+
+  @override
+  String subEnded(String date) {
+    return 'The subscription ended: $date';
+  }
+
+  @override
+  String get subLifetime => 'unlimited';
+
+  @override
+  String get subDescription => 'The yearly subscription gives access to voice control and team work (inviting workers to your apiaries). All other app features, including the cloud backup, are free.';
+
+  @override
+  String subPricePerYear(String price) {
+    return '$price / year';
+  }
+
+  @override
+  String get subAutoRenew => 'The subscription renews automatically every year until you cancel it. You can cancel in your App Store or Google Play account settings at least 24 hours before the end of the period.';
+
+  @override
+  String get subBuy => 'Buy subscription';
+
+  @override
+  String get subRestore => 'Restore purchases';
+
+  @override
+  String get subManage => 'Manage subscription';
+
+  @override
+  String get subTerms => 'Terms of use';
+
+  @override
+  String get subPrivacy => 'Privacy policy';
+
+  @override
+  String get subUnavailable => 'Buying the subscription is not available yet in this version of the app.';
+
+  @override
+  String get subStoreError => 'Could not connect to the store. Check your internet connection and try again.';
+
+  @override
+  String subThanks(String date) {
+    return 'Thank you! Voice control is active until: $date';
+  }
+
+  @override
+  String get subPending => 'The payment is waiting for confirmation by the store. Voice control will turn on once it is approved.';
+
+  @override
+  String get subRestoreNone => 'No active subscription was found for this store account.';
+
+  @override
+  String get subWillNotRenew => 'The subscription will not renew - access until the end of the paid period.';
+
+  @override
+  String get subBillingProblem => 'The store reports a payment problem - check the payment method in the store settings.';
 }

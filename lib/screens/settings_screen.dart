@@ -15,6 +15,7 @@ import '../screens/nfc_settings_screen.dart';
 import '../screens/apiarys_all_map_screen.dart';
 import '../screens/notification_settings_screen.dart';
 import '../screens/team_screen.dart'; //praca zespołowa (etap 2)
+import '../screens/voice_settings_screen.dart'; //ustawienia sterowania głosem
 
 class SettingsScreen extends StatelessWidget {
   static const routeName = '/settings';
@@ -268,6 +269,23 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
+//sterowanie głosem (od 08.10.2026 tutaj, wcześniej w Parametryzacji) - osobny ekran: subskrypcja,
+//podgląd korpusu, nagrywanie notatek, głośność odzywek. Warunki jak przycisk głosu: klucz i język z modelem Vosk.
+            if (globals.key != '' &&
+                globals.key != 'bez_klucza' &&
+                (globals.jezyk == 'pl_PL' || globals.jezyk == 'en_US'))
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pushNamed(VoiceSettingsScreen.routeName);
+                },
+                child: Card(
+                  child: ListTile(
+                    leading: Icon(Icons.mic),
+                    title: Text(AppLocalizations.of(context)!.voiceSettingsTitle),
+                    trailing: Icon(Icons.chevron_right),
+                  ),
+                ),
+              ),
 //parametryzacja
             GestureDetector(
               onTap: () {

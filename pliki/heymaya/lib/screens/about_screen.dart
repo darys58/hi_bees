@@ -8,6 +8,8 @@ import '../globals.dart' as globals;
 
 import '../screens/activation_screen.dart';
 import '../models/memory.dart';
+import '../helpers/subskrypcja.dart';
+import '../screens/voice_subscription_screen.dart';
 
 class AboutScreen extends StatelessWidget {
   static const routeName = '/about';
@@ -108,7 +110,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
    
     //uzyskanie dostępu do danych w pamięci
-    final memData = Provider.of<Memory>(context, listen: false);
+    final memData = Provider.of<Memory>(context); //nasłuch: po zakupie w ekranie subskrypcji nowa data od razu (08.10.2026)
     final mem = memData.items;
 
    
@@ -173,12 +175,17 @@ class AboutScreen extends StatelessWidget {
                     //leading: Icon(Icons.settings),
                     //od 02.10.2026 "Sterowanie głosem do: <be_do>" zamiast "Subskrypcja do: bez ograniczeń"
                     //(płatne sterowanie głosem - pliki/plan_subskrypcja_glos.md); be_do dociera przez _synchronizujKonto
-                    title: Text(AppLocalizations.of(context)!.voiceControlTo + dataGlosu(mem[0].ddo)),
+                    title: Text(AppLocalizations.of(context)!.subscryptionTo +
+                        (Subskrypcja.dataDo(mem[0].ddo).startsWith('9999') //zakup bezterminowy
+                            ? AppLocalizations.of(context)!.subLifetime
+                            : dataGlosu(Subskrypcja.dataDo(mem[0].ddo)))), //z subskrypcją ze sklepu (08.10.2026)
                     // title: globals.isEuropeanFormat()
                     // ? Text(AppLocalizations.of(context)!.subscryptionTo + zmienDate(mem[0].ddo))
                     // : Text(AppLocalizations.of(context)!.subscryptionTo + mem[0].ddo),
                     subtitle: Text(mem[0].key),
-                    //trailing: Icon(Icons.chevron_right),
+                    //08.10.2026: wejście do ekranu subskrypcji (zakup, przywrócenie, zarządzanie)
+                    trailing: Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).pushNamed(VoiceSubscriptionScreen.routeName),
                   ),
                 )
                 : Card(

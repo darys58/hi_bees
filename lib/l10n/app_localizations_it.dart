@@ -3100,4 +3100,72 @@ class AppLocalizationsIt extends AppLocalizations {
   String teamExportRejected(String saved, String total, String part) {
     return 'Esportazione nel cloud: il server ha accettato $saved di $total voci ($part) - le altre sono state rifiutate: nessun permesso';
   }
+
+  @override
+  String get subTitle => 'Abbonamento';
+
+  @override
+  String subEnded(String date) {
+    return 'L\'abbonamento è terminato: $date';
+  }
+
+  @override
+  String get subLifetime => 'illimitato';
+
+  @override
+  String get subDescription =>
+      'L\'abbonamento annuale dà accesso al controllo vocale e al lavoro di squadra (invitare collaboratori nei tuoi apiari). Tutte le altre funzioni dell\'app, incluso il backup nel cloud, sono gratuite.';
+
+  @override
+  String subPricePerYear(String price) {
+    return '$price / anno';
+  }
+
+  @override
+  String get subAutoRenew =>
+      'L\'abbonamento si rinnova automaticamente ogni anno finché non lo annulli. Puoi annullarlo nelle impostazioni dell\'account App Store o Google Play almeno 24 ore prima della fine del periodo.';
+
+  @override
+  String get subBuy => 'Acquista abbonamento';
+
+  @override
+  String get subRestore => 'Ripristina acquisti';
+
+  @override
+  String get subManage => 'Gestisci abbonamento';
+
+  @override
+  String get subTerms => 'Condizioni d\'uso';
+
+  @override
+  String get subPrivacy => 'Informativa sulla privacy';
+
+  @override
+  String get subUnavailable =>
+      'L\'acquisto dell\'abbonamento non è ancora disponibile in questa versione dell\'app.';
+
+  @override
+  String get subStoreError =>
+      'Impossibile connettersi allo store. Controlla la connessione a internet e riprova.';
+
+  @override
+  String subThanks(String date) {
+    return 'Grazie! Il controllo vocale è attivo fino al: $date';
+  }
+
+  @override
+  String get subPending =>
+      'Il pagamento è in attesa di conferma da parte dello store. Il controllo vocale si attiverà dopo l\'approvazione.';
+
+  @override
+  String get subRestoreNone =>
+      'Nessun abbonamento attivo trovato per questo account dello store.';
+
+  @override
+  String get subWillNotRenew =>
+      'L\'abbonamento non si rinnoverà - accesso fino alla fine del periodo pagato.';
+
+  @override
+  String get subBillingProblem =>
+      'Lo store segnala un problema di pagamento - controlla il metodo di pagamento nelle impostazioni dello store.';
 }

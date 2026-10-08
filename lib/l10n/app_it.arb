@@ -1234,5 +1234,44 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "subTitle": "Abbonamento",
+    "subEnded": "L'abbonamento è terminato: {date}",
+    "@subEnded": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subLifetime": "illimitato",
+    "subDescription": "L'abbonamento annuale dà accesso al controllo vocale e al lavoro di squadra (invitare collaboratori nei tuoi apiari). Tutte le altre funzioni dell'app, incluso il backup nel cloud, sono gratuite.",
+    "subPricePerYear": "{price} / anno",
+    "@subPricePerYear": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "subAutoRenew": "L'abbonamento si rinnova automaticamente ogni anno finché non lo annulli. Puoi annullarlo nelle impostazioni dell'account App Store o Google Play almeno 24 ore prima della fine del periodo.",
+    "subBuy": "Acquista abbonamento",
+    "subRestore": "Ripristina acquisti",
+    "subManage": "Gestisci abbonamento",
+    "subTerms": "Condizioni d'uso",
+    "subPrivacy": "Informativa sulla privacy",
+    "subUnavailable": "L'acquisto dell'abbonamento non è ancora disponibile in questa versione dell'app.",
+    "subStoreError": "Impossibile connettersi allo store. Controlla la connessione a internet e riprova.",
+    "subThanks": "Grazie! Il controllo vocale è attivo fino al: {date}",
+    "@subThanks": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subPending": "Il pagamento è in attesa di conferma da parte dello store. Il controllo vocale si attiverà dopo l'approvazione.",
+    "subRestoreNone": "Nessun abbonamento attivo trovato per questo account dello store.",
+    "subWillNotRenew": "L'abbonamento non si rinnoverà - accesso fino alla fine del periodo pagato.",
+    "subBillingProblem": "Lo store segnala un problema di pagamento - controlla il metodo di pagamento nelle impostazioni dello store."
 }

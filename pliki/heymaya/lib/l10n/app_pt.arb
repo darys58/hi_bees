@@ -1234,5 +1234,44 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "subTitle": "Subscrição",
+    "subEnded": "A subscrição terminou: {date}",
+    "@subEnded": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subLifetime": "sem limite",
+    "subDescription": "A subscrição anual dá acesso ao controlo por voz e ao trabalho em equipa (convidar colaboradores para os seus apiários). As restantes funções da aplicação, incluindo a cópia na nuvem, são gratuitas.",
+    "subPricePerYear": "{price} / ano",
+    "@subPricePerYear": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "subAutoRenew": "A subscrição renova-se automaticamente todos os anos até a cancelar. Pode cancelá-la nas definições da conta App Store ou Google Play, pelo menos 24 horas antes do fim do período.",
+    "subBuy": "Comprar subscrição",
+    "subRestore": "Restaurar compras",
+    "subManage": "Gerir subscrição",
+    "subTerms": "Termos de utilização",
+    "subPrivacy": "Política de privacidade",
+    "subUnavailable": "A compra da subscrição ainda não está disponível nesta versão da aplicação.",
+    "subStoreError": "Não foi possível ligar à loja. Verifique a ligação à internet e tente novamente.",
+    "subThanks": "Obrigado! O controlo por voz está ativo até: {date}",
+    "@subThanks": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subPending": "O pagamento aguarda confirmação da loja. O controlo por voz será ativado após a aprovação.",
+    "subRestoreNone": "Não foi encontrada nenhuma subscrição ativa para esta conta da loja.",
+    "subWillNotRenew": "A subscrição não será renovada - acesso até ao fim do período pago.",
+    "subBillingProblem": "A loja indica um problema com o pagamento - verifique o método de pagamento nas definições da loja."
 }

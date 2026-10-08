@@ -31,6 +31,8 @@ import '../models/infos.dart';
 import '../widgets/apiarys_item.dart';
 import '../widgets/note_priorytet_item.dart';
 import '../screens/voice_vosk_screen.dart';
+import '../screens/voice_subscription_screen.dart'; //zakup subskrypcji głosu
+import '../helpers/subskrypcja.dart';
 //import '../screens/subscription_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/harvest_screen.dart';
@@ -309,6 +311,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
             //sprawdzenie czy w sklepie jest nowsza wersja apki (cicho, raz przy starcie) - patrz sprawdzNowaWersje()
             sprawdzNowaWersje(mem[0].kod, mem[0].mem2);
+            //płatne sterowanie głosem: SDK sklepu dla konta hb_<be_id> (bez kluczy RevenueCat nic nie robi)
+            Subskrypcja.init(mem[0].id);
 
             //sprawdzenie daty do której apka jest aktywna - teraz bez znaczenia !!!!!
             final data = DateTime.parse(mem[0].ddo);
@@ -2029,9 +2033,15 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                           child: ElevatedButton(
                             style: buttonStyle,
                             onPressed: () {
-                              Navigator.of(context).pushNamed(
-                                VoiceVoskScreen.routeName,
-                              );
+                              //od 08.10.2026: po końcu okresu (memory.ddo) bez aktywnej subskrypcji
+                              //ekran zakupu zamiast sterowania - plan_subskrypcja_glos.md pkt 2.2
+                              final memy = Provider.of<Memory>(context, listen: false).items;
+                              if (Subskrypcja.glosDostepny(memy.isNotEmpty ? memy[0].ddo : '')) {
+                                Navigator.of(context).pushNamed(VoiceVoskScreen.routeName);
+                              } else {
+                                Navigator.of(context).pushNamed(VoiceSubscriptionScreen.routeName,
+                                    arguments: {'zGlosu': true});
+                              }
                             },
                             child: Text(
                                 AppLocalizations.of(context)!.voiceControl,

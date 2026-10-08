@@ -1234,5 +1234,44 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "subTitle": "Abonnement",
+    "subEnded": "L'abonnement a pris fin : {date}",
+    "@subEnded": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subLifetime": "illimité",
+    "subDescription": "L'abonnement annuel donne accès à la commande vocale et au travail d'équipe (inviter des collaborateurs dans vos ruchers). Toutes les autres fonctions de l'application, y compris la sauvegarde dans le cloud, sont gratuites.",
+    "subPricePerYear": "{price} / an",
+    "@subPricePerYear": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "subAutoRenew": "L'abonnement se renouvelle automatiquement chaque année jusqu'à ce que vous l'annuliez. Vous pouvez l'annuler dans les réglages de votre compte App Store ou Google Play au moins 24 heures avant la fin de la période.",
+    "subBuy": "Acheter l'abonnement",
+    "subRestore": "Restaurer les achats",
+    "subManage": "Gérer l'abonnement",
+    "subTerms": "Conditions d'utilisation",
+    "subPrivacy": "Politique de confidentialité",
+    "subUnavailable": "L'achat de l'abonnement n'est pas encore disponible dans cette version de l'application.",
+    "subStoreError": "Impossible de se connecter à la boutique. Vérifiez votre connexion Internet et réessayez.",
+    "subThanks": "Merci ! La commande vocale est active jusqu'au : {date}",
+    "@subThanks": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subPending": "Le paiement attend la confirmation de la boutique. La commande vocale s'activera après son approbation.",
+    "subRestoreNone": "Aucun abonnement actif n'a été trouvé pour ce compte de la boutique.",
+    "subWillNotRenew": "L'abonnement ne sera pas renouvelé - accès jusqu'à la fin de la période payée.",
+    "subBillingProblem": "La boutique signale un problème de paiement - vérifiez le moyen de paiement dans les réglages de la boutique."
 }

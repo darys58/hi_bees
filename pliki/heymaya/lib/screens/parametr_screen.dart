@@ -7,7 +7,6 @@ import '../helpers/db_helper.dart';
 import '../screens/parametry_ula_screen.dart';
 import '../screens/parametr_edit_screen.dart';
 import '../screens/hive_news_settings_screen.dart';
-import '../screens/voice_settings_screen.dart'; //ustawienia sterowania głosem
 //import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/dodatki1.dart';
@@ -415,29 +414,7 @@ class _ParametrScreenState extends State<ParametrScreen> {
                     ),
                   ),
 
-//Sterowanie głosem - osobny ekran (podgląd korpusu, nagrywanie notatek,
-//głośność odzywek), tak samo jak "Aktualności ula" wyżej. Belka bez ikony
-//i bez pogrubienia - konwencja tej listy.
-//Tytuł z ARB (voiceSettingsTitle) - do 05.09.2026 był tu polski tekst na
-//sztywno, a belka pokazywała się WYŁĄCZNIE przy pl_PL. Uzasadnieniem był brak
-//angielskiego modelu Vosk; od 03.09.2026 model jest, więc bramka języka
-//dogania tę z ekranu startowego (pl_PL || en_US).
-                  if (globals.key != '' &&
-                      globals.key != 'bez_klucza' &&
-                      (globals.jezyk == 'pl_PL' || globals.jezyk == 'en_US'))
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context)
-                            .pushNamed(VoiceSettingsScreen.routeName);
-                      },
-                      child: Card(
-                        child: ListTile(
-                          title: Text(
-                              AppLocalizations.of(context)!.voiceSettingsTitle),
-                          trailing: const Icon(Icons.chevron_right),
-                        ),
-                      ),
-                    ),
+//Sterowanie głosem - belka przeniesiona do Ustawień, pod Pracę zespołową (08.10.2026)
 
 //ul TYP A
 

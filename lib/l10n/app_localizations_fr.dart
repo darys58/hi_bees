@@ -3108,4 +3108,72 @@ class AppLocalizationsFr extends AppLocalizations {
   String teamExportRejected(String saved, String total, String part) {
     return 'Export vers le cloud : le serveur a accepté $saved sur $total entrées ($part) - les autres ont été refusées : pas d\'autorisation';
   }
+
+  @override
+  String get subTitle => 'Abonnement';
+
+  @override
+  String subEnded(String date) {
+    return 'L\'abonnement a pris fin : $date';
+  }
+
+  @override
+  String get subLifetime => 'illimité';
+
+  @override
+  String get subDescription =>
+      'L\'abonnement annuel donne accès à la commande vocale et au travail d\'équipe (inviter des collaborateurs dans vos ruchers). Toutes les autres fonctions de l\'application, y compris la sauvegarde dans le cloud, sont gratuites.';
+
+  @override
+  String subPricePerYear(String price) {
+    return '$price / an';
+  }
+
+  @override
+  String get subAutoRenew =>
+      'L\'abonnement se renouvelle automatiquement chaque année jusqu\'à ce que vous l\'annuliez. Vous pouvez l\'annuler dans les réglages de votre compte App Store ou Google Play au moins 24 heures avant la fin de la période.';
+
+  @override
+  String get subBuy => 'Acheter l\'abonnement';
+
+  @override
+  String get subRestore => 'Restaurer les achats';
+
+  @override
+  String get subManage => 'Gérer l\'abonnement';
+
+  @override
+  String get subTerms => 'Conditions d\'utilisation';
+
+  @override
+  String get subPrivacy => 'Politique de confidentialité';
+
+  @override
+  String get subUnavailable =>
+      'L\'achat de l\'abonnement n\'est pas encore disponible dans cette version de l\'application.';
+
+  @override
+  String get subStoreError =>
+      'Impossible de se connecter à la boutique. Vérifiez votre connexion Internet et réessayez.';
+
+  @override
+  String subThanks(String date) {
+    return 'Merci ! La commande vocale est active jusqu\'au : $date';
+  }
+
+  @override
+  String get subPending =>
+      'Le paiement attend la confirmation de la boutique. La commande vocale s\'activera après son approbation.';
+
+  @override
+  String get subRestoreNone =>
+      'Aucun abonnement actif n\'a été trouvé pour ce compte de la boutique.';
+
+  @override
+  String get subWillNotRenew =>
+      'L\'abonnement ne sera pas renouvelé - accès jusqu\'à la fin de la période payée.';
+
+  @override
+  String get subBillingProblem =>
+      'La boutique signale un problème de paiement - vérifiez le moyen de paiement dans les réglages de la boutique.';
 }

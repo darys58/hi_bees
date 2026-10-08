@@ -3098,4 +3098,72 @@ class AppLocalizationsPt extends AppLocalizations {
   String teamExportRejected(String saved, String total, String part) {
     return 'Exportação para a nuvem: o servidor aceitou $saved de $total entradas ($part) - as restantes foram rejeitadas: sem permissão';
   }
+
+  @override
+  String get subTitle => 'Subscrição';
+
+  @override
+  String subEnded(String date) {
+    return 'A subscrição terminou: $date';
+  }
+
+  @override
+  String get subLifetime => 'sem limite';
+
+  @override
+  String get subDescription =>
+      'A subscrição anual dá acesso ao controlo por voz e ao trabalho em equipa (convidar colaboradores para os seus apiários). As restantes funções da aplicação, incluindo a cópia na nuvem, são gratuitas.';
+
+  @override
+  String subPricePerYear(String price) {
+    return '$price / ano';
+  }
+
+  @override
+  String get subAutoRenew =>
+      'A subscrição renova-se automaticamente todos os anos até a cancelar. Pode cancelá-la nas definições da conta App Store ou Google Play, pelo menos 24 horas antes do fim do período.';
+
+  @override
+  String get subBuy => 'Comprar subscrição';
+
+  @override
+  String get subRestore => 'Restaurar compras';
+
+  @override
+  String get subManage => 'Gerir subscrição';
+
+  @override
+  String get subTerms => 'Termos de utilização';
+
+  @override
+  String get subPrivacy => 'Política de privacidade';
+
+  @override
+  String get subUnavailable =>
+      'A compra da subscrição ainda não está disponível nesta versão da aplicação.';
+
+  @override
+  String get subStoreError =>
+      'Não foi possível ligar à loja. Verifique a ligação à internet e tente novamente.';
+
+  @override
+  String subThanks(String date) {
+    return 'Obrigado! O controlo por voz está ativo até: $date';
+  }
+
+  @override
+  String get subPending =>
+      'O pagamento aguarda confirmação da loja. O controlo por voz será ativado após a aprovação.';
+
+  @override
+  String get subRestoreNone =>
+      'Não foi encontrada nenhuma subscrição ativa para esta conta da loja.';
+
+  @override
+  String get subWillNotRenew =>
+      'A subscrição não será renovada - acesso até ao fim do período pago.';
+
+  @override
+  String get subBillingProblem =>
+      'A loja indica um problema com o pagamento - verifique o método de pagamento nas definições da loja.';
 }

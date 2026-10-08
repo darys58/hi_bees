@@ -19,6 +19,7 @@ import '../models/queen.dart';
 import '../models/recording.dart';
 import '../models/sale.dart';
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import 'voice_subscription_screen.dart'; //wspólna subskrypcja: głos + praca zespołowa
 
 //PRACA ZESPOŁOWA (etap 2, 07.10.2026) - sekcja w Zarządzaniu danymi.
 //Właściciel (z abonamentem): zaprasza pracowników e-mailem, nadaje pasieki i prawa odczyt/zapis
@@ -445,7 +446,21 @@ class _TeamScreenState extends State<TeamScreen> {
                         ),
                       )
                     else if (_blad.isEmpty)
-                      Padding(padding: const EdgeInsets.all(8), child: Text(l.teamNeedsSubscription)),
+                      //ta sama subskrypcja co sterowanie głosem (08.10.2026); po powrocie lista od nowa -
+                      //serwer zna zakup od razu (Subskrypcja.potwierdzNaSerwerze)
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(children: [
+                          Text(l.teamNeedsSubscription),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: () => Navigator.of(context)
+                                .pushNamed(VoiceSubscriptionScreen.routeName)
+                                .then((_) { if (mounted) _wczytaj(); }),
+                            child: Text(l.subTitle),
+                          ),
+                        ]),
+                      ),
                   ],
                 ],
               ),

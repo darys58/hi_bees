@@ -3074,4 +3074,64 @@ class AppLocalizationsPl extends AppLocalizations {
   String teamExportRejected(String saved, String total, String part) {
     return 'Eksport do chmury: serwer przyjął $saved z $total wpisów ($part) - pozostałe odrzucone: brak uprawnień';
   }
+
+  @override
+  String get subTitle => 'Subskrypcja';
+
+  @override
+  String subEnded(String date) {
+    return 'Subskrypcja zakończyła się: $date';
+  }
+
+  @override
+  String get subLifetime => 'bez ograniczeń';
+
+  @override
+  String get subDescription => 'Roczna subskrypcja daje dostęp do sterowania głosem i do pracy zespołowej (zapraszanie pracowników do Twoich pasiek). Pozostałe funkcje aplikacji, w tym kopia danych w chmurze, są bezpłatne.';
+
+  @override
+  String subPricePerYear(String price) {
+    return '$price / rok';
+  }
+
+  @override
+  String get subAutoRenew => 'Subskrypcja odnawia się automatycznie co rok, dopóki jej nie anulujesz. Anulować możesz w ustawieniach konta App Store lub Google Play, najpóźniej 24 godziny przed końcem okresu.';
+
+  @override
+  String get subBuy => 'Kup subskrypcję';
+
+  @override
+  String get subRestore => 'Przywróć zakupy';
+
+  @override
+  String get subManage => 'Zarządzaj subskrypcją';
+
+  @override
+  String get subTerms => 'Warunki korzystania';
+
+  @override
+  String get subPrivacy => 'Polityka prywatności';
+
+  @override
+  String get subUnavailable => 'Zakup subskrypcji nie jest jeszcze dostępny w tej wersji aplikacji.';
+
+  @override
+  String get subStoreError => 'Nie udało się połączyć ze sklepem. Sprawdź połączenie z internetem i spróbuj ponownie.';
+
+  @override
+  String subThanks(String date) {
+    return 'Dziękujemy! Sterowanie głosem jest aktywne do: $date';
+  }
+
+  @override
+  String get subPending => 'Płatność czeka na potwierdzenie przez sklep. Sterowanie głosem włączy się po jej zatwierdzeniu.';
+
+  @override
+  String get subRestoreNone => 'Nie znaleziono aktywnej subskrypcji dla tego konta w sklepie.';
+
+  @override
+  String get subWillNotRenew => 'Subskrypcja nie odnowi się - dostęp do końca opłaconego okresu.';
+
+  @override
+  String get subBillingProblem => 'Sklep zgłasza problem z płatnością - sprawdź metodę płatności w ustawieniach sklepu.';
 }

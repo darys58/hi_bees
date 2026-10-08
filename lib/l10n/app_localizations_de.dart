@@ -3101,4 +3101,72 @@ class AppLocalizationsDe extends AppLocalizations {
   String teamExportRejected(String saved, String total, String part) {
     return 'Export in die Cloud: Der Server hat $saved von $total Einträgen angenommen ($part) - der Rest wurde abgelehnt: keine Berechtigung';
   }
+
+  @override
+  String get subTitle => 'Abonnement';
+
+  @override
+  String subEnded(String date) {
+    return 'Das Abonnement ist abgelaufen: $date';
+  }
+
+  @override
+  String get subLifetime => 'unbegrenzt';
+
+  @override
+  String get subDescription =>
+      'Das Jahresabonnement gibt Zugang zur Sprachsteuerung und zur Teamarbeit (Mitarbeiter zu Ihren Bienenständen einladen). Alle anderen Funktionen der App, einschließlich der Cloud-Sicherung, sind kostenlos.';
+
+  @override
+  String subPricePerYear(String price) {
+    return '$price / Jahr';
+  }
+
+  @override
+  String get subAutoRenew =>
+      'Das Abonnement verlängert sich automatisch jedes Jahr, bis Sie es kündigen. Kündigen können Sie in den Kontoeinstellungen von App Store oder Google Play spätestens 24 Stunden vor Ende des Zeitraums.';
+
+  @override
+  String get subBuy => 'Abonnement kaufen';
+
+  @override
+  String get subRestore => 'Käufe wiederherstellen';
+
+  @override
+  String get subManage => 'Abonnement verwalten';
+
+  @override
+  String get subTerms => 'Nutzungsbedingungen';
+
+  @override
+  String get subPrivacy => 'Datenschutzerklärung';
+
+  @override
+  String get subUnavailable =>
+      'Der Kauf des Abonnements ist in dieser Version der App noch nicht verfügbar.';
+
+  @override
+  String get subStoreError =>
+      'Keine Verbindung zum Store. Prüfen Sie die Internetverbindung und versuchen Sie es erneut.';
+
+  @override
+  String subThanks(String date) {
+    return 'Vielen Dank! Die Sprachsteuerung ist aktiv bis: $date';
+  }
+
+  @override
+  String get subPending =>
+      'Die Zahlung wartet auf die Bestätigung durch den Store. Die Sprachsteuerung wird nach der Freigabe aktiviert.';
+
+  @override
+  String get subRestoreNone =>
+      'Für dieses Store-Konto wurde kein aktives Abonnement gefunden.';
+
+  @override
+  String get subWillNotRenew =>
+      'Das Abonnement wird nicht verlängert - Zugang bis zum Ende des bezahlten Zeitraums.';
+
+  @override
+  String get subBillingProblem =>
+      'Der Store meldet ein Zahlungsproblem - prüfen Sie die Zahlungsmethode in den Store-Einstellungen.';
 }

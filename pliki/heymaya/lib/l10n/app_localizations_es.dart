@@ -785,7 +785,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get activationCode => 'Codigo de activacion: ';
 
   @override
-  String get subscryptionTo => 'Suscripcion hasta: ';
+  String get subscryptionTo => 'Suscripción hasta: ';
 
   @override
   String get voiceControlTo => 'Control de voz hasta: ';
@@ -3076,4 +3076,64 @@ class AppLocalizationsEs extends AppLocalizations {
   String teamExportRejected(String saved, String total, String part) {
     return 'Exportación a la nube: el servidor aceptó $saved de $total entradas ($part) - el resto fue rechazado: sin permiso';
   }
+
+  @override
+  String get subTitle => 'Suscripción';
+
+  @override
+  String subEnded(String date) {
+    return 'La suscripción terminó: $date';
+  }
+
+  @override
+  String get subLifetime => 'sin límite';
+
+  @override
+  String get subDescription => 'La suscripción anual da acceso al control de voz y al trabajo en equipo (invitar a colaboradores a tus colmenares). Las demás funciones de la aplicación, incluida la copia en la nube, son gratuitas.';
+
+  @override
+  String subPricePerYear(String price) {
+    return '$price / año';
+  }
+
+  @override
+  String get subAutoRenew => 'La suscripción se renueva automáticamente cada año hasta que la canceles. Puedes cancelarla en los ajustes de tu cuenta de App Store o Google Play al menos 24 horas antes del final del periodo.';
+
+  @override
+  String get subBuy => 'Comprar suscripción';
+
+  @override
+  String get subRestore => 'Restaurar compras';
+
+  @override
+  String get subManage => 'Gestionar suscripción';
+
+  @override
+  String get subTerms => 'Condiciones de uso';
+
+  @override
+  String get subPrivacy => 'Política de privacidad';
+
+  @override
+  String get subUnavailable => 'La compra de la suscripción aún no está disponible en esta versión de la aplicación.';
+
+  @override
+  String get subStoreError => 'No se pudo conectar con la tienda. Comprueba la conexión a internet e inténtalo de nuevo.';
+
+  @override
+  String subThanks(String date) {
+    return '¡Gracias! El control de voz está activo hasta: $date';
+  }
+
+  @override
+  String get subPending => 'El pago está pendiente de confirmación por la tienda. El control de voz se activará cuando se apruebe.';
+
+  @override
+  String get subRestoreNone => 'No se encontró ninguna suscripción activa para esta cuenta de la tienda.';
+
+  @override
+  String get subWillNotRenew => 'La suscripción no se renovará - acceso hasta el final del periodo pagado.';
+
+  @override
+  String get subBillingProblem => 'La tienda informa de un problema con el pago - revisa el método de pago en los ajustes de la tienda.';
 }

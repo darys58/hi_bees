@@ -1249,5 +1249,44 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "subTitle": "Subskrypcja",
+    "subEnded": "Subskrypcja zakończyła się: {date}",
+    "@subEnded": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subLifetime": "bez ograniczeń",
+    "subDescription": "Roczna subskrypcja daje dostęp do sterowania głosem i do pracy zespołowej (zapraszanie pracowników do Twoich pasiek). Pozostałe funkcje aplikacji, w tym kopia danych w chmurze, są bezpłatne.",
+    "subPricePerYear": "{price} / rok",
+    "@subPricePerYear": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "subAutoRenew": "Subskrypcja odnawia się automatycznie co rok, dopóki jej nie anulujesz. Anulować możesz w ustawieniach konta App Store lub Google Play, najpóźniej 24 godziny przed końcem okresu.",
+    "subBuy": "Kup subskrypcję",
+    "subRestore": "Przywróć zakupy",
+    "subManage": "Zarządzaj subskrypcją",
+    "subTerms": "Warunki korzystania",
+    "subPrivacy": "Polityka prywatności",
+    "subUnavailable": "Zakup subskrypcji nie jest jeszcze dostępny w tej wersji aplikacji.",
+    "subStoreError": "Nie udało się połączyć ze sklepem. Sprawdź połączenie z internetem i spróbuj ponownie.",
+    "subThanks": "Dziękujemy! Sterowanie głosem jest aktywne do: {date}",
+    "@subThanks": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subPending": "Płatność czeka na potwierdzenie przez sklep. Sterowanie głosem włączy się po jej zatwierdzeniu.",
+    "subRestoreNone": "Nie znaleziono aktywnej subskrypcji dla tego konta w sklepie.",
+    "subWillNotRenew": "Subskrypcja nie odnowi się - dostęp do końca opłaconego okresu.",
+    "subBillingProblem": "Sklep zgłasza problem z płatnością - sprawdź metodę płatności w ustawieniach sklepu."
 }

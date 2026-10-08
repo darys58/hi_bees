@@ -253,7 +253,7 @@
     "about": "Acerca de la aplicacion",
     "versionApp": "Version de la aplicacion: ",
     "activationCode": "Codigo de activacion: ",
-    "subscryptionTo": "Suscripcion hasta: ",
+    "subscryptionTo": "Suscripción hasta: ",
     "voiceControlTo": "Control de voz hasta: ",
     "onlyNew": "solo los no enviados anteriormente, de todas las categorias",
     "exportNewData": "Solo se enviaran los datos que aun no han sido enviados",
@@ -1234,5 +1234,44 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "subTitle": "Suscripción",
+    "subEnded": "La suscripción terminó: {date}",
+    "@subEnded": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subLifetime": "sin límite",
+    "subDescription": "La suscripción anual da acceso al control de voz y al trabajo en equipo (invitar a colaboradores a tus colmenares). Las demás funciones de la aplicación, incluida la copia en la nube, son gratuitas.",
+    "subPricePerYear": "{price} / año",
+    "@subPricePerYear": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "subAutoRenew": "La suscripción se renueva automáticamente cada año hasta que la canceles. Puedes cancelarla en los ajustes de tu cuenta de App Store o Google Play al menos 24 horas antes del final del periodo.",
+    "subBuy": "Comprar suscripción",
+    "subRestore": "Restaurar compras",
+    "subManage": "Gestionar suscripción",
+    "subTerms": "Condiciones de uso",
+    "subPrivacy": "Política de privacidad",
+    "subUnavailable": "La compra de la suscripción aún no está disponible en esta versión de la aplicación.",
+    "subStoreError": "No se pudo conectar con la tienda. Comprueba la conexión a internet e inténtalo de nuevo.",
+    "subThanks": "¡Gracias! El control de voz está activo hasta: {date}",
+    "@subThanks": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subPending": "El pago está pendiente de confirmación por la tienda. El control de voz se activará cuando se apruebe.",
+    "subRestoreNone": "No se encontró ninguna suscripción activa para esta cuenta de la tienda.",
+    "subWillNotRenew": "La suscripción no se renovará - acceso hasta el final del periodo pagado.",
+    "subBillingProblem": "La tienda informa de un problema con el pago - revisa el método de pago en los ajustes de la tienda."
 }

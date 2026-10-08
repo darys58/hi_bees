@@ -14,6 +14,7 @@ import './screens/hives_screen.dart';
 import './screens/apiarys_screen.dart';
 import './screens/voice_vosk_screen.dart'; //sterowanie głosem na Vosku
 import './screens/voice_settings_screen.dart'; //ustawienia sterowania głosem
+import './screens/voice_subscription_screen.dart'; //subskrypcja sterowania głosem
 import './screens/infos_screen.dart';
 import './screens/frames_detail_screen.dart';
 //import './screens/subscription_screen.dart';
@@ -366,6 +367,7 @@ class _MyAppState extends State<MyApp> {
           HarvestEditScreen.routeName: (ctx) => HarvestEditScreen(),
           ParametrScreen.routeName: (ctx) => ParametrScreen(),
           VoiceSettingsScreen.routeName: (ctx) => const VoiceSettingsScreen(),
+          VoiceSubscriptionScreen.routeName: (ctx) => const VoiceSubscriptionScreen(),
           HiveNewsSettingsScreen.routeName: (ctx) => HiveNewsSettingsScreen(),
           WeatherEditScreen.routeName: (ctx) => WeatherEditScreen(),
           InfosEditScreen.routeName: (ctx) => InfosEditScreen(),

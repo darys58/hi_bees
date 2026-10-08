@@ -501,7 +501,7 @@
     "@versionApp": {},
     "activationCode": "Activation code: ",
     "@activationCode": {},
-    "subscryptionTo": "Subscryption to: ",
+    "subscryptionTo": "Subscription until: ",
     "@subscryptionTo": {},
     "voiceControlTo": "Voice control until: ",
     "@voiceControlTo": {},
@@ -2056,5 +2056,44 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "subTitle": "Subscription",
+    "subEnded": "The subscription ended: {date}",
+    "@subEnded": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subLifetime": "unlimited",
+    "subDescription": "The yearly subscription gives access to voice control and team work (inviting workers to your apiaries). All other app features, including the cloud backup, are free.",
+    "subPricePerYear": "{price} / year",
+    "@subPricePerYear": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "subAutoRenew": "The subscription renews automatically every year until you cancel it. You can cancel in your App Store or Google Play account settings at least 24 hours before the end of the period.",
+    "subBuy": "Buy subscription",
+    "subRestore": "Restore purchases",
+    "subManage": "Manage subscription",
+    "subTerms": "Terms of use",
+    "subPrivacy": "Privacy policy",
+    "subUnavailable": "Buying the subscription is not available yet in this version of the app.",
+    "subStoreError": "Could not connect to the store. Check your internet connection and try again.",
+    "subThanks": "Thank you! Voice control is active until: {date}",
+    "@subThanks": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "subPending": "The payment is waiting for confirmation by the store. Voice control will turn on once it is approved.",
+    "subRestoreNone": "No active subscription was found for this store account.",
+    "subWillNotRenew": "The subscription will not renew - access until the end of the paid period.",
+    "subBillingProblem": "The store reports a payment problem - check the payment method in the store settings."
 }

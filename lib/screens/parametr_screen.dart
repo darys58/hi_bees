@@ -7,7 +7,6 @@ import '../helpers/db_helper.dart';
 import '../screens/parametry_ula_screen.dart';
 import '../screens/parametr_edit_screen.dart';
 import '../screens/hive_news_settings_screen.dart';
-import '../screens/voice_settings_screen.dart'; //ustawienia sterowania głosem
 //import '../models/info.dart';
 import '../models/infos.dart';
 import '../models/dodatki1.dart';
@@ -419,27 +418,7 @@ class _ParametrScreenState extends State<ParametrScreen> {
                     ),
                   ),
 
-//Sterowanie głosem - osobny ekran (podgląd korpusu, nagrywanie notatek,
-//głośność odzywek), tak samo jak "Aktualności ula" wyżej. Belka bez ikony
-//i bez pogrubienia - konwencja tej listy.
-//Tytuł z ARB (voiceSettingsTitle) - do 05.09.2026 był tu polski tekst na
-//sztywno, z uzasadnieniem „sterowanie głosem działa tylko przy pl_PL". Od
-//czasu modelu angielskiego to nieprawda, a belka po polsku wisiała także
-//w wersji EN - zgłoszone z urządzenia.
-                  if (globals.key != '' && globals.key != 'bez_klucza')
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context)
-                            .pushNamed(VoiceSettingsScreen.routeName);
-                      },
-                      child: Card(
-                        child: ListTile(
-                          title: Text(
-                              AppLocalizations.of(context)!.voiceSettingsTitle),
-                          trailing: const Icon(Icons.chevron_right),
-                        ),
-                      ),
-                    ),
+//Sterowanie głosem - belka przeniesiona do Ustawień, pod Pracę zespołową (08.10.2026)
 
 //ul TYP A
 

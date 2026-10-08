@@ -1617,7 +1617,7 @@ abstract class AppLocalizations {
   /// No description provided for @subscryptionTo.
   ///
   /// In en, this message translates to:
-  /// **'Subscryption to: '**
+  /// **'Subscription until: '**
   String get subscryptionTo;
 
   /// No description provided for @voiceControlTo.
@@ -6030,6 +6030,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cloud export: the server accepted {saved} of {total} entries ({part}) - the rest were rejected: no permission'**
   String teamExportRejected(String saved, String total, String part);
+
+  /// No description provided for @subTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get subTitle;
+
+  /// No description provided for @subEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'The subscription ended: {date}'**
+  String subEnded(String date);
+
+  /// No description provided for @subLifetime.
+  ///
+  /// In en, this message translates to:
+  /// **'unlimited'**
+  String get subLifetime;
+
+  /// No description provided for @subDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The yearly subscription gives access to voice control and team work (inviting workers to your apiaries). All other app features, including the cloud backup, are free.'**
+  String get subDescription;
+
+  /// No description provided for @subPricePerYear.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} / year'**
+  String subPricePerYear(String price);
+
+  /// No description provided for @subAutoRenew.
+  ///
+  /// In en, this message translates to:
+  /// **'The subscription renews automatically every year until you cancel it. You can cancel in your App Store or Google Play account settings at least 24 hours before the end of the period.'**
+  String get subAutoRenew;
+
+  /// No description provided for @subBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy subscription'**
+  String get subBuy;
+
+  /// No description provided for @subRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get subRestore;
+
+  /// No description provided for @subManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get subManage;
+
+  /// No description provided for @subTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of use'**
+  String get subTerms;
+
+  /// No description provided for @subPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get subPrivacy;
+
+  /// No description provided for @subUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Buying the subscription is not available yet in this version of the app.'**
+  String get subUnavailable;
+
+  /// No description provided for @subStoreError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to the store. Check your internet connection and try again.'**
+  String get subStoreError;
+
+  /// No description provided for @subThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you! Voice control is active until: {date}'**
+  String subThanks(String date);
+
+  /// No description provided for @subPending.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment is waiting for confirmation by the store. Voice control will turn on once it is approved.'**
+  String get subPending;
+
+  /// No description provided for @subRestoreNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No active subscription was found for this store account.'**
+  String get subRestoreNone;
+
+  /// No description provided for @subWillNotRenew.
+  ///
+  /// In en, this message translates to:
+  /// **'The subscription will not renew - access until the end of the paid period.'**
+  String get subWillNotRenew;
+
+  /// No description provided for @subBillingProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'The store reports a payment problem - check the payment method in the store settings.'**
+  String get subBillingProblem;
 }
 
 class _AppLocalizationsDelegate
