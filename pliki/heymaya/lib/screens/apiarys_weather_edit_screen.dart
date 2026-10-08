@@ -10,6 +10,8 @@ import 'package:intl/intl.dart';
 import '../models/weather.dart';
 import '../models/weathers.dart';
 import './apiarys_map_screen.dart';
+import '../helpers/ustawienia_bazy.dart'; //lokalizacje pasiek i typy uli w chmurze (08.10.2026)
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class WeatherEditScreen extends StatefulWidget {
   static const routeName = '/weather_edit';
@@ -135,6 +137,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
       '',
    ).then((_) {
       OdswiezPogode(idPasieki!);
+      zmienioneUstawienie('p:$idPasieki'); //lokalizacja do chmury (08.10.2026; tylko własna baza)
     });
     return true;
   }
@@ -168,6 +171,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
       '',
     ).then((_) {
       OdswiezPogode(idPasieki!);
+      zmienioneUstawienie('p:$idPasieki'); //lokalizacja do chmury (08.10.2026; tylko własna baza)
     }); //
     return true;
   }
@@ -528,6 +532,7 @@ class _WeatherEditScreenState extends State<WeatherEditScreen> {
                                 side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
                                 ),
                               onPressed: () {
+                                if (!tylkoWlasciciel(context)) return; //lokalizacja pasieki należy do właściciela bazy
                                 if (_formKey1.currentState!.validate()) {
                                   //print('$idPasieki,$miasto,$latitude,$longitude,$units,$lang');
                                   

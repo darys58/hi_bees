@@ -52,6 +52,7 @@ import '../screens/move_hive_screen.dart';
 //Odkomentować oba naraz, jeżeli ekran POC ma znów być dostępny.
 import '../screens/voice_vosk_screen.dart'; //sterowanie głosem na Vosku
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/ustawienia_bazy.dart'; //lokalizacje pasiek i typy uli w chmurze (08.10.2026)
 //import '../models/apiarys.dart';
 
 //ekran startowy
@@ -401,6 +402,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                 // Błąd planowania powiadomień - nie blokuje startu aplikacji
               }
               if (dod1[0].a == 'true') {
+                wyslijUstawieniaBazy(); //auto-eksport: lokalizacje pasiek i typy uli (tylko własna baza, po cichu)
                 //ustawienie przłącznika eksportu danych - automatyczne wysłanie danych przy uruchamianiu apki
                 //BACKUP BAZY LOKALNEJ
                 //czy jest wpis w bazie memory dla tego deviceId? kod potrzebny do nazwy tabeli backupu

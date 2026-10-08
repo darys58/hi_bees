@@ -657,6 +657,35 @@ class DBHelper {
         where: 'id = ?', whereArgs: [id]);
   }
 
+  //LOKALIZACJE PASIEK W CHMURZE (08.10.2026, helpers/ustawienia_bazy.dart) - z tabeli pogoda
+  //bierzemy tylko miejsce (miasto, współrzędne); temp/ikona/pobranie to podręczna pogoda telefonu.
+  static Future<List<Map<String, dynamic>>> getLokalizacjePasiek() async {
+    final db = await DBHelper.database();
+    return db.rawQuery('SELECT id, miasto, latitude, longitude FROM pogoda');
+  }
+
+  //lokalizacja z chmury: istniejący wpis - zmiana samego miejsca (przy innym miejscu pogoda do
+  //ponownego pobrania); brak wpisu - nowy z pustą pogodą. Zwraca, czy coś się zmieniło.
+  static Future<bool> zapiszLokalizacjePasieki(
+      String id, String miasto, String latitude, String longitude, String lang) async {
+    final db = await DBHelper.database();
+    final rows = await db.query('pogoda', where: 'id = ?', whereArgs: [id]);
+    if (rows.isNotEmpty) {
+      final r = rows.first;
+      if (r['miasto'] == miasto && r['latitude'] == latitude && r['longitude'] == longitude) return false;
+      await db.update('pogoda',
+          {'miasto': miasto, 'latitude': latitude, 'longitude': longitude, 'pobranie': '0000-00-00 00:00'},
+          where: 'id = ?', whereArgs: [id]);
+      return true;
+    }
+    await db.insert('pogoda', {
+      'id': id, 'miasto': miasto, 'latitude': latitude, 'longitude': longitude,
+      'pobranie': '0000-00-00 00:00', 'temp': '', 'weatherId': '', 'icon': '',
+      'units': 1, 'lang': lang, 'inne': '',
+    });
+    return true;
+  }
+
   //odczyt z tabeli ule - ule z wybranej pasieki - dla hives_screen
   static Future<List<Map<String, dynamic>>> getHives(nrPasieki) async {
     final db = await DBHelper.database();

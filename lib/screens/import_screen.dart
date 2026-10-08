@@ -34,6 +34,9 @@ import 'dart:io';
 import '../screens/apiarys_screen.dart';
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 import '../helpers/baza_zespolu.dart'; //odswiezPrawaBazy (etap 2 część B)
+import '../helpers/ustawienia_bazy.dart'; //lokalizacje pasiek i typy uli w chmurze (08.10.2026)
+import '../models/weathers.dart';
+import '../models/dodatki2.dart';
 
 class ImportScreen extends StatefulWidget {
   static const routeName = '/import';
@@ -726,6 +729,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // Faza 4: Oznaczenie arch=1
               await _markArchAll(przyjete); //etap 2 część B: tylko części przyjęte przez serwer
+              await wyslijUstawieniaBazy(); //lokalizacje pasiek i typy uli (tylko własna baza)
 
               // Faza 5: Podsumowanie - liczba PRZYJĘTYCH + komunikaty o odrzuconych
               if (iloscDoWyslania > 0)
@@ -1035,6 +1039,12 @@ class _ImportScreenState extends State<ImportScreen> {
               await DBHelper.batchUpdateUleField('h3', _nfcTags);
               _progressLabelNotifier.value = 'NFC: ${_nfcTags.length}';
 
+              // 15a. Lokalizacje pasiek i własne typy uli z chmury (08.10.2026)
+              if (await pobierzUstawieniaBazy()) {
+                await Provider.of<Weathers>(context, listen: false).fetchAndSetWeathers();
+                await Provider.of<Dodatki2>(context, listen: false).fetchAndSetDodatki2();
+              }
+
               // 16. Finalizacja - pobranie pasiek
               _updateProgress(loc.finalization + '...');
               await Provider.of<Apiarys>(context, listen: false).fetchAndSetApiarys();
@@ -1263,6 +1273,12 @@ class _ImportScreenState extends State<ImportScreen> {
                     _updateProgress('NFC...');
                     await DBHelper.batchUpdateUleField('h3', _nfcTags);
                     _progressLabelNotifier.value = 'NFC: ${_nfcTags.length}';
+
+                    // 15a. Lokalizacje pasiek i własne typy uli z chmury (08.10.2026)
+                    if (await pobierzUstawieniaBazy()) {
+                      await Provider.of<Weathers>(context, listen: false).fetchAndSetWeathers();
+                      await Provider.of<Dodatki2>(context, listen: false).fetchAndSetDodatki2();
+                    }
 
                     // 16. Finalizacja
                     _updateProgress(loc.finalization + '...');

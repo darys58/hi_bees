@@ -260,9 +260,10 @@ class SettingsScreen extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(Icons.groups),
                   title: Text(AppLocalizations.of(context)!.teamWork),
-                  subtitle: Text(globals.aktywnaBaza.isEmpty
-                      ? AppLocalizations.of(context)!.teamWorkSubtitle
-                      : AppLocalizations.of(context)!.teamWorkingIn(globals.aktywnaBazaEmail)),
+                  //we własnej bazie bez podpisu; w bazie właściciela - czyja to baza
+                  subtitle: globals.aktywnaBaza.isEmpty
+                      ? null
+                      : Text(AppLocalizations.of(context)!.teamWorkingIn(globals.aktywnaBazaEmail)),
                   trailing: Icon(Icons.chevron_right),
                 ),
               ),

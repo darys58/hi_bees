@@ -8,6 +8,8 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 //import '../helpers/db_helper.dart';
 import '../models/dodatki2.dart';
 import 'package:flutter/services.dart';
+import '../helpers/ustawienia_bazy.dart'; //lokalizacje pasiek i typy uli w chmurze (08.10.2026)
+import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 
 class ParametryUlaScreen extends StatefulWidget {
   static const routeName = '/parametry_ula';
@@ -306,6 +308,7 @@ class _ParametryUlaScreenState extends State<ParametryUlaScreen> {
                                 side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
                                 ),
                               onPressed: () {
+                                if (!tylkoWlasciciel(context)) return; //typy uli należą do właściciela bazy
                                 if (_formKey1.currentState!.validate()) {
                                   DBHelper.updateDodatki2(
                                     (int.parse(indexX)+1).toString(), //np: dla TYP A: indexX = 0 wiec id rekordu = 1 
@@ -318,7 +321,7 @@ class _ParametryUlaScreenState extends State<ParametryUlaScreen> {
                                     wysokosc_mr, //'105', 
                                     (int.parse(szerokosc_mr) * int.parse(wysokosc_mr)).toString(), //'35175'
                                     ).then((_) {
-
+                                      zmienioneUstawienie('t:${int.parse(indexX)+1}'); //typy uli do chmury (08.10.2026; tylko własna baza)
                                       Provider.of<Dodatki2>(context, listen: false)
                                         .fetchAndSetDodatki2()
                                         .then((_) {
