@@ -137,6 +137,20 @@ String adresPrzewodnikaHeyMaya() {
   }
 }
 
+/// Regulamin (warunki korzystania, w tym subskrypcji) - strona PL lub EN (wgrane 09.10.2026).
+String adresRegulaminuHeyMaya() {
+  return jezyk.startsWith('pl')
+      ? 'https://heymaya.eu/index.php/regulamin/'
+      : 'https://heymaya.eu/index.php/en/regulations/';
+}
+
+/// Polityka prywatności - strona PL lub EN (wgrane 09.10.2026).
+String adresPolitykiHeyMaya() {
+  return jezyk.startsWith('pl')
+      ? 'https://heymaya.eu/index.php/polityka-prywatnosci/'
+      : 'https://heymaya.eu/index.php/en/privacy-policy/';
+}
+
 String ikonaUla = 'green'; //
 String ikonaPasieki = 'green'; //
 String widokMatek = 'activ'; //lista matek w ZARZADZANIE MATKAMI (all, activ, living, lost) 

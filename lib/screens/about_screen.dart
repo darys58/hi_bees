@@ -274,6 +274,37 @@ class AboutScreen extends StatelessWidget {
                         ),
                       ),
                     
+                      SizedBox(height: 22),
+     //regulamin i polityka prywatności (09.10.2026)
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 24,
+                        children: [
+                          GestureDetector(
+                            onTap: () => _otworz(context, globals.adresRegulaminuHeyMaya()),
+                            child: Text(
+                              AppLocalizations.of(context)!.subTerms,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue[700],
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _otworz(context, globals.adresPolitykiHeyMaya()),
+                            child: Text(
+                              AppLocalizations.of(context)!.subPrivacy,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue[700],
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    
                     SizedBox(height: 42),
                     Text(AppLocalizations.of(context)!.sUpport),
                     SizedBox(height: 22),

@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -6,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:hi_bees/l10n/app_localizations.dart';
 import '../helpers/subskrypcja.dart';
 import '../models/memory.dart';
+import '../globals.dart' as globals;
 import 'voice_vosk_screen.dart';
 
 //Ekran subskrypcji sterowania głosem (08.10.2026, etap 4 planu pliki/plan_subskrypcja_glos.md).
@@ -23,12 +23,8 @@ class VoiceSubscriptionScreen extends StatefulWidget {
 }
 
 class _VoiceSubscriptionScreenState extends State<VoiceSubscriptionScreen> {
-  //Linki wymagane przez sklepy. TODO przed włączeniem zakupów: strony na heymaya.eu (etap 1 planu).
-  //Pusty regulamin = na iOS standardowa licencja Apple (EULA), na Androidzie link ukryty;
-  //pusta polityka prywatności = link ukryty (Apple jej WYMAGA przy subskrypcji - uzupełnić).
-  static const String _regulamin = '';
-  static const String _polityka = '';
-  static const String _eulaApple = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+  //Linki wymagane przez sklepy: regulamin i polityka prywatności na heymaya.eu (PL lub EN wg języka apki,
+  //strony wgrane 09.10.2026) - globals.adresRegulaminuHeyMaya() / adresPolitykiHeyMaya().
 
   bool _wczytywanie = true;
   bool _zajete = false; //trwa zakup / przywracanie - przyciski nieaktywne
@@ -136,7 +132,8 @@ class _VoiceSubscriptionScreenState extends State<VoiceSubscriptionScreen> {
     final String ddo = _ddo;
     final bool dostepny = Subskrypcja.glosDostepny(ddo);
     final String dataDo = _data(l, Subskrypcja.dataDo(ddo));
-    final String regulamin = _regulamin.isNotEmpty ? _regulamin : (Platform.isIOS ? _eulaApple : '');
+    final String regulamin = globals.adresRegulaminuHeyMaya();
+    final String polityka = globals.adresPolitykiHeyMaya();
 
     return Scaffold(
       appBar: AppBar(
@@ -209,10 +206,8 @@ class _VoiceSubscriptionScreenState extends State<VoiceSubscriptionScreen> {
             alignment: WrapAlignment.center,
             spacing: 16,
             children: [
-              if (regulamin.isNotEmpty)
-                TextButton(onPressed: () => _otworz(regulamin), child: Text(l.subTerms)),
-              if (_polityka.isNotEmpty)
-                TextButton(onPressed: () => _otworz(_polityka), child: Text(l.subPrivacy)),
+              TextButton(onPressed: () => _otworz(regulamin), child: Text(l.subTerms)),
+              TextButton(onPressed: () => _otworz(polityka), child: Text(l.subPrivacy)),
             ],
           ),
         ],

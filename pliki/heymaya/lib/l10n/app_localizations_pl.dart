@@ -3107,7 +3107,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get subManage => 'Zarządzaj subskrypcją';
 
   @override
-  String get subTerms => 'Warunki korzystania';
+  String get subTerms => 'Regulamin';
 
   @override
   String get subPrivacy => 'Polityka prywatności';
