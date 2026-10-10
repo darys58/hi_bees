@@ -767,6 +767,8 @@
     "@tOTAL": {},
     "nOtes": "Notes",
     "@nOtes": {},
+    "notepad": "Notes",
+    "@notepad": {},
     "noNoteYet": "There are no notes yet.",
     "@noNoteYet": {},
     "editingNote": "Editing note",

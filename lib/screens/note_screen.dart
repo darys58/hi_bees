@@ -237,7 +237,7 @@ class _NoteScreenState extends State<NoteScreen> {
         appBar: AppBar(
           iconTheme: IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
           title: Text(
-            AppLocalizations.of(context)!.nOtes,
+            AppLocalizations.of(context)!.notepad,
             style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
           ),
           backgroundColor: Color.fromARGB(255, 255, 255, 255),

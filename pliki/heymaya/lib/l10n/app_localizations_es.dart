@@ -1197,6 +1197,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nOtes => 'Notas';
 
   @override
+  String get notepad => 'Libreta';
+
+  @override
   String get noNoteYet => 'Aun no hay notas.';
 
   @override

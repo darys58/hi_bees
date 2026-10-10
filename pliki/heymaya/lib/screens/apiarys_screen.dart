@@ -1766,7 +1766,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
 
     List<String> gridItems = [
-      'Notes',
+      AppLocalizations.of(context)!.notepad,
       AppLocalizations.of(context)!.hArvests,
       if (globals.showZakupySprzedaz)
       AppLocalizations.of(context)!.pUrchase,
@@ -2079,7 +2079,9 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                                 children: gridItems
                                     .map((data) => InkWell(
                                         onTap: () {
-                                          if (data == 'Notes')
+                                          if (data ==
+                                              AppLocalizations.of(context)!
+                                                  .notepad)
                                             Navigator.of(context).pushNamed(
                                                 NoteScreen.routeName);
 

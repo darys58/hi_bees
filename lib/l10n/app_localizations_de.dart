@@ -1197,6 +1197,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nOtes => 'Notizen';
 
   @override
+  String get notepad => 'Notizbuch';
+
+  @override
   String get noNoteYet => 'Es gibt noch keine Notizen.';
 
   @override

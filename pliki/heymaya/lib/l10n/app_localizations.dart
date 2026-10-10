@@ -2412,6 +2412,12 @@ abstract class AppLocalizations {
   /// **'Notes'**
   String get nOtes;
 
+  /// No description provided for @notepad.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notepad;
+
   /// No description provided for @noNoteYet.
   ///
   /// In en, this message translates to:

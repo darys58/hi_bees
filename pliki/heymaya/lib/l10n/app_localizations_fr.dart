@@ -1200,6 +1200,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nOtes => 'Notes';
 
   @override
+  String get notepad => 'Carnet';
+
+  @override
   String get noNoteYet => 'Il n\'y a pas encore de notes.';
 
   @override
