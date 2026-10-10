@@ -2908,7 +2908,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get teamWork => 'Team work';
+  String get teamWork => 'Teamwork';
 
   @override
   String get teamWorkSubtitle => 'Workers and databases you work in';

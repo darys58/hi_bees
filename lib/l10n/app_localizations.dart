@@ -5745,7 +5745,7 @@ abstract class AppLocalizations {
   /// No description provided for @teamWork.
   ///
   /// In en, this message translates to:
-  /// **'Team work'**
+  /// **'Teamwork'**
   String get teamWork;
 
   /// No description provided for @teamWorkSubtitle.
