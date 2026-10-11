@@ -114,12 +114,11 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
         style: _komentarz),
     //voiceNfc - "skanuj" mówione, w gramatyce alias "skanuje" (brak w modelu)
     _punktor,
-    TextSpan(text: 'Hej Maja', style: _opcjonalny),
-    TextSpan(text: ' czytaj/odczytaj/skanuj tag', style: _wymagany),
+    TextSpan(text: 'Czytaj/odczytaj/skanuj tag', style: _wymagany),
     TextSpan(
         text: Platform.isIOS
-            ? ' - otwiera czytnik NFC; przyłożony tag otwiera pasiekę i ul.\n\n'
-            : ' - tagi NFC są czytane cały czas: przyłożony tag otwiera pasiekę i ul.\n',
+            ? ' - otwiera czytnik NFC.\n'
+            : ' - tagi NFC są czytane cały czas.\n',
         style: _komentarz),
     //voiceCamera / voicePhoto / voiceCameraClose
     _punktor,
@@ -172,12 +171,11 @@ List<TextSpan> _sekcjaSesjaEn() {
     TextSpan(text: ' - undoes the last saving command.\n',
         style: _komentarz),
     _punktor,
-    TextSpan(text: 'Hey Maya', style: _opcjonalny),
-    TextSpan(text: ' read/scan tag', style: _wymagany),
+    TextSpan(text: 'Read/scan tag', style: _wymagany),
     TextSpan(
         text: Platform.isIOS
-            ? ' - opens the NFC reader; a tag opens its apiary and hive.\n\n'
-            : ' - NFC tags are read all the time: a tag opens its apiary and hive.\n',
+            ? ' - opens the NFC reader.\n'
+            : ' - NFC tags are read all the time.\n',
         style: _komentarz),
     _punktor,
     TextSpan(text: 'Open camera', style: _wymagany),
