@@ -619,6 +619,8 @@
     "dIsconnectOrEdit": "Puoi scollegare la regina dall'arnia o modificare i suoi dati, ad es. aggiungere la data di perdita della regina.",
     "eDitQueen": "Puoi modificare tutti i dati della regina, ad esempio rimuovere la data di perdita della regina, rendendo così la regina di nuovo viva...",
     "dIsconnectQueen": "Scollega la regina",
+    "dIsconnectQueenConfirm": "Vuoi davvero scollegare la regina dall'arnia?",
+    "queenConnectedToHive": "collegata all'arnia",
     "sElectDate": "Seleziona una data",
     "lOst": "Persa",
     "qUeens": "Regine",

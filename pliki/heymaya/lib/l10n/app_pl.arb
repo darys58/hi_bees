@@ -619,6 +619,8 @@
     "dIsconnectOrEdit":"Możesz odłączyć matkę od ula lub edytować jej dane, np. dodać datę straty matki.",
     "eDitQueen": "Możesz edytować wszystkie dane matki, np. usunąć datę straty matki, dzięki czemu matka będzie znowu żywa...",
     "dIsconnectQueen": "Odłącz matkę",
+    "dIsconnectQueenConfirm": "Czy na pewno odłączyć matkę od ula?",
+    "queenConnectedToHive": "podłączona do ula",
     "sElectDate": "Wybierz datę",
     "lOst":"Stracona",
     "qUeens": "Matki",

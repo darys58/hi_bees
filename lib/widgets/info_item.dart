@@ -16,6 +16,7 @@ import '../screens/infos_edit_screen.dart';
 import '../globals.dart' as globals;
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/queen_helpers.dart'; //kIdPodlaczeniaMatki
 
 class InfoItem extends StatelessWidget {
   String zmienDate(String data) {
@@ -828,6 +829,16 @@ class InfoItem extends StatelessWidget {
                                 //fontWeight: FontWeight.bold,
                                 color: Color.fromARGB(255, 0, 0, 0)),
                           ),
+//podłączenie matki do ula (11.10.2026) - ikonka jak w historii matki i na belce
+                          if (info.id.endsWith(kIdPodlaczeniaMatki))
+                            const WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 6),
+                                child: Icon(Icons.login, size: 18,
+                                    color: Color.fromARGB(255, 46, 125, 50)),
+                              ),
+                            ),
 //trzeci wiersz: uwagi                          
                           TextSpan(
                             text: '\n${info.uwagi}',

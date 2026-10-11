@@ -1909,6 +1909,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dIsconnectQueen => 'Détacher la reine';
 
   @override
+  String get dIsconnectQueenConfirm =>
+      'Voulez-vous vraiment détacher la reine de la ruche ?';
+
+  @override
+  String get queenConnectedToHive => 'introduite dans la ruche';
+
+  @override
   String get sElectDate => 'Sélectionnez une date';
 
   @override

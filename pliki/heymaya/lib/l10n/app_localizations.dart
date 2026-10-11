@@ -3811,6 +3811,18 @@ abstract class AppLocalizations {
   /// **'Disconnect the queen'**
   String get dIsconnectQueen;
 
+  /// No description provided for @dIsconnectQueenConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to disconnect the queen from the hive?'**
+  String get dIsconnectQueenConfirm;
+
+  /// No description provided for @queenConnectedToHive.
+  ///
+  /// In en, this message translates to:
+  /// **'connected to the hive'**
+  String get queenConnectedToHive;
+
   /// No description provided for @sElectDate.
   ///
   /// In en, this message translates to:

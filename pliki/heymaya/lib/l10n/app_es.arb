@@ -619,6 +619,8 @@
     "dIsconnectOrEdit": "Puedes desconectar la reina de la colmena o editar sus datos, p.ej. agregar la fecha de perdida de la reina.",
     "eDitQueen": "Puedes editar todos los datos de la reina, por ejemplo, eliminar la fecha de perdida de la reina, lo que hara que la reina vuelva a estar viva...",
     "dIsconnectQueen": "Desconectar reina",
+    "dIsconnectQueenConfirm": "¿Seguro que quieres desconectar la reina de la colmena?",
+    "queenConnectedToHive": "conectada a la colmena",
     "sElectDate": "Seleccionar fecha",
     "lOst": "Perdida",
     "qUeens": "Reinas",

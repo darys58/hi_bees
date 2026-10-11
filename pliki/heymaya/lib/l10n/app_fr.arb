@@ -619,6 +619,8 @@
     "dIsconnectOrEdit": "Vous pouvez détacher la reine de la ruche ou modifier ses données, par ex. ajouter la date de perte de la reine.",
     "eDitQueen": "Vous pouvez modifier toutes les données de la reine, par exemple supprimer la date de perte de la reine, ce qui la rendra à nouveau vivante...",
     "dIsconnectQueen": "Détacher la reine",
+    "dIsconnectQueenConfirm": "Voulez-vous vraiment détacher la reine de la ruche ?",
+    "queenConnectedToHive": "introduite dans la ruche",
     "sElectDate": "Sélectionnez une date",
     "lOst": "Perdue",
     "qUeens": "Reines",

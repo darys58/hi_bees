@@ -1904,6 +1904,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dIsconnectQueen => 'Scollega la regina';
 
   @override
+  String get dIsconnectQueenConfirm =>
+      'Vuoi davvero scollegare la regina dall\'arnia?';
+
+  @override
+  String get queenConnectedToHive => 'collegata all\'arnia';
+
+  @override
   String get sElectDate => 'Seleziona una data';
 
   @override

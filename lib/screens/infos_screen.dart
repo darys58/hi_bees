@@ -738,6 +738,7 @@ class _InfoScreenState extends State<InfoScreen> {
     Image image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
     String rocznik = '';
     bool brakMatki = false;
+    bool podlaczenie2 = false; //najnowszy wpis o znaku jest z podłączenia matki do ula
     //czy dana cecha jest PRZENIESIONA z poprzedniego ula (szary tekst w panelu)
     bool przeniesiona1 = false; //jakość
     bool przeniesiona3 = false; //unasiennienie
@@ -754,10 +755,11 @@ class _InfoScreenState extends State<InfoScreen> {
     if (wybranaKategoria == 'queen') {
       var dataZnakuMatki = DateTime.parse('2022-01-01 00:00');
       for (var i = 0; i < infos.length; i++) {
+        //data Z GODZINĄ: odłączenie ("brak") i podłączenie nowej matki bywają tego samego dnia
         if (infos[i].wartosc.isNotEmpty &&
             parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.queen &&
-            DateTime.parse(infos[i].data).isAfter(dataZnakuMatki)) {
-          dataZnakuMatki = DateTime.parse(infos[i].data);
+            momentWpisu(infos[i].data, infos[i].czas).isAfter(dataZnakuMatki)) {
+          dataZnakuMatki = momentWpisu(infos[i].data, infos[i].czas);
           idMatkiWUlu = infos[i].pogoda;
         }
       }
@@ -1118,8 +1120,11 @@ class _InfoScreenState extends State<InfoScreen> {
             tejMatki &&
             infos[i].wartosc.isNotEmpty &&
             parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.queen) {
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
-            ostatniaData2 = DateTime.parse(infos[i].data);
+          //z godziną - patrz idMatkiWUlu wyżej
+          if (momentWpisu(infos[i].data, infos[i].czas).isAfter(ostatniaData2)) {
+            ostatniaData2 = momentWpisu(infos[i].data, infos[i].czas);
+            //wpis z queen_item przy podłączaniu matki (od 11.10.2026) - ikonka na belce
+            podlaczenie2 = infos[i].id.endsWith(kIdPodlaczeniaMatki);
             final loc = AppLocalizations.of(context)!;
             //wpisy sprzed 06.09.2026 mają tu KLUCZ znaku ("mark_white") -
             //patrz znakMatkiNaEkran() w queen_helpers.dart
@@ -3024,8 +3029,17 @@ class _InfoScreenState extends State<InfoScreen> {
                           children: [
                             SizedBox(width: 6),
                             icon2,
-                            Text(' (4) $wartosc2',
-                                style: const TextStyle(fontSize: 16)),
+                            Flexible(
+                              child: Text(' (4) $wartosc2',
+                                  style: const TextStyle(fontSize: 16)),
+                            ),
+                            //podłączenie matki do ula - jak w historii matki
+                            if (podlaczenie2)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 6),
+                                child: Icon(Icons.login, size: 18,
+                                    color: Color.fromARGB(255, 46, 125, 50)),
+                              ),
                           ],
                         ),
 //rocznik                      

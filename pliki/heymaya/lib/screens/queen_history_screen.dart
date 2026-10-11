@@ -68,13 +68,25 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
             .toList();
 
         // Sortowanie od najstarszego do najmłodszego
-        _queenInfos.sort((a, b) => a.data.compareTo(b.data));
+        //w obrębie dnia po godzinie - kolejność cech w kafelku zbiorczym
+        _queenInfos.sort((a, b) {
+          final int d = a.data.compareTo(b.data);
+          return d != 0 ? d : _minuty(a.czas).compareTo(_minuty(b.czas));
+        });
 
         setState(() {
           _isLoading = false;
         });
       });
     }
+  }
+
+  //"9:05" -> 545. Czas jest w bazie jako H:mm (bez zera z przodu), więc
+  //porównanie napisów stawiałoby "10:00" przed "9:05".
+  int _minuty(String czas) {
+    final List<String> cz = czas.split(':');
+    if (cz.length < 2) return 0;
+    return (int.tryParse(cz[0].trim()) ?? 0) * 60 + (int.tryParse(cz[1].trim()) ?? 0);
   }
 
   String _zmienDatePelna(String data) {
@@ -107,7 +119,111 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
     final String parametr = nazwaParametru(context, info.parametr);
     final String wartosc = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
     if (wartosc == loc.virgine) return '$parametr ${loc.virgine1}'; //"nieunasienniona"
+    //znak matki - z napisem na opalitku (info.miara), jak na belce ula (11.10.2026)
+    if (_wpisZnaku(context, info) && info.miara.trim().isNotEmpty && info.miara.trim() != '0') {
+      return '$parametr $wartosc ${info.miara.trim()}'.trim();
+    }
     return '$parametr $wartosc'.trim();
+  }
+
+  //wpis o znaku z wartością "brak" / "nie ma" (matki nie ma w ulu)
+  bool _brakMatki(BuildContext context, Info info) {
+    final loc = AppLocalizations.of(context)!;
+    final String v = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
+    return v == loc.missing || v == loc.gone;
+  }
+
+  //Ikonka cechy jak na belce matki w info (infos_screen, statystyki "queen") -
+  //te same ikony i kolory, żeby historia czytała się tak samo (11.10.2026).
+  //Rocznik - skrót roku ('26). Wpisy bez ikony - null (puste miejsce na ikonę).
+  Widget? _ikonaCechy(BuildContext context, Info info) {
+    final loc = AppLocalizations.of(context)!;
+    final String p = parametrWBiezacym(context, info.parametr);
+    final String v = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
+    if (p == loc.queen + '  ' + loc.isIs) { //jakość
+      return qualityIsBad(info.wartosc)
+          ? const Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1))
+          : const Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8));
+    }
+    if (p == loc.queen + ' -') { //unasiennienie
+      final String u = wartoscWBiezacym(context, info.wartosc);
+      if (u == loc.virgine) return const Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
+      if (u == loc.naturallyMated || u == loc.artificiallyInseminated) {
+        return const Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8));
+      }
+      if (u == loc.droneLaying) return const Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9));
+      return null;
+    }
+    if (p == loc.queenIs) { //ograniczenie: wolna / w klatce
+      return wartoscWBiezacym(context, info.wartosc) == loc.freed
+          ? Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill)
+          : Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
+    }
+    if (p == loc.queenWasBornIn) { //rocznik - skrót roku jak na belce: '26
+      final String rok = info.wartosc.trim();
+      if (rok.length < 4) return null;
+      return Text('\'${rok.substring(2)}', style: const TextStyle(fontSize: 14));
+    }
+        if (p == ' ' + loc.queen) { //znak
+      if (v == loc.missing || v == loc.gone) {
+        return const Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
+      }
+      final List<Widget> ikona = markToIcon(markToKey(v));
+      return ikona.isEmpty ? null : ikona.first;
+    }
+    return null;
+  }
+
+  //wpis o znaku matki (parametr " matka" w dowolnym z języków)
+  bool _wpisZnaku(BuildContext context, Info info) =>
+      parametrWBiezacym(context, info.parametr) == ' ' + AppLocalizations.of(context)!.queen;
+
+  //Wpisy z chwili podłączenia matki do ula (11.10.2026). Od tej daty queen_item
+  //znaczy je przyrostkiem id [kIdPodlaczeniaMatki]. Starsze rozpoznajemy po
+  //kolejności: wpis o znaku, który jest PIERWSZYM wpisem tej matki w danym ulu
+  //(poprzedni był w innym ulu albo nie było żadnego) - podłączenie dopisuje
+  //właśnie wpis o znaku. Ponowne podłączenie do TEGO SAMEGO ula widać tylko
+  //w wpisach z przyrostkiem.
+  Set<String> _wpisyPodlaczenia(BuildContext context) {
+    final Set<String> wynik = {};
+    String poprzedniUl = '';
+    for (final info in _queenInfos) {
+      final String ul = '${info.pasiekaNr}|${info.ulNr}';
+      //"matki brak" / "nie ma" to też wpis o znaku, ale nie podłączenie
+      if (info.id.endsWith(kIdPodlaczeniaMatki) ||
+          (ul != poprzedniUl && _wpisZnaku(context, info) && !_brakMatki(context, info))) {
+        wynik.add(info.id);
+      }
+      poprzedniUl = ul;
+    }
+    return wynik;
+  }
+
+  //Kafelki historii (11.10.2026, prośba usera). Wpisy BEZ uwag z tej samej daty
+  //i tego samego ula idą do jednego kafelka - przegląd zapisuje każdą cechę matki
+  //osobnym wpisem, więc jeden dzień dawał kilka kafelków z tym samym nagłówkiem.
+  //Wpis z uwagą zostaje osobno (uwaga dotyczy tej jednej cechy). Kafelek zbiorczy
+  //stoi w miejscu pierwszego wpisu dnia; kolejność jak w _queenInfos.
+  //Ul w kluczu: matkę przeniesioną tego samego dnia do innego ula widać w dwóch.
+  List<List<Info>> _kafelki() {
+    final List<List<Info>> kafelki = [];
+    final Map<String, List<Info>> zbiorcze = {};
+    for (final info in _queenInfos) {
+      if (info.uwagi.trim().isNotEmpty) {
+        kafelki.add([info]);
+        continue;
+      }
+      final String klucz = '${info.data}|${info.pasiekaNr}|${info.ulNr}';
+      final List<Info>? grupa = zbiorcze[klucz];
+      if (grupa != null) {
+        grupa.add(info);
+      } else {
+        final List<Info> nowa = [info];
+        zbiorcze[klucz] = nowa;
+        kafelki.add(nowa);
+      }
+    }
+    return kafelki;
   }
 
   List<Widget> _buildMarkIcon(String znak, BuildContext context) {
@@ -275,9 +391,17 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
       );
 
       List<List<pw.Widget>> tableData = [];
-      for (int i = 0; i < _queenInfos.length; i++) {
-        final info = _queenInfos[i];  
-        final String infoText = _opisWpisu(context, info);
+      //jeden wiersz na kafelek z ekranu - cechy z tego samego dnia i ula bez uwag
+      //razem, jedna pod drugą (11.10.2026)
+      final List<List<Info>> kafelki = _kafelki();
+      final Set<String> podlaczenia = _wpisyPodlaczenia(context);
+      for (int i = 0; i < kafelki.length; i++) {
+        final info = kafelki[i].first;
+        final String infoText = kafelki[i]
+            .map((w) => podlaczenia.contains(w.id)
+                ? '${_opisWpisu(context, w)} (${loc.queenConnectedToHive})'
+                : _opisWpisu(context, w))
+            .join('\n');
         
         // Czyść temperaturę - zostaw tylko cyfry, minus, kropkę i dodaj °C
         final tempClean = _cleanTemp(info.temp);
@@ -342,7 +466,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                   )),
               pw.SizedBox(height: 12),
               // Tabela
-              if (_queenInfos.isNotEmpty)
+              if (tableData.isNotEmpty)
                 pw.Table(
                   border: pw.TableBorder.all(
                     color: PdfColors.grey400,
@@ -404,6 +528,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
     }
 
     final queen = _queen!;
+    final Set<String> podlaczenia = _wpisyPodlaczenia(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -501,7 +626,8 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
           ),
 
           // --- Kolejne segmenty: wpisy z info kategoria "queen" ---
-          for (final info in _queenInfos)
+          //wpisy z tego samego dnia i ula bez uwag = jeden kafelek, cechy jedna pod drugą
+          for (final grupa in _kafelki())
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -512,24 +638,47 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Wiersz 1: numer pasieki / numer ula, data wpisu, godzina, temperatura
+                    //(w kafelku zbiorczym - z pierwszego wpisu dnia)
                     Text(
-                      '${info.pasiekaNr} / ${info.ulNr}   ${_zmienDatePelna(info.data)}   ${info.czas}   ${info.temp}',
+                      '${grupa.first.pasiekaNr} / ${grupa.first.ulNr}   ${_zmienDatePelna(grupa.first.data)}   ${grupa.first.czas}   ${grupa.first.temp}',
                       style: const TextStyle(fontSize: 14),
                     ),
-                    // Wiersz 2: parametr i wartość
-                    if (info.parametr.isNotEmpty || info.wartosc.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2, left: 40),
-                        child: Text(
-                          _opisWpisu(context, info),
-                          style: const TextStyle(fontSize: 14),
+                    // Wiersz 2: parametr i wartość - każdy wpis kafelka w osobnej linii
+                    for (final info in grupa)
+                      if (info.parametr.isNotEmpty || info.wartosc.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2, left: 10),
+                          child: Row(
+                            children: [
+                              //ikonka cechy jak na belce matki w info
+                              SizedBox(
+                                width: 30,
+                                child: Center(child: _ikonaCechy(context, info)),
+                              ),
+                              Flexible(
+                                child: Text(
+                                  _opisWpisu(context, info),
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                              //podłączenie matki do ula - ikonka po napisie na opalitku
+                              if (podlaczenia.contains(info.id))
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 6),
+                                  child: Tooltip(
+                                    message: AppLocalizations.of(context)!.queenConnectedToHive,
+                                    child: const Icon(Icons.login,
+                                        size: 18, color: Color.fromARGB(255, 46, 125, 50)),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    // Wiersz 3: uwagi
-                    if (info.uwagi.isNotEmpty)
+                    // Wiersz 3: uwagi (tylko kafelek pojedynczy - zbiorczy uwag nie ma)
+                    if (grupa.first.uwagi.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 2, left: 40),
-                        child: Text(info.uwagi,
+                        child: Text(grupa.first.uwagi,
                             style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic), ),
                       ),
                   ],

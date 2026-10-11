@@ -619,6 +619,8 @@
     "dIsconnectOrEdit": "Pode desassociar a rainha da colmeia ou editar os seus dados, p. ex. adicionar a data de perda da rainha.",
     "eDitQueen": "Pode editar todos os dados da rainha, p. ex. remover a data de perda da rainha, o que fará com que a rainha volte a estar viva...",
     "dIsconnectQueen": "Desassociar rainha",
+    "dIsconnectQueenConfirm": "Tem a certeza de que quer desassociar a rainha da colmeia?",
+    "queenConnectedToHive": "associada à colmeia",
     "sElectDate": "Selecione uma data",
     "lOst": "Perdida",
     "qUeens": "Rainhas",

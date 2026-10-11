@@ -1906,6 +1906,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dIsconnectQueen => 'Königin trennen';
 
   @override
+  String get dIsconnectQueenConfirm => 'Königin wirklich vom Volk trennen?';
+
+  @override
+  String get queenConnectedToHive => 'dem Volk zugesetzt';
+
+  @override
   String get sElectDate => 'Datum wählen';
 
   @override

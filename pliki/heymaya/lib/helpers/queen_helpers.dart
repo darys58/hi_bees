@@ -29,6 +29,25 @@ const String kQualitySmall = 'quality_small';
 const String kQualityWeak = 'quality_weak';
 const String kQualityOld = 'quality_old';
 
+//Przyrostek id wpisu info zapisanego przy PODŁĄCZENIU matki do ula (queen_item,
+//od 11.10.2026). Historia matki rysuje przy takim wpisie ikonkę podłączenia.
+const String kIdPodlaczeniaMatki = '.connect';
+//Przyrostek id wpisu "matka brak" zapisanego przy ODŁĄCZENIU matki od ula (queen_item,
+//od 11.10.2026). Własny przyrostek = podłączenie nowej matki tego samego dnia
+//(".connect") ani znak z przeglądu (bez przyrostka) go nie nadpiszą.
+const String kIdOdlaczeniaMatki = '.disconnect';
+
+/// Moment wpisu info: data + godzina. Czas jest w bazie jako H:mm (bez zera
+/// z przodu), więc ORDER BY czas stawia "9:05" za "10:00" - przy dwóch wpisach
+/// o znaku z jednego dnia (odłączenie i podłączenie) liczy się prawdziwa godzina.
+DateTime momentWpisu(String data, String czas) {
+  final DateTime d = DateTime.tryParse(data) ?? DateTime(2000);
+  final List<String> cz = czas.split(':');
+  if (cz.length < 2) return d;
+  return d.add(Duration(
+      hours: int.tryParse(cz[0].trim()) ?? 0, minutes: int.tryParse(cz[1].trim()) ?? 0));
+}
+
 // Canonical keys for queen mark (znak)
 const String kMarkUnmarked = 'unMarked';
 const String kMarkWhite = 'mark_white';

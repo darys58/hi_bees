@@ -1896,6 +1896,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dIsconnectQueen => 'Disconnect the queen';
 
   @override
+  String get dIsconnectQueenConfirm =>
+      'Are you sure you want to disconnect the queen from the hive?';
+
+  @override
+  String get queenConnectedToHive => 'connected to the hive';
+
+  @override
   String get sElectDate => 'Select a date';
 
   @override

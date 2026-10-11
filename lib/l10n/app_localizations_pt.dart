@@ -1904,6 +1904,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dIsconnectQueen => 'Desassociar rainha';
 
   @override
+  String get dIsconnectQueenConfirm =>
+      'Tem a certeza de que quer desassociar a rainha da colmeia?';
+
+  @override
+  String get queenConnectedToHive => 'associada à colmeia';
+
+  @override
   String get sElectDate => 'Selecione uma data';
 
   @override

@@ -1903,6 +1903,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get dIsconnectQueen => 'Odłącz matkę';
 
   @override
+  String get dIsconnectQueenConfirm => 'Czy na pewno odłączyć matkę od ula?';
+
+  @override
+  String get queenConnectedToHive => 'podłączona do ula';
+
+  @override
   String get sElectDate => 'Wybierz datę';
 
   @override

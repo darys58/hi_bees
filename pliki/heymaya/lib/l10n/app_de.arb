@@ -619,6 +619,8 @@
     "dIsconnectOrEdit": "Sie können die Königin von der Beute trennen oder ihre Daten bearbeiten, z.B. das Verlustdatum hinzufügen.",
     "eDitQueen": "Sie können alle Daten der Königin bearbeiten, z.B. das Verlustdatum entfernen, sodass die Königin wieder lebt...",
     "dIsconnectQueen": "Königin trennen",
+    "dIsconnectQueenConfirm": "Königin wirklich vom Volk trennen?",
+    "queenConnectedToHive": "dem Volk zugesetzt",
     "sElectDate": "Datum wählen",
     "lOst": "Verloren",
     "qUeens": "Königinnen",
