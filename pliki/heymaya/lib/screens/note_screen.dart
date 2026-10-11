@@ -1,5 +1,9 @@
 
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:heymaya/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +13,8 @@ import '../models/note.dart';
 import '../widgets/note_item.dart';
 import '../screens/note_edit_screen.dart';
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
-//import '../globals.dart' as globals;
+import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
+import '../globals.dart' as globals;
 
 class NoteScreen extends StatefulWidget {
   const NoteScreen({super.key});
@@ -33,6 +38,123 @@ class _NoteScreenState extends State<NoteScreen> {
     _isInit = false;
 
     super.didChangeDependencies();
+  }
+
+  //EKSPORT NOTATEK (11.10.2026) - PDF i CSV z notatek wybranego roku, od
+  //najstarszej. Wspólne wiersze dla obu formatów: [_naglowkiNotatek] + [_wierszNotatki].
+  String _dataNaEkran(String d) {
+    if (d.length < 10) return d;
+    return globals.isEuropeanFormat()
+        ? '${d.substring(8, 10)}.${d.substring(5, 7)}.${d.substring(0, 4)}'
+        : d.substring(0, 10);
+  }
+
+  List<String> _naglowkiNotatek(AppLocalizations loc) => [
+        loc.pdfLp,
+        loc.pdfDate,
+        loc.pdfApiaryHive,
+        loc.tItle,
+        loc.nOte,
+        loc.toDo,
+        loc.taskDate,
+        loc.pdfRemarks,
+      ];
+
+  List<String> _wierszNotatki(AppLocalizations loc, int lp, Note n) => [
+        '$lp',
+        _dataNaEkran(n.data),
+        n.pasiekaNr > 0 ? '${n.pasiekaNr}/${n.ulNr}' : '',
+        n.tytul,
+        n.notatka,
+        n.priorytet == 'true' ? loc.yes : '',
+        n.pole1.isNotEmpty ? _dataNaEkran(n.pole1) : '',
+        n.uwagi,
+      ];
+
+  Future<void> _eksportujNotatki(List<Note> notatki) async {
+    if (notatki.isEmpty) return;
+    final format = await wybierzFormat(context); //menu PDF / CSV
+    if (format == null || !mounted) return;
+    final loc = AppLocalizations.of(context)!;
+    final List<Note> odNajstarszej = notatki.reversed.toList(); //lista jest od najnowszej
+    final String tytul = '${loc.notepad} $wybranaData';
+    final String dzis = _dataNaEkran(DateTime.now().toString());
+
+    if (format == FormatEksportu.csv) {
+      await udostepnijCsv(context, 'notes_$wybranaData', [
+        [tytul],
+        ['Hey Maya $dzis'],
+        [],
+        _naglowkiNotatek(loc),
+        for (int i = 0; i < odNajstarszej.length; i++) _wierszNotatki(loc, i + 1, odNajstarszej[i]),
+      ]);
+      return;
+    }
+
+    try {
+      final fontRegular = await PdfGoogleFonts.robotoRegular();
+      final fontBold = await PdfGoogleFonts.robotoBold();
+      final headerStyle = pw.TextStyle(fontSize: 8, font: fontBold);
+      final cellStyle = pw.TextStyle(fontSize: 8, font: fontRegular);
+      pw.Widget komorka(String t, pw.TextStyle st, {bool srodek = false}) => pw.Padding(
+            padding: const pw.EdgeInsets.all(3),
+            child: srodek ? pw.Center(child: pw.Text(t, style: st)) : pw.Text(t, style: st),
+          );
+      //kolumny wyśrodkowane: L.p., data, pasieka/ul, do zrobienia, data zadania
+      const Set<int> srodkowe = {0, 1, 2, 5, 6};
+
+      final pdf = pw.Document(theme: pw.ThemeData.withFont(base: fontRegular, bold: fontBold));
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          build: (pw.Context ctx) => [
+            pw.Center(child: pw.Text(tytul, style: pw.TextStyle(fontSize: 18, font: fontBold))),
+            pw.SizedBox(height: 5),
+            pw.Center(
+              child: pw.Text('Hey Maya  $dzis',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey, font: fontRegular)),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey300),
+              columnWidths: {
+                0: const pw.FixedColumnWidth(24),
+                1: const pw.FixedColumnWidth(52),
+                2: const pw.FixedColumnWidth(38),
+                3: const pw.FlexColumnWidth(1.6),
+                4: const pw.FlexColumnWidth(3),
+                5: const pw.FixedColumnWidth(36),
+                6: const pw.FixedColumnWidth(52),
+                7: const pw.FlexColumnWidth(2),
+              },
+              children: [
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                  children: [
+                    for (final n in _naglowkiNotatek(loc)) komorka(n, headerStyle, srodek: true),
+                  ],
+                ),
+                for (int i = 0; i < odNajstarszej.length; i++)
+                  pw.TableRow(children: [
+                    for (final (j, t) in _wierszNotatki(loc, i + 1, odNajstarszej[i]).indexed)
+                      komorka(t, cellStyle, srodek: srodkowe.contains(j)),
+                  ]),
+              ],
+            ),
+          ],
+        ),
+      );
+      final Uint8List pdfBytes = await pdf.save();
+      await Printing.sharePdf(bytes: pdfBytes, filename: 'notes_$wybranaData.pdf');
+    } catch (e) {
+      debugPrint('Błąd generowania PDF notatek: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${loc.pdfGeneratingError}: $e')),
+        );
+      }
+    }
   }
 
   //kalendarz zadań - podgląd zaplanowanych zadań
@@ -255,6 +377,11 @@ class _NoteScreenState extends State<NoteScreen> {
             IconButton(
               icon: Icon(Icons.calendar_month, color: Color.fromARGB(255, 0, 0, 0)),
               onPressed: () => _showTaskCalendar(context),
+            ),
+            //PDF / CSV notatek z wybranego roku
+            IconButton(
+              icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),
+              onPressed: () => _eksportujNotatki(notatki),
             ),
             // IconButton(
             //   icon: Icon(Icons.edit),

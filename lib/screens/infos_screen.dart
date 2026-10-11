@@ -31,6 +31,7 @@ import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 import '../helpers/photo_helper.dart'; //zapis zdjęcia ula
+import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
 
 class InfoScreen extends StatefulWidget {
   static const routeName = '/screen-infos';
@@ -384,6 +385,110 @@ class _InfoScreenState extends State<InfoScreen> {
     return '${numMatch.group(0)}\u00B0C';
   }
 
+  //Wspólne dla PDF i CSV historii ula (11.10.2026) - CSV ma zawierać dokładnie
+  //te same wpisy co tabela w PDF.
+
+  // WSZYSTKIE info dla tego ula (z providera - już załadowane), filtr roku,
+  // chronologicznie (od najstarszego)
+  List<Info> _infosHistoriiUla() {
+    final infosData = Provider.of<Infos>(context, listen: false);
+    List<Info> allInfos = List.from(infosData.items);
+
+    // Filtruj po roku jeśli nie "wszystkie"
+    if (rokStatystyk != 'wszystkie') {
+      allInfos = allInfos.where((info) =>
+          info.data.substring(0, 4) == rokStatystyk).toList();
+    }
+
+    // Sortuj chronologicznie (od najstarszego)
+    allInfos.sort((a, b) {
+      int cmp = a.data.compareTo(b.data);
+      if (cmp != 0) return cmp;
+      return a.czas.compareTo(b.czas);
+    });
+    return allInfos;
+  }
+
+  String _tytulHistoriiUla(int hiveNr) {
+    final loc = AppLocalizations.of(context)!;
+    final apiaryNr = globals.pasiekaID.toString();
+    return rokStatystyk == 'wszystkie'
+        ? loc.hiveHistoryTitleAll(hiveNr.toString(), apiaryNr)
+        : loc.hiveHistoryTitle(hiveNr.toString(), apiaryNr, rokNaEkran(context, rokStatystyk));
+  }
+
+  //nazwa pliku bez rozszerzenia
+  String _nazwaPlikuHistorii(int hiveNr) => rokStatystyk == 'wszystkie'
+      ? 'historia_ula_$hiveNr'
+      : 'historia_ula_${hiveNr}_$rokStatystyk';
+
+  // Kolumna "Informacja"
+  String _infoTextHistorii(Info info) {
+    String infoText;
+    //parametr i wartość w BIEŻĄCYM języku, także dla wpisów zapisanych w innym
+    //(05.10.2026); "nieunasienniona" z tłumaczeń zamiast literału polskiego
+    final String paramPdf = nazwaParametru(context, info.parametr);
+    final String wartPdf = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
+    if (wartPdf == AppLocalizations.of(context)!.virgine) {
+      infoText = '$paramPdf ${AppLocalizations.of(context)!.virgine1}';
+    } else {
+      infoText = '$paramPdf $wartPdf'.trim();
+    }
+    if (info.miara.isNotEmpty && info.miara != '0') {
+      infoText = '$infoText ${miaraWBiezacym(context, info.miara, parametr: info.parametr)}';
+    }
+    if (info.pogoda.isNotEmpty && info.pogoda != '0' && info.kategoria == 'queen') {
+      infoText = 'ID${info.pogoda} $infoText ';
+    }
+    return infoText;
+  }
+
+  //CSV historii ula (11.10.2026) - te same kolumny co tabela w PDF; zamiast ikonki
+  //kategorii jej nazwa.
+  Future<void> _generateHiveHistoryCsv(int hiveNr) async {
+    final loc = AppLocalizations.of(context)!;
+    final List<Info> allInfos = _infosHistoriiUla();
+
+    String kategoria(String k) {
+      switch (k) {
+        case 'inspection': return loc.iNspection;
+        case 'equipment': return loc.eQuipment;
+        case 'colony': return loc.cOlony;
+        case 'queen': return loc.qUeen;
+        case 'harvest': return loc.hArvest;
+        case 'feeding': return loc.fEeding;
+        case 'treatment': return loc.tReatment;
+        default: return k;
+      }
+    }
+
+    final now = DateTime.now();
+    final dataCsv = globals.isEuropeanFormat()
+        ? '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}'
+        : '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    final List<List<String>> wiersze = [
+      [_tytulHistoriiUla(hiveNr)],
+      ['Hey Maya $dataCsv'],
+      [],
+      [loc.pdfLp, loc.catColumn, loc.pdfDate, loc.pdfHour, loc.pdfTemperature,
+       loc.pdfInformation, loc.pdfRemarks],
+    ];
+    for (int i = 0; i < allInfos.length; i++) {
+      final info = allInfos[i];
+      wiersze.add([
+        '${i + 1}',
+        kategoria(info.kategoria),
+        _zmienDatePdf(info.data),
+        info.czas,
+        _cleanTempPdf(info.temp),
+        _infoTextHistorii(info).trim(),
+        info.uwagi,
+      ]);
+    }
+    await udostepnijCsv(context, _nazwaPlikuHistorii(hiveNr), wiersze);
+  }
+
   Future<void> _generateHiveHistoryPdf(int hiveNr) async {
     final loc = AppLocalizations.of(context)!;
 
@@ -412,22 +517,7 @@ class _InfoScreenState extends State<InfoScreen> {
         categoryIcons[entry.key] = byteData.buffer.asUint8List();
       }
 
-      // Pobierz WSZYSTKIE info dla tego ula (z providera - już załadowane)
-      final infosData = Provider.of<Infos>(context, listen: false);
-      List<Info> allInfos = List.from(infosData.items);
-
-      // Filtruj po roku jeśli nie "wszystkie"
-      if (rokStatystyk != 'wszystkie') {
-        allInfos = allInfos.where((info) =>
-            info.data.substring(0, 4) == rokStatystyk).toList();
-      }
-
-      // Sortuj chronologicznie (od najstarszego)
-      allInfos.sort((a, b) {
-        int cmp = a.data.compareTo(b.data);
-        if (cmp != 0) return cmp;
-        return a.czas.compareTo(b.czas);
-      });
+      final List<Info> allInfos = _infosHistoriiUla();
 
       final pdf = pw.Document(
         theme: pw.ThemeData.withFont(
@@ -443,10 +533,7 @@ class _InfoScreenState extends State<InfoScreen> {
           : '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
       // Tytuł PDF
-      final apiaryNr = globals.pasiekaID.toString();
-      final tytul = rokStatystyk == 'wszystkie'
-          ? loc.hiveHistoryTitleAll(hiveNr.toString(), apiaryNr)
-          : loc.hiveHistoryTitle(hiveNr.toString(), apiaryNr, rokNaEkran(context, rokStatystyk));
+      final tytul = _tytulHistoriiUla(hiveNr);
 
       // Proporcje kolumn: L.p., Kat., Data, Czas, Temp., Informacja, Uwagi
       final columnWidths = {
@@ -503,22 +590,7 @@ class _InfoScreenState extends State<InfoScreen> {
       List<List<pw.Widget>> tableData = [];
       for (int i = 0; i < allInfos.length; i++) {
         final info = allInfos[i];
-        String infoText;
-        //parametr i wartość w BIEŻĄCYM języku, także dla wpisów zapisanych w innym
-        //(05.10.2026); "nieunasienniona" z tłumaczeń zamiast literału polskiego
-        final String paramPdf = nazwaParametru(context, info.parametr);
-        final String wartPdf = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
-        if (wartPdf == AppLocalizations.of(context)!.virgine) {
-          infoText = '$paramPdf ${AppLocalizations.of(context)!.virgine1}';
-        } else {
-          infoText = '$paramPdf $wartPdf'.trim();
-        }
-        if (info.miara.isNotEmpty && info.miara != '0') {
-          infoText = '$infoText ${miaraWBiezacym(context, info.miara, parametr: info.parametr)}';
-        }
-        if (info.pogoda.isNotEmpty && info.pogoda != '0' && info.kategoria == 'queen') {
-          infoText = 'ID${info.pogoda} $infoText ';
-        }
+        final String infoText = _infoTextHistorii(info);
 
         final tempClean = _cleanTempPdf(info.temp);
 
@@ -601,9 +673,7 @@ class _InfoScreenState extends State<InfoScreen> {
       );
 
       final Uint8List pdfBytes = await pdf.save();
-      final filename = rokStatystyk == 'wszystkie'
-          ? 'historia_ula_$hiveNr.pdf'
-          : 'historia_ula_${hiveNr}_$rokStatystyk.pdf';
+      final filename = '${_nazwaPlikuHistorii(hiveNr)}.pdf';
 
       await Printing.sharePdf(
         bytes: pdfBytes,
@@ -2249,7 +2319,11 @@ class _InfoScreenState extends State<InfoScreen> {
               )
             : IconButton(
                 icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),
-                onPressed: () => _generateHiveHistoryPdf(hiveNr),
+                onPressed: () async {
+                  final format = await wybierzFormat(context); //menu PDF / CSV
+                  if (format == FormatEksportu.pdf) _generateHiveHistoryPdf(hiveNr);
+                  if (format == FormatEksportu.csv) _generateHiveHistoryCsv(hiveNr);
+                },
               ),
           //: Text(''),
           // IconButton(

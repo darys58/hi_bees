@@ -13,6 +13,7 @@ import '../models/hives.dart';
 import '../models/info.dart';
 import '../models/infos.dart';
 import '../helpers/parametr_nazwy.dart'; //rokNaEkran
+import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
 
 // Raport leczenia (osyp varroa) z kolorowymi słupkami - rozwinięcie raport2_screen
 // na wzór raport_color_screen:
@@ -410,8 +411,10 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : InkWell(
-                  onTap: () {
-                    _showPdfOptionsDialog(rok);
+                  onTap: () async {
+                    final format = await wybierzFormat(context); //menu PDF / CSV, potem dotychczasowy wybór uli
+                    if (format == null || !mounted) return;
+                    _showPdfOptionsDialog(rok, format: format);
                   },
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -435,13 +438,13 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
   }
 
   // Dialog z opcjami PDF: widoczne ule, wszystkie ule
-  void _showPdfOptionsDialog(String rok) {
+  void _showPdfOptionsDialog(String rok, {FormatEksportu format = FormatEksportu.pdf}) {
     final loc = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('PDF - ${loc.dEad} varroa ${rokNaEkran(context, rok)}'),
+        title: Text('${format == FormatEksportu.csv ? 'CSV' : 'PDF'} - ${loc.dEad} varroa ${rokNaEkran(context, rok)}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -452,7 +455,11 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
               subtitle: Text('${hivesNumbers.length} ${loc.hives}'),
               onTap: () {
                 Navigator.of(context).pop();
-                _generatePdf(rok: rok, tylkoWidoczne: true);
+                if (format == FormatEksportu.csv) {
+                  _generateCsv(rok: rok, tylkoWidoczne: true);
+                } else {
+                  _generatePdf(rok: rok, tylkoWidoczne: true);
+                }
               },
             ),
             Divider(),
@@ -463,7 +470,11 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
               subtitle: Text('${allHivesNumbers.length} ${loc.hives}'),
               onTap: () {
                 Navigator.of(context).pop();
-                _generatePdf(rok: rok, tylkoWidoczne: false);
+                if (format == FormatEksportu.csv) {
+                  _generateCsv(rok: rok, tylkoWidoczne: false);
+                } else {
+                  _generatePdf(rok: rok, tylkoWidoczne: false);
+                }
               },
             ),
           ],
@@ -477,6 +488,84 @@ class _Raport2ColorScreenState extends State<Raport2ColorScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       ),
     );
+  }
+
+  //CSV raportu osypu varroa (11.10.2026) - te same dane co PDF: tabela uli
+  //(osyp z każdego liczenia + razem na ul, jak słupki wykresu), tabela liczeń
+  //(jak legenda PDF: data, suma osypu, uwagi "nrUla: uwagi") i RAZEM.
+  //Wykres i kolory pominięte, jednostka (szt.) w nagłówku.
+  Future<void> _generateCsv({
+    required String rok,
+    bool tylkoWidoczne = false,
+  }) async {
+    List<Map<String, dynamic>> allData = tylkoWidoczne
+        ? (daneVarroaDoWykresu[rok] ?? [])
+        : (daneVarroaWszystkieUle[rok] ?? []);
+    if (allData.isEmpty) return;
+
+    List<String> daty = datyVarroa[rok] ?? [];
+    Map<String, double> suma = sumaVarroa[rok] ?? {};
+    Map<String, List<String>> uwagiDlaGrupyDat = uwagiVarroa[rok] ?? {};
+    int totalValue = tylkoWidoczne ? (varroa[rok] ?? 0) : (allVarroa[rok] ?? 0);
+
+    final loc = AppLocalizations.of(context)!;
+    final String rokEkran = rokNaEkran(context, rok);
+    final String pasiekaNazwa = loc.aPiary + ' nr ' + globals.pasiekaID.toString();
+    final bool isPl = globals.isEuropeanFormat();
+    String dataPelna(String d) {
+      if (d.length < 10) return d;
+      return isPl ? '${d.substring(8, 10)}.${d.substring(5, 7)}.${d.substring(0, 4)}'
+                  : '${d.substring(5, 7)}-${d.substring(8, 10)}-${d.substring(0, 4)}';
+    }
+    final String uwagiNaglowek = loc.comments.isEmpty
+        ? loc.comments
+        : loc.comments[0].toUpperCase() + loc.comments.substring(1);
+
+    final List<List<String>> wiersze = [
+      ['${loc.dEad} varroa $rokEkran - $pasiekaNazwa'],
+      ['Hey Maya ${dataPelna(DateTime.now().toString().substring(0, 10))}'],
+      [],
+      //tabela 1 - ule (dane słupków wykresu)
+      [loc.hiveNumbers],
+      [
+        loc.hIveNr,
+        for (var d in daty) '${_dataNaEkran(d)} [${loc.pcs}]',
+        '${loc.total} [${loc.pcs}]',
+      ],
+    ];
+    for (var hive in allData) {
+      final Map<String, double> wartosci = {};
+      for (var h in (hive['harvests'] as List)) {
+        final String d = h['date'] as String;
+        wartosci[d] = (wartosci[d] ?? 0) + (h['value'] as num).toDouble();
+      }
+      double razemUl = 0;
+      for (var v in wartosci.values) {
+        razemUl += v;
+      }
+      wiersze.add([
+        '${hive['nrUla']}',
+        for (var d in daty) wartosci[d] != null ? liczbaCsv(wartosci[d]!, miejsca: 0) : '',
+        liczbaCsv(razemUl, miejsca: 0),
+      ]);
+    }
+
+    //tabela 2 - liczenia osypu (legenda PDF, od najnowszej daty)
+    wiersze.add([]);
+    wiersze.add(['${loc.dEad} varroa']);
+    wiersze.add([loc.dAte, '${loc.total} [${loc.pcs}]', uwagiNaglowek]);
+    for (var date in daty.reversed) {
+      wiersze.add([
+        dataPelna(date),
+        '${(suma[date] ?? 0).round()}',
+        (uwagiDlaGrupyDat[date] ?? []).join('; '),
+      ]);
+    }
+
+    //RAZEM - jak w nagłówku PDF
+    wiersze.add([loc.tOTAL, '$totalValue']);
+
+    await udostepnijCsv(context, 'varroa_$rok', wiersze);
   }
 
   // Funkcja generująca PDF z wykresem osypu varroa

@@ -11,6 +11,7 @@ import '../widgets/harvest_item.dart';
 import '../screens/harvest_edit_screen.dart';
 import '../globals.dart' as globals;
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
 
 class HarvestScreen extends StatefulWidget {
   const HarvestScreen({super.key});
@@ -41,6 +42,74 @@ class _HarvestScreenState extends State<HarvestScreen> {
     _isInit = false;
 
     super.didChangeDependencies();
+  }
+
+  //CSV zbiorów (11.10.2026) - te same kolumny co tabela w PDF, ilość osobno od
+  //jednostki, żeby arkusz mógł je sumować; na końcu podsumowanie z legendy PDF
+  //(ilość w l albo kg i przeliczenie na kg jak w PDF).
+  Future<void> _generateHarvestCsv(List<Harvest> zbiory) async {
+    if (zbiory.isEmpty) return;
+    final loc = AppLocalizations.of(context)!;
+    final bool isPl = globals.isEuropeanFormat();
+
+    String zasob(int z) {
+      switch (z) {
+        case 1: return loc.honey;
+        case 2: return loc.beePollen;
+        case 3: return loc.perga;
+        case 4: return loc.wax;
+        case 5: return 'propolis';
+        default: return '';
+      }
+    }
+    String miara(int m) => m == 1 ? 'l' : m == 2 ? 'kg' : '';
+    String data(String d) {
+      if (d.length < 10) return d;
+      return isPl ? '${d.substring(8, 10)}.${d.substring(5, 7)}.${d.substring(0, 4)}'
+                  : '${d.substring(5, 7)}-${d.substring(8, 10)}-${d.substring(0, 4)}';
+    }
+
+    final List<List<String>> wiersze = [
+      ['${loc.hArvests} $wybranaData'],
+      ['Hey Maya ${data(DateTime.now().toString().substring(0, 10))}'],
+      [],
+      [
+        'L.p.',
+        isPl ? 'Data' : 'Date',
+        isPl ? 'Zasób' : 'Resource',
+        isPl ? 'Ilość' : 'Qty',
+        isPl ? 'J.m.' : 'Unit',
+        isPl ? 'Uwagi' : 'Notes',
+      ],
+    ];
+    final zbiorySorted = zbiory.reversed.toList(); //od najstarszego, jak w PDF
+    for (int i = 0; i < zbiorySorted.length; i++) {
+      final z = zbiorySorted[i];
+      wiersze.add([
+        '${i + 1}',
+        data(z.data),
+        zasob(z.zasobId),
+        liczbaCsv(z.ilosc),
+        miara(z.miara),
+        z.uwagi,
+      ]);
+    }
+
+    //podsumowanie - to samo co legenda przy wykresie w PDF (przeliczniki l -> kg jak w PDF)
+    wiersze.add([]);
+    wiersze.add([
+      isPl ? 'Zasób' : 'Resource',
+      isPl ? 'Ilość' : 'Qty',
+      isPl ? 'J.m.' : 'Unit',
+      isPl ? 'Ilość (kg)' : 'Qty (kg)',
+    ]);
+    if (miod > 0) wiersze.add([loc.honey, liczbaCsv(miod), 'l', liczbaCsv(miod * 1.45)]);
+    if (pylek > 0) wiersze.add([loc.beePollen, liczbaCsv(pylek), 'l', liczbaCsv(pylek * 0.56)]);
+    if (pierzga > 0) wiersze.add([loc.perga, liczbaCsv(pierzga), 'l', liczbaCsv(pierzga * 0.56)]);
+    if (wosk > 0) wiersze.add([loc.wax, liczbaCsv(wosk), 'kg', liczbaCsv(wosk)]);
+    if (propolis > 0) wiersze.add(['propolis', liczbaCsv(propolis), 'kg', liczbaCsv(propolis)]);
+
+    await udostepnijCsv(context, 'harvest_$wybranaData', wiersze);
   }
 
   Future<void> _generateHarvestPdf(List<Harvest> zbiory) async {
@@ -436,7 +505,12 @@ class _HarvestScreenState extends State<HarvestScreen> {
             ),
             IconButton(
               icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),
-              onPressed: () => _generateHarvestPdf(zbiory),
+              onPressed: () async {
+                if (zbiory.isEmpty) return;
+                final format = await wybierzFormat(context); //menu PDF / CSV
+                if (format == FormatEksportu.pdf) _generateHarvestPdf(zbiory);
+                if (format == FormatEksportu.csv) _generateHarvestCsv(zbiory);
+              },
             ),
             // IconButton(
             //   icon: Icon(Icons.edit),

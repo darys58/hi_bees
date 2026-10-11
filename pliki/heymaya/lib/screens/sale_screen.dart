@@ -11,6 +11,7 @@ import '../widgets/sale_item.dart';
 import '../screens/sale_edit_screen.dart';
 import '../globals.dart' as globals;
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
 
 class SaleScreen extends StatefulWidget {
   const SaleScreen({super.key});
@@ -136,6 +137,119 @@ class _SaleScreenState extends State<SaleScreen> {
         propolisWartoscUSD += wartosc;
         break;
     }
+  }
+
+  //CSV sprzedaży (11.10.2026) - te same kolumny co tabela w PDF, ilość osobno od
+  //opakowania i wartość osobno od waluty, żeby arkusz mógł je sumować; na końcu
+  //podsumowanie z legendy PDF (ilości w l/kg i wartości w każdej walucie) + RAZEM.
+  Future<void> _generateSaleCsv(List<Sale> sprzedaz) async {
+    if (sprzedaz.isEmpty) return;
+    final loc = AppLocalizations.of(context)!;
+    final bool isPl = globals.isEuropeanFormat();
+
+    String waluta(int w) => w == 1 ? 'PLN' : w == 2 ? 'EUR' : w == 3 ? 'USD' : '';
+    String miara(int m) {
+      switch (m) {
+        case 2: return '900 ml';
+        case 3: return '720 ml';
+        case 4: return '500 ml';
+        case 5: return '350 ml';
+        case 6: return '315 ml';
+        case 7: return '200 ml';
+        case 8: return '100 ml';
+        case 9: return '50 ml';
+        case 10: return '30 ml';
+        case 21: return '1000 g';
+        case 22: return '500 g';
+        case 23: return '250 g';
+        case 24: return '100 g';
+        case 25: return '50 g';
+        default: return '';
+      }
+    }
+    String kategoria(int k) {
+      switch (k) {
+        case 1: return loc.honey;
+        case 2: return loc.beePollen;
+        case 3: return loc.perga;
+        case 4: return loc.wax;
+        case 5: return 'propolis';
+        default: return '';
+      }
+    }
+    String data(String d) {
+      if (d.length < 10) return d;
+      return isPl ? '${d.substring(8, 10)}.${d.substring(5, 7)}.${d.substring(0, 4)}'
+                  : '${d.substring(5, 7)}-${d.substring(8, 10)}-${d.substring(0, 4)}';
+    }
+    String kwota(double v) => v > 0 ? liczbaCsv(v) : ''; //puste zamiast 0 w podsumowaniu
+
+    final List<List<String>> wiersze = [
+      ['${loc.sAle} $wybranaData'],
+      ['Hey Maya ${data(DateTime.now().toString().substring(0, 10))}'],
+      [],
+      [
+        'L.p.',
+        isPl ? 'Data' : 'Date',
+        isPl ? 'Nazwa' : 'Name',
+        isPl ? 'Ilość' : 'Qty',
+        isPl ? 'Opakowanie' : 'Package',
+        isPl ? 'Cena' : 'Price',
+        isPl ? 'Wartość' : 'Value',
+        isPl ? 'Waluta' : 'Currency',
+        isPl ? 'Uwagi' : 'Notes',
+      ],
+    ];
+    final sprzedazSorted = sprzedaz.reversed.toList(); //od najstarszego, jak w PDF
+    for (int i = 0; i < sprzedazSorted.length; i++) {
+      final s = sprzedazSorted[i];
+      String nazwaText = kategoria(s.kategoriaId);
+      if (s.nazwa.isNotEmpty) nazwaText += ' ${s.nazwa}';
+      wiersze.add([
+        '${i + 1}',
+        data(s.data),
+        nazwaText,
+        '${s.ilosc.toInt()}',
+        miara(s.miara),
+        liczbaCsv(s.cena),
+        liczbaCsv(s.wartosc),
+        waluta(s.waluta),
+        s.uwagi,
+      ]);
+    }
+
+    //podsumowanie - to samo co legenda przy wykresie w PDF (przeliczniki l -> kg jak w PDF)
+    wiersze.add([]);
+    wiersze.add([
+      isPl ? 'Zasób' : 'Resource',
+      isPl ? 'Ilość (l)' : 'Qty (l)',
+      isPl ? 'Ilość (kg)' : 'Qty (kg)',
+      'PLN',
+      'EUR',
+      'USD',
+    ]);
+    void podsumowanie(String nazwa, double litry, double kg, double pln, double eur, double usd) {
+      if (litry <= 0 && pln <= 0 && eur <= 0 && usd <= 0) return;
+      wiersze.add([
+        nazwa,
+        litry > 0 ? liczbaCsv(litry, miejsca: 1) : '',
+        litry > 0 ? liczbaCsv(kg, miejsca: 1) : '',
+        kwota(pln),
+        kwota(eur),
+        kwota(usd),
+      ]);
+    }
+    podsumowanie(loc.honey, miod, miod * 1.38, miodWartoscPLN + miodWartoscInnaPLN,
+        miodWartoscEUR + miodWartoscInnaEUR, miodWartoscUSD + miodWartoscInnaUSD);
+    podsumowanie(loc.beePollen, pylek, pylek * 0.634, pylekWartoscPLN + pylekWartoscInnaPLN,
+        pylekWartoscEUR + pylekWartoscInnaEUR, pylekWartoscUSD + pylekWartoscInnaUSD);
+    podsumowanie(loc.perga, pierzga, pierzga * 0.555, pierzgaWartoscPLN + pierzgaWartoscInnaPLN,
+        pierzgaWartoscEUR + pierzgaWartoscInnaEUR, pierzgaWartoscUSD + pierzgaWartoscInnaUSD);
+    podsumowanie(loc.wax, 0, 0, woskWartoscPLN, woskWartoscEUR, woskWartoscUSD);
+    podsumowanie('propolis', 0, 0, propolisWartoscPLN, propolisWartoscEUR, propolisWartoscUSD);
+    wiersze.add([loc.tOTAL, '', '', kwota(razemWartoscPLN), kwota(razemWartoscEUR), kwota(razemWartoscUSD)]);
+
+    await udostepnijCsv(context, 'sale_$wybranaData', wiersze);
   }
 
   Future<void> _generateSalePdf(List<Sale> sprzedaz) async {
@@ -921,7 +1035,12 @@ class _SaleScreenState extends State<SaleScreen> {
             ),
             IconButton(
               icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),
-              onPressed: () => _generateSalePdf(sprzedaz),
+              onPressed: () async {
+                if (sprzedaz.isEmpty) return;
+                final format = await wybierzFormat(context); //menu PDF / CSV
+                if (format == FormatEksportu.pdf) _generateSalePdf(sprzedaz);
+                if (format == FormatEksportu.csv) _generateSaleCsv(sprzedaz);
+              },
             ),
             // IconButton(
             //   icon: Icon(Icons.edit),

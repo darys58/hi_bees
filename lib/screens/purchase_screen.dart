@@ -11,6 +11,7 @@ import '../widgets/purchase_item.dart';
 import '../screens/purchase_edit_screen.dart';
 import '../globals.dart' as globals;
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
 
 class PurchaseScreen extends StatefulWidget {
   const PurchaseScreen({super.key});
@@ -177,6 +178,75 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
         lekiWartoscUSD += wartosc;
         break;
     }
+  }
+
+  //CSV zakupów (11.10.2026) - te same kolumny co tabela w PDF, liczby osobno od
+  //jednostek/walut, żeby arkusz mógł je sumować; na końcu RAZEM w każdej walucie.
+  Future<void> _generatePurchaseCsv(List<Purchase> zakupy) async {
+    if (zakupy.isEmpty) return;
+    final loc = AppLocalizations.of(context)!;
+    final bool isPl = globals.isEuropeanFormat();
+
+    String waluta(int w) => w == 1 ? 'PLN' : w == 2 ? 'EUR' : w == 3 ? 'USD' : '';
+    String kategoria(int k) {
+      switch (k) {
+        case 1: return loc.noCaregory;
+        case 2: return loc.packaging;
+        case 3: return loc.equipment;
+        case 4: return loc.bees;
+        case 5: return loc.queens;
+        case 6: return loc.waxFundation;
+        case 7: return loc.food;
+        case 8: return loc.medicines;
+        default: return '';
+      }
+    }
+    String miara(int m) => m == 1 ? loc.pcs : m == 2 ? 'l' : m == 3 ? 'kg' : '';
+    String data(String d) {
+      if (d.length < 10) return d;
+      return isPl ? '${d.substring(8, 10)}.${d.substring(5, 7)}.${d.substring(0, 4)}'
+                  : '${d.substring(5, 7)}-${d.substring(8, 10)}-${d.substring(0, 4)}';
+    }
+
+    final List<List<String>> wiersze = [
+      ['${loc.pUrchase} $wybranaData'],
+      ['Hey Maya ${data(DateTime.now().toString().substring(0, 10))}'],
+      [],
+      [
+        'L.p.',
+        isPl ? 'Data' : 'Date',
+        isPl ? 'Kategoria' : 'Category',
+        isPl ? 'Nazwa' : 'Name',
+        isPl ? 'Ilość' : 'Qty',
+        isPl ? 'J.m.' : 'Unit',
+        isPl ? 'Cena' : 'Price',
+        isPl ? 'Wartość' : 'Value',
+        isPl ? 'Waluta' : 'Currency',
+        isPl ? 'Uwagi' : 'Notes',
+      ],
+    ];
+    final zakupySorted = zakupy.reversed.toList(); //od najstarszego, jak w PDF
+    for (int i = 0; i < zakupySorted.length; i++) {
+      final z = zakupySorted[i];
+      wiersze.add([
+        '${i + 1}',
+        data(z.data),
+        kategoria(z.kategoriaId),
+        z.nazwa,
+        '${z.ilosc.toInt()}',
+        miara(z.miara),
+        liczbaCsv(z.cena),
+        liczbaCsv(z.wartosc),
+        waluta(z.waluta),
+        z.uwagi,
+      ]);
+    }
+    wiersze.add([]);
+    if (razemWartoscPLN > 0) wiersze.add([loc.tOTAL, '', '', '', '', '', '', liczbaCsv(razemWartoscPLN), 'PLN']);
+    if (razemWartoscEUR > 0) wiersze.add([loc.tOTAL, '', '', '', '', '', '', liczbaCsv(razemWartoscEUR), 'EUR']);
+    if (razemWartoscUSD > 0) wiersze.add([loc.tOTAL, '', '', '', '', '', '', liczbaCsv(razemWartoscUSD), 'USD']);
+
+    await udostepnijCsv(context, 'purchase_$wybranaData', wiersze);
   }
 
   Future<void> _generatePurchasePdf(List<Purchase> zakupy) async {
@@ -673,7 +743,12 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
             ),
             IconButton(
               icon: Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 0, 0, 0)),
-              onPressed: () => _generatePurchasePdf(zakupy),
+              onPressed: () async {
+                if (zakupy.isEmpty) return;
+                final format = await wybierzFormat(context); //menu PDF / CSV
+                if (format == FormatEksportu.pdf) _generatePurchasePdf(zakupy);
+                if (format == FormatEksportu.csv) _generatePurchaseCsv(zakupy);
+              },
             ),
             // IconButton(
             //   icon: Icon(Icons.edit),

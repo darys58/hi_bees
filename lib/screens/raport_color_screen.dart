@@ -22,6 +22,7 @@ import '../models/infos.dart';
 import '../models/memory.dart';
 import '../helpers/parametr_nazwy.dart'; //parametrWBiezacym - wpisy z każdego języka
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
+import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
 
 class RaportColorScreen extends StatefulWidget {
   static const routeName = '/raport_color'; //zbiór miodu
@@ -580,7 +581,9 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : InkWell(
-                    onTap: () {
+                    onTap: () async {
+                      final format = await wybierzFormat(context); //menu PDF / CSV, potem dotychczasowy wybór uli
+                      if (format == null || !mounted) return;
                       _showPdfOptionsDialog(
                         typ: 'pylek',
                         rok: rok,
@@ -588,6 +591,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         datyMiodobran: datyMiodobran,
                         sumaL: sumaL,
                         totalValue: totalValue,
+                        format: format,
                       );
                     },
                     child: Container(
@@ -693,7 +697,9 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : InkWell(
-                    onTap: () {
+                    onTap: () async {
+                      final format = await wybierzFormat(context); //menu PDF / CSV, potem dotychczasowy wybór uli
+                      if (format == null || !mounted) return;
                       _showPdfOptionsDialog(
                         typ: 'miod',
                         rok: rok,
@@ -701,6 +707,7 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
                         datyMiodobran: datyMiodobran,
                         sumaKg: sumaKg,
                         totalValue: totalValue,
+                        format: format,
                       );
                     },
                     child: Container(
@@ -733,13 +740,14 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
     Map<String, double>? sumaKg,
     Map<String, double>? sumaL, // sumy ml pyłku dla każdego zbioru
     required double totalValue,
+    FormatEksportu format = FormatEksportu.pdf, //wybrany w menu PDF / CSV
   }) {
     final loc = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('PDF - ${typ == 'miod' ? loc.hOneyHarvest : loc.beePollen} ${rokNaEkran(context, rok)}'),
+        title: Text('${format == FormatEksportu.csv ? 'CSV' : 'PDF'} - ${typ == 'miod' ? loc.hOneyHarvest : loc.beePollen} ${rokNaEkran(context, rok)}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -750,6 +758,20 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
               subtitle: Text('${hivesNumbers.length} ${loc.hives}'),
               onTap: () {
                 Navigator.of(context).pop();
+                if (format == FormatEksportu.csv) {
+                  _generateCsv(
+                    typ: typ,
+                    rok: rok,
+                    daneZbioru: daneZbioru,
+                    datyMiodobran: datyMiodobran,
+                    sumaKg: sumaKg,
+                    sumaL: sumaL,
+                    totalValue: totalValue,
+                    pasiekaNazwa: loc.aPiary + ' nr ' + globals.pasiekaID.toString(),
+                    tylkoWidoczne: true,
+                  );
+                  return;
+                }
                 _generateAndSendPdf(
                   typ: typ,
                   rok: rok,
@@ -771,6 +793,20 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
               subtitle: Text('${allHivesNumbers.length} ${loc.hives}'),
               onTap: () {
                 Navigator.of(context).pop();
+                if (format == FormatEksportu.csv) {
+                  _generateCsv(
+                    typ: typ,
+                    rok: rok,
+                    daneZbioru: daneZbioru,
+                    datyMiodobran: datyMiodobran,
+                    sumaKg: sumaKg,
+                    sumaL: sumaL,
+                    totalValue: totalValue,
+                    pasiekaNazwa: loc.aPiary + ' nr ' + globals.pasiekaID.toString(),
+                    tylkoWidoczne: false,
+                  );
+                  return;
+                }
                 _generateAndSendPdf(
                   typ: typ,
                   rok: rok,
@@ -815,6 +851,330 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       ),
     );
+  }
+
+  // Przygotowanie danych raportu zbioru (wydzielone z _generateAndSendPdf 11.10.2026,
+  // żeby PDF i CSV miały dokładnie te same liczby).
+  // allData: [{"nrUla": int, "harvests": [{"date": "YYYY-MM-DD", "value": double}, ...]}, ...]
+  // uwagiDlaGrupyDat: data grupy -> lista zbiorów z tabeli zbiory (ilosc, miara, uwagi)
+  // UWAGA: uzupełnia/przelicza datyMiodobran w miejscu (jak wcześniej w PDF).
+  ({List<Map<String, dynamic>> allData, Map<String, List<Map<String, dynamic>>> uwagiDlaGrupyDat}) _przygotujDaneZbioru({
+    required String typ, // 'miod' lub 'pylek'
+    required String rok,
+    required List<Map<String, dynamic>> daneZbioru,
+    required List<String> datyMiodobran,
+    required bool tylkoWidoczne,
+  }) {
+    final loc = AppLocalizations.of(context)!;
+
+    // Przygotuj dane w zależności od opcji
+    List<Map<String, dynamic>> allData = [];
+
+    // Mapa uwag dla każdej grupy dat (data -> lista zbiorów z ilością, miarą i uwagami)
+    Map<String, List<Map<String, dynamic>>> uwagiDlaGrupyDat = {};
+
+    if (tylkoWidoczne) {
+      // Tylko ule z bieżącej strony - użyj istniejących danych
+      for (var j = 0; j < hivesNumbers.length; j++) {
+        var hiveData = daneZbioru.firstWhere(
+          (d) => d['x'] == j + 1,
+          orElse: () => {'x': j + 1, 'harvests': []},
+        );
+        if ((hiveData['harvests'] as List).isNotEmpty) {
+          allData.add({
+            'nrUla': hivesNumbers[j],
+            'harvests': hiveData['harvests'],
+          });
+        }
+      }
+
+      // Upewnij się że datyMiodobran zawiera wszystkie daty z danych
+      Set<String> allDatesFromData = {};
+      for (var hive in allData) {
+        for (var h in (hive['harvests'] as List)) {
+          allDatesFromData.add(h['date'] as String);
+        }
+      }
+      // Jeśli są daty których brakuje w datyMiodobran, dodaj je
+      for (var date in allDatesFromData) {
+        if (!datyMiodobran.contains(date)) {
+          datyMiodobran.add(date);
+        }
+      }
+      datyMiodobran.sort();
+
+      // Pobierz uwagi z tabeli zbiory
+      final harvestsData = Provider.of<Harvests>(context, listen: false);
+      int zasobIdFilter = typ == 'miod' ? 1 : 2; // 1 = miód, 2 = pyłek
+      List<Harvest> zbioryFiltered = harvestsData.items.where((h) =>
+        h.zasobId == zasobIdFilter && h.pasiekaNr == globals.pasiekaID
+      ).toList();
+
+      // Dla każdej daty miodobrania znajdź uwagi (z tolerancją 3 dni dla miodu)
+      for (var groupDate in datyMiodobran) {
+        DateTime groupDateTime = DateTime.parse(groupDate);
+        List<Map<String, dynamic>> zbioryList = [];
+
+        for (var harvest in zbioryFiltered) {
+          if (harvest.data.substring(0, 4) != rok) continue;
+
+          String harvestDate = harvest.data.substring(0, 10);
+          DateTime harvestDateTime = DateTime.parse(harvestDate);
+          int daysDiff = harvestDateTime.difference(groupDateTime).inDays.abs();
+
+          // Dla miodu tolerancja 3 dni, dla pyłku dokładne dopasowanie
+          if ((typ == 'miod' && daysDiff <= 3) || (typ == 'pylek' && daysDiff == 0)) {
+            zbioryList.add({
+              'ilosc': harvest.ilosc,
+              'miara': harvest.miara,
+              'uwagi': harvest.uwagi,
+            });
+          }
+        }
+
+        if (zbioryList.isNotEmpty) {
+          uwagiDlaGrupyDat[groupDate] = zbioryList;
+        }
+      }
+    } else {
+      // Wszystkie ule - przelicz dane od nowa z infos
+      final infosData = Provider.of<Infos>(context, listen: false);
+      final dod1Data = Provider.of<Dodatki1>(context, listen: false);
+      final dod1 = dod1Data.items;
+
+      List<Info> infos = infosData.items.where((inf) => inf.kategoria == 'harvest').toList();
+
+      // Stringi do rozpoznawania typu zbioru
+      String honeySmall = loc.honey + " = " + loc.small + " " + loc.frame + " x";
+      String honeyBig = loc.honey + " = " + loc.big + " " + loc.frame + " x";
+      String honeyKg = loc.honey + " = ";
+      String pylekPorcja = loc.beePollen + "  = " + loc.portion + " x";
+      String pylekMiarka = loc.beePollen + "  = " + loc.miarka + " x";
+      String pylekMl = loc.beePollen + " = ";
+      String pylekL = " " + loc.beePollen + " =  ";
+
+      int defaultB = dod1.isNotEmpty ? int.parse(dod1[0].b) : 250;
+      int g = dod1.isNotEmpty ? int.parse(dod1[0].g) : 100;
+
+      // Pobierz zbiory miodu dla pasieki (do sprawdzenia harvest.g)
+      final harvestsDataForB = Provider.of<Harvests>(context, listen: false);
+      List<Harvest> zbioryMiod = harvestsDataForB.items.where((h) =>
+        h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty
+      ).toList();
+
+      // Zbierz wszystkie unikalne daty dla tego roku
+      Set<String> uniqueDates = {};
+      for (var info in infos) {
+        if (info.data.substring(0, 4) == rok) {
+          String date = info.data.substring(0, 10);
+          int b = typ == 'miod' ? _getBForDate(info.data, defaultB, zbioryMiod) : defaultB;
+          double val = typ == 'miod'
+              ? _obliczMiod(info, b, honeySmall, honeyBig, honeyKg)
+              : _obliczPylek(info, g, pylekPorcja, pylekMiarka, pylekMl, pylekL);
+          if (val > 0) uniqueDates.add(date);
+        }
+      }
+
+      // Grupuj bliskie daty (tylko dla miodu)
+      Map<String, String> dateMapping = typ == 'miod'
+          ? _grupujBliskieDaty(uniqueDates)
+          : Map.fromEntries(uniqueDates.map((d) => MapEntry(d, d)));
+
+      // Aktualizuj datyMiodobran - użyj nowo obliczonych dat dla wszystkich uli
+      datyMiodobran.clear();
+      Set<String> groupedDates = dateMapping.values.toSet();
+      List<String> sortedGroupedDates = groupedDates.toList()..sort();
+      datyMiodobran.addAll(sortedGroupedDates);
+
+      // Dla każdego ula oblicz zbiory
+      for (var nrUla in allHivesNumbers) {
+        Map<String, double> harvests = {};
+
+        for (var info in infos) {
+          if (info.data.substring(0, 4) == rok && info.ulNr == nrUla) {
+            String date = info.data.substring(0, 10);
+            int b = typ == 'miod' ? _getBForDate(info.data, defaultB, zbioryMiod) : defaultB;
+            double val = typ == 'miod'
+                ? _obliczMiod(info, b, honeySmall, honeyBig, honeyKg)
+                : _obliczPylek(info, g, pylekPorcja, pylekMiarka, pylekMl, pylekL);
+
+            if (val > 0) {
+              String groupDate = dateMapping[date] ?? date;
+              harvests[groupDate] = (harvests[groupDate] ?? 0) + val;
+            }
+          }
+        }
+
+        if (harvests.isNotEmpty) {
+          List<Map<String, dynamic>> harvestsList = harvests.entries
+              .map((e) => {"date": e.key, "value": e.value})
+              .toList();
+          allData.add({
+            'nrUla': nrUla,
+            'harvests': harvestsList,
+          });
+        }
+      }
+
+      // Pobierz uwagi z tabeli zbiory
+      final harvestsData = Provider.of<Harvests>(context, listen: false);
+      int zasobIdFilter = typ == 'miod' ? 1 : 2; // 1 = miód, 2 = pyłek
+      List<Harvest> zbioryFiltered = harvestsData.items.where((h) =>
+        h.zasobId == zasobIdFilter && h.pasiekaNr == globals.pasiekaID
+      ).toList();
+
+      for (var groupDate in datyMiodobran) {
+        DateTime groupDateTime = DateTime.parse(groupDate);
+        List<Map<String, dynamic>> zbioryList = [];
+
+        for (var harvest in zbioryFiltered) {
+          if (harvest.data.substring(0, 4) != rok) continue;
+
+          String harvestDate = harvest.data.substring(0, 10);
+          DateTime harvestDateTime = DateTime.parse(harvestDate);
+          int daysDiff = harvestDateTime.difference(groupDateTime).inDays.abs();
+
+          // Dla miodu tolerancja 3 dni, dla pyłku dokładne dopasowanie
+          if ((typ == 'miod' && daysDiff <= 3) || (typ == 'pylek' && daysDiff == 0)) {
+            zbioryList.add({
+              'ilosc': harvest.ilosc,
+              'miara': harvest.miara,
+              'uwagi': harvest.uwagi,
+            });
+          }
+        }
+
+        if (zbioryList.isNotEmpty) {
+          uwagiDlaGrupyDat[groupDate] = zbioryList;
+        }
+      }
+    }
+
+    return (allData: allData, uwagiDlaGrupyDat: uwagiDlaGrupyDat);
+  }
+
+  //CSV raportu zbioru (11.10.2026) - te same dane co PDF (_przygotujDaneZbioru):
+  //tabela uli (zbiór z każdego miodobrania + razem na ul, jak słupki wykresu),
+  //tabela miodobrań (jak legenda PDF: suma, przeliczenie, zbiory z uwagami) i RAZEM.
+  //Liczby osobno od jednostek (jednostka w nagłówku), wykres i kolory pominięte.
+  //Wariant "mailem" też idzie przez systemowe Udostępnij (udostepnijCsv).
+  Future<void> _generateCsv({
+    required String typ, // 'miod' lub 'pylek'
+    required String rok,
+    required List<Map<String, dynamic>> daneZbioru,
+    required List<String> datyMiodobran,
+    Map<String, double>? sumaKg,
+    Map<String, double>? sumaL, // sumy ml pyłku dla każdego zbioru
+    required double totalValue,
+    required String pasiekaNazwa,
+    bool tylkoWidoczne = false, // true = tylko ule z bieżącej strony
+  }) async {
+    if (daneZbioru.isEmpty) return;
+    final loc = AppLocalizations.of(context)!;
+    final String rokEkran = rokNaEkran(context, rok);
+    final bool isPl = globals.isEuropeanFormat();
+
+    final dane = _przygotujDaneZbioru(
+      typ: typ,
+      rok: rok,
+      daneZbioru: daneZbioru,
+      datyMiodobran: datyMiodobran,
+      tylkoWidoczne: tylkoWidoczne,
+    );
+    final List<Map<String, dynamic>> allData = dane.allData;
+    final Map<String, List<Map<String, dynamic>>> uwagiDlaGrupyDat = dane.uwagiDlaGrupyDat;
+    if (allData.isEmpty) return;
+
+    //miód: gramy -> kg (1 l = 1.45 kg), pyłek: ml -> l (gęstość ~0.5 kg/l) - jak w PDF
+    final String jednostka = typ == 'miod' ? 'kg' : 'l';
+    final String jednostka2 = typ == 'miod' ? 'l' : 'kg';
+    double przelicz(double litryLubKg) => typ == 'miod' ? litryLubKg / 1.45 : litryLubKg * 0.5;
+
+    //data YYYY-MM-DD -> DD.MM / MM-DD (jak legenda w PDF)
+    String dataKrotka(String d) {
+      if (d.length < 10) return d;
+      return isPl ? '${d.substring(8, 10)}.${d.substring(5, 7)}' : '${d.substring(5, 7)}-${d.substring(8, 10)}';
+    }
+    String dataPelna(String d) {
+      if (d.length < 10) return d;
+      return isPl ? '${d.substring(8, 10)}.${d.substring(5, 7)}.${d.substring(0, 4)}'
+                  : '${d.substring(5, 7)}-${d.substring(8, 10)}-${d.substring(0, 4)}';
+    }
+    final String uwagiNaglowek = loc.comments.isEmpty
+        ? loc.comments
+        : loc.comments[0].toUpperCase() + loc.comments.substring(1);
+
+    final String tytul = typ == 'miod'
+        ? '${loc.hOneyHarvest} $rokEkran - $pasiekaNazwa'
+        : '${loc.beePollenHarvest} $rokEkran - $pasiekaNazwa';
+
+    final List<List<String>> wiersze = [
+      [tytul],
+      ['Hey Maya ${dataPelna(DateTime.now().toString().substring(0, 10))}'],
+      [],
+      //tabela 1 - ule (dane słupków wykresu)
+      [loc.hiveNumbers],
+      [
+        loc.hIveNr,
+        for (var d in datyMiodobran) '${dataKrotka(d)} [$jednostka]',
+        '${loc.total} [$jednostka]',
+      ],
+    ];
+    for (var hive in allData) {
+      final Map<String, double> wartosci = {};
+      for (var h in (hive['harvests'] as List)) {
+        final String d = h['date'] as String;
+        wartosci[d] = (wartosci[d] ?? 0) + (h['value'] as num).toDouble();
+      }
+      double razemUl = 0;
+      for (var v in wartosci.values) {
+        razemUl += v;
+      }
+      wiersze.add([
+        '${hive['nrUla']}',
+        for (var d in datyMiodobran) wartosci[d] != null ? liczbaCsv(wartosci[d]! / 1000) : '',
+        liczbaCsv(razemUl / 1000),
+      ]);
+    }
+
+    //tabela 2 - miodobrania/zbiory (legenda PDF, od najnowszej daty)
+    final Map<String, double>? sumy = typ == 'miod' ? sumaKg : sumaL;
+    wiersze.add([]);
+    wiersze.add([loc.hArvests]);
+    wiersze.add([
+      loc.harvestDate,
+      '${loc.total} [$jednostka]',
+      '${loc.total} [$jednostka2]',
+      uwagiNaglowek,
+    ]);
+    for (var date in datyMiodobran.reversed) {
+      final double wartosc = (sumy?[date] ?? 0) / 1000;
+      final List<Map<String, dynamic>> zbioryList = uwagiDlaGrupyDat[date] ?? [];
+      final String uwagiText = zbioryList.map((zbior) {
+        double ilosc = (zbior['ilosc'] as num?)?.toDouble() ?? 0.0;
+        int miara = (zbior['miara'] as num?)?.toInt() ?? 1;
+        String uwagi = (zbior['uwagi'] as String?) ?? '';
+        String jedn = miara == 1 ? 'l' : 'kg';
+        String iloscStr = liczbaCsv(ilosc, miejsca: 1);
+        return uwagi.isNotEmpty ? '$iloscStr $jedn - $uwagi' : '$iloscStr $jedn';
+      }).join('; ');
+      wiersze.add([
+        dataPelna(date),
+        liczbaCsv(wartosc),
+        liczbaCsv(przelicz(wartosc)),
+        uwagiText,
+      ]);
+    }
+
+    //RAZEM - jak w nagłówku PDF (kolumny jak w tabeli zbiorów powyżej)
+    wiersze.add([
+      loc.tOTAL,
+      liczbaCsv(totalValue / 1000),
+      liczbaCsv(przelicz(totalValue / 1000)),
+    ]);
+
+    final String nazwa = typ == 'miod' ? 'miod_$rok' : 'pylek_$rok';
+    await udostepnijCsv(context, nazwa, wiersze);
   }
 
   // Funkcja generująca PDF z wykresem miodu/pyłku i wysyłająca mailem
@@ -866,188 +1226,16 @@ class _RaportColorScreenState extends State<RaportColorScreen> {
       // Stała ilość uli na stronę PDF dla czytelności
       const int uliNaStrone = 20;
 
-      // Przygotuj dane w zależności od opcji
-      List<Map<String, dynamic>> allData = [];
-
-      // Mapa uwag dla każdej grupy dat (data -> lista zbiorów z ilością, miarą i uwagami)
-      Map<String, List<Map<String, dynamic>>> uwagiDlaGrupyDat = {};
-
-      if (tylkoWidoczne) {
-        // Tylko ule z bieżącej strony - użyj istniejących danych
-        for (var j = 0; j < hivesNumbers.length; j++) {
-          var hiveData = daneZbioru.firstWhere(
-            (d) => d['x'] == j + 1,
-            orElse: () => {'x': j + 1, 'harvests': []},
-          );
-          if ((hiveData['harvests'] as List).isNotEmpty) {
-            allData.add({
-              'nrUla': hivesNumbers[j],
-              'harvests': hiveData['harvests'],
-            });
-          }
-        }
-
-        // Upewnij się że datyMiodobran zawiera wszystkie daty z danych
-        Set<String> allDatesFromData = {};
-        for (var hive in allData) {
-          for (var h in (hive['harvests'] as List)) {
-            allDatesFromData.add(h['date'] as String);
-          }
-        }
-        // Jeśli są daty których brakuje w datyMiodobran, dodaj je
-        for (var date in allDatesFromData) {
-          if (!datyMiodobran.contains(date)) {
-            datyMiodobran.add(date);
-          }
-        }
-        datyMiodobran.sort();
-
-        // Pobierz uwagi z tabeli zbiory
-        final harvestsData = Provider.of<Harvests>(context, listen: false);
-        int zasobIdFilter = typ == 'miod' ? 1 : 2; // 1 = miód, 2 = pyłek
-        List<Harvest> zbioryFiltered = harvestsData.items.where((h) =>
-          h.zasobId == zasobIdFilter && h.pasiekaNr == globals.pasiekaID
-        ).toList();
-
-        // Dla każdej daty miodobrania znajdź uwagi (z tolerancją 3 dni dla miodu)
-        for (var groupDate in datyMiodobran) {
-          DateTime groupDateTime = DateTime.parse(groupDate);
-          List<Map<String, dynamic>> zbioryList = [];
-
-          for (var harvest in zbioryFiltered) {
-            if (harvest.data.substring(0, 4) != rok) continue;
-
-            String harvestDate = harvest.data.substring(0, 10);
-            DateTime harvestDateTime = DateTime.parse(harvestDate);
-            int daysDiff = harvestDateTime.difference(groupDateTime).inDays.abs();
-
-            // Dla miodu tolerancja 3 dni, dla pyłku dokładne dopasowanie
-            if ((typ == 'miod' && daysDiff <= 3) || (typ == 'pylek' && daysDiff == 0)) {
-              zbioryList.add({
-                'ilosc': harvest.ilosc,
-                'miara': harvest.miara,
-                'uwagi': harvest.uwagi,
-              });
-            }
-          }
-
-          if (zbioryList.isNotEmpty) {
-            uwagiDlaGrupyDat[groupDate] = zbioryList;
-          }
-        }
-      } else {
-        // Wszystkie ule - przelicz dane od nowa z infos
-        final infosData = Provider.of<Infos>(context, listen: false);
-        final dod1Data = Provider.of<Dodatki1>(context, listen: false);
-        final dod1 = dod1Data.items;
-
-        List<Info> infos = infosData.items.where((inf) => inf.kategoria == 'harvest').toList();
-
-        // Stringi do rozpoznawania typu zbioru
-        String honeySmall = loc.honey + " = " + loc.small + " " + loc.frame + " x";
-        String honeyBig = loc.honey + " = " + loc.big + " " + loc.frame + " x";
-        String honeyKg = loc.honey + " = ";
-        String pylekPorcja = loc.beePollen + "  = " + loc.portion + " x";
-        String pylekMiarka = loc.beePollen + "  = " + loc.miarka + " x";
-        String pylekMl = loc.beePollen + " = ";
-        String pylekL = " " + loc.beePollen + " =  ";
-
-        int defaultB = dod1.isNotEmpty ? int.parse(dod1[0].b) : 250;
-        int g = dod1.isNotEmpty ? int.parse(dod1[0].g) : 100;
-
-        // Pobierz zbiory miodu dla pasieki (do sprawdzenia harvest.g)
-        final harvestsDataForB = Provider.of<Harvests>(context, listen: false);
-        List<Harvest> zbioryMiod = harvestsDataForB.items.where((h) =>
-          h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty
-        ).toList();
-
-        // Zbierz wszystkie unikalne daty dla tego roku
-        Set<String> uniqueDates = {};
-        for (var info in infos) {
-          if (info.data.substring(0, 4) == rok) {
-            String date = info.data.substring(0, 10);
-            int b = typ == 'miod' ? _getBForDate(info.data, defaultB, zbioryMiod) : defaultB;
-            double val = typ == 'miod'
-                ? _obliczMiod(info, b, honeySmall, honeyBig, honeyKg)
-                : _obliczPylek(info, g, pylekPorcja, pylekMiarka, pylekMl, pylekL);
-            if (val > 0) uniqueDates.add(date);
-          }
-        }
-
-        // Grupuj bliskie daty (tylko dla miodu)
-        Map<String, String> dateMapping = typ == 'miod'
-            ? _grupujBliskieDaty(uniqueDates)
-            : Map.fromEntries(uniqueDates.map((d) => MapEntry(d, d)));
-
-        // Aktualizuj datyMiodobran - użyj nowo obliczonych dat dla wszystkich uli
-        datyMiodobran.clear();
-        Set<String> groupedDates = dateMapping.values.toSet();
-        List<String> sortedGroupedDates = groupedDates.toList()..sort();
-        datyMiodobran.addAll(sortedGroupedDates);
-
-        // Dla każdego ula oblicz zbiory
-        for (var nrUla in allHivesNumbers) {
-          Map<String, double> harvests = {};
-
-          for (var info in infos) {
-            if (info.data.substring(0, 4) == rok && info.ulNr == nrUla) {
-              String date = info.data.substring(0, 10);
-              int b = typ == 'miod' ? _getBForDate(info.data, defaultB, zbioryMiod) : defaultB;
-              double val = typ == 'miod'
-                  ? _obliczMiod(info, b, honeySmall, honeyBig, honeyKg)
-                  : _obliczPylek(info, g, pylekPorcja, pylekMiarka, pylekMl, pylekL);
-
-              if (val > 0) {
-                String groupDate = dateMapping[date] ?? date;
-                harvests[groupDate] = (harvests[groupDate] ?? 0) + val;
-              }
-            }
-          }
-
-          if (harvests.isNotEmpty) {
-            List<Map<String, dynamic>> harvestsList = harvests.entries
-                .map((e) => {"date": e.key, "value": e.value})
-                .toList();
-            allData.add({
-              'nrUla': nrUla,
-              'harvests': harvestsList,
-            });
-          }
-        }
-
-        // Pobierz uwagi z tabeli zbiory
-        final harvestsData = Provider.of<Harvests>(context, listen: false);
-        int zasobIdFilter = typ == 'miod' ? 1 : 2; // 1 = miód, 2 = pyłek
-        List<Harvest> zbioryFiltered = harvestsData.items.where((h) =>
-          h.zasobId == zasobIdFilter && h.pasiekaNr == globals.pasiekaID
-        ).toList();
-
-        for (var groupDate in datyMiodobran) {
-          DateTime groupDateTime = DateTime.parse(groupDate);
-          List<Map<String, dynamic>> zbioryList = [];
-
-          for (var harvest in zbioryFiltered) {
-            if (harvest.data.substring(0, 4) != rok) continue;
-
-            String harvestDate = harvest.data.substring(0, 10);
-            DateTime harvestDateTime = DateTime.parse(harvestDate);
-            int daysDiff = harvestDateTime.difference(groupDateTime).inDays.abs();
-
-            // Dla miodu tolerancja 3 dni, dla pyłku dokładne dopasowanie
-            if ((typ == 'miod' && daysDiff <= 3) || (typ == 'pylek' && daysDiff == 0)) {
-              zbioryList.add({
-                'ilosc': harvest.ilosc,
-                'miara': harvest.miara,
-                'uwagi': harvest.uwagi,
-              });
-            }
-          }
-
-          if (zbioryList.isNotEmpty) {
-            uwagiDlaGrupyDat[groupDate] = zbioryList;
-          }
-        }
-      }
+      // Dane wspólne z CSV (_przygotujDaneZbioru) - te same liczby w obu formatach
+      final dane = _przygotujDaneZbioru(
+        typ: typ,
+        rok: rok,
+        daneZbioru: daneZbioru,
+        datyMiodobran: datyMiodobran,
+        tylkoWidoczne: tylkoWidoczne,
+      );
+      final List<Map<String, dynamic>> allData = dane.allData;
+      final Map<String, List<Map<String, dynamic>>> uwagiDlaGrupyDat = dane.uwagiDlaGrupyDat;
 
       if (allData.isEmpty) {
         setState(() {

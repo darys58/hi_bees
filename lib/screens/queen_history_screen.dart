@@ -11,6 +11,7 @@ import '../models/info.dart';
 import '../helpers/db_helper.dart';
 import '../helpers/queen_helpers.dart';
 import '../helpers/parametr_nazwy.dart'; //nazwaParametru, wartoscWBiezacym
+import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
 import '../globals.dart' as globals;
 
 class QueenHistoryScreen extends StatefulWidget {
@@ -228,6 +229,77 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
 
   List<Widget> _buildMarkIcon(String znak, BuildContext context) {
     return markToIcon(markToKey(znak));
+  }
+
+  //CSV historii matki (11.10.2026) - to samo co PDF: dane matki jako wiersze
+  //"etykieta;wartość" (etykiety jak w PDF), potem tabela z jednym wierszem na
+  //kafelek; cechy z jednego dnia w jednej komórce, jedna pod drugą.
+  Future<void> _generateQueenHistoryCsv() async {
+    if (_queen == null) return;
+    final queen = _queen!;
+    final loc = AppLocalizations.of(context)!;
+
+    final now = DateTime.now();
+    final dataCsv = globals.isEuropeanFormat()
+        ? '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}.${now.year}'
+        : '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    final List<List<String>> wiersze = [
+      [loc.pdfQueenHistoryTitle(queen.id.toString())],
+      ['Hey Maya $dataCsv'],
+      [],
+    ];
+
+    // Dane matki - te same warunki co w PDF
+    if (queen.linia.isNotEmpty) wiersze.add([loc.pdfLine, queen.linia]);
+    if (queen.rasa.isNotEmpty) {
+      wiersze.add([loc.pdfBreed, breedToDisplay(breedToKey(queen.rasa), loc)]);
+    }
+    if (queen.znak.isNotEmpty && queen.znak != '0') {
+      wiersze.add([loc.pdfMark, markToDisplay(markToKey(queen.znak), loc)]);
+    }
+    if (queen.napis.isNotEmpty && queen.napis != '0') {
+      wiersze.add([loc.pdfLabel, queen.napis]);
+    }
+    if (queen.zrodlo.isNotEmpty && queen.zrodlo != '0') {
+      wiersze.add([loc.pdfSource, sourceToDisplay(sourceToKey(queen.zrodlo), loc)]);
+    }
+    if (queen.data.isNotEmpty && queen.data != '0') {
+      wiersze.add([loc.pdfObtainedDate, _zmienDatePelna(queen.data)]);
+    }
+    if (queen.dataStraty.isNotEmpty && queen.dataStraty != '0') {
+      wiersze.add([loc.pdfLostDate, _zmienDatePelna(queen.dataStraty)]);
+    }
+    if (queen.uwagi.isNotEmpty && queen.uwagi != '0') {
+      wiersze.add([loc.pdfRemarks, queen.uwagi]);
+    }
+    wiersze.add([]);
+
+    // Tabela - jeden wiersz na kafelek, jak w PDF
+    final List<List<Info>> kafelki = _kafelki();
+    final Set<String> podlaczenia = _wpisyPodlaczenia(context);
+    if (kafelki.isNotEmpty) {
+      wiersze.add([loc.pdfLp, loc.pdfApiaryHive, loc.pdfDate, loc.pdfHour,
+                   loc.pdfTemperature, loc.pdfInformation, loc.pdfRemarks]);
+    }
+    for (int i = 0; i < kafelki.length; i++) {
+      final info = kafelki[i].first;
+      final String infoText = kafelki[i]
+          .map((w) => podlaczenia.contains(w.id)
+              ? '${_opisWpisu(context, w)} (${loc.queenConnectedToHive})'
+              : _opisWpisu(context, w))
+          .join('\n');
+      wiersze.add([
+        '${i + 1}',
+        '${info.pasiekaNr}/${info.ulNr}',
+        _zmienDatePelna(info.data),
+        info.czas,
+        _cleanTemp(info.temp),
+        infoText,
+        info.uwagi,
+      ]);
+    }
+    await udostepnijCsv(context, 'historia_matki_ID${queen.id}', wiersze);
   }
 
   Future<void> _generateAndSharePdf() async {
@@ -546,7 +618,11 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
                 )
               : IconButton(
                   icon: const Icon(Icons.picture_as_pdf),
-                  onPressed: _generateAndSharePdf,
+                  onPressed: () async {
+                    final format = await wybierzFormat(context); //menu PDF / CSV
+                    if (format == FormatEksportu.pdf) _generateAndSharePdf();
+                    if (format == FormatEksportu.csv) _generateQueenHistoryCsv();
+                  },
                 ),
         ],
       ),
