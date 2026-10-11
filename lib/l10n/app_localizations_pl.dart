@@ -2927,6 +2927,14 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get voiceNfcTagNotAssigned =>
+      'Ten tag NFC nie jest przypisany do żadnego ula';
+
+  @override
+  String get voiceNfcHiveOutOfRange =>
+      'Ul z tego tagu jest w pasiece, do której nie masz dostępu';
+
+  @override
   String get teamWork => 'Praca zespołowa';
 
   @override

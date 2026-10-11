@@ -2930,6 +2930,14 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get voiceNfcTagNotAssigned =>
+      'Esta etiqueta NFC não está atribuída a nenhuma colmeia';
+
+  @override
+  String get voiceNfcHiveOutOfRange =>
+      'A colmeia desta etiqueta está num apiário ao qual não tem acesso';
+
+  @override
   String get teamWork => 'Trabalho em equipa';
 
   @override

@@ -52,6 +52,9 @@ import 'package:provider/provider.dart';
 import '../helpers/queen_helpers.dart';
 import '../helpers/sound_helper.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'dart:io' show Platform; //NFC: iOS czytnik na komendę, Android ciągły
+import 'package:nfc_manager/nfc_manager.dart';
+import '../helpers/nfc_helper.dart'; //ID tagu NFC
 import 'package:heymaya/l10n/app_localizations.dart';
 import '../helpers/vosk_engine.dart';
 import '../helpers/vosk_grammar.dart';
@@ -203,6 +206,140 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //funkcja, a nie jak stary plik.
   bool _gramatykaNieaktualna = false;
   bool _silnikGotowy = false;
+
+  //NFC NA EKRANIE STEROWANIA GŁOSEM (11.10.2026). Przyłożony tag = "otwórz
+  //pasiekę N" + "otwórz ul M" (ul z tabeli ule, kolumna h3) - te same komendy,
+  //które można powiedzieć, przepuszczone przez _obsluzKomende, więc stan ekranu,
+  //live podgląd, stos cofania i pogoda zachowują się jak przy mowie.
+  //Decyzje usera: tag działa TYLKO w otwartej sesji ("Hej Maja start"); tag
+  //nieprzypisany albo ul spoza pasiek udostępnionych = komunikat + dźwięk błędu,
+  //bez okna wyboru (przypisywanie tagów zostaje na ekranie startowym).
+  //
+  //iOS: czytnik otwiera komenda voiceNfc ("czytaj tag"); okno systemowe zasłania
+  //dół ekranu, stan apki to "inactive" i nasłuch Vosk działa dalej (test na
+  //iPhonie 10.10.2026). Jedno otwarcie czytnika = jeden tag.
+  //Android: czytnik działa cały czas, od wejścia na ekran do wyjścia. startSession
+  //ZASTĘPUJE sesję ekranu startowego (fork heymaya czyta tagi od initState
+  //apiarys_screen) - ekran startowy wznawia swoją po powrocie z tego ekranu.
+  bool _czytnikNfcOtwarty = false; //iOS: okno czytnika jest na ekranie
+  bool _czytnikNfcAndroid = false; //Android: sesja tego ekranu działa
+  String _ostatniTagNfc = ''; //Android: ten sam tag przytrzymany przy telefonie
+  DateTime _czasOstatniegoTaguNfc = DateTime(2000);
+
+  //Android - ciągły czytnik, startowany w initState. Bez NFC w telefonie po cichu.
+  Future<void> _wlaczCzytnikNfcAndroid() async {
+    try {
+      if (!await NfcManager.instance.isAvailable()) return;
+      await NfcManager.instance.startSession(
+        pollingOptions: {NfcPollingOption.iso15693}, //jak w nfc_helper.dart
+        onDiscovered: (NfcTag tag) async {
+          final String? id = NfcHelper.idTagu(tag);
+          final DateTime teraz = DateTime.now();
+          if (id != null &&
+              id == _ostatniTagNfc &&
+              teraz.difference(_czasOstatniegoTaguNfc) < const Duration(seconds: 3)) {
+            return; //ten sam tag zgłoszony ponownie - przytrzymany przy telefonie
+          }
+          _ostatniTagNfc = id ?? '';
+          _czasOstatniegoTaguNfc = teraz;
+          await _otworzUlZTagu(id);
+        },
+      );
+      _czytnikNfcAndroid = true;
+    } catch (e) {
+      debugPrint('NFC (głos): czytnik nie wystartował: $e');
+    }
+  }
+
+  //Komenda voiceNfc. iOS: otwiera okno czytnika. Android czyta tagi bez komendy,
+  //więc tylko podpowiadamy, żeby przyłożyć telefon.
+  Future<void> _otworzCzytnikNfc() async {
+    final l = AppLocalizations.of(context)!;
+    if (!Platform.isIOS) {
+      if (_czytnikNfcAndroid) {
+        _powiedzOZapisie(l.nfcHoldNearTag);
+      } else {
+        beep('error');
+        _powiedzOZapisie(l.nfcNotAvailable);
+      }
+      return;
+    }
+    if (_czytnikNfcOtwarty) return; //okno już jest na ekranie
+    try {
+      if (!await NfcManager.instance.isAvailable()) {
+        beep('error');
+        _powiedzOZapisie(l.nfcNotAvailable);
+        return;
+      }
+      _czytnikNfcOtwarty = true;
+      await NfcManager.instance.startSession(
+        pollingOptions: {NfcPollingOption.iso15693}, //jak w nfc_helper.dart
+        alertMessage: l.nfcHoldNearTag,
+        onDiscovered: (NfcTag tag) async {
+          final String? blad = await _otworzUlZTagu(NfcHelper.idTagu(tag));
+          _czytnikNfcOtwarty = false;
+          if (blad == null) {
+            await NfcManager.instance.stopSession();
+          } else {
+            await NfcManager.instance.stopSession(errorMessage: blad);
+          }
+        },
+        onError: (NfcError e) async {
+          _czytnikNfcOtwarty = false; //anulowane okno, upływ 60 s
+        },
+      );
+    } catch (e) {
+      _czytnikNfcOtwarty = false;
+      debugPrint('NFC (głos): czytnik nie wystartował: $e');
+    }
+  }
+
+  //Odczytany tag -> pasieka i ul. Zwraca komunikat błędu (iOS pokazuje go też
+  //w oknie czytnika) albo null.
+  Future<String?> _otworzUlZTagu(String? id) async {
+    if (!mounted) return null;
+    //poza sesją komend (czuwanie, dyktowanie notatki) tag nic nie robi
+    if (_engine?.tryb != TrybNasluchu.komendy) return null;
+    final l = AppLocalizations.of(context)!;
+    String? blad;
+    if (id == null) {
+      blad = l.nfcTagReadError;
+    } else {
+      final ule = await DBHelper.getHiveByH3(id);
+      if (!mounted) return null;
+      if (ule.isEmpty) {
+        blad = l.voiceNfcTagNotAssigned;
+      } else {
+        final int pasieka = int.tryParse('${ule.first['pasiekaNr']}') ?? 0;
+        final int ul = int.tryParse('${ule.first['ulNr']}') ?? 0;
+        if (pasieka == 0 || ul == 0) {
+          blad = l.voiceNfcTagNotAssigned;
+        } else if (!globals.pasiekaWZakresie(pasieka)) {
+          blad = l.voiceNfcHiveOutOfRange;
+        } else {
+          debugPrint('NFC (głos): tag $id → pasieka $pasieka, ul $ul');
+          //pasiekę otwieramy tylko, gdy to inna niż bieżąca - inaczej dwa
+          //sygnały potwierdzenia jeden po drugim
+          if (!readyApiary || nrXXOfApiary != pasieka) {
+            _obsluzKomende(VoskInference(isUnderstood: true, intent: 'setApiary', slots: {
+              'apiaryState': l.open,
+              'nrXXOfApiary': '$pasieka',
+            }));
+          }
+          _obsluzKomende(VoskInference(isUnderstood: true, intent: 'setHive', slots: {
+            'hiveState': l.open,
+            'nrXXOfHive': '$ul',
+          }));
+        }
+      }
+    }
+    if (blad != null) {
+      beep('error');
+      _powiedzOZapisie(blad);
+    }
+    return blad;
+  }
+
   Timer? _inferenceTimer; //timer zastępujący Future.delayed - anulowalny przy nowej komendzie
   //flaga odroczonego dźwięku 'okej' - gra się dopiero po pętli slotów, jezeli 'zapisałam' (success) nie wyparł go
   bool _pendingOpenBeep = false;
@@ -528,6 +665,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     // setState (pasek stanu), a to w trakcie budowania drzewa kończy się
     // asercją "setState called during build".
     WidgetsBinding.instance.addPostFrameCallback((_) => _uruchomVosk());
+    if (Platform.isAndroid) _wlaczCzytnikNfcAndroid(); //iOS: czytnik na komendę "czytaj tag"
   }
 
   @override
@@ -538,6 +676,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     WidgetsBinding.instance.removeObserver(this);
     //nasłuch jest ciągły, więc wyjście z ekranu MUSI zwolnić mikrofon
     _engine?.zamknij();
+    //czytnik NFC tego ekranu (Android ciągły, iOS otwarte okno) - ekran startowy
+    //wznawia swoją sesję sam
+    if (_czytnikNfcAndroid || _czytnikNfcOtwarty) NfcManager.instance.stopSession();
     _sound.dispose(); //zwolnienie odtwarzaczy dźwięku
     WakelockPlus.disable(); //usunięcie blokady wygaszania ekranu
     // Powrót do wymuszonej orientacji pionowej
@@ -747,6 +888,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //żadnego kontekstu ani czyścić slotów.
     if (f.inference.intent == 'voiceUndo') {
       _cofnijOstatniZapis();
+      return;
+    }
+
+    //6. czytnik NFC ("czytaj tag") - otwiera okno czytnika na iOS; odczytany tag
+    //otwiera pasiekę i ul (patrz _otworzUlZTagu). Nic nie zapisuje.
+    if (f.inference.intent == 'voiceNfc') {
+      _otworzCzytnikNfc();
       return;
     }
 

@@ -1971,6 +1971,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nfcTagReadError => 'Error reading NFC tag';
 
   @override
+  String get voiceNfcTagNotAssigned => 'This NFC tag is not assigned to any hive';
+
+  @override
+  String get voiceNfcHiveOutOfRange => 'The hive on this tag is in an apiary you have no access to';
+
+  @override
   String get nfcAssignTag => 'Assign tag to hive';
 
   @override

@@ -1115,6 +1115,8 @@
     },
     "voiceNoQueenInHive": "Nessuna regina in questa arnia - aggiungi prima la regina nell'app",
     "voiceQueenSavedInHives": "Salvato in {saved} arnie su {all} - nelle altre non c'è la regina",
+    "voiceNfcTagNotAssigned": "Questo tag NFC non è assegnato a nessun alveare",
+    "voiceNfcHiveOutOfRange": "L'alveare di questo tag è in un apiario a cui non hai accesso",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

@@ -1984,6 +1984,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nfcTagReadError => 'Erreur de lecture du tag NFC';
 
   @override
+  String get voiceNfcTagNotAssigned => 'Ce tag NFC n\'est attribué à aucune ruche';
+
+  @override
+  String get voiceNfcHiveOutOfRange => 'La ruche de ce tag se trouve dans un rucher auquel vous n\'avez pas accès';
+
+  @override
   String get nfcAssignTag => 'Assigner le tag à la ruche';
 
   @override

@@ -1130,6 +1130,8 @@
     },
     "voiceNoQueenInHive": "W ulu nie ma matki - najpierw dodaj matkę w aplikacji",
     "voiceQueenSavedInHives": "Zapisano w {saved} z {all} uli - w pozostałych nie ma matki",
+    "voiceNfcTagNotAssigned": "Ten tag NFC nie jest przypisany do żadnego ula",
+    "voiceNfcHiveOutOfRange": "Ul z tego tagu jest w pasiece, do której nie masz dostępu",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

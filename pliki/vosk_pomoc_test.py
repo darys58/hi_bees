@@ -40,6 +40,7 @@ POMOC = [
         'zanotuj', 'zapisz notatkę', 'hej maja notatka do przeglądu',
         'hej maja notatka do notesu',
         'hej maja cofnij ostatni zapis', 'hej maja cofnij ostatni wpis',
+        'czytaj tag', 'odczytaj tag', 'skanuje tag', 'hej maja czytaj tag',
     ]),
     ('lokacja', [
         'otwórz pasiekę numer jeden',

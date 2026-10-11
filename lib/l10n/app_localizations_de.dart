@@ -2932,6 +2932,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get voiceNfcTagNotAssigned =>
+      'Dieser NFC-Tag ist keinem Bienenstock zugeordnet';
+
+  @override
+  String get voiceNfcHiveOutOfRange =>
+      'Der Bienenstock dieses Tags gehört zu einem Bienenstand, auf den du keinen Zugriff hast';
+
+  @override
   String get teamWork => 'Teamarbeit';
 
   @override

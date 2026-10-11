@@ -76,6 +76,9 @@ class NfcHelper {
     }
   }
 
+  // ID tagu dla innych ekranów (NFC na ekranie sterowania głosem, 11.10.2026)
+  static String? idTagu(NfcTag tag) => _extractTagId(tag);
+
   // Wyodrebnienie ID z tagu NFC
   static String? _extractTagId(NfcTag tag) {
     try {

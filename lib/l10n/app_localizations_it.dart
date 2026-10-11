@@ -2932,6 +2932,14 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get voiceNfcTagNotAssigned =>
+      'Questo tag NFC non è assegnato a nessun alveare';
+
+  @override
+  String get voiceNfcHiveOutOfRange =>
+      'L\'alveare di questo tag è in un apiario a cui non hai accesso';
+
+  @override
   String get teamWork => 'Lavoro di squadra';
 
   @override

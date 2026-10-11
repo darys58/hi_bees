@@ -3955,6 +3955,18 @@ abstract class AppLocalizations {
   /// **'Error reading NFC tag'**
   String get nfcTagReadError;
 
+  /// No description provided for @voiceNfcTagNotAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'This NFC tag is not assigned to any hive'**
+  String get voiceNfcTagNotAssigned;
+
+  /// No description provided for @voiceNfcHiveOutOfRange.
+  ///
+  /// In en, this message translates to:
+  /// **'The hive on this tag is in an apiary you have no access to'**
+  String get voiceNfcHiveOutOfRange;
+
   /// No description provided for @nfcAssignTag.
   ///
   /// In en, this message translates to:

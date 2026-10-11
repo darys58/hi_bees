@@ -1115,6 +1115,8 @@
     },
     "voiceNoQueenInHive": "Aucune reine dans cette ruche - ajoutez d'abord la reine dans l'application",
     "voiceQueenSavedInHives": "Enregistré dans {saved} ruches sur {all} - pas de reine dans les autres",
+    "voiceNfcTagNotAssigned": "Ce tag NFC n'est attribué à aucune ruche",
+    "voiceNfcHiveOutOfRange": "La ruche de ce tag se trouve dans un rucher auquel vous n'avez pas accès",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

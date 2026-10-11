@@ -1115,6 +1115,8 @@
     },
     "voiceNoQueenInHive": "In diesem Volk ist keine Königin - zuerst die Königin in der App hinzufügen",
     "voiceQueenSavedInHives": "In {saved} von {all} Völkern gespeichert - in den übrigen keine Königin",
+    "voiceNfcTagNotAssigned": "Dieser NFC-Tag ist keinem Bienenstock zugeordnet",
+    "voiceNfcHiveOutOfRange": "Der Bienenstock dieses Tags gehört zu einem Bienenstand, auf den du keinen Zugriff hast",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

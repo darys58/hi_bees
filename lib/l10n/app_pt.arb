@@ -1115,6 +1115,8 @@
     },
     "voiceNoQueenInHive": "Não há rainha nesta colmeia - adicione primeiro a rainha na aplicação",
     "voiceQueenSavedInHives": "Guardado em {saved} de {all} colmeias - nas restantes não há rainha",
+    "voiceNfcTagNotAssigned": "Esta etiqueta NFC não está atribuída a nenhuma colmeia",
+    "voiceNfcHiveOutOfRange": "A colmeia desta etiqueta está num apiário ao qual não tem acesso",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

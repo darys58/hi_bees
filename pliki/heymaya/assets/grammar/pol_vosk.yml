@@ -88,6 +88,15 @@ context:
     voiceUndo:
       - hej maja cofnij ostatni zapis
       - hej maja cofnij ostatni wpis
+    # --- czytnik NFC (11.10.2026) --------------------------------------------
+    # Na iOS otwiera systemowe okno czytnika; odczytany tag otwiera pasiekę i ul
+    # (voice_vosk_screen._otworzUlZTagu). Android czyta tagi bez komendy.
+    # Nic nie zapisuje, więc "hej maja" jest opcjonalne.
+    # ALIAS: "skanuj" NIE MA w słowniku modelu - jest "skanuje", który Vosk
+    # dopasowuje do wypowiedzianego "skanuj". Pomoc pokazuje "skanuj".
+    # Wszystkie słowa sprawdzone w słowniku modelu (pliki/vosk_slownik_pl.txt).
+    voiceNfc:
+      - (hej maja) [czytaj,odczytaj,skanuje] tag
     setApiary:
       - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

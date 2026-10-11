@@ -2244,10 +2244,18 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                           //ekran zakupu zamiast sterowania - plan_subskrypcja_glos.md pkt 2.2
                           final memy = Provider.of<Memory>(context, listen: false).items;
                           if (Subskrypcja.glosDostepny(memy.isNotEmpty ? memy[0].ddo : '')) {
-                            Navigator.of(context).pushNamed(VoiceVoskScreen.routeName);
+                            //ekran głosu ma własną sesję NFC (zastępuje tę z _startNfc)
+                            //i zamyka ją przy wyjściu - po powrocie wznawiamy naszą
+                            Navigator.of(context).pushNamed(VoiceVoskScreen.routeName).then((_) async {
+                              if (mounted && await NfcManager.instance.isAvailable()) _startNfc();
+                            });
                           } else {
+                            //po zakupie ekran subskrypcji podmienia się na ekran głosu
+                            //(pushReplacementNamed) - ten sam powrót, to samo wznowienie NFC
                             Navigator.of(context).pushNamed(VoiceSubscriptionScreen.routeName,
-                                arguments: {'zGlosu': true});
+                                arguments: {'zGlosu': true}).then((_) async {
+                              if (mounted && await NfcManager.instance.isAvailable()) _startNfc();
+                            });
                           }
                         },
                         child: Text(

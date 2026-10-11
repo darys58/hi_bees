@@ -2929,6 +2929,14 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get voiceNfcTagNotAssigned =>
+      'Esta etiqueta NFC no está asignada a ninguna colmena';
+
+  @override
+  String get voiceNfcHiveOutOfRange =>
+      'La colmena de esta etiqueta está en un colmenar al que no tienes acceso';
+
+  @override
   String get teamWork => 'Trabajo en equipo';
 
   @override

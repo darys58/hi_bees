@@ -1979,6 +1979,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nfcTagReadError => 'Errore di lettura del tag NFC';
 
   @override
+  String get voiceNfcTagNotAssigned => 'Questo tag NFC non è assegnato a nessun alveare';
+
+  @override
+  String get voiceNfcHiveOutOfRange => 'L\'alveare di questo tag è in un apiario a cui non hai accesso';
+
+  @override
   String get nfcAssignTag => 'Assegna tag all\'arnia';
 
   @override

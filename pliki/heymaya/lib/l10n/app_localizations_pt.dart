@@ -1979,6 +1979,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nfcTagReadError => 'Erro na leitura da etiqueta NFC';
 
   @override
+  String get voiceNfcTagNotAssigned => 'Esta etiqueta NFC não está atribuída a nenhuma colmeia';
+
+  @override
+  String get voiceNfcHiveOutOfRange => 'A colmeia desta etiqueta está num apiário ao qual não tem acesso';
+
+  @override
   String get nfcAssignTag => 'Atribuir etiqueta à colmeia';
 
   @override

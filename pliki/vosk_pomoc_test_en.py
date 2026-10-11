@@ -222,6 +222,9 @@ POMOC = [
         'hey maya note for notepad',
         'hey maya undo last save',
         'hey maya undo last entry',
+        'read tag',
+        'scan tag',
+        'hey maya read tag',
     ]),
 ]
 

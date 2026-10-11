@@ -1938,6 +1938,8 @@
     },
     "voiceNoQueenInHive": "No queen in this hive - add the queen in the app first",
     "voiceQueenSavedInHives": "Saved in {saved} of {all} hives - no queen in the rest",
+    "voiceNfcTagNotAssigned": "This NFC tag is not assigned to any hive",
+    "voiceNfcHiveOutOfRange": "The hive on this tag is in an apiary you have no access to",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

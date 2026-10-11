@@ -117,6 +117,13 @@ context:
     voiceUndo:
       - hey maya undo last save
       - hey maya undo last entry
+    # --- NFC reader (11.10.2026) ---------------------------------------------
+    # iOS: opens the system reader sheet; a read tag opens the apiary and hive
+    # (voice_vosk_screen._otworzUlZTagu). Android reads tags without a command.
+    # Saves nothing, so "hey maya" is optional.
+    # All words checked in pliki/vosk_slownik_eng.txt.
+    voiceNfc:
+      - (hey maya) [read,scan] tag
     setApiary:
       - $state:apiaryState apiary (number) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

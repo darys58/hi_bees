@@ -29,6 +29,7 @@
 // mała ramka x"), więc NIE WOLNO zmieniać ich na biernik. Do pomocy służą
 // osobne klucze `apiaryAcc` ("pasiekę") i `frameAcc` ("ramkę").
 
+import 'dart:io' show Platform; //opis komendy NFC zależy od platformy
 import 'package:flutter/material.dart';
 import 'package:heymaya/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
@@ -109,7 +110,16 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
     TextSpan(text: '.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Hej Maja cofnij ostatni zapis/wpis', style: _wymagany),
-    TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n\n',
+    TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n',
+        style: _komentarz),
+    //voiceNfc - "skanuj" mówione, w gramatyce alias "skanuje" (brak w modelu)
+    _punktor,
+    TextSpan(text: 'Hej Maja', style: _opcjonalny),
+    TextSpan(text: ' czytaj/odczytaj/skanuj tag', style: _wymagany),
+    TextSpan(
+        text: Platform.isIOS
+            ? ' - otwiera czytnik NFC; przyłożony tag otwiera pasiekę i ul.\n\n'
+            : ' - tagi NFC są czytane cały czas: przyłożony tag otwiera pasiekę i ul.\n\n',
         style: _komentarz),
   ];
 }
@@ -147,7 +157,15 @@ List<TextSpan> _sekcjaSesjaEn() {
     TextSpan(text: '.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Hey Maya undo last save/entry', style: _wymagany),
-    TextSpan(text: ' - undoes the last saving command.\n\n',
+    TextSpan(text: ' - undoes the last saving command.\n',
+        style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Hey Maya', style: _opcjonalny),
+    TextSpan(text: ' read/scan tag', style: _wymagany),
+    TextSpan(
+        text: Platform.isIOS
+            ? ' - opens the NFC reader; a tag opens its apiary and hive.\n\n'
+            : ' - NFC tags are read all the time: a tag opens its apiary and hive.\n\n',
         style: _komentarz),
   ];
 }
