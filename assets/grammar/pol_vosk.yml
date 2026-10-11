@@ -97,6 +97,18 @@ context:
     # Wszystkie słowa sprawdzone w słowniku modelu (pliki/vosk_slownik_pl.txt).
     voiceNfc:
       - (hej maja) [czytaj,odczytaj,skanuje] tag
+    # --- aparat (11.10.2026) -------------------------------------------------
+    # Podgląd aparatu w ekranie głosu, tylko przy otwartym ulu; zdjęcie trafia
+    # do zdjęć ula (tabela zdjecia) i nie podlega cofaniu. "zrób zdjęcie" przy
+    # zamkniętym aparacie tylko go otwiera. Obsługa: voice_vosk_screen._komendaAparatu.
+    # Wszystkie słowa sprawdzone w słowniku modelu (pliki/vosk_slownik_pl.txt).
+    voiceCamera:
+      - (hej maja) [otwórz,włącz] aparat
+    voicePhoto:
+      - (hej maja) zrób zdjęcie
+      - pstryk
+    voiceCameraClose:
+      - (hej maja) [zamknij,wyłącz] aparat
     setApiary:
       - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

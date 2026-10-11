@@ -41,6 +41,8 @@ POMOC = [
         'hej maja notatka do notesu',
         'hej maja cofnij ostatni zapis', 'hej maja cofnij ostatni wpis',
         'czytaj tag', 'odczytaj tag', 'skanuje tag', 'hej maja czytaj tag',
+        'otwórz aparat', 'włącz aparat', 'zrób zdjęcie', 'pstryk',
+        'hej maja zrób zdjęcie', 'zamknij aparat', 'wyłącz aparat',
     ]),
     ('lokacja', [
         'otwórz pasiekę numer jeden',

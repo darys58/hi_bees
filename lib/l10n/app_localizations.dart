@@ -5754,6 +5754,36 @@ abstract class AppLocalizations {
   /// **'The hive on this tag is in an apiary you have no access to'**
   String get voiceNfcHiveOutOfRange;
 
+  /// No description provided for @voicePhotoNoHive.
+  ///
+  /// In en, this message translates to:
+  /// **'A photo can only be taken with a hive open'**
+  String get voicePhotoNoHive;
+
+  /// No description provided for @voiceCameraHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say “take photo” or “snap”; “close camera” to finish'**
+  String get voiceCameraHint;
+
+  /// No description provided for @voiceCameraError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the camera – check camera permission in phone settings'**
+  String get voiceCameraError;
+
+  /// No description provided for @voicePhotoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo saved'**
+  String get voicePhotoSaved;
+
+  /// No description provided for @voicePhotoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the photo'**
+  String get voicePhotoError;
+
   /// No description provided for @teamWork.
   ///
   /// In en, this message translates to:

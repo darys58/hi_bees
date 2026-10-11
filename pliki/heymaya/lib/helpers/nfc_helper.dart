@@ -30,6 +30,7 @@ class NfcHelper {
    // _showScanningDialog(context);
 
     try {
+      globals.nfcSesja++; //patrz globals.nfcSesja
       NfcManager.instance.startSession(
         pollingOptions: {NfcPollingOption.iso15693}, //bez tego wywala się bład
         onDiscovered: (NfcTag tag) async {

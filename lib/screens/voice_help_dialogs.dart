@@ -119,8 +119,20 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
     TextSpan(
         text: Platform.isIOS
             ? ' - otwiera czytnik NFC; przyłożony tag otwiera pasiekę i ul.\n\n'
-            : ' - tagi NFC są czytane cały czas: przyłożony tag otwiera pasiekę i ul.\n\n',
+            : ' - tagi NFC są czytane cały czas: przyłożony tag otwiera pasiekę i ul.\n',
         style: _komentarz),
+    //voiceCamera / voicePhoto / voiceCameraClose
+    _punktor,
+    TextSpan(text: 'Otwórz/włącz aparat', style: _wymagany),
+    TextSpan(text: ' - podgląd aparatu (tylko przy otwartym ulu).\n',
+        style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Zrób zdjęcie', style: _wymagany),
+    TextSpan(text: '/pstryk'),
+    TextSpan(text: ' - zdjęcie do zdjęć ula.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Zamknij/wyłącz aparat', style: _wymagany),
+    TextSpan(text: ' - zamyka podgląd.\n\n', style: _komentarz),
   ];
 }
 
@@ -165,8 +177,19 @@ List<TextSpan> _sekcjaSesjaEn() {
     TextSpan(
         text: Platform.isIOS
             ? ' - opens the NFC reader; a tag opens its apiary and hive.\n\n'
-            : ' - NFC tags are read all the time: a tag opens its apiary and hive.\n\n',
+            : ' - NFC tags are read all the time: a tag opens its apiary and hive.\n',
         style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Open camera', style: _wymagany),
+    TextSpan(text: ' - camera preview (only with a hive open).\n',
+        style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Take photo', style: _wymagany),
+    TextSpan(text: '/take picture/snap'),
+    TextSpan(text: ' - photo saved to the hive photos.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Close camera', style: _wymagany),
+    TextSpan(text: ' - closes the preview.\n\n', style: _komentarz),
   ];
 }
 

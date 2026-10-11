@@ -2935,6 +2935,23 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ul z tego tagu jest w pasiece, do której nie masz dostępu';
 
   @override
+  String get voicePhotoNoHive => 'Zdjęcie można zrobić tylko przy otwartym ulu';
+
+  @override
+  String get voiceCameraHint =>
+      'Powiedz „zrób zdjęcie” albo „pstryk”, a „zamknij aparat” kończy';
+
+  @override
+  String get voiceCameraError =>
+      'Nie udało się włączyć aparatu – sprawdź zgodę na aparat w ustawieniach telefonu';
+
+  @override
+  String get voicePhotoSaved => 'Zdjęcie zapisane';
+
+  @override
+  String get voicePhotoError => 'Nie udało się zapisać zdjęcia';
+
+  @override
   String get teamWork => 'Praca zespołowa';
 
   @override

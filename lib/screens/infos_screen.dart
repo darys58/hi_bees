@@ -9,7 +9,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../globals.dart' as globals;
 import '../models/info.dart';
@@ -31,6 +30,7 @@ import '../helpers/db_helper.dart'; //getInfosOfQueen - cechy matki z poprzednie
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/photo_helper.dart'; //zapis zdjęcia ula
 
 class InfoScreen extends StatefulWidget {
   static const routeName = '/screen-infos';
@@ -148,35 +148,8 @@ class _InfoScreenState extends State<InfoScreen> {
 
   //zapisanie wybranego/zrobionego zdjęcia do katalogu aplikacji i bazy
   Future<void> _savePickedImage(XFile image) async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final photosDir = Directory('${appDir.path}/photos');
-    if (!await photosDir.exists()) {
-      await photosDir.create(recursive: true);
-    }
-
-    final now = DateTime.now();
-    final timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
-    final fileName = '${globals.pasiekaID}_${globals.ulID}_$timestamp.jpg';
-    final savedPath = '${photosDir.path}/$fileName';
-
-    final File imageFile = File(image.path);
-    await imageFile.copy(savedPath);
-
-    final dataStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final czasStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-    final id = '$dataStr.$timestamp.${globals.pasiekaID}.${globals.ulID}';
-
-    await Photos.insertPhoto(
-      id,
-      dataStr,
-      czasStr,
-      globals.pasiekaID,
-      globals.ulID,
-      savedPath,
-      '',
-      0,
-    );
-
+    //zapis wspólny z ekranem sterowania głosem (helpers/photo_helper.dart)
+    await PhotoHelper.zapiszZdjecie(image.path, globals.pasiekaID, globals.ulID);
     await _loadPhotos();
   }
 

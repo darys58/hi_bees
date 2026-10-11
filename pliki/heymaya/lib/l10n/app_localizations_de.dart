@@ -1986,6 +1986,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceNfcHiveOutOfRange => 'Der Bienenstock dieses Tags gehört zu einem Bienenstand, auf den du keinen Zugriff hast';
 
   @override
+  String get voicePhotoNoHive => 'A photo can only be taken with a hive open';
+
+  @override
+  String get voiceCameraHint => 'Say “take photo” or “snap”; “close camera” to finish';
+
+  @override
+  String get voiceCameraError => 'Could not start the camera – check camera permission in phone settings';
+
+  @override
+  String get voicePhotoSaved => 'Photo saved';
+
+  @override
+  String get voicePhotoError => 'Could not save the photo';
+
+  @override
   String get nfcAssignTag => 'Tag der Beute zuweisen';
 
   @override

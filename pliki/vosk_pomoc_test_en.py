@@ -225,6 +225,12 @@ POMOC = [
         'read tag',
         'scan tag',
         'hey maya read tag',
+        'open camera',
+        'take photo',
+        'take picture',
+        'snap',
+        'hey maya take photo',
+        'close camera',
     ]),
 ]
 

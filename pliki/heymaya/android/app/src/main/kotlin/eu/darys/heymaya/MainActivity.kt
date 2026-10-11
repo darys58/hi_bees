@@ -2,6 +2,7 @@ package eu.darys.heymaya
 
 import android.content.Context
 import android.media.AudioManager
+import android.media.MediaActionSound
 import android.media.ToneGenerator
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -86,12 +87,33 @@ class MainActivity : FlutterActivity() {
     AudioManager.STREAM_NOTIFICATION,
   )
 
+  //MIGAWKA APARATU w sterowaniu głosem (11.10.2026). Pakiet `camera` na Androidzie
+  //(CameraX) robi zdjęcie po cichu - iOS gra migawkę sam. MediaActionSound to
+  //systemowy dźwięk aparatu: gra go system, bez audio focusa, więc nasłuch
+  //`record` nie przycicha (jak przy [ToneGenerator]). Wczytany raz, przy pierwszym
+  //zdjęciu, zwalniany w onDestroy.
+  private var dzwiekMigawki: MediaActionSound? = null
+
+  private fun zagrajMigawke(): String {
+    return try {
+      val dzwiek = dzwiekMigawki ?: MediaActionSound().also {
+        it.load(MediaActionSound.SHUTTER_CLICK)
+        dzwiekMigawki = it
+      }
+      dzwiek.play(MediaActionSound.SHUTTER_CLICK)
+      "ok: migawka"
+    } catch (e: RuntimeException) {
+      "migawka: ${e.message ?: e.javaClass.simpleName}"
+    }
+  }
+
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
     MethodChannel(flutterEngine.dartExecutor.binaryMessenger, kanalSygnalu)
       .setMethodCallHandler { call, result ->
         when (call.method) {
           "beep" -> result.success(zagrajSygnal())
+          "migawka" -> result.success(zagrajMigawke())
           else -> result.notImplemented()
         }
       }
@@ -194,6 +216,11 @@ class MainActivity : FlutterActivity() {
 
   override fun onDestroy() {
     zwolnijGenerator()
+    try {
+      dzwiekMigawki?.release()
+    } catch (e: RuntimeException) {
+    }
+    dzwiekMigawki = null
     super.onDestroy()
   }
 

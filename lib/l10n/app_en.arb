@@ -1940,6 +1940,11 @@
     "voiceQueenSavedInHives": "Saved in {saved} of {all} hives - no queen in the rest",
     "voiceNfcTagNotAssigned": "This NFC tag is not assigned to any hive",
     "voiceNfcHiveOutOfRange": "The hive on this tag is in an apiary you have no access to",
+    "voicePhotoNoHive": "A photo can only be taken with a hive open",
+    "voiceCameraHint": "Say “take photo” or “snap”; “close camera” to finish",
+    "voiceCameraError": "Could not start the camera – check camera permission in phone settings",
+    "voicePhotoSaved": "Photo saved",
+    "voicePhotoError": "Could not save the photo",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

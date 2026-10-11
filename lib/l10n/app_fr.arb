@@ -1117,6 +1117,11 @@
     "voiceQueenSavedInHives": "Enregistré dans {saved} ruches sur {all} - pas de reine dans les autres",
     "voiceNfcTagNotAssigned": "Ce tag NFC n'est attribué à aucune ruche",
     "voiceNfcHiveOutOfRange": "La ruche de ce tag se trouve dans un rucher auquel vous n'avez pas accès",
+    "voicePhotoNoHive": "A photo can only be taken with a hive open",
+    "voiceCameraHint": "Say “take photo” or “snap”; “close camera” to finish",
+    "voiceCameraError": "Could not start the camera – check camera permission in phone settings",
+    "voicePhotoSaved": "Photo saved",
+    "voicePhotoError": "Could not save the photo",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

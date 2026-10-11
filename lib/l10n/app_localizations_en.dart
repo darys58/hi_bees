@@ -2927,6 +2927,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'The hive on this tag is in an apiary you have no access to';
 
   @override
+  String get voicePhotoNoHive => 'A photo can only be taken with a hive open';
+
+  @override
+  String get voiceCameraHint =>
+      'Say “take photo” or “snap”; “close camera” to finish';
+
+  @override
+  String get voiceCameraError =>
+      'Could not start the camera – check camera permission in phone settings';
+
+  @override
+  String get voicePhotoSaved => 'Photo saved';
+
+  @override
+  String get voicePhotoError => 'Could not save the photo';
+
+  @override
   String get teamWork => 'Teamwork';
 
   @override

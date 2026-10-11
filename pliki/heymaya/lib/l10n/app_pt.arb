@@ -1117,6 +1117,11 @@
     "voiceQueenSavedInHives": "Guardado em {saved} de {all} colmeias - nas restantes não há rainha",
     "voiceNfcTagNotAssigned": "Esta etiqueta NFC não está atribuída a nenhuma colmeia",
     "voiceNfcHiveOutOfRange": "A colmeia desta etiqueta está num apiário ao qual não tem acesso",
+    "voicePhotoNoHive": "A photo can only be taken with a hive open",
+    "voiceCameraHint": "Say “take photo” or “snap”; “close camera” to finish",
+    "voiceCameraError": "Could not start the camera – check camera permission in phone settings",
+    "voicePhotoSaved": "Photo saved",
+    "voicePhotoError": "Could not save the photo",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

@@ -1117,6 +1117,11 @@
     "voiceQueenSavedInHives": "Salvato in {saved} arnie su {all} - nelle altre non c'è la regina",
     "voiceNfcTagNotAssigned": "Questo tag NFC non è assegnato a nessun alveare",
     "voiceNfcHiveOutOfRange": "L'alveare di questo tag è in un apiario a cui non hai accesso",
+    "voicePhotoNoHive": "A photo can only be taken with a hive open",
+    "voiceCameraHint": "Say “take photo” or “snap”; “close camera” to finish",
+    "voiceCameraError": "Could not start the camera – check camera permission in phone settings",
+    "voicePhotoSaved": "Photo saved",
+    "voicePhotoError": "Could not save the photo",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

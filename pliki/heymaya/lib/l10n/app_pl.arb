@@ -1132,6 +1132,11 @@
     "voiceQueenSavedInHives": "Zapisano w {saved} z {all} uli - w pozostałych nie ma matki",
     "voiceNfcTagNotAssigned": "Ten tag NFC nie jest przypisany do żadnego ula",
     "voiceNfcHiveOutOfRange": "Ul z tego tagu jest w pasiece, do której nie masz dostępu",
+    "voicePhotoNoHive": "Zdjęcie można zrobić tylko przy otwartym ulu",
+    "voiceCameraHint": "Powiedz „zrób zdjęcie” albo „pstryk”, a „zamknij aparat” kończy",
+    "voiceCameraError": "Nie udało się włączyć aparatu – sprawdź zgodę na aparat w ustawieniach telefonu",
+    "voicePhotoSaved": "Zdjęcie zapisane",
+    "voicePhotoError": "Nie udało się zapisać zdjęcia",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

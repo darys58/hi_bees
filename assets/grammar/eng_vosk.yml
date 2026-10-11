@@ -124,6 +124,18 @@ context:
     # All words checked in pliki/vosk_slownik_eng.txt.
     voiceNfc:
       - (hey maya) [read,scan] tag
+    # --- camera (11.10.2026) -------------------------------------------------
+    # In-screen camera preview, only with a hive open; the photo goes to the
+    # hive photos (table zdjecia), no undo. "take photo" with the camera closed
+    # only opens it. Handler: voice_vosk_screen._komendaAparatu.
+    # All words checked in pliki/vosk_slownik_eng.txt.
+    voiceCamera:
+      - (hey maya) open camera
+    voicePhoto:
+      - (hey maya) take [photo,picture]
+      - snap
+    voiceCameraClose:
+      - (hey maya) close camera
     setApiary:
       - $state:apiaryState apiary (number) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

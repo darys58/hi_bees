@@ -261,6 +261,18 @@ class SoundHelper {
   /// drogą poszedł sygnał (patrz `MainActivity.zagrajSygnal`), iOS - samo
   /// `true`. Umowa jest jedna: „ok" na początku znaczy „zagrało". Wynik ląduje
   /// w [ostatniSygnal], bo z telefonu nie da się tego wyczytać inaczej.
+  /// Migawka aparatu przy zdjęciu w sterowaniu głosem - TYLKO Android
+  /// (`MainActivity.zagrajMigawke`, systemowy MediaActionSound). iOS gra migawkę
+  /// sam przy `takePicture`. Bez kanału (stary build) po cichu nic.
+  Future<void> migawka() async {
+    if (defaultTargetPlatform != TargetPlatform.android || !_kanalSygnaluIstnieje) return;
+    try {
+      await _kanalSygnalu.invokeMethod<String>('migawka');
+    } catch (e) {
+      debugPrint('SoundHelper: migawka nie zagrała: $e');
+    }
+  }
+
   Future<void> beep() async {
     // Opis budujemy w ZMIENNEJ LOKALNEJ, a do [ostatniSygnal] wkładamy dopiero
     // gotowy. Doklejanie do pola dawałoby napis rosnący z każdą komendą, gdy

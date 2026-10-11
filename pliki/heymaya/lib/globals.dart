@@ -185,6 +185,12 @@ bool odswiezBelkiUliZ = false;//czy odswiezyć ręcznie ikoną odswiezania
 
 String wykresZbiory = 'miod'; //wyświetlany wykres "miod" lub "pylek"
 
+//numer ostatnio uruchomionej sesji NFC (11.10.2026). Na Androidzie jest jedna
+//sesja na apkę, a ekran głosu zamyka swoją w dispose - PO tym, jak ekran startowy
+//(fork heymaya) wznowił własną w `.then` z pushNamed. Zamykał więc cudzą i tagi
+//nie działały do restartu. Kto startuje sesję, podbija numer; zamyka tylko
+//właściciel bieżącego numeru.
+int nfcSesja = 0;
 String nfcMode = 'summary'; //tryb NFC: 'off' - wyłączony, 'info' - otwieraj informacje, 'summary' - otwieraj podsumowanie
 
 bool showZakupySprzedaz = true; //pokazuj/ukrywaj przyciski Zakupy i Sprzedaż na stronie startowej

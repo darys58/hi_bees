@@ -52,7 +52,10 @@ import 'package:provider/provider.dart';
 import '../helpers/queen_helpers.dart';
 import '../helpers/sound_helper.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'dart:io' show Platform; //NFC: iOS czytnik na komendę, Android ciągły
+import 'dart:io' show Platform, File; //NFC: iOS czytnik na komendę, Android ciągły; plik zdjęcia
+import 'package:camera/camera.dart'
+    show CameraController, CameraPreview, CameraLensDirection, ResolutionPreset, FlashMode, XFile, availableCameras;
+import '../helpers/photo_helper.dart'; //zapis zdjęcia ula (wspólny z infos_screen)
 import 'package:nfc_manager/nfc_manager.dart';
 import '../helpers/nfc_helper.dart'; //ID tagu NFC
 import 'package:hi_bees/l10n/app_localizations.dart';
@@ -225,11 +228,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   bool _czytnikNfcAndroid = false; //Android: sesja tego ekranu działa
   String _ostatniTagNfc = ''; //Android: ten sam tag przytrzymany przy telefonie
   DateTime _czasOstatniegoTaguNfc = DateTime(2000);
+  int _mojaSesjaNfc = -1; //numer z globals.nfcSesja - dispose zamyka tylko swoją
 
   //Android - ciągły czytnik, startowany w initState. Bez NFC w telefonie po cichu.
   Future<void> _wlaczCzytnikNfcAndroid() async {
     try {
       if (!await NfcManager.instance.isAvailable()) return;
+      _mojaSesjaNfc = ++globals.nfcSesja;
       await NfcManager.instance.startSession(
         pollingOptions: {NfcPollingOption.iso15693}, //jak w nfc_helper.dart
         onDiscovered: (NfcTag tag) async {
@@ -272,6 +277,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         return;
       }
       _czytnikNfcOtwarty = true;
+      _mojaSesjaNfc = ++globals.nfcSesja;
       await NfcManager.instance.startSession(
         pollingOptions: {NfcPollingOption.iso15693}, //jak w nfc_helper.dart
         alertMessage: l.nfcHoldNearTag,
@@ -298,9 +304,16 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //w oknie czytnika) albo null.
   Future<String?> _otworzUlZTagu(String? id) async {
     if (!mounted) return null;
-    //poza sesją komend (czuwanie, dyktowanie notatki) tag nic nie robi
-    if (_engine?.tryb != TrybNasluchu.komendy) return null;
     final l = AppLocalizations.of(context)!;
+    //poza sesją komend tag nic nie otwiera. W czuwaniu (Android czyta tagi od
+    //wejścia na ekran) podpowiadamy "Hej Maja start" - inaczej telefon pika
+    //odczytem i nic się nie dzieje. Bez "nie tutaj" - Maja jeszcze nie słucha
+    //komend, a pik odczytu daje system. Przy dyktowaniu notatki cicho.
+    if (_engine?.tryb == TrybNasluchu.czuwanie) {
+      _powiedzOZapisie(l.voiceStandby);
+      return l.voiceStandby;
+    }
+    if (_engine?.tryb != TrybNasluchu.komendy) return null;
     String? blad;
     if (id == null) {
       blad = l.nfcTagReadError;
@@ -338,6 +351,198 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       _powiedzOZapisie(blad);
     }
     return blad;
+  }
+
+  //APARAT W STEROWANIU GŁOSEM (11.10.2026). Pakiet camera, nie image_picker: podgląd
+  //jest W EKRANIE (nakładka na strefy), migawkę wyzwala komenda, więc nie trzeba
+  //dotykać telefonu. Systemowy aparat image_pickera to osobny ekran - na Androidzie
+  //inna Activity, przy której ekran dostaje "paused" i silnik Vosk staje.
+  //Decyzje usera: podgląd na komendę, TYLKO przy otwartym ulu, zdjęcie NIE podlega
+  //cofaniu. Aparat jest przypięty do ula, przy którym go otwarto - zmiana ula
+  //(komendą albo tagiem NFC) go zamyka. enableAudio: false - mikrofon zostaje dla Vosk.
+  CameraController? _aparat; //null = podgląd zamknięty
+  bool _aparatStartuje = false;
+  bool _robieZdjecie = false;
+  int _aparatPasieka = 0;
+  int _aparatUl = 0;
+  Timer? _timerAparatu; //zamknięcie po bezczynności - podgląd zjada baterię
+  static const Duration _kAparatBezczynnosc = Duration(minutes: 2);
+
+  //voiceCamera / voicePhoto / voiceCameraClose
+  Future<void> _komendaAparatu(String intent) async {
+    final l = AppLocalizations.of(context)!;
+    if (intent == 'voiceCameraClose') {
+      if (_aparat != null) {
+        _zamknijAparat();
+        beep('close');
+      }
+      return;
+    }
+    if (!readyApiary || !readyHive || nrXXOfApiary == 0 || nrXXOfHive == 0) {
+      beep('error');
+      _powiedzOZapisie(l.voicePhotoNoHive);
+      return;
+    }
+    if (_aparat == null) {
+      //"zrób zdjęcie" przy zamkniętym aparacie tylko go otwiera - pierwsze zdjęcie
+      //ma być zrobione wtedy, gdy użytkownik widzi kadr
+      await _otworzAparat();
+      return;
+    }
+    if (intent == 'voicePhoto') await _zrobZdjecie();
+  }
+
+  Future<void> _otworzAparat() async {
+    if (_aparatStartuje || _aparat != null) return;
+    _aparatStartuje = true;
+    final l = AppLocalizations.of(context)!;
+    CameraController? aparat;
+    try {
+      final kamery = await availableCameras();
+      if (kamery.isEmpty) throw StateError('brak aparatu');
+      final tylna = kamery.firstWhere((k) => k.lensDirection == CameraLensDirection.back,
+          orElse: () => kamery.first);
+      aparat = CameraController(tylna, ResolutionPreset.high, enableAudio: false);
+      await aparat.initialize();
+      try {
+        await aparat.setFlashMode(FlashMode.off); //bez lampy przy ulu
+      } catch (_) {} //aparat bez lampy
+      if (!mounted) {
+        aparat.dispose();
+        return;
+      }
+      setState(() {
+        _aparat = aparat;
+        _aparatPasieka = nrXXOfApiary;
+        _aparatUl = nrXXOfHive;
+      });
+      _playSuccess();
+      _powiedzOZapisie(l.voiceCameraHint);
+      _odliczBezczynnoscAparatu();
+    } catch (e) {
+      debugPrint('APARAT: nie wystartował: $e');
+      aparat?.dispose();
+      if (mounted) {
+        beep('error');
+        _powiedzOZapisie(l.voiceCameraError);
+      }
+    } finally {
+      _aparatStartuje = false;
+    }
+  }
+
+  //komenda albo przycisk migawki na podglądzie
+  Future<void> _zrobZdjecie() async {
+    final CameraController? aparat = _aparat;
+    if (aparat == null || _robieZdjecie || !aparat.value.isInitialized) return;
+    final l = AppLocalizations.of(context)!;
+    //prawa w bazie właściciela - przycisk omija bramkę _blokadaPraw z _naFraze
+    final String? blokada = powodBlokady(l, [czZdjecia], pasieka: _aparatPasieka);
+    if (blokada != null) {
+      beep('error');
+      _powiedzOZapisie(blokada);
+      return;
+    }
+    _robieZdjecie = true;
+    try {
+      _sound.migawka(); //Android - iOS gra migawkę sam
+      final XFile plik = await aparat.takePicture();
+      await PhotoHelper.zapiszZdjecie(plik.path, _aparatPasieka, _aparatUl);
+      try {
+        await File(plik.path).delete(); //plik tymczasowy aparatu - kopia jest w photos/
+      } catch (_) {}
+      if (!mounted) return;
+      _playSuccess();
+      _powiedzOZapisie(l.voicePhotoSaved);
+      _odliczBezczynnoscAparatu();
+    } catch (e) {
+      debugPrint('APARAT: zdjęcie nie wyszło: $e');
+      if (mounted) {
+        beep('error');
+        _powiedzOZapisie(l.voicePhotoError);
+      }
+    } finally {
+      _robieZdjecie = false;
+    }
+  }
+
+  void _odliczBezczynnoscAparatu() {
+    _timerAparatu?.cancel();
+    _timerAparatu = Timer(_kAparatBezczynnosc, () {
+      if (_aparat != null) _zamknijAparat();
+    });
+  }
+
+  void _zamknijAparat() {
+    _timerAparatu?.cancel();
+    final CameraController? aparat = _aparat;
+    if (aparat == null) return;
+    if (mounted) {
+      setState(() => _aparat = null);
+    } else {
+      _aparat = null;
+    }
+    aparat.dispose();
+  }
+
+  //Nakładka na cały korpus ekranu: podgląd + pasek stanu Mai (komunikaty muszą być
+  //widoczne, patrz buildPasekStanu). Przyciski migawki i zamknięcia - zapasowo, gdy
+  //w pasiece jest za głośno.
+  Widget _buildAparat(BuildContext context) {
+    final CameraController aparat = _aparat!;
+    final l = AppLocalizations.of(context)!;
+    return Container(
+      color: const Color.fromARGB(255, 0, 0, 0),
+      child: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                Center(child: CameraPreview(aparat)),
+                //do którego ula idzie zdjęcie
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(150, 0, 0, 0),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${l.aPiary} $_aparatPasieka · ${l.hIve} $_aparatUl',
+                      style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255), fontSize: 16),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: IconButton(
+                    iconSize: 34,
+                    icon: const Icon(Icons.close, color: Color.fromARGB(255, 255, 255, 255)),
+                    onPressed: _zamknijAparat,
+                  ),
+                ),
+                Positioned(
+                  bottom: 12,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: IconButton(
+                      iconSize: 64,
+                      icon: const Icon(Icons.camera, color: Color.fromARGB(255, 255, 255, 255)),
+                      onPressed: _zrobZdjecie,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          buildPasekStanu(context),
+        ],
+      ),
+    );
   }
 
   Timer? _inferenceTimer; //timer zastępujący Future.delayed - anulowalny przy nowej komendzie
@@ -678,7 +883,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _engine?.zamknij();
     //czytnik NFC tego ekranu (Android ciągły, iOS otwarte okno) - ekran startowy
     //wznawia swoją sesję sam
-    if (_czytnikNfcAndroid || _czytnikNfcOtwarty) NfcManager.instance.stopSession();
+    //- tylko gdy to wciąż NASZA sesja (patrz globals.nfcSesja)
+    if ((_czytnikNfcAndroid || _czytnikNfcOtwarty) && globals.nfcSesja == _mojaSesjaNfc) {
+      NfcManager.instance.stopSession();
+    }
+    _timerAparatu?.cancel();
+    _aparat?.dispose();
     _sound.dispose(); //zwolnienie odtwarzaczy dźwięku
     WakelockPlus.disable(); //usunięcie blokady wygaszania ekranu
     // Powrót do wymuszonej orientacji pionowej
@@ -898,6 +1108,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
 
+    //7. aparat - podgląd, zdjęcie, zamknięcie. Zdjęcie nie podlega cofaniu.
+    if (f.inference.intent == 'voiceCamera' ||
+        f.inference.intent == 'voicePhoto' ||
+        f.inference.intent == 'voiceCameraClose') {
+      _komendaAparatu(f.inference.intent!);
+      return;
+    }
+
     _obsluzKomende(f.inference);
   }
 
@@ -967,6 +1185,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _inferenceTimer?.cancel();
     await e.ustawTryb(TrybNasluchu.czuwanie);
     if (!mounted) return;
+    _zamknijAparat(); //koniec sesji = koniec zdjęć
     setState(() {
       isProcessing = false;
       rhinoText = "";
@@ -974,21 +1193,21 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _zagraj('listening'); //"czekam"
   }
 
-  //Komunikat o notatce - patrz [_komunikatNotatki]. Sam się kasuje po 25 s,
+  //Komunikat o notatce - patrz [_komunikatNotatki]. Sam się kasuje po 5 s (do 11.10.2026 25 s),
   //żeby „Zapisałam notatkę." nie wisiało na ekranie przez cały przegląd.
   void _powiedzONotatce(String tekst) {
     _timerKomunikatuNotatki?.cancel();
     if (!mounted) return;
     setState(() => _komunikatNotatki = tekst);
     if (tekst.isEmpty) return;
-    _timerKomunikatuNotatki = Timer(const Duration(seconds: 25), () {
+    _timerKomunikatuNotatki = Timer(const Duration(seconds: 5), () {
       if (!mounted) return;
       setState(() => _komunikatNotatki = '');
     });
   }
 
   //Komunikat o braku miejsca na stronie ramki - patrz [_komunikatZapisu].
-  //Kasuje się sam po 25 s, tak jak komunikat notatki.
+  //Kasuje się sam po 5 s, tak jak komunikat notatki.
   //Odcisk MIEJSCA ZAPISU, do którego odnosi się komunikat o braku miejsca.
   //Bierzemy stan ekranu, a nie pola wyliczane w [zapisDoBazy] (`formattedDate`,
   //`_korpusNr`) - te zmieniają się dopiero przy zapisie, więc komenda „data
@@ -1029,7 +1248,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     setState(() => _komunikatZapisu = tekst);
     if (tekst.isEmpty) return;
     _adresKomunikatuZapisu = _adresKontekstu();
-    _timerKomunikatuZapisu = Timer(const Duration(seconds: 25), () {
+    _timerKomunikatuZapisu = Timer(const Duration(seconds: 5), () {
       if (!mounted) return;
       setState(() => _komunikatZapisu = '');
     });
@@ -1710,6 +1929,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    //aparat oddaje się systemowi przy wyjściu w tło (inactive NIE - to też okno
+    //czytnika NFC na iOS, a wtedy podgląd ma zostać)
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      _zamknijAparat();
+    }
     if (!_silnikGotowy) return;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
@@ -1861,6 +2085,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         return powodBlokady(l, [czNotatki], pasieka: pasieka);
       case 'voiceNote':
         return powodBlokady(l, [czInfo], pasieka: pasieka);
+      case 'voiceCamera':
+      case 'voicePhoto':
+        return powodBlokady(l, [czZdjecia], pasieka: pasieka);
       case 'voiceUndo':
         return powodBlokady(l, [czRamka, czInfo], edycja: true, wyslany: false);
       case 'setChange':
@@ -1956,6 +2183,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         readyApiary && readyHive &&
         nrXXOfApiary != 0 && nrXXOfHive != 0) {
       _refreshLiveView();
+    }
+
+    //aparat jest przypięty do ula, przy którym go otwarto - inny ul albo zamknięty ul
+    //(komendą lub tagiem NFC) go zamyka, żeby zdjęcie nie poszło do złego ula
+    if (_aparat != null &&
+        (!readyHive || nrXXOfApiary != _aparatPasieka || nrXXOfHive != _aparatUl)) {
+      _zamknijAparat();
     }
 
     //anulowalny timer zastępujący Future.delayed - przy nowej komendzie stary
@@ -6286,7 +6520,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     zapisZas = 0; //zerowanie parametów wywołania tej funkcji
     zapisWart = '0'; //j.w.
     //KOMUNIKAT O BRAKU MIEJSCA DOTYCZY POPRZEDNIEJ KOMENDY - kasujemy go na
-    //wejściu, a nie dopiero po 25 s. Zgłoszenie z urządzenia (09.09.2026): po
+    //wejściu, a nie dopiero po 5 s. Zgłoszenie z urządzenia (09.09.2026): po
     //poprawieniu wartości na taką, która się mieści, „Nie mieści się - wolne
     //30%" wisiało dalej i wyglądało, jakby i ta komenda została odrzucona.
     //Jeżeli nowa komenda też się nie zmieści, komunikat wróci niżej - z NOWĄ
@@ -7879,7 +8113,9 @@ print('openDialog = $openDialog');
         //włączony, i od orientacji. Wysokości liczymy z [LayoutBuilder], bo
         //strefa 2 musi znać miejsce, którym dysponuje: dopiero wtedy wie, czy
         //korpus mieści się w skali 1:1, czy trzeba go zmniejszyć.
-        body: LayoutBuilder(
+        //APARAT - nakładka na wszystkie trzy strefy, gdy podgląd jest otwarty
+        body: Stack(children: [
+          Positioned.fill(child: LayoutBuilder(
           builder: (BuildContext ctx, BoxConstraints wymiary) {
             final double wysokosc = wymiary.maxHeight;
             final bool poziom =
@@ -8063,7 +8299,9 @@ print('openDialog = $openDialog');
               ],
             );
           },
-        ),
+          )),
+          if (_aparat != null) Positioned.fill(child: _buildAparat(context)),
+        ]),
       ),
     );
    

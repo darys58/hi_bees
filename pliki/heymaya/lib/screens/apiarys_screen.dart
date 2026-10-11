@@ -689,6 +689,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
     // print('globals.nfcMode = ${globals.nfcMode}');
     // if(globals.nfcMode == 'off')NfcManager.instance.stopSession();
     // if(globals.nfcMode != 'off'){ //jezeli NFC jest właczony w Obsłudze NFCh
+      globals.nfcSesja++; //od teraz sesja jest nasza - ekran głosu jej nie zamknie
       NfcManager.instance.startSession(
         pollingOptions: {NfcPollingOption.iso15693}, //bez tego wywala się bład
         onDiscovered: (NfcTag tag) async {
