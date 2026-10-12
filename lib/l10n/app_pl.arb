@@ -462,6 +462,15 @@
     "zalacz1": "załączony",
     "aDdHive": "Dodaj ul",
     "aDdQueen": "Rejestruj matkę",
+    "queenCount": "Liczba matek",
+    "queenHiveFull": "W ulu są już {ile} matki. Odłącz jedną z nich, żeby podłączyć kolejną.",
+    "@queenHiveFull": {
+        "placeholders": {
+            "ile": {
+                "type": "String"
+            }
+        }
+    },
     "nUmberOfFrameInBody": "Ilość ramek w korpusie",
     "selectStatYear": "Wybierz rok do statystyk",
     "zMalychW": "z małych w ",

@@ -327,7 +327,7 @@ class DBHelper {
   //Zapis wpisu info z ZACHOWANIEM istniejących uwag - dla sterowania głosem.
   //Głos zapisuje wpisy z pustymi uwagami, a id jest składane (data.pasieka.ul.
   //kategoria.parametr) i insert to ConflictAlgorithm.replace. Bez tego „rodzina ok",
-  //„dodaj uwagę ...", a potem „rodzina słaba" tego samego dnia kasowało uwagę.
+  //„zanotuj ...", a potem „rodzina słaba" tego samego dnia kasowało uwagę.
   //Odczyt i zapis w jednej transakcji - zapisy w ekranie głosowym nie są awaitowane.
   static Future<void> insertInfoZachowujacUwagi(Map<String, Object> data) async {
     final db = await DBHelper.database();
@@ -345,7 +345,7 @@ class DBHelper {
     });
   }
 
-  //Wpisy info, do których komenda „dodaj uwagę" dopisuje uwagę: ostatni zapis głosem
+  //Wpisy info, do których komenda „zanotuj" dopisuje notatkę: ostatni zapis głosem
   //(data, pasieka, kategoria, parametr). [ule] puste = wszystkie ule pasieki (tryb
   //„wszystkie ule"), inaczej tylko te numery. Posortowane po numerze ula.
   static Future<List<Map<String, dynamic>>> getInfoDoUwagi(String data,
@@ -989,6 +989,23 @@ class DBHelper {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie matek');
     return db.rawQuery('SELECT * FROM matki ORDER BY id DESC');
+  }
+
+  //żyjące matki ula (bez daty straty) - kilka matek w ulu (queen_helpers.idMatekUla)
+  static Future<List<Map<String, dynamic>>> getZyweMatkiUla(int pasieka, int ul) async {
+    final db = await DBHelper.database();
+    return db.rawQuery(
+        "SELECT * FROM matki WHERE pasieka = ? AND ul = ? "
+        "AND (dataStraty IS NULL OR dataStraty = '' OR dataStraty = '0') ORDER BY id",
+        [pasieka, ul]);
+  }
+
+  //liczba żyjących matek w każdym ulu - licznik "×2" na belce ula
+  static Future<List<Map<String, dynamic>>> getIleZywychMatekWUlach() async {
+    final db = await DBHelper.database();
+    return db.rawQuery(
+        "SELECT pasieka, ul, COUNT(*) AS ile FROM matki WHERE ul > 0 "
+        "AND (dataStraty IS NULL OR dataStraty = '' OR dataStraty = '0') GROUP BY pasieka, ul");
   }
 
   //odczyt ID matki tabeli matki  - dla infos_screen

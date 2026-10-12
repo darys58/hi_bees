@@ -1428,6 +1428,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aDdQueen => 'Königin registrieren';
 
   @override
+  String get queenCount => 'Anzahl der Königinnen';
+
+  @override
+  String queenHiveFull(String ile) {
+    return 'In dieser Beute sind bereits $ile Königinnen. Trenne eine davon, um eine weitere zuzuordnen.';
+  }
+
+  @override
   String get nUmberOfFrameInBody => 'Anzahl Rahmen in der Zarge';
 
   @override

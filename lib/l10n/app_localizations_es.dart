@@ -1428,6 +1428,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aDdQueen => 'Registrar reina';
 
   @override
+  String get queenCount => 'Número de reinas';
+
+  @override
+  String queenHiveFull(String ile) {
+    return 'Esta colmena ya tiene $ile reinas. Desconecta una para conectar otra.';
+  }
+
+  @override
   String get nUmberOfFrameInBody => 'Numero de cuadros en el alza';
 
   @override

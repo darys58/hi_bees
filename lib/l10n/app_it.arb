@@ -462,6 +462,15 @@
     "zalacz1": "acceso",
     "aDdHive": "Aggiungi arnia",
     "aDdQueen": "Registra regina",
+    "queenCount": "Numero di regine",
+    "queenHiveFull": "Questa arnia ha già {ile} regine. Scollegane una per collegarne un'altra.",
+    "@queenHiveFull": {
+        "placeholders": {
+            "ile": {
+                "type": "String"
+            }
+        }
+    },
     "nUmberOfFrameInBody": "Numero di telai nel melario",
     "selectStatYear": "Seleziona anno per le statistiche",
     "zMalychW": "da piccoli in ",

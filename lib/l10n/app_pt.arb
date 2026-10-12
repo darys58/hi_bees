@@ -462,6 +462,15 @@
     "zalacz1": "ligado",
     "aDdHive": "Adicionar colmeia",
     "aDdQueen": "Registar rainha",
+    "queenCount": "Número de rainhas",
+    "queenHiveFull": "Esta colmeia já tem {ile} rainhas. Desligue uma delas para ligar outra.",
+    "@queenHiveFull": {
+        "placeholders": {
+            "ile": {
+                "type": "String"
+            }
+        }
+    },
     "nUmberOfFrameInBody": "Número de quadros na alça",
     "selectStatYear": "Selecione o ano para estatísticas",
     "zMalychW": "de pequenos em ",

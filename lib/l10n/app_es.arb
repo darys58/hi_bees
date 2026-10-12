@@ -462,6 +462,15 @@
     "zalacz1": "activado",
     "aDdHive": "Agregar colmena",
     "aDdQueen": "Registrar reina",
+    "queenCount": "Número de reinas",
+    "queenHiveFull": "Esta colmena ya tiene {ile} reinas. Desconecta una para conectar otra.",
+    "@queenHiveFull": {
+        "placeholders": {
+            "ile": {
+                "type": "String"
+            }
+        }
+    },
     "nUmberOfFrameInBody": "Numero de cuadros en el alza",
     "selectStatYear": "Selecciona el ano para estadisticas",
     "zMalychW": "de pequenos en ",

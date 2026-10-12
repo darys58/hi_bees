@@ -462,6 +462,15 @@
     "zalacz1": "eingeschaltet",
     "aDdHive": "Beute hinzufügen",
     "aDdQueen": "Königin registrieren",
+    "queenCount": "Anzahl der Königinnen",
+    "queenHiveFull": "In dieser Beute sind bereits {ile} Königinnen. Trenne eine davon, um eine weitere zuzuordnen.",
+    "@queenHiveFull": {
+        "placeholders": {
+            "ile": {
+                "type": "String"
+            }
+        }
+    },
     "nUmberOfFrameInBody": "Anzahl Rahmen in der Zarge",
     "selectStatYear": "Statistikjahr wählen",
     "zMalychW": "von kleinen in ",

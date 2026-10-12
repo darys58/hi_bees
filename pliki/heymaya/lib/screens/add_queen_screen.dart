@@ -44,6 +44,9 @@ class _AddQueenScreenState extends State<AddQueenScreen> {
   String opisOpalitka = ''; // cyfry lub litery
   String rodzajUla = '';
   String uwagi = '';
+  //ile matek zarejestrować naraz - te same dane, każda z własnym ID
+  int ileMatek = 1;
+  static const int maxMatek = 99;
   int pasieka = 0;
   int ul = 0;
   bool edycja = false;
@@ -100,6 +103,17 @@ class _AddQueenScreenState extends State<AddQueenScreen> {
   //  }
 
     super.didChangeDependencies();
+  }
+
+  //napis na opalitku dla kolejnej matki z serii: liczba na końcu napisu rośnie
+  //o [krok] ("12" -> "13", "A07" -> "A08", "099" -> "100"); napis bez liczby na
+  //końcu zostaje taki sam dla wszystkich matek
+  static String napisKolejnejMatki(String napis, int krok) {
+    final m = RegExp(r'^(.*?)(\d+)$').firstMatch(napis.trim());
+    if (krok == 0 || m == null) return napis;
+    final String cyfry = m.group(2)!;
+    final BigInt liczba = BigInt.parse(cyfry) + BigInt.from(krok);
+    return m.group(1)! + liczba.toString().padLeft(cyfry.length, '0');
   }
 
    //kalendarz wyboru daty pozyskania matki
@@ -429,6 +443,45 @@ class _AddQueenScreenState extends State<AddQueenScreen> {
                                           }),
                                     //),
                                  // ]),
+
+//liczba matek - kilka jednakowych matek jednym zapisem
+                              SizedBox(
+                                height: 15,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: <Widget>[
+                                  Text(
+                                    AppLocalizations.of(context)!.queenCount + ':',
+                                    style: TextStyle(fontSize: 18, color: Colors.black),
+                                  ),
+                                  SizedBox(width: 10),
+                                  IconButton(
+                                    icon: Icon(Icons.remove_circle_outline),
+                                    onPressed: ileMatek > 1
+                                        ? () => setState(() => ileMatek--)
+                                        : null,
+                                  ),
+                                  SizedBox(
+                                    width: 36,
+                                    child: Text(
+                                      '$ileMatek',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.add_circle_outline),
+                                    onPressed: ileMatek < maxMatek
+                                        ? () => setState(() => ileMatek++)
+                                        : null,
+                                  ),
+                                ],
+                              ),
                             ]),
                       ),
                       SizedBox(
@@ -445,34 +498,35 @@ class _AddQueenScreenState extends State<AddQueenScreen> {
                               height: 50,
                               shape: const StadiumBorder(
                                 side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),),                    
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_formKey1.currentState!.validate()) {
                                   if (!mogeZapisac(context, [czMatki], pasieka: pasieka)) return; //etap 2 część B
                                   
-                                  Queens.insertQueen(
-                                    dateController.text,
-                                    zrodloMatki,
-                                    rasaMatki,
-                                    liniaMatki,
-                                    znakMatki, 
-                                    opisOpalitka,
-                                    uwagi,
-                                    pasieka,
-                                    ul,
-                                    '', //dataStraty,
-                                    '',//a,
-                                    '',//b,
-                                    '',//c,
-                                    '0', //arch,
-                                  ).then((_) {
-                                  
-                                     
-                                      Provider.of<Queens>(context, listen: false)
-                                          .fetchAndSetQueens()
-                                          .then((_) {
-                                        Navigator.of(context).pop();
-                                       });
-                                  }); //arch
+                                  //po kolei, nie równolegle: każde insertQueen bierze MAX(id) z bazy,
+                                  //więc następna matka dostaje ID dopiero po zapisaniu poprzedniej
+                                  for (int i = 0; i < ileMatek; i++) {
+                                    await Queens.insertQueen(
+                                      dateController.text,
+                                      zrodloMatki,
+                                      rasaMatki,
+                                      liniaMatki,
+                                      znakMatki, 
+                                      napisKolejnejMatki(opisOpalitka, i),
+                                      uwagi,
+                                      pasieka,
+                                      ul,
+                                      '', //dataStraty,
+                                      '',//a,
+                                      '',//b,
+                                      '',//c,
+                                      '0', //arch,
+                                    );
+                                  }
+                                  if (!mounted) return;
+                                  await Provider.of<Queens>(context, listen: false)
+                                      .fetchAndSetQueens();
+                                  if (!mounted) return;
+                                  Navigator.of(context).pop();
                                 }      
                               },
                               child: Text('   ' +

@@ -1421,6 +1421,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aDdQueen => 'Register queen';
 
   @override
+  String get queenCount => 'Number of queens';
+
+  @override
+  String queenHiveFull(String ile) {
+    return 'This hive already has $ile queens. Disconnect one of them to connect another.';
+  }
+
+  @override
   String get nUmberOfFrameInBody => 'Number of frame in body';
 
   @override

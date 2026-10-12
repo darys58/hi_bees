@@ -47,8 +47,15 @@ class _QueenItemState extends State<QueenItem> {
     final int pasieka = matki.pasieka;
     final int ul = matki.ul;
     final String data = DateTime.now().toString().substring(0, 10);
+    //KILKA MATEK W ULU (12.10.2026): czy po odłączeniu zostaje inna matka? Matka
+    //odłączana jest jeszcze w tabeli z tym ulem (pasieka/ul zerujemy po tej metodzie).
+    final List<int> matkiPrzed = await idMatekUla(pasieka, ul);
+    final List<int> pozostale = matkiPrzed.where((id) => id != matki.id).toList();
+    //wpis "brak" z ID TEJ matki zostaje zawsze - jest jej historią; cechy innych
+    //matek liczą się po ich ID, więc ten wpis ich nie rusza
     await Infos.insertInfo(
-      '$data.$pasieka.$ul.queen. ' + loc.queen + kIdOdlaczeniaMatki,
+      //.m<ID> - dwie matki odłączone tego samego dnia z jednego ula (12.10.2026)
+      '$data.$pasieka.$ul.queen. ' + loc.queen + '.m${matki.id}' + kIdOdlaczeniaMatki,
       data,
       pasieka,
       ul,
@@ -63,12 +70,29 @@ class _QueenItemState extends State<QueenItem> {
       0,
     );
     final String idUla = '$pasieka.$ul';
-    await DBHelper.updateUleMatka1(idUla, '');
-    await DBHelper.updateUleMatka2(idUla, 'brak');
-    await DBHelper.updateUleMatka3(idUla, '');
-    await DBHelper.updateUleMatka4(idUla, '');
-    await DBHelper.updateUleMatka5(idUla, '');
-    await DBHelper.updateUle(idUla, 'ikona', 'red');
+    await wczytajDodatkoweMatki(pomin: matki.id); //ikony matek niegłównych na belce
+    if (pozostale.isNotEmpty) {
+      //w ulu zostaje matka - belka bez "brak" i bez czerwonej ikony. Gdy odłączana
+      //była GŁÓWNĄ, belka dostaje znak nowej głównej; resztę cech dolicza
+      //odświeżenie belek (ikona oka), bo liczą się z wpisów
+      if (matkiPrzed.isNotEmpty && matkiPrzed.first == matki.id) {
+        final nowa = await DBHelper.getZyweMatkiUla(pasieka, ul);
+        final glowna = nowa.where((m) => m['id'] == pozostale.first).toList();
+        await DBHelper.updateUleMatka1(idUla, '');
+        await DBHelper.updateUleMatka2(idUla, glowna.isEmpty ? ''
+            : belkaZnakuMatki('${glowna[0]['znak'] ?? ''}', '${glowna[0]['napis'] ?? ''}'));
+        await DBHelper.updateUleMatka3(idUla, '');
+        await DBHelper.updateUleMatka4(idUla, '');
+        await DBHelper.updateUleMatka5(idUla, '');
+      }
+    } else {
+      await DBHelper.updateUleMatka1(idUla, '');
+      await DBHelper.updateUleMatka2(idUla, 'brak');
+      await DBHelper.updateUleMatka3(idUla, '');
+      await DBHelper.updateUleMatka4(idUla, '');
+      await DBHelper.updateUleMatka5(idUla, '');
+      await DBHelper.updateUle(idUla, 'ikona', 'red');
+    }
     //ikona pasieki z ikon jej uli - tak samo jak przy podłączaniu
     final ule = await DBHelper.getHives(pasieka);
     String ikonaPasieki = 'green';
@@ -308,6 +332,18 @@ class _QueenItemState extends State<QueenItem> {
                   //etap 2 część B: podłączenie zmienia matkę i dopisuje wpis do historii ula (info)
                   if (!mogeZapisac(context, [czMatki], edycja: true, wyslany: matki.arch != 0) ||
                       !mogeZapisac(context, [czInfo], pasieka: globals.pasiekaID)) return;
+                  //KILKA MATEK W ULU (12.10.2026): do kMaxMatekWUlu żyjących matek
+                  final int ileWUlu = Provider.of<Queens>(context, listen: false).items
+                      .where((q) => q.pasieka == globals.pasiekaID &&
+                          q.ul == globals.ulID && matkaZyje(q.dataStraty))
+                      .length;
+                  if (ileWUlu >= kMaxMatekWUlu) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(AppLocalizations.of(context)!
+                          .queenHiveFull(kMaxMatekWUlu.toString())),
+                    ));
+                    return;
+                  }
                   DBHelper.updateQueen(matki.id, 'pasieka', globals.pasiekaID);
                   DBHelper.updateQueen(matki.id, 'ul', globals.ulID);
                   DBHelper.updateQueen(matki.id, 'arch', 0);
@@ -315,7 +351,8 @@ class _QueenItemState extends State<QueenItem> {
                     //".connect" na końcu id = wpis z chwili podłączenia matki do ula
                     //(11.10.2026) - historia matki rysuje przy nim ikonkę. Id nie jest
                     //nigdzie rozbierane; osobne id = przegląd z tego dnia go nie nadpisze.
-                    '${dateController.text}.${globals.pasiekaID}.${globals.ulID}.queen. ' + AppLocalizations.of(context)!.queen + kIdPodlaczeniaMatki,
+                    //.m<ID> - dwie matki podłączone tego samego dnia do jednego ula (12.10.2026)
+                    '${dateController.text}.${globals.pasiekaID}.${globals.ulID}.queen. ' + AppLocalizations.of(context)!.queen + '.m${matki.id}' + kIdPodlaczeniaMatki,
                     dateController.text,
                     globals.pasiekaID,
                     globals.ulID,
@@ -335,21 +372,15 @@ class _QueenItemState extends State<QueenItem> {
                     matki.uwagi,
                     0, //info[0].arch,
                   ).then((_) {
-                    String matka2 = '';
-                    final znakKey = markToKey(matki.znak);
-                    if(znakKey != '' && znakKey != '0') {
-                      switch(znakKey) {
-                        case kMarkUnmarked: matka2 = 'niez '; break;
-                        case kMarkWhite: matka2 = 'biał ' + matki.napis; break;
-                        case kMarkYellow: matka2 = 'żółt ' + matki.napis; break;
-                        case kMarkRed: matka2 = 'czer ' + matki.napis; break;
-                        case kMarkGreen: matka2 = 'ziel ' + matki.napis; break;
-                        case kMarkBlue: matka2 = 'nieb ' + matki.napis; break;
-                        case kMarkOther: matka2 = 'inny ' + matki.napis; break;
-                      }
-                    }
-                    DBHelper.updateUleMatka2('${globals.pasiekaID}.${globals.ulID}', matka2).then((_) { //ul.id, ul.matka2
-                      DBHelper.updateUle('${globals.pasiekaID}.${globals.ulID}', 'ikona', 'green').then((_) {
+                    //belka ula pokazuje matkę GŁÓWNĄ (najwcześniej podłączoną) - nowa
+                    //matka jest nią tylko w ulu bez innej żyjącej matki
+                    final String idUla = '${globals.pasiekaID}.${globals.ulID}';
+                    final Future<void> belka = ileWUlu == 0
+                        ? DBHelper.updateUleMatka2(idUla, belkaZnakuMatki(matki.znak, matki.napis))
+                            .then((_) => DBHelper.updateUle(idUla, 'ikona', 'green'))
+                        : Future<void>.value();
+                    belka.then((_) {
+                      wczytajDodatkoweMatki().then((_) { //ikony matek niegłównych na belce
                         //pobranie do Hives_items z tabeli ule - ule z pasieki do której był wpis
                         Provider.of<Hives>(context, listen: false).fetchAndSetHives(globals.pasiekaID)
                           .then((_) {

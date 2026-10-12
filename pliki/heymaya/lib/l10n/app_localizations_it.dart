@@ -1428,6 +1428,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get aDdQueen => 'Registra regina';
 
   @override
+  String get queenCount => 'Numero di regine';
+
+  @override
+  String queenHiveFull(String ile) {
+    return 'Questa arnia ha già $ile regine. Scollegane una per collegarne un\'altra.';
+  }
+
+  @override
   String get nUmberOfFrameInBody => 'Numero di telai nel melario';
 
   @override

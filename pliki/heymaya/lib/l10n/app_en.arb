@@ -918,6 +918,15 @@
     "aDdHive": "Add hive",
     "@aDdHive": {},
     "aDdQueen": "Register queen",
+    "queenCount": "Number of queens",
+    "queenHiveFull": "This hive already has {ile} queens. Disconnect one of them to connect another.",
+    "@queenHiveFull": {
+        "placeholders": {
+            "ile": {
+                "type": "String"
+            }
+        }
+    },
     "@aDdQueen": {},
     "nUmberOfFrameInBody": "Number of frame in body",
     "@nUmberOfFrameInBody": {},

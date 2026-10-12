@@ -462,6 +462,15 @@
     "zalacz1": "activé",
     "aDdHive": "Ajouter une ruche",
     "aDdQueen": "Enregistrer une reine",
+    "queenCount": "Nombre de reines",
+    "queenHiveFull": "Cette ruche a déjà {ile} reines. Détachez-en une pour en associer une autre.",
+    "@queenHiveFull": {
+        "placeholders": {
+            "ile": {
+                "type": "String"
+            }
+        }
+    },
     "nUmberOfFrameInBody": "Nombre de cadres dans la hausse",
     "selectStatYear": "Sélectionnez l'année pour les statistiques",
     "zMalychW": "des petits en ",

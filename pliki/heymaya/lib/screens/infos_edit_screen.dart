@@ -49,6 +49,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
   String typUla = 'WIELKOPOLSKI'; //wielkopolski, dadant itp
   String rodzajUla = ''; //ul, odkład, mini
   int matkaID = 0; //numer id matki - index z tabeli "matka"
+  //żyjące matki ula, GŁÓWNA pierwsza (12.10.2026) - przy kilku wpis wybiera, której dotyczy
+  List<Queen> _matkiUla = [];
   String dmRamki = ''; //ilośc dm2 w ramce - zalezna od typu ula i wielkosci ramki
   String? nowyMiara;
   String? nowyUwagi;
@@ -177,6 +179,26 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
     globals.typUla = typUla;
   }
 
+  //żyjące matki edytowanego ula, GŁÓWNA pierwsza - kolejność z wpisów ula o matce
+  //(provider Infos trzyma wpisy tego ula, wczytane przez infos_screen)
+  List<Queen> _wczytajMatkiUla(BuildContext context) {
+    final queens = Provider.of<Queens>(context, listen: false).items.where((qu) {
+      return qu.pasieka == globals.pasiekaID && qu.ul == globals.ulID;
+    });
+    final wpisy = Provider.of<Infos>(context, listen: false).items.where((inf) =>
+        inf.kategoria == 'queen' &&
+        inf.pasiekaNr == globals.pasiekaID && inf.ulNr == globals.ulID);
+    return matkiUlaWKolejnosci(queens, wpisy);
+  }
+
+  //ID matek na liście wyboru - matki ula plus matka edytowanego wpisu, gdy jej
+  //już w ulu nie ma (DropdownButton wymaga pozycji zgodnej z wartością)
+  List<int> _idMatekDoWyboru() {
+    final ids = _matkiUla.map((q) => q.id).toList();
+    if (matkaID != 0 && !ids.contains(matkaID)) ids.add(matkaID);
+    return ids;
+  }
+
   @override
   void didChangeDependencies() {
   if (_isInit) {
@@ -233,15 +255,11 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
         rodzajUla = info[0].pogoda; //dane tylko dla iloscRamek =
         _uzupelnijRodzajITyp(context); //braki z tabeli ule + walidacja list rozwijanych
       }
-      if(nowaKategoria == 'queen' && info[0].pogoda != '') matkaID = int.parse(info[0].pogoda);
+      if (nowaKategoria == 'queen') _matkiUla = _wczytajMatkiUla(context);
+      if(nowaKategoria == 'queen' && info[0].pogoda != '') matkaID = int.tryParse(info[0].pogoda) ?? 0;
       else{
-          //pobranie matek dla tego ula bo edytowane info nie ma jeszcze ID matki
-          final queensData = Provider.of<Queens>(context);
-          List<Queen> queens = queensData.items.where((qu) {
-            return qu.pasieka == globals.pasiekaID && qu.ul == globals.ulID ;
-          }).toList();
-          if(queens.isNotEmpty) matkaID = queens[0].id;//jest matka podłączona do ula
-          else matkaID = 0; //nie ma matki połaczonej z ulem
+          //edytowane info nie ma jeszcze ID matki - matka GŁÓWNA ula (0 = ul bez matki)
+          matkaID = _matkiUla.isNotEmpty ? _matkiUla.first.id : 0;
       }
       nowyTemp = info[0].temp;
       nowyCzas = info[0].czas;
@@ -286,12 +304,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
       nowyUwagi = '';
       tytulEkranu = AppLocalizations.of(context)!.addInfo;
       if(nowaKategoria == 'queen') {
-        //pobranie matek dla tego ula
-          final queensData = Provider.of<Queens>(context);
-          List<Queen> queens = queensData.items.where((qu) {
-            return qu.pasieka == globals.pasiekaID && qu.ul == globals.ulID ;
-          }).toList();
-          matkaID = queens[0].id;  
+        //domyślnie matka GŁÓWNA ula (najwcześniej podłączona); przy kilku matkach
+        //nagłówek ekranu ma listę do zmiany
+        _matkiUla = _wczytajMatkiUla(context);
+        matkaID = _matkiUla.isNotEmpty ? _matkiUla.first.id : 0;
       }
       if(nowyWartosc == AppLocalizations.of(context)!.onBodyNumber) nowyMiara = '1';//wartość domyslna korpusu dla kraty odgrodowej przy dodawaniu wpisu
       if(nowyParametr == " " + AppLocalizations.of(context)!.excluder + " -") nowyMiara = '0';//wartość domyslna dla usunietej kraty odgrodowej, musi być 0 bo jest zameniana na int w frames_screen
@@ -591,11 +607,34 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               AppLocalizations.of(context)!.oRodzinie,
                               style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
                             ),
-                        if(nowaKategoria == 'queen')
+                        if(nowaKategoria == 'queen' && _idMatekDoWyboru().length < 2)
                           Text(
                               AppLocalizations.of(context)!.oMatce + ' ID' + matkaID.toString(),
                               style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
                             ),
+                        //kilka matek w ulu - wybór, której matki dotyczy wpis
+                        if(nowaKategoria == 'queen' && _idMatekDoWyboru().length >= 2)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                AppLocalizations.of(context)!.oMatce + ' ',
+                                style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                              DropdownButton<int>(
+                                value: matkaID,
+                                style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 0, 0, 0)),
+                                //główna NA DOLE listy - jak w panelu ula (prośba usera 12.10.2026)
+                                items: [
+                                  for (final id in _idMatekDoWyboru().reversed)
+                                    DropdownMenuItem<int>(value: id, child: Text('ID$id')),
+                                ],
+                                onChanged: (id) {
+                                  if (id != null) setState(() => matkaID = id);
+                                },
+                              ),
+                            ],
+                          ),
                         if(nowaKategoria == 'harvest')
                           Text(
                               AppLocalizations.of(context)!.oZbiorach,
@@ -2384,7 +2423,16 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                     ? info[0].wartosc
                                     : nowyWartosc;
                             DBHelper.deleteInfo(info[0].id).then((_) {
-                              final nowyInfoId = '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$parametrDoBazy';
+                              final bazaId = '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$parametrDoBazy';
+                              //wpis o matce: ta sama matka i to samo id bazowe = stare id (z
+                              //przyrostkiem matki albo bez), inna matka = przyrostek wybranej
+                              final nowyInfoId = nowaKategoria == 'queen' &&
+                                      info[0].pogoda == matkaID.toString() &&
+                                      (info[0].id == bazaId || info[0].id.startsWith('$bazaId.m'))
+                                  ? info[0].id
+                                  : bazaId + (nowaKategoria == 'queen'
+                                      ? przyrostekIdMatki(matkaID, _matkiUla.isNotEmpty ? _matkiUla.first.id : 0)
+                                      : '');
                               Infos.insertInfo(
                                 nowyInfoId,
                                 dateController.text,
@@ -2468,7 +2516,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               //print('dodawanie info - rodzaj ula = $rodzajUla');
                               //print('usunieto pokarm - nowaWartość = $nowyWartosc')                              
                               Infos.insertInfo(
-                                '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr',
+                                '${dateController.text}.$nowaPasieka.$nowyUl.$nowaKategoria.$nowyParametr${nowaKategoria == 'queen' ? przyrostekIdMatki(matkaID, _matkiUla.isNotEmpty ? _matkiUla.first.id : 0) : ''}',
                                 dateController.text,
                                 nowaPasieka,
                                 nowyUl,
@@ -2701,6 +2749,9 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                           NotificationHelper.scheduleAllNotifications();
                         }
 
+                        //wpis o matce mógł zmienić ikony matek niegłównych na belce
+                        if (nowaKategoria == 'queen') wczytajDodatkoweMatki();
+
                         //jezeli wpis  dotyczy leczenia lub dokarmiania lub matki lub wyposazenia lub przeglądu (bo likwidacja ula i zmiana ikony na czarną)
                         if (nowaKategoria == 'feeding' || nowaKategoria == 'treatment' || nowaKategoria == 'queen' || nowaKategoria == 'equipment'  || nowaKategoria == 'inspection') {
                           //zeby nie stracić danych zebranych podczas przeglądu w widoku zbiorczym uli (belki)
@@ -2761,8 +2812,10 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                               miara = nowyMiara!;
                             }
                           }
-                          //jezeli info jest o matce to zmiana parametrów matki w belce
-                          if (nowaKategoria == 'queen') {                                          
+                          //jezeli info jest o matce to zmiana parametrów matki w belce - belka
+                          //pokazuje matkę GŁÓWNĄ, więc wpis o innej matce ula jej nie zmienia
+                          if (nowaKategoria == 'queen' &&
+                              (_matkiUla.length < 2 || matkaID == _matkiUla.first.id)) {                                          
                           
   //** */ Quality - matka1
                             final loc = AppLocalizations.of(context)!;

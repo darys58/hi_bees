@@ -1426,6 +1426,14 @@ class AppLocalizationsPl extends AppLocalizations {
   String get aDdQueen => 'Rejestruj matkę';
 
   @override
+  String get queenCount => 'Liczba matek';
+
+  @override
+  String queenHiveFull(String ile) {
+    return 'W ulu są już $ile matki. Odłącz jedną z nich, żeby podłączyć kolejną.';
+  }
+
+  @override
   String get nUmberOfFrameInBody => 'Ilość ramek w korpusie';
 
   @override

@@ -41,6 +41,25 @@ class Queen with ChangeNotifier {
     required this.c,
     required this.arch,
   });
+
+  //wiersz tabeli "matki" spoza providera (queen_helpers.idMatekUla)
+  factory Queen.fromMap(Map<String, dynamic> item) => Queen(
+        id: item['id'],
+        data: item['data'] ?? '',
+        zrodlo: item['zrodlo'] ?? '',
+        rasa: item['rasa'] ?? '',
+        linia: item['linia'] ?? '',
+        znak: item['znak'] ?? '',
+        napis: item['napis'] ?? '',
+        uwagi: item['uwagi'] ?? '',
+        pasieka: item['pasieka'] ?? 0,
+        ul: item['ul'] ?? 0,
+        dataStraty: item['dataStraty'] ?? '',
+        a: item['a'] ?? '',
+        b: item['b'] ?? '',
+        c: item['c'] ?? '',
+        arch: item['arch'] ?? 0,
+      );
 }
 
 class Queens with ChangeNotifier {

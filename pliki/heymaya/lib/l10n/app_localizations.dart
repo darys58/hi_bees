@@ -2868,6 +2868,18 @@ abstract class AppLocalizations {
   /// **'Register queen'**
   String get aDdQueen;
 
+  /// No description provided for @queenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of queens'**
+  String get queenCount;
+
+  /// No description provided for @queenHiveFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This hive already has {ile} queens. Disconnect one of them to connect another.'**
+  String queenHiveFull(String ile);
+
   /// No description provided for @nUmberOfFrameInBody.
   ///
   /// In en, this message translates to:

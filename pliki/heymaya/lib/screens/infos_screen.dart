@@ -56,11 +56,11 @@ class _InfoScreenState extends State<InfoScreen> {
   String uwagiUla = '';
   String nazwaWlasna = '';
   List<Photo> _photos = [];
-  //wpisy o matce, która siedzi w tym ulu, ze WSZYSTKICH uli - z nich biorą się
-  //cechy PRZENIESIONE po przełożeniu matki (patrz build). Wczytywane raz na
-  //matkę, poza budowaniem widoku.
-  List<Info> _infoTejMatki = [];
-  String _idMatkiInfo = ''; //dla jakiej matki wczytano _infoTejMatki
+  //wpisy o matkach, które siedzą w tym ulu, ze WSZYSTKICH uli (klucz = ID matki) -
+  //z nich biorą się cechy PRZENIESIONE po przełożeniu matki (patrz build).
+  //Wczytywane raz na zestaw matek, poza budowaniem widoku.
+  Map<String, List<Info>> _infoMatek = {};
+  String _idMatekInfo = ''; //dla jakich matek (ID po przecinku) wczytano _infoMatek
   final ImagePicker _picker = ImagePicker();
 
   List<Color> colory = [
@@ -119,19 +119,282 @@ class _InfoScreenState extends State<InfoScreen> {
     super.didChangeDependencies();
   }
 
-  //Wpisy JEDNEJ matki ze wszystkich uli - dla cech przenoszonych po przełożeniu
+  //Wpisy matek ula ze wszystkich uli - dla cech przenoszonych po przełożeniu
   //matki do innego ula. Wołane z build przez addPostFrameCallback, więc setState
   //nie wpada w trakcie budowania widoku.
-  Future<void> _wczytajInfoMatki(String matkaID) async {
-    if (matkaID.isEmpty) {
-      if (_infoTejMatki.isNotEmpty && mounted) setState(() { _infoTejMatki = []; });
-      return;
+  Future<void> _wczytajInfoMatek(List<String> idMatek) async {
+    final Map<String, List<Info>> wynik = {};
+    for (final id in idMatek) {
+      if (id.isEmpty) continue;
+      final dataList = await DBHelper.getInfosOfQueen(id);
+      wynik[id] = dataList.map((item) => Info.fromMap(item)).toList();
     }
-    final dataList = await DBHelper.getInfosOfQueen(matkaID);
     if (!mounted) return;
-    setState(() {
-      _infoTejMatki = dataList.map((item) => Info.fromMap(item)).toList();
-    });
+    setState(() => _infoMatek = wynik);
+  }
+
+  //CECHY JEDNEJ MATKI (12.10.2026 - wydzielone z build, bo w ulu może być do
+  //trzech matek, a każda ma swoje cechy). Bierze OSTATNI wpis każdej cechy
+  //spośród wpisów TEJ matki ([wpisMatki]: po ID w info.pogoda; wpis bez ID -
+  //gdy ta matka była wtedy w ulu sama). Brakujące cechy
+  //uzupełnia wpisami tej matki z POPRZEDNIEGO ula (szary tekst) - kopia
+  //kłamałaby w dzienniku, więc nic nie trafia do bazy. "Brak matki" czyści cechy.
+  _CechyMatki _policzCechyMatki(BuildContext context, List<Info> infos,
+      String idMatki, {required Map<String, DateTime> wejscia}) {
+    final loc = AppLocalizations.of(context)!;
+    final c = _CechyMatki();
+    var ostatniaData1 = DateTime.parse('2022-01-01 00:00');
+    var ostatniaData3 = DateTime.parse('2022-01-01 00:00');
+    var ostatniaData4 = DateTime.parse('2022-01-01 00:00');
+    var ostatniaData5 = DateTime.parse('2022-01-01 00:00');
+    Info? ostatniWpisZnaku;
+
+    final String paramJakosc = loc.queen + '  ' + loc.isIs;
+    final String paramRocznik = loc.queenWasBornIn;
+    final String paramUnasiennienie = loc.queen + " -";
+    final String paramOgraniczenie = loc.queenIs;
+
+    void ustawJakosc(Info inf) {
+      //porównanie z bieżącym l10n dawało kciuk w dół każdemu wpisowi zrobionemu
+      //przy innym języku - listę wszystkich języków trzyma queen_helpers
+      if (qualityIsBad(inf.wartosc))
+        c.icon1 = Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),);
+      else c.icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+      c.wartosc1 = 'ID' + inf.pogoda + ' ' + wartoscWBiezacym(context, inf.wartosc, parametr: inf.parametr) +
+          ' (${zmienDate_cala(inf.data)})';
+    }
+
+    void ustawRocznik(Info inf) {
+      c.rocznik = '\'${inf.wartosc.substring(2)}';
+      c.wartosc5 = 'ID' + inf.pogoda + ' ' + loc.bornIn + ' ' + inf.wartosc +
+          ' (${zmienDate_cala(inf.data)})';
+    }
+
+    void ustawUnasiennienie(Info inf) {
+      String wartoscM3 = '';
+      if(wartoscWBiezacym(context, inf.wartosc) == loc.virgine){
+        c.icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
+        wartoscM3 = loc.virgine1;
+      } else if(wartoscWBiezacym(context, inf.wartosc) == loc.naturallyMated){
+        c.icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+        wartoscM3 = loc.naturallyMated1;
+      } else if(wartoscWBiezacym(context, inf.wartosc) == loc.artificiallyInseminated){
+        c.icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+        wartoscM3 = loc.artificiallyInseminated1;
+      } else if(wartoscWBiezacym(context, inf.wartosc) == loc.droneLaying){
+        c.icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),);
+        wartoscM3 = loc.droneLaying;
+      }
+      c.wartosc3 = 'ID' + inf.pogoda + ' ' + wartoscM3 +
+          ' (${zmienDate_cala(inf.data)})';
+    }
+
+    void ustawOgraniczenie(Info inf) {
+      if(wartoscWBiezacym(context, inf.wartosc) == loc.freed)
+        c.image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
+      else c.image4 = Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
+      c.wartosc4 = 'ID' + inf.pogoda + ' ' + wartoscWBiezacym(context, inf.wartosc) +
+          ' (${zmienDate_cala(inf.data)})';
+    }
+
+    for (final inf in infos) {
+      if (inf.wartosc.isEmpty ||
+          !wpisMatki(inf, idMatki, wejscia)) continue;
+      final String param = parametrWBiezacym(context, inf.parametr);
+      //jakość (bardzo dobra...)
+      if (param == paramJakosc && DateTime.parse(inf.data).isAfter(ostatniaData1)) {
+        ostatniaData1 = DateTime.parse(inf.data);
+        ustawJakosc(inf);
+      }
+      //rocznik
+      if (param == paramRocznik && DateTime.parse(inf.data).isAfter(ostatniaData5)) {
+        ostatniaData5 = DateTime.parse(inf.data);
+        ustawRocznik(inf);
+      }
+      //unasiennienie (dziewica, naturalna...)
+      if (param == paramUnasiennienie && DateTime.parse(inf.data).isAfter(ostatniaData3)) {
+        ostatniaData3 = DateTime.parse(inf.data);
+        ustawUnasiennienie(inf);
+      }
+      //ograniczenie (wolna, w klatce)
+      if (param == paramOgraniczenie && DateTime.parse(inf.data).isAfter(ostatniaData4)) {
+        ostatniaData4 = DateTime.parse(inf.data);
+        ustawOgraniczenie(inf);
+      }
+      //znak - z godziną i remisem dla podłączenia (wpisZnakuNowszy)
+      if (param == " " + loc.queen && wpisZnakuNowszy(inf, ostatniWpisZnaku)) {
+        ostatniWpisZnaku = inf;
+        //nowszy wpis ZASTĘPUJE poprzedni - także jego "brak matki"
+        c.brakMatki = false;
+        //wpis z queen_item przy podłączaniu matki (od 11.10.2026) - ikonka
+        c.podlaczenie = inf.id.endsWith(kIdPodlaczeniaMatki);
+        //wpisy sprzed 06.09.2026 mają tu KLUCZ znaku ("mark_white") -
+        //znakMatkiNaEkran w środku, a "brak"/"nie ma" także z innego języka
+        final wartoscZnaku = wartoscWBiezacym(context, inf.wartosc, parametr: inf.parametr);
+        if(wartoscZnaku == loc.unmarked)
+          c.icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);
+        else if(wartoscZnaku == loc.markedOther)
+          c.icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),);
+        else if(wartoscZnaku == loc.markedWhite)
+          c.icon2 = Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),);
+        else if(wartoscZnaku == loc.markedYellow)
+          c.icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),);
+        else if(wartoscZnaku == loc.markedRed)
+          c.icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
+        else if(wartoscZnaku == loc.markedGreen)
+          c.icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+        else if(wartoscZnaku == loc.markedBlue)
+          c.icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),);
+        else if(wartoscZnaku == loc.gone || wartoscZnaku == loc.missing){
+          c.icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
+          c.brakMatki = true;
+        }
+        String wartoscM2 = wartoscZnaku;
+        if(wartoscZnaku == loc.unmarked) wartoscM2 = loc.unmarked1;
+        else if(wartoscZnaku == loc.missing) wartoscM2 = loc.missing1;
+        else if(wartoscZnaku == loc.gone) wartoscM2 = loc.gone1;
+        c.wartosc2 = 'ID' + inf.pogoda + ' ' + wartoscM2 + ' ' + miaraWBiezacym(context, inf.miara, parametr: inf.parametr) +
+            ' (${zmienDate_cala(inf.data)})';
+      }
+    }
+
+    //CECHY PRZENIESIONE Z POPRZEDNIEGO ULA - najnowszy wpis tej matki o danym
+    //parametrze, zrobiony w INNYM ulu (_infoMatek posortowane malejąco po dacie)
+    final List<Info> wpisyMatki = _infoMatek[idMatki] ?? const [];
+    Info? przeniesiony(String parametr) {
+      for (final inf in wpisyMatki) {
+        if (parametrWBiezacym(context, inf.parametr) == parametr &&
+            inf.wartosc.isNotEmpty &&
+            (inf.ulNr != globals.ulID || inf.pasiekaNr != globals.pasiekaID)) return inf;
+      }
+      return null;
+    }
+    if (idMatki.isNotEmpty) {
+      if (c.wartosc1 == '') {
+        final inf = przeniesiony(paramJakosc);
+        if (inf != null) { ustawJakosc(inf); c.przeniesiona1 = true; }
+      }
+      if (c.wartosc3 == '') {
+        final inf = przeniesiony(paramUnasiennienie);
+        if (inf != null) { ustawUnasiennienie(inf); c.przeniesiona3 = true; }
+      }
+      if (c.wartosc4 == '') {
+        final inf = przeniesiony(paramOgraniczenie);
+        if (inf != null) { ustawOgraniczenie(inf); c.przeniesiona4 = true; }
+      }
+      if (c.wartosc5 == '') {
+        final inf = przeniesiony(paramRocznik);
+        if (inf != null) { ustawRocznik(inf); c.przeniesiona5 = true; }
+      }
+    }
+
+    //usunięcie ze statystyk informacji o matce, jeżeli jej brak
+    if (c.brakMatki) {
+      c.wartosc1 = '';
+      c.wartosc3 = '';
+      c.wartosc4 = '';
+      c.wartosc5 = '';
+    }
+    return c;
+  }
+
+  //dane matki z tabeli matek: ID, linia, rasa / znak, napis, źródło, data
+  List<Widget> _daneMatki(BuildContext context, Queen q) {
+    return [
+      RichText(
+          text: TextSpan(style: TextStyle(color: Colors.black), children: [
+        TextSpan(
+          text: ('(ID ${q.id}) '),
+          style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 0, 0, 0)),
+        ),
+        TextSpan(
+          text: ('${q.linia} '),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 0, 0, 0)),
+        ),
+        TextSpan(
+          text: breedToDisplay(breedToKey(q.rasa), AppLocalizations.of(context)!),
+          style: TextStyle(fontSize: 14, color: Color.fromARGB(255, 0, 0, 0)),
+        ),
+      ])),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          ...markToIcon(markToKey(q.znak)),
+          Text(' ${q.napis} ',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 0, 0, 0))),
+          Text('  ${sourceToDisplay(sourceToKey(q.zrodlo), AppLocalizations.of(context)!)} ${zmienDate_cala(q.data)} ',
+              style: TextStyle(fontSize: 14, color: Color.fromARGB(255, 0, 0, 0))),
+        ],
+      ),
+    ];
+  }
+
+  //cechy matki pod jej danymi; szary = cecha PRZENIESIONA z poprzedniego ula
+  List<Widget> _cechyMatkiWidgety(_CechyMatki c) {
+    return [
+      //ograniczenie matki
+      if (c.wartosc4 != '')
+        Row(
+          children: [
+            c.image4,
+            Text(' (1) ${c.wartosc4}',
+                style: TextStyle(fontSize: 16,
+                  color: c.przeniesiona4 ? _kolorPrzeniesionej : null)),
+          ],
+        ),
+      //jakość matki
+      if (c.wartosc1 != '')
+        Row(
+          children: [
+            SizedBox(width: 6),
+            c.icon1,
+            Text(' (2) ${c.wartosc1}',
+                style: TextStyle(fontSize: 16,
+                  color: c.przeniesiona1 ? _kolorPrzeniesionej : null)),
+          ],
+        ),
+      //unasiennienie
+      if (c.wartosc3 != '')
+        Row(
+          children: [
+            SizedBox(width: 6),
+            c.icon3,
+            Text(' (3) ${c.wartosc3}',
+                style: TextStyle(fontSize: 16,
+                  color: c.przeniesiona3 ? _kolorPrzeniesionej : null)),
+          ],
+        ),
+      //znak
+      if (c.wartosc2 != '')
+        Row(
+          children: [
+            SizedBox(width: 6),
+            c.icon2,
+            Flexible(
+              child: Text(' (4) ${c.wartosc2}',
+                  style: const TextStyle(fontSize: 16)),
+            ),
+            //podłączenie matki do ula - jak w historii matki
+            if (c.podlaczenie)
+              const Padding(
+                padding: EdgeInsets.only(left: 6),
+                child: Icon(Icons.login, size: 18,
+                    color: Color.fromARGB(255, 46, 125, 50)),
+              ),
+          ],
+        ),
+      //rocznik
+      if (c.wartosc5 != '')
+        Text('${c.rocznik} (5) ${c.wartosc5}',
+            style: TextStyle(fontSize: 16,
+              color: c.przeniesiona5 ? _kolorPrzeniesionej : null)),
+    ];
   }
 
   //odzyskanie zdjęcia po restarcie Activity na Androidzie
@@ -764,6 +1027,10 @@ class _InfoScreenState extends State<InfoScreen> {
     List<Queen> queens = queensData.items.where((qu) {
       return qu.pasieka == globals.pasiekaID && qu.ul == globals.ulID ;
     }).toList();
+    //tylko ŻYJĄCE, główna (najwcześniej podłączona) pierwsza - stracona matka
+    //zostaje w tabeli z numerem ula i zajmowała jedno z trzech miejsc w panelu
+    queens = matkiUlaWKolejnosci(queens,
+        wybranaKategoria == 'queen' ? infos : const <Info>[]);
 
     //print('======= infos globals ${globals.pasiekaID}, ${globals.ulID}');
     // print(wybranaKategoria);
@@ -801,99 +1068,39 @@ class _InfoScreenState extends State<InfoScreen> {
     double suma3 = 0.0;
     double suma4 = 0.0;
    //double suma5 = 0.0;
-    //grafiki przy informacjach o matce 
-    Icon icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),); 
-    Icon icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);;
-    Icon icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-    Image image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
-    String rocznik = '';
-    bool brakMatki = false;
-    bool podlaczenie2 = false; //najnowszy wpis o znaku jest z podłączenia matki do ula
-    //czy dana cecha jest PRZENIESIONA z poprzedniego ula (szary tekst w panelu)
-    bool przeniesiona1 = false; //jakość
-    bool przeniesiona3 = false; //unasiennienie
-    bool przeniesiona4 = false; //ograniczenie
-    bool przeniesiona5 = false; //rocznik
-
-    //ID matki, która siedzi w ulu TERAZ - z NAJNOWSZEGO wpisu o znaku matki.
-    //Wpis o znaku powstaje zawsze przy podłączaniu matki do ula
-    //(queen_item.dart), a kolumna info.pogoda niesie dla kategorii "queen"
-    //matkaID - wpisują je queen_item, infos_edit_screen i sterowanie głosem.
-    //Po tym ID statystyki niżej odsiewają wpisy POPRZEDNICH matek (patrz
-    //[tejMatki]). Puste = brak takiego wpisu, czyli nie ma czym filtrować.
-    String idMatkiWUlu = '';
+    //CECHY MATEK W ULU (12.10.2026) - osobno dla każdej żyjącej matki z tabeli
+    //matek (do trzech), w kolejności panelu: główna pierwsza. Gdy ul nie ma
+    //matki w tabeli (stare dane) - jedna "matka" z NAJNOWSZEGO wpisu o znaku,
+    //tak jak przed 12.10.2026. Wpis bez ID należy do matki, która była wtedy
+    //w ulu sama (patrz wpisMatki).
+    final List<_CechyMatki> cechyMatek = [];
     if (wybranaKategoria == 'queen') {
-      var dataZnakuMatki = DateTime.parse('2022-01-01 00:00');
-      for (var i = 0; i < infos.length; i++) {
-        //data Z GODZINĄ: odłączenie ("brak") i podłączenie nowej matki bywają tego samego dnia
-        if (infos[i].wartosc.isNotEmpty &&
-            parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.queen &&
-            momentWpisu(infos[i].data, infos[i].czas).isAfter(dataZnakuMatki)) {
-          dataZnakuMatki = momentWpisu(infos[i].data, infos[i].czas);
-          idMatkiWUlu = infos[i].pogoda;
+      final List<String> idMatek;
+      if (queens.isNotEmpty) {
+        idMatek = queens.map((q) => q.id.toString()).toList();
+      } else {
+        Info? wpisZnakuMatki;
+        for (final inf in infos) {
+          if (inf.wartosc.isNotEmpty &&
+              parametrWBiezacym(context, inf.parametr) == " " + AppLocalizations.of(context)!.queen &&
+              wpisZnakuNowszy(inf, wpisZnakuMatki)) wpisZnakuMatki = inf;
         }
+        idMatek = [wpisZnakuMatki?.pogoda ?? ''];
       }
-      //wpisy tej matki ze wszystkich uli - do przeniesienia cech (patrz niżej).
-      //Ładowane poza budowaniem widoku, raz na matkę.
-      if (idMatkiWUlu != _idMatkiInfo) {
-        _idMatkiInfo = idMatkiWUlu;
+      //wpisy matek ze wszystkich uli - do przeniesienia cech; raz na zestaw matek
+      final String klucz = idMatek.join(',');
+      if (klucz != _idMatekInfo) {
+        _idMatekInfo = klucz;
         WidgetsBinding.instance
-            .addPostFrameCallback((_) => _wczytajInfoMatki(idMatkiWUlu));
+            .addPostFrameCallback((_) => _wczytajInfoMatek(idMatek));
       }
-    }
-
-    //nazwy parametrów cech matki - używane i w pętli, i przy przenoszeniu cech
-    final String paramJakosc = AppLocalizations.of(context)!.queen + '  ' + AppLocalizations.of(context)!.isIs;
-    final String paramRocznik = AppLocalizations.of(context)!.queenWasBornIn;
-    final String paramUnasiennienie = AppLocalizations.of(context)!.queen + " -";
-    final String paramOgraniczenie = AppLocalizations.of(context)!.queenIs;
-
-    //Formatowanie czterech cech matki wyjęte z pętli do domknięć, bo używamy go
-    //DWA RAZY: dla wpisu z tego ula, a gdy takiego nie ma - dla wpisu
-    //PRZENIESIONEGO z ula poprzedniego. Domknięcia piszą po wartosc1/3/4/5,
-    //icon1/icon3, image4 i rocznik zadeklarowanych wyżej.
-    void ustawJakosc(Info inf) {
-      //porównanie z bieżącym l10n dawało kciuk w dół każdemu wpisowi zrobionemu
-      //przy innym języku (np. "bardzo dobra" oglądane po angielsku) - listę
-      //wszystkich języków i wartości historycznych trzyma queen_helpers
-      if (qualityIsBad(inf.wartosc))
-        icon1 = Icon(Icons.thumb_down_outlined, size: 20.0, color: Color.fromARGB(255, 255, 1, 1),);
-      else icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-      wartosc1 = 'ID' + inf.pogoda + ' ' + wartoscWBiezacym(context, inf.wartosc, parametr: inf.parametr) +
-          ' (${zmienDate_cala(inf.data)})';
-    }
-
-    void ustawRocznik(Info inf) {
-      rocznik = '\'${inf.wartosc.substring(2)}';
-      wartosc5 = 'ID' + inf.pogoda + ' ' + AppLocalizations.of(context)!.bornIn + ' ' + inf.wartosc +
-          ' (${zmienDate_cala(inf.data)})';
-    }
-
-    void ustawUnasiennienie(Info inf) {
-      String wartoscM3 = '';
-      if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.virgine){
-        icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
-        wartoscM3 = AppLocalizations.of(context)!.virgine1;
-      } else if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.naturallyMated){
-        icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-        wartoscM3 = AppLocalizations.of(context)!.naturallyMated1;
-      } else if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.artificiallyInseminated){
-        icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-        wartoscM3 = AppLocalizations.of(context)!.artificiallyInseminated1;
-      } else if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.droneLaying){
-        icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),);
-        wartoscM3 = AppLocalizations.of(context)!.droneLaying;
+      //moment wejścia do ula każdej matki - do przypisania wpisów bez ID
+      final Map<String, DateTime> wejscia = queens.isNotEmpty
+          ? wejsciaMatek(infos, idMatek)
+          : {idMatek[0]: momentPodlaczeniaMatki(infos, idMatek[0]) ?? DateTime(1900)};
+      for (final id in idMatek) {
+        cechyMatek.add(_policzCechyMatki(context, infos, id, wejscia: wejscia));
       }
-      wartosc3 = 'ID' + inf.pogoda + ' ' + wartoscM3 +
-          ' (${zmienDate_cala(inf.data)})';
-    }
-
-    void ustawOgraniczenie(Info inf) {
-      if(wartoscWBiezacym(context, inf.wartosc) == AppLocalizations.of(context)!.freed)
-        image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
-      else image4 = Image.asset('assets/image/matka11.png', width: 25, height: 15, fit: BoxFit.fill);
-      wartosc4 = 'ID' + inf.pogoda + ' ' + wartoscWBiezacym(context, inf.wartosc) +
-          ' (${zmienDate_cala(inf.data)})';
     }
 
 //******************************************************** */
@@ -1126,113 +1333,6 @@ class _InfoScreenState extends State<InfoScreen> {
         }
       }
 
-      //********** MATKA ******** dla queen
-      if (wybranaKategoria == 'queen') {
-        //Czy ten wpis dotyczy matki, która siedzi w ulu TERAZ?
-        //
-        //Statystyki niżej biorą OSTATNI wpis danej cechy - do 06.09.2026
-        //z całej historii ula, bez pytania o to, czyja to była matka. Po
-        //ustawieniu "brak matki" dane znikały (brakMatki czyści je na końcu),
-        //ale po podłączeniu NOWEJ matki wracały dane STAREJ: nowa nie ma
-        //jeszcze własnych wpisów, więc "ostatni" wciąż wskazywał poprzednią.
-        //Zgłoszone z urządzenia - mylące, bo rocznik i jakość dotyczyły matki,
-        //której już nie ma. [idMatkiWUlu] liczone jest wyżej, raz na ekran.
-        //
-        //Wpis BEZ ID matki (pogoda puste - zapisy sprzed wprowadzenia matkaID)
-        //zostaje pokazany: nie ma po czym go odrzucić, a odrzucenie skasowałoby
-        //całą historię tym, którzy mają tylko takie wpisy.
-        final bool tejMatki = idMatkiWUlu.isEmpty ||
-            infos[i].pogoda.isEmpty ||
-            infos[i].pogoda == idMatkiWUlu;
-         
-         //dla wszystkich lat i cechy matki queenQuality (bardzo dobra)
-        if (//infos[i].data.substring(0, 4) == rokStatystyk && 
-            tejMatki &&
-            infos[i].wartosc.isNotEmpty &&
-            parametrWBiezacym(context, infos[i].parametr) == paramJakosc) {
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
-            ostatniaData1 = DateTime.parse(infos[i].data);
-            ustawJakosc(infos[i]);
-          }
-        }
-        //dla wszystkich lat i cechy matki queenBorn
-        if (//infos[i].data.substring(0, 4) == rokStatystyk &&
-            tejMatki &&
-            infos[i].wartosc.isNotEmpty &&
-            parametrWBiezacym(context, infos[i].parametr) == paramRocznik) {
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData5)) {
-            ostatniaData5 = DateTime.parse(infos[i].data);
-            ustawRocznik(infos[i]);
-          }
-        }
-        //wszystkich lat i cechy matki queenState (dziewica, naturalna)
-        if (//infos[i].data.substring(0, 4) == rokStatystyk && 
-            tejMatki &&
-            infos[i].wartosc.isNotEmpty &&
-            parametrWBiezacym(context, infos[i].parametr) == paramUnasiennienie) {
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData3)) {
-            ostatniaData3 = DateTime.parse(infos[i].data);
-            ustawUnasiennienie(infos[i]);
-          }
-        }
-        //dla wszystkich lat i cechy matki queenStart (wolna, w klatce)
-        if (//infos[i].data.substring(0, 4) == rokStatystyk && 
-            tejMatki &&
-            infos[i].wartosc.isNotEmpty &&
-            parametrWBiezacym(context, infos[i].parametr) == paramOgraniczenie) {
-          if (DateTime.parse(infos[i].data).isAfter(ostatniaData4)) {
-            ostatniaData4 = DateTime.parse(infos[i].data);
-            ustawOgraniczenie(infos[i]);
-          }
-        }
-        //dla wszystkich lat i cechy matki queenMark
-        if (//infos[i].data.substring(0, 4) == rokStatystyk && 
-            tejMatki &&
-            infos[i].wartosc.isNotEmpty &&
-            parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.queen) {
-          //z godziną - patrz idMatkiWUlu wyżej
-          if (momentWpisu(infos[i].data, infos[i].czas).isAfter(ostatniaData2)) {
-            ostatniaData2 = momentWpisu(infos[i].data, infos[i].czas);
-            //wpis z queen_item przy podłączaniu matki (od 11.10.2026) - ikonka na belce
-            podlaczenie2 = infos[i].id.endsWith(kIdPodlaczeniaMatki);
-            final loc = AppLocalizations.of(context)!;
-            //wpisy sprzed 06.09.2026 mają tu KLUCZ znaku ("mark_white") -
-            //patrz znakMatkiNaEkran() w queen_helpers.dart
-            //znak (znakMatkiNaEkran w środku) ORAZ "brak"/"nie ma" z innego języka
-            final wartoscZnaku = wartoscWBiezacym(context, infos[i].wartosc, parametr: infos[i].parametr);
-            if(wartoscZnaku == loc.unmarked)
-              icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);
-            else if(wartoscZnaku == loc.markedOther)
-              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 158, 166, 172),);
-            else if(wartoscZnaku == loc.markedWhite)
-              icon2 = Icon(Icons.check_circle_outline_outlined, size: 20.0, color: Color.fromARGB(255, 0, 0, 0),);
-            else if(wartoscZnaku == loc.markedYellow)
-              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 215, 208, 0),);
-            else if(wartoscZnaku == loc.markedRed)
-              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),);
-            else if(wartoscZnaku == loc.markedGreen)
-              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
-            else if(wartoscZnaku == loc.markedBlue)
-              icon2 = Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),);
-            else if(wartoscZnaku == loc.gone){
-              icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
-              brakMatki = true;
-              }
-            else if(wartoscZnaku == loc.missing){
-              icon2 = Icon(Icons.dangerous_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
-               brakMatki = true;
-              }
-            String wartoscM2 = wartoscZnaku;
-            if(wartoscZnaku == AppLocalizations.of(context)!.unmarked ) wartoscM2 = AppLocalizations.of(context)!.unmarked1; 
-            else if(wartoscZnaku == AppLocalizations.of(context)!.missing ) wartoscM2 = AppLocalizations.of(context)!.missing1; 
-            else if(wartoscZnaku == AppLocalizations.of(context)!.gone ) wartoscM2 = AppLocalizations.of(context)!.gone1;            
-            wartosc2 = 'ID' + infos[i].pogoda + ' ' + wartoscM2 + ' ' + miaraWBiezacym(context, infos[i].miara, parametr: infos[i].parametr) +
-                ' (${zmienDate_cala(infos[i].data)})';
-                //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
-          }
-        }
-      }
-
       //********** POKARM ******** dla kategorii feeding
       if (wybranaKategoria == 'feeding') {
         //dla bierzącego roku i parametru syrup1to1I,syrup1to1D
@@ -1366,54 +1466,6 @@ class _InfoScreenState extends State<InfoScreen> {
       }
     }
 
-    //CECHY PRZENIESIONE Z POPRZEDNIEGO ULA
-    //
-    //Po przełożeniu matki do innego ula nowy ul ma na starcie tylko wpis
-    //o znaku (robi go queen_item przy podłączaniu) - jakość, unasiennienie,
-    //ograniczenie i rocznik zostały przy wpisach z ula POPRZEDNIEGO. Zamiast
-    //przepisywać je do bazy z dzisiejszą datą (kopia kłamałaby w dzienniku,
-    //a przy `id` = data.pasieka.ul.kategoria.parametr + ConflictAlgorithm
-    //.replace mogłaby NADPISAĆ prawdziwy wpis z tego samego dnia) pokazujemy
-    //je tutaj: z ORYGINALNĄ datą i SZAREJ, żeby było widać, że to nie jest
-    //ocena zrobiona w tym ulu (kolor: _kolorPrzeniesionej). Nic nie trafia
-    //do bazy.
-    if (wybranaKategoria == 'queen' && idMatkiWUlu.isNotEmpty) {
-      //najnowszy wpis TEJ matki o danym parametrze, zrobiony w INNYM ulu
-      //(_infoTejMatki przychodzi z bazy posortowane malejąco po dacie i czasie)
-      Info? przeniesiony(String parametr) {
-        for (final inf in _infoTejMatki) {
-          if (parametrWBiezacym(context, inf.parametr) == parametr &&
-              inf.wartosc.isNotEmpty &&
-              (inf.ulNr != globals.ulID || inf.pasiekaNr != globals.pasiekaID)) return inf;
-        }
-        return null;
-      }
-
-      if (wartosc1 == '') {
-        final inf = przeniesiony(paramJakosc);
-        if (inf != null) { ustawJakosc(inf); przeniesiona1 = true; }
-      }
-      if (wartosc3 == '') {
-        final inf = przeniesiony(paramUnasiennienie);
-        if (inf != null) { ustawUnasiennienie(inf); przeniesiona3 = true; }
-      }
-      if (wartosc4 == '') {
-        final inf = przeniesiony(paramOgraniczenie);
-        if (inf != null) { ustawOgraniczenie(inf); przeniesiona4 = true; }
-      }
-      if (wartosc5 == '') {
-        final inf = przeniesiony(paramRocznik);
-        if (inf != null) { ustawRocznik(inf); przeniesiona5 = true; }
-      }
-    }
-
-    //usunięcie ze ststystyk informacji o matce jezeli jej brak
-    if(brakMatki){
-      wartosc1 = '';
-      wartosc3 = '';
-      wartosc4 = '';
-      wartosc5 = '';
-    }
 
     if (miod > 0 && pylek == 0) globals.wykresZbiory = 'miod';
     if (miod == 0 && pylek > 0) globals.wykresZbiory = 'pylek';
@@ -2915,212 +2967,15 @@ class _InfoScreenState extends State<InfoScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-  //dla trzeciej matki podłączonej do ula
-                    if(queens.length > 2)
-                      if(queens[2].dataStraty =='') //jezeli matka zyje
-                        RichText(
-                          text: TextSpan(
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                            TextSpan(
-                              text: ('(ID ${queens[2].id}) '),
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  //fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            TextSpan(
-                              text: ('${queens[2].linia} '),
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            TextSpan(
-                              text: breedToDisplay(breedToKey(queens[2].rasa), AppLocalizations.of(context)!),
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            ])),
-
-                      if(queens.length > 2)
-                        if(queens[2].dataStraty =='') //jezeli matka zyje
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              ...markToIcon(markToKey(queens[2].znak)),
-
-                          Text(' ${queens[2].napis} ',
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0))),
-                          Text('  ${sourceToDisplay(sourceToKey(queens[2].zrodlo), AppLocalizations.of(context)!)} ${zmienDate_cala(queens[2].data)} ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 0, 0, 0))),
-                           ],),
-                       
-                      SizedBox(height: 5),    
-                   
-
-    //dla drugiej matki podłączonej do ula
-                    if(queens.length > 1)
-                      if(queens[1].dataStraty =='') //jezeli matka zyje
-                        RichText(
-                          text: TextSpan(
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                            TextSpan(
-                              text: ('(ID ${queens[1].id}) '),
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  //fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            TextSpan(
-                              text: ('${queens[1].linia} '),
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            TextSpan(
-                              text: breedToDisplay(breedToKey(queens[1].rasa), AppLocalizations.of(context)!),
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            ])),
-
-                      if(queens.length > 1)
-                        if(queens[1].dataStraty =='') //jezeli matka zyje
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              ...markToIcon(markToKey(queens[1].znak)),
-
-                          Text(' ${queens[1].napis} ',
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0))),
-                          Text('  ${sourceToDisplay(sourceToKey(queens[1].zrodlo), AppLocalizations.of(context)!)} ${zmienDate_cala(queens[1].data)} ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 0, 0, 0))),
-                           ],),
-                       
-                      SizedBox(height: 5),    
-                            
-                    
-  //dla pierwszej matki podłączonej do ula
-          //pierwszy wiersz: ID, linia, rasa
-                    if(queens.length > 0)
-                      if(queens[0].dataStraty =='') //jezeli matka zyje
-                        RichText(
-                          text: TextSpan(
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                            TextSpan(
-                              text: ('(ID ${queens[0].id}) '),
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  //fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            TextSpan(
-                              text: ('${queens[0].linia} '),
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            TextSpan(
-                              text: breedToDisplay(breedToKey(queens[0].rasa), AppLocalizations.of(context)!),
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 0, 0, 0)),
-                              ),
-                            ])),
-      //drugi wersz:  znak, napis, zródło, data pozyskania
-                      if(queens.length > 0)
-                        if(queens[0].dataStraty =='') //jezeli matka zyje
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              ...markToIcon(markToKey(queens[0].znak)),
-
-                          Text(' ${queens[0].napis} ',
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 0, 0, 0))),
-                          Text('  ${sourceToDisplay(sourceToKey(queens[0].zrodlo), AppLocalizations.of(context)!)} ${zmienDate_cala(queens[0].data)} ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 0, 0, 0))),
-                           ],),
-//informacje o matce                  
-                      SizedBox(height: 5),    
- //ograniczenie matki
-                      if (wartosc4 != '')
-                        Row(
-                          children: [
-                            image4,
-                            //szary = cecha PRZENIESIONA z poprzedniego ula
-                            Text(' (1) $wartosc4',
-                                style: TextStyle(fontSize: 16,
-                                  color: przeniesiona4 ? _kolorPrzeniesionej : null)),
-                          ],
-                        ),
- //jakość matki                     
-                      if (wartosc1 != '')
-                        Row(
-                          children: [
-                            SizedBox(width: 6),
-                            icon1,
-                            Text(' (2) $wartosc1',
-                                style: TextStyle(fontSize: 16,
-                                  color: przeniesiona1 ? _kolorPrzeniesionej : null)),
-                          ],
-                        ),
-//unasiennienie                      
-                      if (wartosc3 != '')
-                        Row(
-                          children: [
-                            SizedBox(width: 6),
-                            icon3,
-                            Text(' (3) $wartosc3',
-                                style: TextStyle(fontSize: 16,
-                                  color: przeniesiona3 ? _kolorPrzeniesionej : null)),
-                          ],
-                        ),
-//znak                      
-                      if (wartosc2 != '')
-                        Row(
-                          children: [
-                            SizedBox(width: 6),
-                            icon2,
-                            Flexible(
-                              child: Text(' (4) $wartosc2',
-                                  style: const TextStyle(fontSize: 16)),
-                            ),
-                            //podłączenie matki do ula - jak w historii matki
-                            if (podlaczenie2)
-                              const Padding(
-                                padding: EdgeInsets.only(left: 6),
-                                child: Icon(Icons.login, size: 18,
-                                    color: Color.fromARGB(255, 46, 125, 50)),
-                              ),
-                          ],
-                        ),
-//rocznik                      
-                      if (wartosc5 != '')
-                        Text('$rocznik (5) $wartosc5',
-                            style: TextStyle(fontSize: 16,
-                              color: przeniesiona5 ? _kolorPrzeniesionej : null)),
+  //matki podłączone do ula (do trzech), główna NA DOLE (prośba usera 12.10.2026):
+  //dane z tabeli matek, a pod nimi jej cechy z wpisów. Bez matki w tabeli - same
+  //cechy z wpisów.
+                    for (int m = cechyMatek.length - 1; m >= 0; m--) ...[
+                      if (m < cechyMatek.length - 1) SizedBox(height: 12),
+                      if (m < queens.length) ..._daneMatki(context, queens[m]),
+                      SizedBox(height: 5),
+                      ..._cechyMatkiWidgety(cechyMatek[m]),
+                    ],
                     ],
                   ),
                 ),
@@ -3461,4 +3316,25 @@ class _InfoScreenState extends State<InfoScreen> {
       ),
     );
   }
+}
+
+//Cechy jednej matki do panelu ula - wynik _policzCechyMatki (12.10.2026).
+class _CechyMatki {
+  String wartosc1 = ''; //jakość
+  String wartosc2 = ''; //znak
+  String wartosc3 = ''; //unasiennienie
+  String wartosc4 = ''; //ograniczenie
+  String wartosc5 = ''; //rocznik
+  String rocznik = '';
+  Icon icon1 = Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+  Icon icon2 = Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),);
+  Icon icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
+  Image image4 = Image.asset('assets/image/matka12.png', width: 27, height: 16, fit: BoxFit.fill);
+  bool brakMatki = false;
+  bool podlaczenie = false; //najnowszy wpis o znaku jest z podłączenia matki do ula
+  //czy dana cecha jest PRZENIESIONA z poprzedniego ula (szary tekst w panelu)
+  bool przeniesiona1 = false; //jakość
+  bool przeniesiona3 = false; //unasiennienie
+  bool przeniesiona4 = false; //ograniczenie
+  bool przeniesiona5 = false; //rocznik
 }

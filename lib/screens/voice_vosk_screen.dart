@@ -1274,7 +1274,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //wartości slotu queenMark oznaczające BRAK matki w ulu - jak w switchu belki matki (matka2 = 'brak')
   static const Set<String> _wartosciBrakuMatki = {'brak', 'nie ma', 'missing', 'gone'};
 
-  //ID matki podłączonej do ula albo 0, gdy ul nie ma matki. Ten sam warunek co w trybie
+  //Czy ul ma matkę: ID matki podłączonej do ula albo 0. Do ODMOWY cech matki w ulu bez
+  //matki - samo ID do wpisu bierze idMatekUla() (matka GŁÓWNA). Ten sam warunek co w trybie
   //ręcznym (infos_screen: „+” przy braku matki prowadzi do dodania matki) i ta sama kolejność
   //co DBHelper.getQueenID: najpierw żyjące, potem najnowsze.
   //SYNCHRONICZNIE z providera Queens (czytany w initState; matki dodaje się poza tym ekranem),
@@ -2342,7 +2343,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     final bool zapisano = _zapisWTejKomendzie ||
         inference.intent == 'setChange' ||
         inference.intent == 'setMoveBody';
-    //"dodaj uwagę": wpis info dostaje opis z wiersza "Zapis:"; komenda zapisująca
+    //"zanotuj": wpis info dostaje opis z wiersza "Zapis:"; komenda zapisująca
     //coś innego (zasoby ramek, przenumerowanie) unieważnia poprzedni wpis - uwaga
     //po "czerw 50" ma iść do przeglądu, a nie do "rodzina ok" sprzed kilku komend
     if (_wpisInfoWTejKomendzie) {
@@ -7363,7 +7364,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     formatedTime = formatterHm.format(now);
     //print('czas $formatedTime');
 
-    //cel komendy "dodaj uwagę" - PRZED pierwszym await (getQueenID niżej), żeby
+    //cel komendy "zanotuj" - PRZED pierwszym await (getQueenID niżej), żeby
     //_obsluzKomende zdążyło po switchu dopisać opis. Ule w trybie zbiorczym tak
     //samo jak w zapisie: zakres albo cała pasieka.
     _wpisInfoWTejKomendzie = true;
@@ -7383,7 +7384,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       //** WPIS DLA WSZYSTKICH uli w pasiece
       //pobranie do Hives_items z tabeli ule - ule z pasieki do której ma być wpis
       Provider.of<Hives>(context, listen: false).fetchAndSetHives(nrXXOfApiary)
-      .then((_) {
+      .then((_) async {
         final hivesData = Provider.of<Hives>(context, listen: false);
         //JEDYNE miejsce, w którym "ustaw ule od X do Y" różni się od "ustaw
         //wszystkie ule" - bez zakresu zwraca całą listę, czyli zachowanie
@@ -7391,11 +7392,21 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         final hives = _uleObjeteZapisem(hivesData.items);
         //print('ilość uli do wpisania info = ${hives.length}');
 
+        //cechy matki: ID matki GŁÓWNEJ (najwcześniej podłączonej) każdego ula -
+        //w ulu bywa kilka matek (12.10.2026), patrz idMatekUla()
+        final Map<int, int> glowneMatki = {};
+        if (kat == 'queen') {
+          for (final h in hives) {
+            final ids = await idMatekUla(nrXXOfApiary, h.ulNr);
+            glowneMatki[h.ulNr] = ids.isNotEmpty ? ids.first : 0;
+          }
+          if (!mounted) return;
+        }
         int pominieteBezMatki = 0; //cechy matki: ule bez matki
         for (var i = 0; i < hives.length; i++) {
           //print('wpis nr $i');
           final int matkaUla =
-              kat == 'queen' ? _idMatkiUla(nrXXOfApiary, hives[i].ulNr) : 0;
+              kat == 'queen' ? (glowneMatki[hives[i].ulNr] ?? 0) : 0;
           if (kat == 'queen' && !toBrakMatki && matkaUla == 0) {
             pominieteBezMatki++;
             continue;
@@ -7420,7 +7431,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               formatedTime, //czas
               '', //uwagi
               0, //niezarchiwizowane
-              zachowajUwagi: true); //uwaga z "dodaj uwagę" przeżywa powtórzenie komendy
+              zachowajUwagi: true); //notatka z "zanotuj" przeżywa powtórzenie komendy
           //"liczba ramek" dla wielu uli: belka z NAJNOWSZEGO wpisu każdego ula, po ostatnim
           //odświeżenie danych uli w pamięci (opis przy zapisie dla jednego ula niżej)
           if (toLiczbaRamek) {
@@ -7535,12 +7546,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 //print('ZAPIS INFO DO BAZY zzzzzzzzzzzzzzzzzzzzzz');
   //jezeli info dotyczy matki
       if(kat == 'queen'){
-        //pobranie ID matki przypisanej do tego ula
+        //ID matki GŁÓWNEJ ula (najwcześniej podłączonej) - przy kilku matkach głos
+        //zapisuje cechy dla niej (decyzja usera 12.10.2026), patrz idMatekUla()
         matkaID = 0; //pole stanu - bez zerowania ul bez matki dostałby ID z poprzedniego ula
-        final data = await DBHelper.getQueenID(nrXXOfApiary, nrXXOfHive);
-        if (data.isNotEmpty) {
-          matkaID = data[0]['id'] as int; //numer id matki - index z tabeli "matka"
-        }
+        final ids = await idMatekUla(nrXXOfApiary, nrXXOfHive);
+        if (ids.isNotEmpty) matkaID = ids.first;
       }
       //rodzaj i typ ula do wpisu "liczba ramek =" - patrz komentarz na początku metody
       String rodzajDoInfo = '';
@@ -7578,7 +7588,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           formatedTime, //czas
           '', //uwagi
           0, //niezarchiwizowane
-          zachowajUwagi: true); //uwaga z "dodaj uwagę" przeżywa powtórzenie komendy
+          zachowajUwagi: true); //notatka z "zanotuj" przeżywa powtórzenie komendy
       //liczba ramek, rodzaj i typ w belce z NAJNOWSZEGO wpisu "liczba ramek =" (komenda
       //z ustawioną wcześniejszą datą nie może nadpisać nowszego wpisu) + odświeżenie danych
       //uli w pamięci - bez tego następny zapis ręczny przywracał w belce starą liczbę ramek.

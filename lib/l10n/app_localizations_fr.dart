@@ -1432,6 +1432,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aDdQueen => 'Enregistrer une reine';
 
   @override
+  String get queenCount => 'Nombre de reines';
+
+  @override
+  String queenHiveFull(String ile) {
+    return 'Cette ruche a déjà $ile reines. Détachez-en une pour en associer une autre.';
+  }
+
+  @override
   String get nUmberOfFrameInBody => 'Nombre de cadres dans la hausse';
 
   @override

@@ -115,6 +115,10 @@ class _HivesScreenState extends State<HivesScreen> {
         .fetchAndSetWeathers();
       //.then((_) {});
       
+      //dodatkowe (niegłówne) matki uli - ich ikony na belce (12.10.2026)
+      wczytajDodatkoweMatki().then((_) {
+        if (mounted) setState(() {});
+      });
       //pobranie danych wszystkich uli z tabeli "ule" z bazy lokalnej (dane do belki, dokarmiania, leczenia i o matce)
       Provider.of<Hives>(context, listen: false)
           .fetchAndSetHives(globals.pasiekaID)
@@ -132,6 +136,8 @@ class _HivesScreenState extends State<HivesScreen> {
             await OdswiezBelkiMatka(item); //tworzenie w belkach info o matkach
             await OdswiezBelki(item); //tworzenie belek zasobów na ramkach dla kazdego ula
           }
+          await wczytajDodatkoweMatki(); //ikony matek niegłównych na belkach
+          if (mounted) setState(() {});
           globals.odswiezBelkiUli = false;
         }
         
@@ -834,23 +840,37 @@ class _HivesScreenState extends State<HivesScreen> {
       final pRocznik = wszystkieJezyki((l) => l.queenWasBornIn); //matka5
       final pIleRamek = wszystkieJezyki((l) => l.numberOfFrame + " = ");
 
-      String idMatkiWUlu = '';
-      for (final inf in hivesInfo) {
-        if (inf.kategoria == 'queen' &&
-            pZnak.contains(inf.parametr) &&
-            inf.wartosc.isNotEmpty) {
-          idMatkiWUlu = inf.pogoda;
-          break;
+      //Nie "pierwszy z listy": baza sortuje czas H:mm jako napis ("9:05" za "10:00"),
+      //a odłączenie i podłączenie nowej matki bywają w tej samej minucie - o wyborze
+      //decyduje wpisZnakuNowszy() (data z godziną, remis wygrywa podłączenie).
+      //KILKA MATEK W ULU (12.10.2026): belka pokazuje matkę GŁÓWNĄ (najwcześniej
+      //podłączoną) z tabeli matek - patrz idMatekUla(). Bez matki w tabeli (stare
+      //dane) - jak dotąd, matka z najnowszego wpisu o znaku.
+      final List<int> matkiUla = await idMatekUla(globals.pasiekaID, numerUla);
+      String idMatkiWUlu = matkiUla.isNotEmpty ? matkiUla.first.toString() : '';
+      if (matkiUla.isEmpty) {
+        Info? wpisZnakuMatki;
+        for (final inf in hivesInfo) {
+          if (inf.kategoria == 'queen' &&
+              pZnak.contains(inf.parametr) &&
+              inf.wartosc.isNotEmpty &&
+              wpisZnakuNowszy(inf, wpisZnakuMatki)) {
+            wpisZnakuMatki = inf;
+            idMatkiWUlu = inf.pogoda;
+          }
         }
       }
+      //moment wejścia do ula każdej matki - do przypisania wpisów bez ID (wpisMatki)
+      final Map<String, DateTime> wejscia = matkiUla.isNotEmpty
+          ? wejsciaMatek(hivesInfo, matkiUla.map((id) => '$id'))
+          : {idMatkiWUlu: momentPodlaczeniaMatki(hivesInfo, idMatkiWUlu) ?? DateTime(1900)};
       //Czy wpis dotyczy matki, która jest w ulu teraz? Belki matka1/3/4/5 brały
       //do 06.09.2026 OSTATNI wpis danej cechy z całej historii ula - po
       //podłączeniu nowej matki pokazywały więc cechy POPRZEDNIEJ (nowa nie ma
       //jeszcze własnych wpisów). Ten sam filtr stoi w infos_screen.
       //Wpis bez ID matki (pogoda puste - zapisy sprzed wprowadzenia matkaID)
-      //zostaje, bo nie ma po czym go odrzucić.
-      bool tejMatki(Info inf) =>
-          idMatkiWUlu.isEmpty || inf.pogoda.isEmpty || inf.pogoda == idMatkiWUlu;
+      //należy do matki, która była wtedy w ulu sama (patrz wpisMatki).
+      bool tejMatki(Info inf) => wpisMatki(inf, idMatkiWUlu, wejscia);
 
       //MATKA JEST TERAZ W INNYM ULU (07.10.2026). Dwa telefony mogą podłączyć tę samą matkę
       //do różnych uli; po wymianie przez chmurę tabela matek ma ją w JEDNYM ulu (wygrywa ostatni
@@ -908,7 +928,7 @@ class _HivesScreenState extends State<HivesScreen> {
             tempDataMatka1 = _datyInfo[0].data; //data ostatniego wpisu matka1
             //pobranie info dla ula i dla daty ostatniego wpisu o matce1
             List<Info> infosMatka1 = hivesInfo.where((m1) {
-                return  m1.data == tempDataMatka1 && m1.kategoria == 'queen' &&  pJakosc.contains(m1.parametr) && tejMatki(m1); 
+                return  m1.wartosc.isNotEmpty && m1.kategoria == 'queen' &&  pJakosc.contains(m1.parametr) && tejMatki(m1); 
               }).toList();
             //pusto = wpis z tej daty należy do POPRZEDNIEJ matki (odsiał go tejMatki)
             if (infosMatka1.isNotEmpty) wpisMatka1 = infosMatka1[0];
@@ -943,7 +963,7 @@ class _HivesScreenState extends State<HivesScreen> {
                 tempDataMatka3 = _datyInfo[0].data; //data ostatniego wpisu matka3
                 //pobranie info dla ula i dla daty ostatniego wpisu o matce3
                 List<Info> infosMatka3 = hivesInfo.where((m3) {
-                    return  m3.data == tempDataMatka3 && m3.kategoria == 'queen' &&  pStan.contains(m3.parametr) && tejMatki(m3); 
+                    return  m3.wartosc.isNotEmpty && m3.kategoria == 'queen' &&  pStan.contains(m3.parametr) && tejMatki(m3); 
                   }).toList();
                 //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
                 if (infosMatka3.isNotEmpty) wpisMatka3 = infosMatka3[0];
@@ -985,7 +1005,7 @@ class _HivesScreenState extends State<HivesScreen> {
                   tempDataMatka4 = _datyInfo[0].data; //data ostatniego wpisu matka4
                   //pobranie info dla ula i dla daty ostatniego wpisu o matce4
                   List<Info> infosMatka4 = hivesInfo.where((m4) {
-                      return  m4.data == tempDataMatka4 && m4.kategoria == 'queen' &&  pStart.contains(m4.parametr) && tejMatki(m4); 
+                      return  m4.wartosc.isNotEmpty && m4.kategoria == 'queen' &&  pStart.contains(m4.parametr) && tejMatki(m4); 
                     }).toList();
                   //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
                   if (infosMatka4.isNotEmpty) wpisMatka4 = infosMatka4[0];
@@ -1018,7 +1038,7 @@ class _HivesScreenState extends State<HivesScreen> {
                    tempDataMatka5 = _datyInfo[0].data; //data oststniego wpisu matka5
                     //pobranie info dla ula i dla daty ostatniego wpisu o matce5
                     List<Info> infosMatka5 = hivesInfo.where((m5) {
-                        return  m5.data == tempDataMatka5 && m5.kategoria == 'queen' &&  pRocznik.contains(m5.parametr) && tejMatki(m5); 
+                        return  m5.wartosc.isNotEmpty && m5.kategoria == 'queen' &&  pRocznik.contains(m5.parametr) && tejMatki(m5); 
                       }).toList();
                     //pusto = wpis z tej daty należy do POPRZEDNIEJ matki
                     if (infosMatka5.isNotEmpty) wpisMatka5 = infosMatka5[0];
@@ -1033,9 +1053,20 @@ class _HivesScreenState extends State<HivesScreen> {
             dataPrzegladu =  _datyInfo[0].data; //data oststniego przeglądu do danych o pasiece
             tempDataMatka2 = _datyInfo[0].data; //data ostatniego wpisu matka2
               //pobranie info dla ula i dla daty ostatniego wpisu o matce2
-              List<Info> infosMatka2 = hivesInfo.where((m2) {
-                  return  m2.data == tempDataMatka2 && m2.kategoria == 'queen' &&  pZnak.contains(m2.parametr); 
-                }).toList();
+              //najnowszy wpis o znaku matki GŁÓWNEJ (tejMatki): przy kilku matkach
+              //ostatni wpis ula bywa wpisem innej matki, a odłączenie i podłączenie
+              //nowej matki bywają w tej samej minucie - patrz wpisZnakuNowszy()
+              Info? najnowszyZnak;
+              for (final m2 in hivesInfo) {
+                if (m2.kategoria == 'queen' && pZnak.contains(m2.parametr) &&
+                    m2.wartosc.isNotEmpty && tejMatki(m2) &&
+                    wpisZnakuNowszy(m2, najnowszyZnak)) najnowszyZnak = m2;
+              }
+              List<Info> infosMatka2 = najnowszyZnak != null
+                  ? [najnowszyZnak]
+                  : hivesInfo.where((m2) {
+                      return  m2.data == tempDataMatka2 && m2.kategoria == 'queen' &&  pZnak.contains(m2.parametr); 
+                    }).toList();
                 //markToKey sprowadza wartość do KLUCZA, więc jedna gałąź
                 //obsługuje wszystkie siedem języków ORAZ same klucze
                 //("mark_white"), które queen_item wpisywał tu do 06.09.2026.
