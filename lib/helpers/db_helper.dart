@@ -316,9 +316,52 @@ class DBHelper {
   //UWAGA: notatki NIE WOLNO zapisywać przez Infos.insertInfo. Rekord przeglądu
   //ma składane id, a DBHelper.insert to ConflictAlgorithm.replace - wstawienie
   //"tylko uwag" wyzerowałoby w nim czas, wartość i temperaturę.
+  //arch = 0: wpis wysłany już do chmury (auto-eksport) bez tego nie pojechałby
+  //drugi raz i dopisana uwaga zostałaby tylko na telefonie.
   static Future<void> updateInfoUwagi(String id, String uwagi) async {
     final db = await DBHelper.database();
-    await db.update('info', {'uwagi': uwagi}, where: 'id = ?', whereArgs: [id]);
+    await db.update('info', {'uwagi': uwagi, 'arch': 0},
+        where: 'id = ?', whereArgs: [id]);
+  }
+
+  //Zapis wpisu info z ZACHOWANIEM istniejących uwag - dla sterowania głosem.
+  //Głos zapisuje wpisy z pustymi uwagami, a id jest składane (data.pasieka.ul.
+  //kategoria.parametr) i insert to ConflictAlgorithm.replace. Bez tego „rodzina ok",
+  //„dodaj uwagę ...", a potem „rodzina słaba" tego samego dnia kasowało uwagę.
+  //Odczyt i zapis w jednej transakcji - zapisy w ekranie głosowym nie są awaitowane.
+  static Future<void> insertInfoZachowujacUwagi(Map<String, Object> data) async {
+    final db = await DBHelper.database();
+    await db.transaction((txn) async {
+      final Map<String, Object> wiersz = Map<String, Object>.from(data);
+      if ('${wiersz['uwagi'] ?? ''}'.isEmpty) {
+        final stary = await txn.query('info',
+            columns: ['uwagi'], where: 'id = ?', whereArgs: [wiersz['id']], limit: 1);
+        if (stary.isNotEmpty) {
+          final String uwagi = (stary[0]['uwagi'] ?? '').toString();
+          if (uwagi.isNotEmpty) wiersz['uwagi'] = uwagi;
+        }
+      }
+      await txn.insert('info', wiersz, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+  }
+
+  //Wpisy info, do których komenda „dodaj uwagę" dopisuje uwagę: ostatni zapis głosem
+  //(data, pasieka, kategoria, parametr). [ule] puste = wszystkie ule pasieki (tryb
+  //„wszystkie ule"), inaczej tylko te numery. Posortowane po numerze ula.
+  static Future<List<Map<String, dynamic>>> getInfoDoUwagi(String data,
+      int pasieka, String kategoria, String parametr, List<int> ule) async {
+    final db = await DBHelper.database();
+    String where = 'data = ? AND pasiekaNr = ? AND kategoria = ? AND parametr = ?';
+    final List<Object> args = [data, pasieka, kategoria, parametr];
+    if (ule.isNotEmpty) {
+      where += ' AND ulNr IN (${List.filled(ule.length, '?').join(',')})';
+      args.addAll(ule);
+    }
+    return db.query('info',
+        columns: ['id', 'ulNr', 'uwagi'],
+        where: where,
+        whereArgs: args,
+        orderBy: 'ulNr');
   }
 
   //update pasieki- ilość uli w pasiece - dla voice_screen

@@ -102,14 +102,18 @@ context:
     # Odpowiednik polskiego voiceNote/voiceNotepad (patrz pol_vosk.yml - dwa
     # ujścia, dwie intencje: voiceNote -> uwagi przeglądu, voiceNotepad -> nowy
     # wpis w Notesie). Brak w eng1.yml (dodane po migracji).
+    # voiceNote zależnie od kontekstu (12.10.2026): do OSTATNIEGO wpisu
+    # zapisanego głosem ("colony ok", potem "note"), bez wpisu - do przeglądu;
+    # voiceNoteInspection - zawsze do przeglądu.
     voiceNote:
       - note
       - hey maya note
-      - write note
-      - hey maya write note
-      - hey maya note for inspection
+      - (hey maya) [write,add] note
+    voiceNoteInspection:
+      - (hey maya) note for inspection
     voiceNotepad:
-      - hey maya note for notepad
+      # "notes", nie "notepad" - tak nazywa się przycisk Notesu w EN
+      - (hey maya) note for notes
     # --- undo last save ---------------------------------------------------------
     # Odpowiednik polskiego voiceUndo. Pełne wywołanie "hey maya" wymagane z
     # tego samego powodu co w polskiej wersji: to komenda ZMIENIAJĄCA BAZĘ, więc

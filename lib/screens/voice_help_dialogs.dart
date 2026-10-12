@@ -95,13 +95,17 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
     TextSpan(text: ' stop/koniec/kończymy'),
     TextSpan(text: ' - wraca do czuwania.\n', style: _komentarz),
     _punktor,
+    //voiceNote - zależnie od kontekstu: ostatni wpis zapisany głosem albo przegląd
     TextSpan(text: 'Zanotuj', style: _wymagany),
-    TextSpan(text: '/zapisz notatkę/Hej Maja notatka do przeglądu'),
+    TextSpan(text: ', zapisz/dodaj notatkę'),
     TextSpan(
-        text: ' - notatka do aktualnego przeglądu.\n',
+        text: ' - do ostatniego zapisu.\n',
         style: _komentarz),
     _punktor,
-    TextSpan(text: 'Hej Maja notatka do Notesu', style: _wymagany),
+    TextSpan(text: 'Notatka do przeglądu', style: _wymagany),
+    TextSpan(text: ' - zawsze do przeglądu.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Notatka do Notesu', style: _wymagany),
     TextSpan(text: ' - notatka do Notesu jako osobny wpis.\n',
         style: _komentarz),
     _punktor,
@@ -137,7 +141,7 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
 
 //Angielski odpowiednik _sekcjaSesja. Każda fraza pochodzi WPROST
 //z assets/grammar/eng_vosk.yml (intencje voiceStart, voiceStop, voiceNote,
-//voiceNotepad, voiceUndo) - pilnuje tego pliki/vosk_pomoc_test_en.py.
+//voiceNoteInspection, voiceNotepad, voiceUndo) - pilnuje tego pliki/vosk_pomoc_test_en.py.
 List<TextSpan> _sekcjaSesjaEn() {
   return [
     TextSpan(
@@ -155,12 +159,16 @@ List<TextSpan> _sekcjaSesjaEn() {
     TextSpan(text: ' - back to standby.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Note', style: _wymagany),
-    TextSpan(text: '/write note/Hey Maya note for inspection'),
+    TextSpan(text: ', write/add note'),
     TextSpan(
-        text: ' - note for the current inspection.\n', style: _komentarz),
+        text: ' - to the last entry.\n',
+        style: _komentarz),
     _punktor,
-    TextSpan(text: 'Hey Maya note for notepad', style: _wymagany),
-    TextSpan(text: ' - note saved to the Notepad as a separate entry.\n',
+    TextSpan(text: 'Note for inspection', style: _wymagany),
+    TextSpan(text: ' - always to the inspection.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Note for Notes', style: _wymagany),
+    TextSpan(text: ' - note saved to Notes as a separate entry.\n',
         style: _komentarz),
     _punktor,
     TextSpan(text: 'Hey Maya', style: _wymagany),

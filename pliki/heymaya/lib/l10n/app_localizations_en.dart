@@ -2820,7 +2820,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceMicStillBusy => 'Microphone still busy. Still trying...';
 
   @override
-  String get voiceNoteNeedPlace => 'Note for the inspection: first say which apiary and which hive (e.g. "apiary one", "hive seven"). A note for the notepad can be dictated right away.';
+  String get voiceNoteNeedPlace => 'Note for the inspection: first say which apiary and which hive (e.g. "apiary one", "hive seven"). A note for Notes can be dictated right away.';
 
   @override
   String get voiceNoteUnavailable => 'Note unavailable:';
@@ -2868,10 +2868,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceNoteAtInspection => 'in the inspection';
 
   @override
-  String get voiceNoteInNotepad => 'the note in the notepad';
+  String get voiceNoteInNotepad => 'the note in Notes';
 
   @override
-  String get voiceNoteWhereNotepad => 'in the Notepad';
+  String get voiceNoteWhereNotepad => 'in Notes';
 
   @override
   String get voiceNoteSavedPrefix => 'Saved';
@@ -2901,7 +2901,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceTipStandby => 'Standing by — "Hey Maya start"';
 
   @override
-  String get voiceNoteHeaderNotepad => 'Note for the notepad - finish by saying "Hey Maya"';
+  String get voiceNoteHeaderNotepad => 'Note for Notes - finish by saying "Hey Maya"';
 
   @override
   String get voiceNoteHeaderInspection => 'Note for the inspection - finish by saying "Hey Maya"';
@@ -2911,6 +2911,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceNoteHint => 'Note - speak, finish by saying "Hey Maya"';
+
+  @override
+  String get voiceNoteHeaderEntry => 'Note for the last entry - finish by saying “Hey Maya”';
+
+  @override
+  String voiceNoteEntryWord(String opis) {
+    return 'the note for the entry “$opis”';
+  }
+
+  @override
+  String voiceNoteInHives(String ile) {
+    return 'in $ile hives';
+  }
+
+  @override
+  String get voiceNoteAtEntry => 'with the entry';
+
+  @override
+  String voiceNoteEntryUndoDesc(String opis) {
+    return 'note for “$opis”';
+  }
+
+  @override
+  String get voiceNoteUndoDesc => 'note for the inspection';
 
   @override
   String get voiceGrammarOutdated => 'WARNING: the loaded grammar does not know the note or undo command - the app bundle contains an outdated grammar file. Rebuild the app (full restart, not hot reload).';

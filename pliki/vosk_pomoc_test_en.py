@@ -219,7 +219,11 @@ POMOC = [
         'hey maya note',
         'write note',
         'hey maya note for inspection',
-        'hey maya note for notepad',
+        'note for inspection',
+        'note for notes',
+        'hey maya note for notes',
+        'add note',
+        'hey maya add note',
         'hey maya undo last save',
         'hey maya undo last entry',
         'read tag',
@@ -237,6 +241,9 @@ POMOC = [
 # --- formy, których pomoc uczyła PRZED audytem 04.09.2026.
 # Każda MUSI zostać odrzucona - inaczej poprawka była kosmetyczna.
 NIEAKTUALNE = [
+    ('notepad zamiast notes 12.10.2026', 'hey maya note for notepad'),
+    ('add remark usunięte 12.10.2026', 'add remark'),
+    ('add comment usunięte 12.10.2026', 'hey maya add comment'),
     ('frame zamiast frames (setFrames)', 'set frame from one to nine'),
     ('brood drone - szyk z polskiego', 'brood drone ten percent on the left'),
     ('covered z eng1.yml', 'covered brood twenty percent on the left'),

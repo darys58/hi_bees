@@ -143,7 +143,12 @@ class WynikCofania {
   /// bo trafia na stos od razu, razem z komendą.
   final String opis;
 
-  const WynikCofania(this.stan, {this.migawka, this.opis = ''});
+  /// Cofnięty krok był SAMĄ NOTATKĄ (dopisaniem uwag do istniejącego wpisu).
+  /// Wpis zostaje w bazie, więc ekran nie czyści wiersza "Zapis:".
+  final bool notatka;
+
+  const WynikCofania(this.stan,
+      {this.migawka, this.opis = '', this.notatka = false});
 }
 
 /// Jeden krok na stosie: OPIS ZNANY OD RAZU + MIGAWKA, KTÓRA DOPIERO SIĘ LICZY.
@@ -158,8 +163,9 @@ class WynikCofania {
 class _WpisStosu {
   final Future<MigawkaZapisu?> przyszla;
   final String opis;
+  final bool notatka; //patrz [WynikCofania.notatka]
 
-  _WpisStosu(this.przyszla, this.opis);
+  _WpisStosu(this.przyszla, this.opis, {this.notatka = false});
 }
 
 /// Stos cofania - pamięć ekranu głosowego, nie baza.
@@ -226,9 +232,10 @@ class StosCofania {
 
   /// Odkłada krok na stos. Wołane SYNCHRONICZNIE zaraz po komendzie, jeszcze
   /// zanim migawka się doczyta - patrz [_WpisStosu]. [opis] to tekst z wiersza
-  /// "Zapis:".
-  void odloz(Future<MigawkaZapisu?> przyszla, String opis) {
-    _stos.add(_WpisStosu(przyszla, opis));
+  /// "Zapis:". [notatka] - krok dopisał tylko uwagi (dyktowana notatka).
+  void odloz(Future<MigawkaZapisu?> przyszla, String opis,
+      {bool notatka = false}) {
+    _stos.add(_WpisStosu(przyszla, opis, notatka: notatka));
     if (_stos.length > maxKrokow) _stos.removeAt(0);
     debugPrint('Cofanie: na stosie $ile krok(ów), ostatni: „$opis"');
   }
@@ -259,7 +266,7 @@ class StosCofania {
       debugPrint('Cofanie: przywrócono ${migawka.ileWierszy} wierszy '
           '(„${wpis.opis}")');
       return WynikCofania(StanCofania.cofnieto,
-          migawka: migawka, opis: wpis.opis);
+          migawka: migawka, opis: wpis.opis, notatka: wpis.notatka);
     } catch (e) {
       _ostatniBlad = '$e';
       debugPrint('Cofanie: nie udało się przywrócić plastra: $e');

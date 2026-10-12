@@ -38,7 +38,9 @@ POMOC = [
         'hej maja start', 'hej maja zaczynamy', 'hej maja startujemy',
         'hej maja stop', 'hej maja kończymy', 'hej maja koniec',
         'zanotuj', 'zapisz notatkę', 'hej maja notatka do przeglądu',
+        'notatka do przeglądu', 'notatka do notesu',
         'hej maja notatka do notesu',
+        'dodaj notatkę', 'hej maja dodaj notatkę',
         'hej maja cofnij ostatni zapis', 'hej maja cofnij ostatni wpis',
         'czytaj tag', 'odczytaj tag', 'skanuje tag', 'hej maja czytaj tag',
         'otwórz aparat', 'włącz aparat', 'zrób zdjęcie', 'pstryk',
@@ -173,6 +175,8 @@ NIEAKTUALNE = [
     ('zbiór zamiast zbiory', 'zbiór pomóż mi'),
     ('Biovar spoza gramatyki', 'biovar wstaw trzy paski'),
     ('chemia z liczbą na początku', 'chemia jeden dawka'),
+    ('dodaj uwagę usunięte 12.10.2026', 'dodaj uwagę'),
+    ('dopisz uwagę usunięte 12.10.2026', 'hej maja dopisz uwagę'),
     ('razy w wariancie mililitrowym',
      'zbiór pyłku osiemset dwadzieścia pięć razy mililitrów'),
 ]

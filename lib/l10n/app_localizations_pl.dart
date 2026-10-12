@@ -2910,6 +2910,31 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceNoteHint => 'Notatka - mów, zakończ słowami „Hej Maja\"';
 
   @override
+  String get voiceNoteHeaderEntry =>
+      'Notatka do ostatniego wpisu - zakończ słowami „Hej Maja”';
+
+  @override
+  String voiceNoteEntryWord(String opis) {
+    return 'notatkę do wpisu „$opis”';
+  }
+
+  @override
+  String voiceNoteInHives(String ile) {
+    return 'w $ile ulach';
+  }
+
+  @override
+  String get voiceNoteAtEntry => 'przy wpisie';
+
+  @override
+  String voiceNoteEntryUndoDesc(String opis) {
+    return 'notatka do „$opis”';
+  }
+
+  @override
+  String get voiceNoteUndoDesc => 'notatka do przeglądu';
+
+  @override
   String get voiceGrammarOutdated =>
       'UWAGA: wczytana gramatyka nie zna polecenia notatki albo cofania - w pakiecie apki jest stary plik gramatyki. Zbuduj apkę od nowa (pełny restart, nie hot reload).';
 

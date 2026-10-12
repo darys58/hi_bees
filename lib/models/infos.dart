@@ -172,8 +172,10 @@ class Infos with ChangeNotifier {
       String temp,
       String czas,
       String uwagi,
-      int arch) async {
-    await DBHelper.insert('info', {
+      int arch,
+      //true = puste [uwagi] nie kasują uwag już zapisanych pod tym id (głos)
+      {bool zachowajUwagi = false}) async {
+    final Map<String, Object> wiersz = {
       'id': id, 
       'data': data,
       'pasiekaNr': pasieka,
@@ -187,7 +189,12 @@ class Infos with ChangeNotifier {
       'czas': czas,
       'uwagi': uwagi,
       'arch': arch,
-    });
+    };
+    if (zachowajUwagi) {
+      await DBHelper.insertInfoZachowujacUwagi(wiersz);
+    } else {
+      await DBHelper.insert('info', wiersz);
+    }
   }
 
 

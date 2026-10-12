@@ -32,9 +32,12 @@
 //      POWROTEM DO CZUWANIA, nigdy cichym zawieszeniem. Decyzja z 01.08.2026.
 //   5. Dyktowanie notatki (nasłuch swobodny, recognizer bez gramatyki) ma DWA
 //      UJŚCIA - patrz [UjscieNotatki]:
-//        "zanotuj" / "zapisz notatkę" / "Hej Maja notatka do przeglądu"
-//              -> uwagi dzisiejszego przeglądu wybranego ula (tabela "info"),
-//        "Hej Maja notatka do notesu"
+//        "zanotuj" / "zapisz notatkę" / "dodaj notatkę"
+//              -> uwagi OSTATNIEGO wpisu zapisanego głosem, a bez takiego
+//                 wpisu - uwagi dzisiejszego przeglądu wybranego ula,
+//        "notatka do przeglądu"
+//              -> zawsze uwagi przeglądu (tabela "info"),
+//        "notatka do notesu"
 //              -> nowy wpis w Notesie (tabela "notatki").
 //      Jedno i drugie kończy "Hej Maja".
 //
@@ -93,7 +96,7 @@ import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 
 //}
 
 //Gdzie ma trafić dyktowana notatka. Komenda otwierająca mówi to wprost
-//("Hej Maja notatka do przeglądu" / "Hej Maja notatka do notesu"), bo pomyłka
+//("notatka do przeglądu" / "notatka do notesu"), bo pomyłka
 //jest droga: to dwie różne tabele i dwa różne miejsca w aplikacji.
 enum UjscieNotatki {
   /// Uwagi dzisiejszego przeglądu wybranego ula (tabela "info", kategoria
@@ -103,6 +106,42 @@ enum UjscieNotatki {
   /// Samodzielny wpis w Notesie (tabela "notatki"). Pasieka i ul są opcjonalne -
   /// jeśli są wybrane, zapisujemy je jako kontekst notatki.
   notes,
+
+  /// ZALEŻNIE OD KONTEKSTU ("zanotuj", "zapisz/dodaj notatkę"): uwagi
+  /// OSTATNIEGO wpisu info zapisanego głosem ("rodzina ok", potem "zanotuj").
+  /// Bez takiego wpisu (np. zaraz po otwarciu ula albo po komendzie o ramce)
+  /// notatka idzie do przeglądu, jak [przeglad].
+  kontekst,
+}
+
+//Ostatni wpis info zapisany głosem - cel komendy "zanotuj". Trzymamy KLUCZ
+//wpisu, a nie id: w trybie "wszystkie ule" komenda pisze po jednym wierszu na ul
+//(z pominięciem uli bez matki przy cechach matki), a zapisy lecą w łańcuchach
+//.then() - listę id zna dopiero baza, więc pytamy ją przy zapisie uwagi.
+class _WpisDoUwagi {
+  final String data;
+  final int pasiekaNr;
+  final int ulNr; //0 = tryb "wszystkie ule" / zakres uli
+  final List<int> ule; //puste = wszystkie ule pasieki; przy jednym ulu [ulNr]
+  final String kategoria;
+  final String parametr;
+  final String wartosc;
+  String opis; //tekst z wiersza "Zapis:" - znany dopiero po switchu komendy
+
+  _WpisDoUwagi({
+    required this.data,
+    required this.pasiekaNr,
+    required this.ulNr,
+    required this.ule,
+    required this.kategoria,
+    required this.parametr,
+    required this.wartosc,
+    this.opis = '',
+  });
+
+  //do komunikatów: opis z wiersza "Zapis:", a gdy go nie ma - parametr i wartość
+  String get doPokazania =>
+      opis.isNotEmpty ? opis : '${parametr.trim()} ${wartosc.trim()}'.trim();
 }
 
 class VoiceVoskScreen extends StatefulWidget {
@@ -591,6 +630,15 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //czy BIEŻĄCA komenda coś zapisała - ustawiane przez zapisDoBazy /
   //zapisInfoDoBazy, czytane po switchu w _obsluzKomende
   bool _zapisWTejKomendzie = false;
+  //"ZANOTUJ" - ostatni wpis info zapisany głosem (ustawia zapisInfoDoBazy).
+  //Kasowany przy zmianie pasieki/ula/korpusu/daty (te same intencje, które czyszczą
+  //stos cofania), po komendzie zapisującej coś innego niż info (zasoby ramek)
+  //i po cofnięciu wpisu - wtedy notatka idzie do przeglądu.
+  _WpisDoUwagi? _ostatniWpis;
+  //czy BIEŻĄCA komenda zapisała wpis info - jak [_zapisWTejKomendzie]
+  bool _wpisInfoWTejKomendzie = false;
+  //cel BIEŻĄCEGO dyktowania notatki - zamrożony przy komendzie otwierającej
+  _WpisDoUwagi? _celUwagi;
   //cofanie w toku - obejmuje TAKŻE odświeżanie providerów po przywróceniu
   //plastra, więc jest szersze niż blokada wewnątrz StosCofania
   bool _cofanieWToku = false;
@@ -981,6 +1029,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //z 03.08.2026). Sprawdzenie jest darmowe i od razu wskazuje winnego.
     if (!_gramatyka!.intencje.contains('voiceNote') ||
         !_gramatyka!.intencje.contains('voiceNotepad') ||
+        !_gramatyka!.intencje.contains('voiceNoteInspection') ||
         !_gramatyka!.intencje.contains('voiceUndo')) {
       debugPrint('VOSK: wczytana gramatyka NIE ZNA intencji notatki albo '
           'cofania (voiceNote/voiceNotepad/voiceUndo) - w pakiecie jest stary '
@@ -1084,6 +1133,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //pomyłkowe wejście w dyktowanie zabiera mikrofon na kilkadziesiąt sekund
     //i kończy się wpisem w bazie, więc niepewne rozpoznanie ma je odrzucić.
     if (f.inference.intent == 'voiceNote') {
+      _zacznijNotatke(UjscieNotatki.kontekst);
+      return;
+    }
+    if (f.inference.intent == 'voiceNoteInspection') {
       _zacznijNotatke(UjscieNotatki.przeglad);
       return;
     }
@@ -1371,8 +1424,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
   //DYKTOWANIE NOTATKI
   //
-  //"zanotuj" / "zapisz notatkę" / "Hej Maja notatka do przeglądu" -> uwagi
-  //dzisiejszego przeglądu tego ula. "Hej Maja notatka do notesu" -> nowy wpis
+  //"zanotuj" / "zapisz notatkę" / "notatka do przeglądu" -> uwagi
+  //dzisiejszego przeglądu tego ula. "notatka do notesu" -> nowy wpis
   //w Notesie. Jedno i drugie otwiera ten sam nasłuch swobodny (recognizer bez
   //gramatyki); różni je wyłącznie [ujscie], czyli miejsce zapisu.
   //
@@ -1385,6 +1438,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     final VoskEngine? e = _engine;
     if (e == null) return;
     _ujscieNotatki = ujscie;
+    //cel notatki zamrażamy TERAZ - dyktowanie trwa do 90 s, a notatka ma trafić
+    //do wpisu, po którym ją zapowiedziano
+    _celUwagi = ujscie == UjscieNotatki.kontekst ? _ostatniWpis : null;
     //CAŁA METODA POD JEDNYM try. Leci bez await z [_naFraze], więc wyjątek z
     //dowolnego jej miejsca nie ma dokąd wypłynąć - przepada w pustce, a ekran
     //zostaje w trybie komend, bez ikony i bez słowa wyjaśnienia. Dokładnie tak
@@ -1392,7 +1448,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //[_zagraj]), więc pojedyncze łatanie znanego winowajcy nie wystarczy:
     //łańcuszek jest długi i każdy jego krok sięga do wtyczek audio.
     try {
-      if (ujscie == UjscieNotatki.przeglad &&
+      //notatka bez wpisu idzie do przeglądu - wtedy potrzebuje pasieki i ula tak
+      //samo (w trybie "wszystkie ule" nrXXOfHive == 0, ale wpis zna swoje ule)
+      if ((ujscie == UjscieNotatki.przeglad ||
+              (ujscie == UjscieNotatki.kontekst && _celUwagi == null)) &&
           (nrXXOfApiary == 0 || nrXXOfHive == 0)) {
         _slad('brak pasieki albo ula');
         _powiedzONotatce(AppLocalizations.of(context)!.voiceNoteNeedPlace);
@@ -1551,9 +1610,44 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
 
+    //"ZANOTUJ" z wpisem, do którego można ją dopisać - osobna droga. Bez wpisu
+    //(albo gdy wpisu w międzyczasie nie ma już w bazie) notatka idzie niżej, do
+    //przeglądu - treść nie może przepaść.
+    final _WpisDoUwagi? cel =
+        _ujscieNotatki == UjscieNotatki.kontekst ? _celUwagi : null;
+    _celUwagi = null;
+    if (cel != null) {
+      final bool zapisana = await _zapiszUwageDoWpisu(
+        cel,
+        tresc,
+        powod,
+        nagranie: nagranie,
+        rozpoznane: rozpoznane,
+        ratujemyNagranie: ratujemyNagranie,
+        czas: godzina,
+      );
+      if (zapisana || !mounted) return;
+    }
+    //tryb "wszystkie ule" bez wpisu, którego nie ma już w bazie - nie ma przeglądu,
+    //do którego można dopisać, więc pokazujemy treść do przepisania
+    if (nrXXOfApiary == 0 || nrXXOfHive == 0) {
+      _powiedzONotatce('${AppLocalizations.of(context)!.voiceNoteSaveFailed}. ${AppLocalizations.of(context)!.voiceNoteContent} „$tresc"');
+      await _zagraj('error');
+      return;
+    }
+
     final String wpis = '$godzina - $tresc';
     String idInfo = '$formattedDate.$nrXXOfApiary.$nrXXOfHive.inspection.'
         '${AppLocalizations.of(context)!.inspection}';
+
+    //COFANIE: migawka PRZED pierwszym zapisem ("cofnij ostatni zapis" zdejmuje też
+    //notatkę). Bez ramek - notatka pisze tylko info, belkę ula i datę przeglądu pasieki.
+    final Future<MigawkaZapisu?> migawka = _stosCofania.przygotuj(
+      ZakresPlastra.ul(formattedDate, nrXXOfApiary, nrXXOfHive, zRamkami: false),
+      pasiekaNr: nrXXOfApiary,
+      ulNr: nrXXOfHive,
+      korpusNr: nrXOfBody != 0 ? nrXOfBody : nrXOfHalfBody,
+    );
 
     //ZAPIS POD KONTROLĄ: ta metoda jest wołana z callbacka silnika, więc
     //wyjątek z bazy nie miałby gdzie wypłynąć - użytkownik zobaczyłby ciszę
@@ -1605,6 +1699,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
     if (!mounted) return;
+    _stosCofania.odloz(
+        migawka, AppLocalizations.of(context)!.voiceNoteUndoDesc,
+        notatka: true);
     //Nagranie PO zapisie notatki: bez rekordu przeglądu nie ma do czego go
     //przypiąć. Odwrotnie już nie - notatka bez nagrania jest w porządku.
     final bool zapisaneNagranie = await _zapiszNagranie(
@@ -1619,17 +1716,105 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //dacie przeglądu nie ma prawa zamienić się w komunikat "nie udało się zapisać".
     await _przestawDatePrzegladu();
     if (!mounted) return;
-    _powiedzONotatce(_komunikatPoZapisie(
+    final String komunikat = _komunikatPoZapisie(
       powod,
       ratujemyNagranie: ratujemyNagranie,
       zapisaneNagranie: zapisaneNagranie,
       co: AppLocalizations.of(context)!.voiceNoteWord,
       gdzie: AppLocalizations.of(context)!.voiceNoteAtInspection,
-    ));
+    );
+    _powiedzONotatce(komunikat);
     //odzywka MOWĄ, nie sygnałem: notatka to rzadka, świadoma czynność i
     //użytkownik musi wiedzieć, że tekst wylądował w bazie. Przy komendach
     //"zapisałam" było za długie i zastąpił je beep - patrz [_playSuccess]
     await _zagraj(ratujemyNagranie ? 'nie_rozumiem' : 'success');
+  }
+
+  //"ZANOTUJ" - dopisanie podyktowanej notatki do OSTATNIEGO wpisu info zapisanego
+  //głosem ([cel]). W trybie "wszystkie ule" / zakresu uli - do tego wpisu w każdym
+  //objętym ulu (ule pominięte przy zapisie, np. bez matki, wpisu nie mają, więc
+  //i notatki nie dostaną). Dopisujemy z godziną, nigdy nie nadpisujemy - tak samo
+  //jak notatka przeglądu.
+  //
+  //Zwraca false TYLKO wtedy, gdy wpisu nie ma już w bazie (np. usunięty ręcznie) -
+  //wtedy wołający zapisuje notatkę do przeglądu. Błąd bazy obsługuje sama (komunikat
+  //z treścią do przepisania) i zwraca true, bo drugiej próby gdzie indziej nie ma.
+  Future<bool> _zapiszUwageDoWpisu(
+    _WpisDoUwagi cel,
+    String tresc,
+    PowodKoncaDyktowania powod, {
+    required Uint8List? nagranie,
+    required String rozpoznane,
+    required bool ratujemyNagranie,
+    required String czas,
+  }) async {
+    final String wpis = '$czas - $tresc';
+    //COFANIE: migawka PRZED zapisem, w zakresie wpisu (jeden ul albo ule trybu
+    //zbiorczego), bez ramek - notatka pisze tylko do info
+    final Future<MigawkaZapisu?> migawka = _stosCofania.przygotuj(
+      ZakresPlastra(
+        data: cel.data,
+        pasiekaNr: cel.pasiekaNr,
+        uleNr: cel.ule,
+        zRamkami: false,
+      ),
+      pasiekaNr: cel.pasiekaNr,
+      ulNr: cel.ulNr,
+      korpusNr: nrXOfBody != 0 ? nrXOfBody : nrXOfHalfBody,
+    );
+    final List<Map<String, dynamic>> wiersze;
+    try {
+      wiersze = await DBHelper.getInfoDoUwagi(
+          cel.data, cel.pasiekaNr, cel.kategoria, cel.parametr, cel.ule);
+      for (final w in wiersze) {
+        final String stare = (w['uwagi'] ?? '').toString();
+        await DBHelper.updateInfoUwagi(
+            '${w['id']}', stare.trim().isEmpty ? wpis : '$stare\n$wpis');
+      }
+      if (wiersze.isNotEmpty && mounted && cel.ulNr != 0) {
+        await Provider.of<Infos>(context, listen: false)
+            .fetchAndSetInfosForHive(cel.pasiekaNr, cel.ulNr);
+      }
+    } catch (err) {
+      debugPrint('Uwaga: zapis nie powiódł się - $err');
+      if (!mounted) return true;
+      _powiedzONotatce('${AppLocalizations.of(context)!.voiceNoteSaveFailed} ($err). ${AppLocalizations.of(context)!.voiceNoteContent} „$tresc"');
+      await _zagraj('error');
+      return true;
+    }
+    if (wiersze.isEmpty) {
+      debugPrint('Uwaga: wpisu „${cel.doPokazania}" nie ma w bazie - do przeglądu');
+      return false;
+    }
+    if (!mounted) return true;
+    final l = AppLocalizations.of(context)!;
+    _stosCofania.odloz(migawka, l.voiceNoteEntryUndoDesc(cel.doPokazania),
+        notatka: true);
+
+    //nagranie przy PIERWSZYM ulu - jeden plik do kilkunastu wpisów trybu zbiorczego
+    //(do 3 MB każdy) byłby nie do przyjęcia, a tekst i tak jest w każdym wpisie
+    final bool zapisaneNagranie = await _zapiszNagranie(
+      nagranie,
+      zrodlo: RecordingHelper.zrodloPrzeglad,
+      powiazanieId: '${wiersze.first['id']}',
+      czas: czas,
+      tekst: rozpoznane,
+      data: cel.data,
+      ulNr: (wiersze.first['ulNr'] as int?) ?? cel.ulNr,
+    );
+    if (!mounted) return true;
+    final String co = wiersze.length > 1
+        ? '${l.voiceNoteEntryWord(cel.doPokazania)} ${l.voiceNoteInHives(wiersze.length.toString())}'
+        : l.voiceNoteEntryWord(cel.doPokazania);
+    _powiedzONotatce(_komunikatPoZapisie(
+      powod,
+      ratujemyNagranie: ratujemyNagranie,
+      zapisaneNagranie: zapisaneNagranie,
+      co: co,
+      gdzie: l.voiceNoteAtEntry,
+    ));
+    await _zagraj(ratujemyNagranie ? 'nie_rozumiem' : 'success');
+    return true;
   }
 
   //Treść zastępcza wpisu, z którego Vosk nie wyciągnął ani jednego słowa, a w
@@ -1647,16 +1832,18 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     required String powiazanieId,
     required String czas,
     required String tekst,
+    String? data, //domyślnie data bieżącego zapisu
+    int? ulNr, //domyślnie wybrany ul (uwaga w trybie zbiorczym podaje swój)
   }) async {
     if (pcm == null || pcm.isEmpty) return false;
     final String? id = await RecordingHelper.zapisz(
       pcm: pcm,
       zrodlo: zrodlo,
       powiazanieId: powiazanieId,
-      data: formattedDate,
+      data: data ?? formattedDate,
       czas: czas,
       pasiekaNr: nrXXOfApiary,
-      ulNr: nrXXOfHive,
+      ulNr: ulNr ?? nrXXOfHive,
       tekst: tekst,
     );
     if (id == null) {
@@ -1697,7 +1884,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     return '${AppLocalizations.of(context)!.voiceNoteSavedPrefix} $co$dzwiek$limit.';
   }
 
-  //NOTATKA DO NOTESU - drugie ujście dyktowania ("Hej Maja notatka do notesu").
+  //NOTATKA DO NOTESU - drugie ujście dyktowania ("notatka do notesu").
   //
   //Wpis idzie do tabeli "notatki", czyli tam, gdzie lądują notatki zakładane
   //ręcznie w Notesie - i tak samo jak one jest osobnym rekordem, a nie doklejką
@@ -2084,6 +2271,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       case 'voiceNotepad':
         return powodBlokady(l, [czNotatki], pasieka: pasieka);
       case 'voiceNote':
+      case 'voiceNoteInspection':
         return powodBlokady(l, [czInfo], pasieka: pasieka);
       case 'voiceCamera':
       case 'voicePhoto':
@@ -2118,9 +2306,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //trzeba by zrobić asynchroniczne całe prettyPrintInference i switch pod nim.
     final Future<MigawkaZapisu?>? przyszlaMigawka = _przygotujMigawke(inference);
 
-    if (_intentyKontekstu.contains(inference.intent)) _stosCofania.wyczysc();
+    if (_intentyKontekstu.contains(inference.intent)) {
+      _stosCofania.wyczysc();
+      _ostatniWpis = null; //inny ul/data - uwaga nie może trafić do starego wpisu
+    }
 
     _zapisWTejKomendzie = false; //ustawiają go zapisDoBazy / zapisInfoDoBazy
+    _wpisInfoWTejKomendzie = false; //ustawia go zapisInfoDoBazy
     setState(() {
       rhinoText = prettyPrintInference(inference);
     });
@@ -2150,6 +2342,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     final bool zapisano = _zapisWTejKomendzie ||
         inference.intent == 'setChange' ||
         inference.intent == 'setMoveBody';
+    //"dodaj uwagę": wpis info dostaje opis z wiersza "Zapis:"; komenda zapisująca
+    //coś innego (zasoby ramek, przenumerowanie) unieważnia poprzedni wpis - uwaga
+    //po "czerw 50" ma iść do przeglądu, a nie do "rodzina ok" sprzed kilku komend
+    if (_wpisInfoWTejKomendzie) {
+      if (_ostatniWpis != null && zapis != '0') _ostatniWpis!.opis = zapis;
+    } else if (zapisano) {
+      _ostatniWpis = null;
+    }
     //ŚLAD W KONSOLI XCODE - jedyne miejsce, w którym widać ZARAZEM wszystkie
     //trzy warunki odłożenia kroku. Bez niego objaw "nie ma czego cofnąć" nie
     //odróżnia braku migawki od braku sygnału zapisu i od wyczyszczonego stosu.
@@ -2321,6 +2521,10 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       }
 
       final MigawkaZapisu cofnieta = wynik.migawka!;
+      //cofnięty zapis mógł być właśnie tym wpisem - kolejna notatka idzie do
+      //przeglądu. Cofnięcie samej NOTATKI wpis zostawia, więc i cel zostaje:
+      //można od razu podyktować ją jeszcze raz.
+      if (!wynik.notatka) _ostatniWpis = null;
 
       //PAMIĘĆ WŁASNYCH ZAPISÓW przestała odpowiadać bazie - plaster wrócił do
       //stanu sprzed komendy. Gdyby została, kontrola sumy zasobów liczyłaby
@@ -2358,11 +2562,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       setState(() {
         _stanNasluchu =
             '${AppLocalizations.of(context)!.undoDone}: ${wynik.opis}';
-        //wiersz "Zapis:" pokazywał to, czego już nie ma w bazie
-        zapis = '0';
-        readyStory = false;
-        readyInfo = false;
-        rhinoText = '';
+        //wiersz "Zapis:" pokazywał to, czego już nie ma w bazie. Po cofnięciu
+        //samej notatki wpis jest w bazie dalej - sekcja zostaje na ekranie.
+        if (!wynik.notatka) {
+          zapis = '0';
+          readyStory = false;
+          readyInfo = false;
+          rhinoText = '';
+        }
       });
       await _beepPotwierdzenia();
     } finally {
@@ -7156,6 +7363,22 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     formatedTime = formatterHm.format(now);
     //print('czas $formatedTime');
 
+    //cel komendy "dodaj uwagę" - PRZED pierwszym await (getQueenID niżej), żeby
+    //_obsluzKomende zdążyło po switchu dopisać opis. Ule w trybie zbiorczym tak
+    //samo jak w zapisie: zakres albo cała pasieka.
+    _wpisInfoWTejKomendzie = true;
+    _ostatniWpis = _WpisDoUwagi(
+      data: formattedDate,
+      pasiekaNr: nrXXOfApiary,
+      ulNr: readyAllHives ? 0 : nrXXOfHive,
+      ule: readyAllHives
+          ? (_zakresUliAktywny ? List<int>.from(_numeryUliZZakresu) : const <int>[])
+          : [nrXXOfHive],
+      kategoria: kat,
+      parametr: param,
+      wartosc: '$wart $miar'.trim(),
+    );
+
     if (readyAllHives) {
       //** WPIS DLA WSZYSTKICH uli w pasiece
       //pobranie do Hives_items z tabeli ule - ule z pasieki do której ma być wpis
@@ -7196,7 +7419,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               globals.tempNaWpis(temp, stopnie), //temperatura zaokrąglona do 1 stopnia
               formatedTime, //czas
               '', //uwagi
-              0); //niezarchiwizowane
+              0, //niezarchiwizowane
+              zachowajUwagi: true); //uwaga z "dodaj uwagę" przeżywa powtórzenie komendy
           //"liczba ramek" dla wielu uli: belka z NAJNOWSZEGO wpisu każdego ula, po ostatnim
           //odświeżenie danych uli w pamięci (opis przy zapisie dla jednego ula niżej)
           if (toLiczbaRamek) {
@@ -7353,7 +7577,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           globals.tempNaWpis(temp, stopnie), //temperatura zaokrąglona do 1 stopnia
           formatedTime, //czas
           '', //uwagi
-          0); //niezarchiwizowane
+          0, //niezarchiwizowane
+          zachowajUwagi: true); //uwaga z "dodaj uwagę" przeżywa powtórzenie komendy
       //liczba ramek, rodzaj i typ w belce z NAJNOWSZEGO wpisu "liczba ramek =" (komenda
       //z ustawioną wcześniejszą datą nie może nadpisać nowszego wpisu) + odświeżenie danych
       //uli w pamięci - bez tego następny zapis ręczny przywracał w belce starą liczbę ramek.
@@ -9506,7 +9731,9 @@ print('openDialog = $openDialog');
                           //wygląda identycznie, a tekst ląduje gdzie indziej
                           _ujscieNotatki == UjscieNotatki.notes
                               ? AppLocalizations.of(context)!.voiceNoteHeaderNotepad
-                              : AppLocalizations.of(context)!.voiceNoteHeaderInspection,
+                              : (_ujscieNotatki == UjscieNotatki.kontekst && _celUwagi != null)
+                                  ? AppLocalizations.of(context)!.voiceNoteHeaderEntry
+                                  : AppLocalizations.of(context)!.voiceNoteHeaderInspection,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color: Color.fromARGB(255, 120, 120, 120),

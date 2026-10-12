@@ -5541,7 +5541,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceNoteNeedPlace.
   ///
   /// In en, this message translates to:
-  /// **'Note for the inspection: first say which apiary and which hive (e.g. \"apiary one\", \"hive seven\"). A note for the notepad can be dictated right away.'**
+  /// **'Note for the inspection: first say which apiary and which hive (e.g. \"apiary one\", \"hive seven\"). A note for Notes can be dictated right away.'**
   String get voiceNoteNeedPlace;
 
   /// No description provided for @voiceNoteUnavailable.
@@ -5637,13 +5637,13 @@ abstract class AppLocalizations {
   /// No description provided for @voiceNoteInNotepad.
   ///
   /// In en, this message translates to:
-  /// **'the note in the notepad'**
+  /// **'the note in Notes'**
   String get voiceNoteInNotepad;
 
   /// No description provided for @voiceNoteWhereNotepad.
   ///
   /// In en, this message translates to:
-  /// **'in the Notepad'**
+  /// **'in Notes'**
   String get voiceNoteWhereNotepad;
 
   /// No description provided for @voiceNoteSavedPrefix.
@@ -5703,7 +5703,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceNoteHeaderNotepad.
   ///
   /// In en, this message translates to:
-  /// **'Note for the notepad - finish by saying \"Hey Maya\"'**
+  /// **'Note for Notes - finish by saying \"Hey Maya\"'**
   String get voiceNoteHeaderNotepad;
 
   /// No description provided for @voiceNoteHeaderInspection.
@@ -5723,6 +5723,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note - speak, finish by saying \"Hey Maya\"'**
   String get voiceNoteHint;
+
+  /// No description provided for @voiceNoteHeaderEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for the last entry - finish by saying “Hey Maya”'**
+  String get voiceNoteHeaderEntry;
+
+  /// No description provided for @voiceNoteEntryWord.
+  ///
+  /// In en, this message translates to:
+  /// **'the note for the entry “{opis}”'**
+  String voiceNoteEntryWord(String opis);
+
+  /// No description provided for @voiceNoteInHives.
+  ///
+  /// In en, this message translates to:
+  /// **'in {ile} hives'**
+  String voiceNoteInHives(String ile);
+
+  /// No description provided for @voiceNoteAtEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'with the entry'**
+  String get voiceNoteAtEntry;
+
+  /// No description provided for @voiceNoteEntryUndoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'note for “{opis}”'**
+  String voiceNoteEntryUndoDesc(String opis);
+
+  /// No description provided for @voiceNoteUndoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'note for the inspection'**
+  String get voiceNoteUndoDesc;
 
   /// No description provided for @voiceGrammarOutdated.
   ///

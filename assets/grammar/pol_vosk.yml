@@ -57,16 +57,20 @@ context:
     # i Notes jako osobny ekran). Pomyłka jest tu droga: notatka przeglądu wymaga
     # wybranej pasieki i ula i dokleja się do rekordu przeglądu, a notatka do
     # notesu to samodzielny wpis w tabeli "notatki".
-    #   voiceNote    -> uwagi dzisiejszego przeglądu wybranego ula
-    #   voiceNotepad -> nowy wpis w Notesie (tabela "notatki")
+    #   voiceNote           -> zależnie od kontekstu (12.10.2026): do uwag
+    #                          OSTATNIEGO wpisu zapisanego głosem ("rodzina ok",
+    #                          potem "zanotuj"), a bez takiego wpisu - do uwag
+    #                          dzisiejszego przeglądu wybranego ula
+    #   voiceNoteInspection -> zawsze do przeglądu, nawet gdy jest wpis
+    #   voiceNotepad        -> nowy wpis w Notesie (tabela "notatki")
     voiceNote:
       - zanotuj
       - hej maja zanotuj
-      - zapisz notatkę
-      - hej maja zapisz notatkę
-      - hej maja notatka do przeglądu
+      - (hej maja) [zapisz,dodaj] notatkę
+    voiceNoteInspection:
+      - (hej maja) notatka do przeglądu
     voiceNotepad:
-      - hej maja notatka do notesu
+      - (hej maja) notatka do notesu
     # --- cofanie ostatniego zapisu ------------------------------------------
     # Przywraca stan bazy sprzed ostatniej ZAPISUJĄCEJ komendy (patrz
     # lib/helpers/undo_helper.dart). Intent przechwytuje voice_vosk_screen.dart
