@@ -25,8 +25,8 @@ class Subskrypcja {
   //aplikacja Android "goog_..."). Są publiczne z założenia - mogą być w repozytorium (klucz TAJNY
   //"sk_..." jest tylko na serwerze, w lib/konf.php). PUSTE = zakupy jeszcze niedostępne:
   //ekran subskrypcji pokazuje komunikat, a głos działa jak dotąd do daty ddo.
-  static const String _kluczIos = '';
-  static const String _kluczAndroid = '';
+  static const String _kluczIos = 'appl_vOvaSjSxFEhcXJTFRbDBrZNAdkn';
+  static const String _kluczAndroid = 'goog_kKPrdtuUkGRKnebieuENAktxTAu';
 
   //identyfikator uprawnienia (entitlement) w RevenueCat - ten sam co HB_RC_UPRAWNIENIE na serwerze
   static const String uprawnienie = 'voice';
