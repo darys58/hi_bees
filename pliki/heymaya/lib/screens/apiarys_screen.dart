@@ -164,8 +164,9 @@ class _ApiarysScreenState extends State<ApiarysScreen>
 
   //1.13.4.102 07.10.2026 - bezpieczniejsza chmura: token urządzenia zamiast samego kodu w imporcie, eksporcie i kasowaniu bazy (baza v6), kod konta w eksporcie, prefiks tabel z serwera; dane niezależne od języka (belki, import, statystyki, raporty, wpisy z innego języka w bieżącym); suma zbiorów dnia i liczba ramek z historii na belce; synchronizacja konta przy starcie i po powrocie z tła (+ data wpisów po powrocie); linki heymaya.eu wg języka; temperatura pusta zamiast 0° przed pobraniem pogody; głos nie zapisuje cech matki w ulu bez matki, poprawne ID matki we wpisach głosowych; ukryty link suppi.pl w O aplikacji
   //1.13.5.103 13.10.2026 - praca zespołowa: zespół w Ustawieniach (zaproszenia, prawa odczytu i zapisu do części bazy i zakresu pasiek, osobne pliki baz, przełączanie na bazę właściciela, blokady zapisu wg praw, lokalizacje pasiek i własne typy uli w chmurze), unikalne id notatek, zbiorów, zakupów, sprzedaży i matek (stanowisko instalacji); subskrypcja (RevenueCat): ekran zakupu, wspólna subskrypcja sterowania głosem i pracy zespołowej, regulamin i polityka prywatności; usuwanie konta z aplikacji; do 3 matek w ulu (główna = najwcześniej podłączona, cechy osobno dla każdej matki, wybór matki we wpisie, rejestracja wielu matek naraz), poprawka statystyki po podłączeniu nowej matki; historia matki: wpisy z jednego dnia w jednym kafelku, ikonki cech, podłączenie i odłączenie matki; sterowanie głosem: NFC (tag otwiera pasiekę i ul), zdjęcia aparatem, „zanotuj” dopisuje notatkę do ostatniego zapisu, „notatka do przeglądu/notesu” bez „Hej Maja”, cofanie obejmuje notatki; eksport CSV obok PDF (8 ekranów, notatki z PDF); belka ula nie pokazuje matki z innego ula; notes w 7 językach
-  final wersja = '1.13.5.103'; //wersja aplikacji tylko na Androida !!!!!
-  final dataWersji = '2026-10-13';
+  //1.13.6.104 14.10.2026 - subskrypcja: zakupy w App Store i Google Play (klucze SDK RevenueCat); usunięta sekcja wsparcia (patronite) w O aplikacji
+  final wersja = '1.13.6.104'; //wersja aplikacji tylko na Androida !!!!!
+  final dataWersji = '2026-10-14';
   DateTime get now => DateTime.now(); //getter, nie pole - pole zapamiętywało datę utworzenia ekranu i po kilku dniach w tle pokazywało starą
   late DateFormat formatter;
   int aktywnosc = 0;

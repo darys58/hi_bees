@@ -305,55 +305,7 @@ class AboutScreen extends StatelessWidget {
                         ],
                       ),
                     
-                    SizedBox(height: 42),
-                    Text(AppLocalizations.of(context)!.sUpport),
                     SizedBox(height: 22),
- //patronite                     
-                      GestureDetector(
-                        onTap: () => _otworz(context, 'https://patronite.pl/heymaya'),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(Icons.handshake, color: Colors.orange[700]),
-                            SizedBox(width: 12),
-                            Text(
-                              'patronite.pl/heymaya',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.blue[700],
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                            SizedBox(width: 18),
-                          ],
-                        ),
-                      ),
-                    
-                    SizedBox(height: 22),
-   //suppi                   
-                      // GestureDetector(
-                      //   onTap: () => _otworz(context, 'https://suppi.pl/heymaya'),
-                      //   child: Row(
-                      //     mainAxisAlignment: MainAxisAlignment.center,
-                      //     crossAxisAlignment: CrossAxisAlignment.center,
-                      //     children: [
-                      //       Icon(Icons.coffee, color: Colors.orange[700]),
-                      //       SizedBox(width: 12),
-                      //       Text(
-                      //         'suppi.pl/heymaya',
-                      //         style: TextStyle(
-                      //           fontSize: 16,
-                      //           color: Colors.blue[700],
-                      //           decoration: TextDecoration.underline,
-                      //         ),
-                      //       ),
-                      //       SizedBox(width: 18),
-                      //     ],
-                      //   ),
-                      // ),
-                    
-                    
                     ],
                   ),
               
