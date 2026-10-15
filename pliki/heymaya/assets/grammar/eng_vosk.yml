@@ -490,6 +490,7 @@ context:
     # pełna forma dla tych, którzy tak wolą powiedzieć - obie są teraz ważne.
     colonyState:
       - dead
+      - sick
       - ok
       - okay
       - swarming mood

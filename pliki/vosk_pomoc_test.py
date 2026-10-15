@@ -110,7 +110,7 @@ POMOC = [
     ('rodzina', [
         'rodzina jest łagodna', 'rodzina jest agresywna', 'rodzina jest ok',
         'rodzina jest w nastroju do ucieczki', 'rodzina zawiązała kłąb',
-        'rodzina nie żyje',
+        'rodzina jest chora', 'rodzina nie żyje',
         'rodzina jest bardzo silna', 'rodzina jest silna',
         'rodzina jest normalna', 'rodzina jest słaba',
         'rodzina jest bardzo słaba',

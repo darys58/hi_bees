@@ -1095,7 +1095,7 @@ abstract class AppLocalizations {
   /// No description provided for @deadFlight.
   ///
   /// In en, this message translates to:
-  /// **'gentle/aggressive/ok/swarming mood/in a cluster/dead'**
+  /// **'aggressive/gentle/in a cluster/ok/swarming mood/sick/dead'**
   String get deadFlight;
 
   /// No description provided for @veryWeakStrong.
@@ -3263,6 +3263,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'drone bees'**
   String get droneBees;
+
+  /// No description provided for @colonySick.
+  ///
+  /// In en, this message translates to:
+  /// **'sick'**
+  String get colonySick;
 
   /// No description provided for @deleteQueenCellsN.
   ///

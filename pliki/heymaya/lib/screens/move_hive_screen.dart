@@ -5,6 +5,7 @@ import 'package:heymaya/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/colony_helpers.dart'; //kolor ikony ula ze stanem rodziny
 import '../globals.dart' as globals;
 import '../models/apiarys.dart';
 import '../models/hive.dart' as hive_model;
@@ -46,23 +47,6 @@ class _MoveHiveScreenState extends State<MoveHiveScreen> {
       _srcHives = List.from(hivesData.items);
       _srcUl = null;
     });
-  }
-
-  Color _hiveStatusColor(String ikona) {
-    switch (ikona) {
-      case 'green':
-        return const Color.fromARGB(255, 0, 255, 0);
-      case 'yellow':
-        return const Color.fromARGB(255, 233, 229, 1);
-      case 'orange':
-        return const Color.fromARGB(255, 233, 132, 1);
-      case 'red':
-        return const Color.fromARGB(255, 255, 0, 0);
-      case 'black':
-        return const Color.fromARGB(255, 0, 0, 0);
-      default:
-        return const Color.fromARGB(255, 100, 100, 100);
-    }
   }
 
   Future<void> _validate() async {
@@ -591,7 +575,7 @@ class _MoveHiveScreenState extends State<MoveHiveScreen> {
                           child: Row(
                             children: _srcHives.map((hive) {
                               final isSelected = _srcUl == hive.ulNr;
-                              final statusColor = _hiveStatusColor(hive.ikona);
+                              final statusColor = kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny));
                               return Padding(
                                 padding: const EdgeInsets.only(right: 10),
                                 child: GestureDetector(

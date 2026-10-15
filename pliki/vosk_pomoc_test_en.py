@@ -146,6 +146,7 @@ POMOC = [
         'colony is swarming mood',
         'colony is swarming',
         'colony is in a cluster',
+        'colony is sick',
         'colony is dead',
         'colony is very strong',
         'colony is strong',

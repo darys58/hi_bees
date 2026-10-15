@@ -123,6 +123,7 @@ final List<String Function(AppLocalizations l)> _szablonyWartosci = [
   (l) => l.inCluster,
   (l) => l.droneBees, //_iStrutowiala
   (l) => l.dead,
+  (l) => l.colonySick,
   //siła rodziny (normalna wyżej)
   (l) => l.veryStrong,
   (l) => l.strong,

@@ -1394,7 +1394,7 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       //print('$todo != '' && ($ikona != red || $ikona != orange)'); 
       // ikona ula zółta jezeli zasobem była czynność do zrobienia
       //o ile nie była czerwona lub pomarańczowa, bo problemy z matką są wazniejsze
-      if ((todo != '' && todo != '0') && (ikona != 'red' || ikona != 'orange')) {
+      if ((todo != '' && todo != '0') && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) {
         ikona = 'yellow';
       }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';   
     // print('ikona po  = $ikona');

@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../models/apiarys.dart';
 // import '../models/info.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/colony_helpers.dart'; //kolor ikony ula ze stanem rodziny
 import '../screens/queen_edit_screen.dart';
 import '../screens/queen_history_screen.dart';
 //import '../screens/infos_screen.dart';
@@ -95,14 +96,9 @@ class _QueenItemState extends State<QueenItem> {
     }
     //ikona pasieki z ikon jej uli - tak samo jak przy podłączaniu
     final ule = await DBHelper.getHives(pasieka);
-    String ikonaPasieki = 'green';
-    for (final u in ule) {
-      switch (u['ikona']) {
-        case 'red': ikonaPasieki = 'red'; break;
-        case 'orange': if (ikonaPasieki == 'yellow' || ikonaPasieki == 'green') ikonaPasieki = 'orange'; break;
-        case 'yellow': if (ikonaPasieki == 'green') ikonaPasieki = 'yellow'; break;
-      }
-    }
+    final stany = await stanyRodzinUli(pasieka); //stan rodziny też barwi ikonę
+    final String ikonaPasieki = ikonaPasiekiZUli(ule.map((u) =>
+        ikonaNaBelce((u['ikona'] as String?) ?? '', stany[u['id']] ?? '')));
     await DBHelper.updateIkonaPasieki(pasieka, ikonaPasieki);
     if (pasieka == globals.pasiekaID) globals.ikonaPasieki = ikonaPasieki;
     if (!context.mounted) return;
@@ -389,18 +385,11 @@ class _QueenItemState extends State<QueenItem> {
                             int ileUli = hives.length;
 
                         //ustawienie ikony dla pasieki
-                            globals.ikonaPasieki = 'green';
+                            //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
+                            globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny)));
                             for (var i = 0; i < hives.length; i++) {
                               //print('i=$i');
                               //print( 'hives[i].ikona = ${hives[i].ikona}');
-                              switch (hives[i].ikona){
-                                case 'red': globals.ikonaPasieki = 'red';
-                                break;
-                                case 'orange': if(globals.ikonaPasieki == 'yellow' || globals.ikonaPasieki == 'green') globals.ikonaPasieki = 'orange';
-                                break;
-                                case 'yellow': if(globals.ikonaPasieki == 'green') globals.ikonaPasieki = 'yellow';
-                                break;
-                              }
                                   //print('============== globals.ikonaPasieki ===== ${globals.ikonaPasieki}');
                                   // print(
                                   //     '${hives[i].id},${hives[i].pasiekaNr},${hives[i].ulNr},${hives[i].przeglad},${hives[i].ikona},${hives[i].ramek}');

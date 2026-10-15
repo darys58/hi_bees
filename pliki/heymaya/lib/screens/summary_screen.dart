@@ -14,6 +14,7 @@ import '../models/harvest.dart';
 import '../models/note.dart';
 import '../globals.dart' as globals;
 import '../helpers/queen_helpers.dart';
+import '../helpers/colony_helpers.dart'; //kolor ikony ula ze stanem rodziny
 import '../widgets/hives_item.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
@@ -301,20 +302,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
     final difference = daysBetween(przeglad, now);
 
     //ikona koloru ula
-    Icon hiveIcon;
-    if (hive.ikona == 'green') {
-      hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 0, 255, 0), size: 30);
-    } else if (hive.ikona == 'yellow') {
-      hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 233, 229, 1), size: 30);
-    } else if (hive.ikona == 'orange') {
-      hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 233, 132, 1), size: 30);
-    } else if (hive.ikona == 'red') {
-      hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 255, 0, 0), size: 30);
-    } else if (hive.ikona == 'black') {
-      hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 0, 0, 0), size: 30);
-    } else {
-      hiveIcon = const Icon(Icons.hive, color: Color.fromARGB(255, 100, 100,100), size: 30);
-    }
+    Icon hiveIcon = Icon(Icons.hive, size: 30,
+        color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny)));
 
     // Szerokość belki zasobów
     final double barWidth = MediaQuery.of(context).size.width - 80;

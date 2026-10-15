@@ -519,7 +519,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deadFlight =>
-      'mansa/agresiva/ok/en modo de enjambrazion/en racimo/muerta';
+      'agresiva/mansa/en racimo/ok/en modo de enjambrazion/enferma/muerta';
 
   @override
   String get veryWeakStrong => 'muy fuerte/fuerte/normal/debil/muy debil';
@@ -1626,6 +1626,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get droneBees => 'zanganera';
+
+  @override
+  String get colonySick => 'enferma';
 
   @override
   String get deleteQueenCellsN => 'realeras\neliminadas';

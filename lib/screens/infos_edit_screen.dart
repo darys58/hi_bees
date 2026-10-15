@@ -6,6 +6,7 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/colony_helpers.dart'; //kolor ikony ula ze stanem rodziny
 import '../helpers/notification_helper.dart';
 import '../helpers/queen_helpers.dart';
 import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
@@ -1772,20 +1773,22 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
                                 items: _zWartoscia(nowyWartosc, [
-                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.aggressive1),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.aggressive1),
                                                   value:AppLocalizations.of(context)!.aggressive),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gentle),
                                                   value:AppLocalizations.of(context)!.gentle),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inCluster),
+                                                  value:AppLocalizations.of(context)!.inCluster),
                                   DropdownMenuItem(child: Text('ok'),
                                                   value:'ok'),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.swarmingMood),
                                                   value:AppLocalizations.of(context)!.swarmingMood),
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inCluster),
-                                                  value:AppLocalizations.of(context)!.inCluster),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.droneBees),
                                                   value:AppLocalizations.of(context)!.droneBees),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.colonySick),
+                                                  value:AppLocalizations.of(context)!.colonySick),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.dead),
-                                                  value:AppLocalizations.of(context)!.dead),                                                                        
+                                                  value:AppLocalizations.of(context)!.dead),
                                 ]), //lista elementów do wyboru
                                 onChanged: (newValue) {
                                   setState(() {
@@ -2960,18 +2963,11 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 int ileUli = hives.length;
 
                                 //ustawienie ikony dla pasieki
-                                globals.ikonaPasieki = 'green';
+                                //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
+                                globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny)));
                                 for (var i = 0; i < hives.length; i++) {
                                   //print('i=$i');
                                   //print( 'hives[i].ikona = ${hives[i].ikona}');
-                                  switch (hives[i].ikona){
-                                    case 'red': globals.ikonaPasieki = 'red';
-                                    break;
-                                    case 'orange': if(globals.ikonaPasieki == 'yellow' || globals.ikonaPasieki == 'green') globals.ikonaPasieki = 'orange';
-                                    break;
-                                    case 'yellow': if(globals.ikonaPasieki == 'green') globals.ikonaPasieki = 'yellow';
-                                    break;
-                                  }
                                   //print('============== globals.ikonaPasieki ===== ${globals.ikonaPasieki}');
                                   // print(
                                   //     '${hives[i].id},${hives[i].pasiekaNr},${hives[i].ulNr},${hives[i].przeglad},${hives[i].ikona},${hives[i].ramek}');

@@ -28,6 +28,7 @@ import '../helpers/queen_helpers.dart';
 import '../helpers/db_helper.dart'; //getInfosOfQueen - cechy matki z poprzedniego ula
 //import '../screens/add_queen_screen.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
+import '../helpers/colony_helpers.dart'; //ikonka przed stanem rodziny
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 import '../helpers/photo_helper.dart'; //zapis zdjęcia ula
@@ -1063,6 +1064,8 @@ class _InfoScreenState extends State<InfoScreen> {
     String wartosc4 = ''; //queenMark
     String wartosc5 = ''; //queenQuality
     String wartosc6 = '';
+    Icon? ikonaRodziny; //ikonka przed stanem rodziny (colony_helpers)
+    Icon? ikonaSily; //buźka przed siłą rodziny (colony_helpers)
     double suma1 = 0.0;
     double suma2 = 0.0;
     double suma3 = 0.0;
@@ -1295,6 +1298,7 @@ class _InfoScreenState extends State<InfoScreen> {
             parametrWBiezacym(context, infos[i].parametr) == " " + AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData1)) {
             ostatniaData1 = DateTime.parse(infos[i].data);
+            ikonaSily = ikonaSilyRodziny(infos[i].wartosc);
             //po bieżącym l10n, nie po polskich literałach - inaczej wpis z innego
             //języka szedł surowo, a polski zawsze po polsku ("normalna")
             if(wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.normal){
@@ -1312,6 +1316,7 @@ class _InfoScreenState extends State<InfoScreen> {
             parametrWBiezacym(context, infos[i].parametr) == AppLocalizations.of(context)!.colony + " " + AppLocalizations.of(context)!.isIs) {
           if (DateTime.parse(infos[i].data).isAfter(ostatniaData2)) {
             ostatniaData2 = DateTime.parse(infos[i].data);
+            ikonaRodziny = ikonaStanuRodziny(infos[i].wartosc);
             if(wartoscWBiezacym(context, infos[i].wartosc) == AppLocalizations.of(context)!.aggressive){
               wartosc2 = AppLocalizations.of(context)!.aggressive1 +
                 ' (${zmienDate_cala(infos[i].data)})'; //' (${zmienDate5_10(infos[i].data.substring(5, 10))})';
@@ -2934,23 +2939,44 @@ class _InfoScreenState extends State<InfoScreen> {
                 ),
               ),
     //Ostatnie infa colony dla biezacego roku
+            //wyrównanie do lewej jak w statystyce matki (prośba usera 15.10.2026)
             if (wybranaKategoria == 'colony')
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.only(left: 30, top: 8, bottom: 8),
                 child: Container(
                   //margin: EdgeInsets.all(10),
                  // height: wysokoscStatystyk + dodatek,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (wartosc2 != '')
-                        Text('(1) $wartosc2',
-                            style: const TextStyle(fontSize: 16)),
+                        Row(
+                          children: [
+                            SizedBox(width: 6),
+                            ikonaRodziny ?? const SizedBox.shrink(),
+                            Flexible(
+                              child: Text(' (1) $wartosc2',
+                                  style: const TextStyle(fontSize: 16)),
+                            ),
+                          ],
+                        ),
                       if (wartosc1 != '')
-                        Text('(2) $wartosc1',
-                            style: const TextStyle(fontSize: 16)),
+                        Row(
+                          children: [
+                            SizedBox(width: 6),
+                            ikonaSily ?? const SizedBox.shrink(),
+                            Flexible(
+                              child: Text(' (2) $wartosc1',
+                                  style: const TextStyle(fontSize: 16)),
+                            ),
+                          ],
+                        ),
                       if (wartosc3 != '')
-                        Text('(3) ' + AppLocalizations.of(context)!.deadBees + ' $wartosc3',
-                            style: const TextStyle(fontSize: 16)),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: Text('(3) ' + AppLocalizations.of(context)!.deadBees + ' $wartosc3',
+                              style: const TextStyle(fontSize: 16)),
+                        ),
                     ],
                   ),
                 ),

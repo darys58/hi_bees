@@ -13,6 +13,7 @@ import '../helpers/queen_helpers.dart';
 import '../models/hive.dart';
 //import '../models/info.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
+import '../helpers/colony_helpers.dart'; //ikonaNaBelce, kolorIkonyUla
 
 class HivesItem extends StatelessWidget {
   @override
@@ -562,35 +563,12 @@ class HivesItem extends StatelessWidget {
               //isThreeLine: true,
 
 //ikona zielona, zółta, czerwona
-              trailing: hive.ikona == 'green'
-                  ? const Icon(
-                      Icons.hive,
-                      color: Color.fromARGB(255, 0, 255, 0),
-                    )
-                  : hive.ikona == 'yellow'
-                      ? const Icon(
-                          Icons.hive,
-                          color: Color.fromARGB(255, 233, 229, 1),
-                        )
-                      : hive.ikona == 'orange'
-                          ? const Icon(
-                              Icons.hive,
-                              color: Color.fromARGB(255, 233, 132, 1),
-                            )
-                          : hive.ikona == 'red'
-                            ? const Icon(
-                                Icons.hive,
-                                color: Color.fromARGB(255, 255, 0, 0),
-                              )
-                            : hive.ikona == 'black'
-                              ? const Icon(
-                                  Icons.hive,
-                                  color: Color.fromARGB(255, 0, 0, 0),
-                                )
-                              : const Icon(
-                                  Icons.hive,
-                                  color: Color.fromARGB(255, 100, 100, 100),
-                                ),
+              //kolor najgorszy z ikony zapisanej (matka, do zrobienia) i stanu rodziny;
+              //'dead' (rodzina nie żyje) = czarna ikona bez zaciemnienia belki
+              trailing: Icon(
+                Icons.hive,
+                color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny)),
+              ),
             )),
       ),
     ),

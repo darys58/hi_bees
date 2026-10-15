@@ -756,6 +756,18 @@ class DBHelper {
   //znaki zapytania dla "parametr IN (...)"
   static String _znakiZapytania(int ile) => List.filled(ile, '?').join(',');
 
+  //wpisy o stanie rodziny ("rodzina jest", parametry we wszystkich językach) - do
+  //koloru ikony na belce ula (colony_helpers.stanyRodzinUli); pasieka null = wszystkie
+  static Future<List<Map<String, dynamic>>> getStanyRodziny(Iterable<String> parametry, Object? pasieka) async {
+    if (parametry.isEmpty) return [];
+    final db = await DBHelper.database();
+    return db.rawQuery(
+        'SELECT pasiekaNr, ulNr, wartosc, data, czas FROM info WHERE wartosc <> \'\' '
+        'and parametr IN (${_znakiZapytania(parametry.length)})'
+        '${pasieka != null ? ' and pasiekaNr = ?' : ''}',
+        [...parametry, if (pasieka != null) pasieka]);
+  }
+
   //Liczba ramek (ramek), rodzaj (h1) i typ ula (h2) w tabeli "ule" z NAJNOWSZEGO
   //(data, czas) wpisu "liczba ramek =" ula - jedynego nośnika tych danych.
   //parametry: wersje językowe parametru (wszystkieJezyki z parametr_nazwy.dart).

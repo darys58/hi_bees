@@ -519,7 +519,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cOlony => 'Colonie';
 
   @override
-  String get deadFlight => 'douce/agressive/ok/essaimage/en grappe/morte';
+  String get deadFlight =>
+      'agressive/douce/en grappe/ok/essaimage/malade/morte';
 
   @override
   String get veryWeakStrong => 'très forte/forte/normale/faible/très faible';
@@ -1630,6 +1631,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get droneBees => 'pondeuse de mâles';
+
+  @override
+  String get colonySick => 'malade';
 
   @override
   String get deleteQueenCellsN => 'cellules\nroyales suppr.';

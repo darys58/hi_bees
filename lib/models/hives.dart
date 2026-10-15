@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
+import '../helpers/colony_helpers.dart'; //stanyRodzinUli - kolor ikony ula
 
 
 import 'hive.dart';
@@ -56,6 +57,8 @@ class Hives with ChangeNotifier {
           ),
         )
         .toList();
+    final stany = await stanyRodzinUli();
+    for (final h in _items) h.stanRodziny = stany[h.id] ?? '';
     //print('wczytanie wszystkich!!!!!!! danych o ulach z wszystkich pasiek --> Hives <---');
     //print(_items);
     notifyListeners();
@@ -106,6 +109,8 @@ class Hives with ChangeNotifier {
           ),
         )
         .toList();
+    final stany = await stanyRodzinUli(nrPasieki);
+    for (final h in _items) h.stanRodziny = stany[h.id] ?? '';
     //print('wczytanie wszystkich!!!!!!! danych o ulach z pasieki nr $nrPasieki --> Hives <---');
     //print(_items);
     notifyListeners();

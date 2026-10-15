@@ -38,9 +38,11 @@ void main() {
       // ("ustaw ule od X do Y", commit 395c0f3). Zmiana jakości matki
       // ("zła" -> "do wymiany") ruszyła tylko slot $queenQuality, więc liczby
       // wyrażeń nie dotknęła.
-      expect(silnik.liczbaWyrazen, 71,
+      //
+      // 75 i 29 intencji (15.10.2026, ZMIERZONE flutter test): NFC (246c99e), aparat i zdjęcie (e5e58cc), notatka do przeglądu jako osobna intencja voiceNoteInspection (da0fd63) - te commity liczb nie podbiły.
+      expect(silnik.liczbaWyrazen, 75,
           reason: 'zmieniła się liczba wyrażeń w assets/grammar/pol_vosk.yml');
-      expect(silnik.intencje.length, 24); // 22 + voiceUndo + setHivesRange
+      expect(silnik.intencje.length, 29); // + voiceNoteInspection, voiceNfc, voiceCamera, voicePhoto, voiceCameraClose
       expect(silnik.intencje, contains('setStore'));
       expect(silnik.intencje, contains('setMoveBody'));
     });
@@ -61,7 +63,11 @@ void main() {
       // 228 = 227 + "notatki" (11.08.2026): nowa wartość slotu $helpMe, przez
       // którą "notatki pomóż mi" otwiera sekcję sesji/dyktowania/cofania.
       // Zero OOV potwierdzone: pliki/vosk_gramatyka_test.py --oov.
-      expect(silnik.slowa().length, 228,
+      //
+      // 239 (15.10.2026, ZMIERZONE flutter test, zgodne z vosk_parser_ref.py):
+      // 238 po commitach NFC (246c99e), aparat i zdjęcie (e5e58cc), notatka do przeglądu jako osobna intencja voiceNoteInspection (da0fd63) + "chora" w $colonyState.
+      // Zero OOV: pliki/vosk_gramatyka_test.py.
+      expect(silnik.slowa().length, 239,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec słownika modelu');
       expect(silnik.slowa(), isNot(contains('zła')),
           reason: 'jakość matki "zła" zastąpiona przez "do wymiany"');
@@ -240,7 +246,10 @@ void main() {
       // slotu $helpMe ("notatki"), a generator wypuszcza z niej DWIE frazy:
       // samą wartość i całe "notatki pomóż mi" - tak samo jak dla pozostałych
       // wartości tego slotu.
-      expect(silnik.frazy().length, 3345);
+      //
+      // 3369 (15.10.2026, ZMIERZONE flutter test): NFC, aparat, notatki
+      // (246c99e, e5e58cc, da0fd63) i "chora" w $colonyState.
+      expect(silnik.frazy().length, 3369);
     });
   });
 
@@ -254,18 +263,22 @@ void main() {
         'hej maja zanotuj',
         'zapisz notatkę',
         'hej maja zapisz notatkę',
-        'hej maja notatka do przeglądu',
       ]) {
         expect(silnik.rozpoznaj(t).intent, 'voiceNote', reason: t);
+      }
+      // od da0fd63 "notatka do przeglądu" ZAWSZE do przeglądu - osobna intencja
+      // ("zanotuj" zależy od kontekstu), "hej maja" opcjonalne
+      for (final t in ['hej maja notatka do przeglądu', 'notatka do przeglądu']) {
+        expect(silnik.rozpoznaj(t).intent, 'voiceNoteInspection', reason: t);
       }
     });
 
     test('notes ma JEDNĄ dokładną komendę', () {
       expect(silnik.rozpoznaj('hej maja notatka do notesu').intent,
           'voiceNotepad');
-      // Bez zawołania to zwykłe słowa - w pasiece pada ich za dużo, żeby
-      // otwierać nimi dyktowanie na 90 sekund.
-      expect(silnik.rozpoznaj('notatka do notesu').isUnderstood, isFalse);
+      // od da0fd63 "hej maja" jest opcjonalne (decyzja usera 12.10.2026);
+      // samo "notatka" dalej nic nie otwiera
+      expect(silnik.rozpoznaj('notatka do notesu').intent, 'voiceNotepad');
       expect(silnik.rozpoznaj('notatka').isUnderstood, isFalse);
     });
 
@@ -343,6 +356,7 @@ void main() {
       ['przegląd pomóż mi', 'setHelp'],
       ['ustaw inny dzień dwadzieścia jeden', 'setDate'],
       ['rodzina zawiązała kłąb', 'setColony'],
+      ['rodzina jest chora', 'setColony'],
       ['zbiór miodu dwa razy mała ramka', 'setHarvest'],
       ['ustaw ramkę od dwa do dziewięć', 'setFrames'],
       ['ramka numer jeden po przeglądzie numer dziesięć', 'setChange'],

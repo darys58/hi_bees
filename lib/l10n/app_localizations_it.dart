@@ -520,7 +520,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deadFlight =>
-      'docile/aggressiva/ok/in sciamatura/in glomere/morta';
+      'aggressiva/docile/in glomere/ok/in sciamatura/malata/morta';
 
   @override
   String get veryWeakStrong => 'molto forte/forte/normale/debole/molto debole';
@@ -1626,6 +1626,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get droneBees => 'fucaiola';
+
+  @override
+  String get colonySick => 'malata';
 
   @override
   String get deleteQueenCellsN => 'celle reali\nrimosse';

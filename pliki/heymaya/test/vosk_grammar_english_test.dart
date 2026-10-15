@@ -41,9 +41,11 @@ void main() {
       // 71 wyrażeń, 24 intencje - IDENTYCZNIE jak assets/grammar/pol_vosk.yml
       // (sprawdzone niezależnie skryptem Python przy pisaniu eng_vosk.yml -
       // ten sam zestaw kluczy intencji/slotów w obu plikach).
-      expect(silnik.liczbaWyrazen, 71,
+      //
+      // 76 i 29 intencji (15.10.2026, ZMIERZONE flutter test): NFC (246c99e), aparat i zdjęcie (e5e58cc), notatka do przeglądu jako osobna intencja voiceNoteInspection (da0fd63) - te commity liczb nie podbiły.
+      expect(silnik.liczbaWyrazen, 76,
           reason: 'zmieniła się liczba wyrażeń w assets/grammar/eng_vosk.yml');
-      expect(silnik.intencje.length, 24);
+      expect(silnik.intencje.length, 29);
       expect(silnik.intencje, contains('setStore'));
       expect(silnik.intencje, contains('setMoveBody'));
       expect(silnik.intencje, contains('voiceStart'));
@@ -54,7 +56,9 @@ void main() {
       // 166 = policzone Python-em przy pisaniu tego testu. "excluder" NIE
       // jest w słowniku modelu (patrz nagłówek eng_vosk.yml) - zostaje jako
       // pierwsza, udokumentowana opcja alternatywy [excluder,grid,grate].
-      expect(silnik.slowa().length, 166,
+      // 181 (15.10.2026, ZMIERZONE flutter test, zgodne z vosk_parser_ref.py):
+      // 180 po commitach 246c99e, e5e58cc, da0fd63 + "sick" w $colonyState.
+      expect(silnik.slowa().length, 181,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec '
               'pliki/vosk_slownik_eng.txt');
       expect(silnik.liczebniki(), contains('twenty'));
@@ -164,10 +168,14 @@ void main() {
 
     test('dyktowanie notatki - dwa ujścia się nie mylą', () {
       expect(silnik.rozpoznaj('hey maya note').intent, 'voiceNote');
-      expect(silnik.rozpoznaj('hey maya note for notepad').intent,
+      //od da0fd63 "note for notes" (Notes zamiast Notepad), "note for inspection"
+      //to osobna intencja
+      expect(silnik.rozpoznaj('hey maya note for notes').intent,
           'voiceNotepad');
-      expect(silnik.rozpoznaj('hey maya note for notepad').intent,
+      expect(silnik.rozpoznaj('hey maya note for notes').intent,
           isNot('voiceNote'));
+      expect(silnik.rozpoznaj('hey maya note for inspection').intent,
+          'voiceNoteInspection');
     });
 
     test('cofanie wymaga pełnego zawołania', () {
@@ -235,6 +243,7 @@ void main() {
       expect(silnik.rozpoznaj('bottom board is okay').slots!['bottomBoard'],
           'okay');
       expect(silnik.rozpoznaj('colony is okay').slots!['colonyState'], 'okay');
+      expect(silnik.rozpoznaj('colony is sick').slots!['colonyState'], 'sick');
     });
   });
 

@@ -34,6 +34,9 @@ class Hive with ChangeNotifier {
   final String h2; //typ ula
   final String h3; //tag nfc
   final int aktual; //0-dane aktualne lub stan po wczytaniu danych z chmury 1-nieaktualne zasoby, 
+  //najnowszy stan rodziny z info ("rodzina jest ...") - NIE kolumna tabeli ule;
+  //ustawiany w Hives.fetchAndSetHives, do koloru ikony (colony_helpers.ikonaNaBelce)
+  String stanRodziny = '';
 
   //bool isFavorite;
 

@@ -518,7 +518,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deadFlight =>
-      'sanft/aggressiv/ok/in Schwarmstimmung/in der Traube/tot';
+      'aggressiv/sanft/in der Traube/ok/in Schwarmstimmung/krank/tot';
 
   @override
   String get veryWeakStrong => 'sehr stark/stark/normal/schwach/sehr schwach';
@@ -1626,6 +1626,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get droneBees => 'drohnenbrütig';
+
+  @override
+  String get colonySick => 'krank';
 
   @override
   String get deleteQueenCellsN => 'entfernte\nWeiselzellen';

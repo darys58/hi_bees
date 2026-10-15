@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
+import '../helpers/colony_helpers.dart'; //kolor ikony ula ze stanem rodziny
 import '../helpers/queen_helpers.dart';
 import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu
@@ -1309,7 +1310,7 @@ class _HivesScreenState extends State<HivesScreen> {
 //IKONA DLA ULA
               // ikona ula zółta jezeli zasobem była czynność do zrobienia
               //o ile nie była czerwona lub pomarańczowa, bo problemy z matką są wazniejsze
-              if ((todo != '' && todo != '0') && (ikona != 'red' || ikona != 'orange')) {
+              if ((todo != '' && todo != '0') && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) {
                 ikona = 'yellow';
               }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';                
               //print('${globals.pasiekaID}.${numerUla} = ');   
@@ -1785,18 +1786,8 @@ class _HivesScreenState extends State<HivesScreen> {
     // print(hives.length);
     
     //ustawienie ikony dla pasieki na podstawie ikon ulowych
-    globals.ikonaPasieki = 'green';
-    for (var i = 0; i < hives.length; i++) {
-      //print('${hives[i].ulNr} = ${hives[i].h3}');
-      switch (hives[i].ikona){
-        case 'red': globals.ikonaPasieki = 'red';
-        break;
-        case 'orange': if(globals.ikonaPasieki == 'yellow' || globals.ikonaPasieki == 'green') globals.ikonaPasieki = 'orange';
-        break;
-        case 'yellow': if(globals.ikonaPasieki == 'green') globals.ikonaPasieki = 'yellow';
-        break;
-      }
-    }
+    //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
+    globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny)));
     
     //aktualizacja ikony pasieki
     DBHelper.updateIkonaPasieki(int.parse(numerPasieki.toString()), globals.ikonaPasieki ); 
