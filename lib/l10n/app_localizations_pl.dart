@@ -1951,6 +1951,34 @@ class AppLocalizationsPl extends AppLocalizations {
   String get rateAppSub => 'Twoja opinia w sklepie pomaga innym pszczelarzom';
 
   @override
+  String get qrSection => 'Kody QR';
+
+  @override
+  String get qrPrint => 'Drukuj kody QR uli';
+
+  @override
+  String get qrPrintDesc =>
+      'Naklejki 6×6 cm, 12 na arkuszu A4. W kodzie jest numer pasieki i ula – po przeniesieniu ula wydrukuj nowy kod.';
+
+  @override
+  String get qrFromHive => 'Od ula';
+
+  @override
+  String get qrToHive => 'Do ula';
+
+  @override
+  String get qrNoHives => 'Brak uli w wybranym zakresie';
+
+  @override
+  String get qrLabels => 'Naklejek';
+
+  @override
+  String get qrSheets => 'Arkuszy A4';
+
+  @override
+  String get qrCreatePdf => 'Utwórz PDF';
+
+  @override
   String get queenConnectedToHive => 'podłączona do ula';
 
   @override
@@ -2134,7 +2162,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get sinceLastInspection => 'dni od ostatniego przeglądu';
 
   @override
-  String get nfcSettings => 'Obsługa NFC';
+  String get nfcSettings => 'Obsługa NFC i QR';
 
   @override
   String get nfcModeOff => 'Wyłącz obsługę NFC';

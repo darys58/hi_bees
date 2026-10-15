@@ -1957,6 +1957,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rateAppSub => 'Votre avis sur la boutique aide d\'autres apiculteurs';
 
   @override
+  String get qrSection => 'Codes QR';
+
+  @override
+  String get qrPrint => 'Imprimer les codes QR des ruches';
+
+  @override
+  String get qrPrintDesc => 'Étiquettes 6×6 cm, 12 par feuille A4. Le code contient le numéro du rucher et de la ruche – après déplacement d\'une ruche, imprimez un nouveau code.';
+
+  @override
+  String get qrFromHive => 'De la ruche';
+
+  @override
+  String get qrToHive => 'À la ruche';
+
+  @override
+  String get qrNoHives => 'Aucune ruche dans la plage choisie';
+
+  @override
+  String get qrLabels => 'Étiquettes';
+
+  @override
+  String get qrSheets => 'Feuilles A4';
+
+  @override
+  String get qrCreatePdf => 'Créer le PDF';
+
+  @override
   String get queenConnectedToHive => 'introduite dans la ruche';
 
   @override
@@ -2161,7 +2188,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sinceLastInspection => 'jours depuis la dernière inspection';
 
   @override
-  String get nfcSettings => 'Support NFC';
+  String get nfcSettings => 'Support NFC et QR';
 
   @override
   String get nfcModeOff => 'Désactiver le support NFC';

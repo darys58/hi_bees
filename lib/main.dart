@@ -60,6 +60,7 @@ import './screens/lactic_calculator_screen.dart';
 import './screens/queen_rearing_screen.dart';
 import './screens/summary_screen.dart';
 import './screens/nfc_settings_screen.dart';
+import './screens/qr_codes_print_screen.dart';
 import './screens/apiarys_map_screen.dart';
 import './screens/apiarys_all_map_screen.dart';
 import './screens/notification_settings_screen.dart';
@@ -400,6 +401,7 @@ class _MyAppState extends State<MyApp> {
           QueenRearingScreen.routeName: (ctx) => QueenRearingScreen(),
           SummaryScreen.routeName: (ctx) => SummaryScreen(),
           NfcSettingsScreen.routeName: (ctx) => NfcSettingsScreen(),
+          QrCodesPrintScreen.routeName: (ctx) => QrCodesPrintScreen(),
           ApiaryMapScreen.routeName: (ctx) => ApiaryMapScreen(),
           ApiarysAllMapScreen.routeName: (ctx) => ApiarysAllMapScreen(),
           NotificationSettingsScreen.routeName: (ctx) => NotificationSettingsScreen(),

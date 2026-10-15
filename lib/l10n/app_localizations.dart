@@ -3900,6 +3900,60 @@ abstract class AppLocalizations {
   /// **'Your store review helps other beekeepers'**
   String get rateAppSub;
 
+  /// No description provided for @qrSection.
+  ///
+  /// In en, this message translates to:
+  /// **'QR codes'**
+  String get qrSection;
+
+  /// No description provided for @qrPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print hive QR codes'**
+  String get qrPrint;
+
+  /// No description provided for @qrPrintDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers 6×6 cm, 12 per A4 sheet. The code holds the apiary and hive number – print a new code after moving a hive.'**
+  String get qrPrintDesc;
+
+  /// No description provided for @qrFromHive.
+  ///
+  /// In en, this message translates to:
+  /// **'From hive'**
+  String get qrFromHive;
+
+  /// No description provided for @qrToHive.
+  ///
+  /// In en, this message translates to:
+  /// **'To hive'**
+  String get qrToHive;
+
+  /// No description provided for @qrNoHives.
+  ///
+  /// In en, this message translates to:
+  /// **'No hives in the selected range'**
+  String get qrNoHives;
+
+  /// No description provided for @qrLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get qrLabels;
+
+  /// No description provided for @qrSheets.
+  ///
+  /// In en, this message translates to:
+  /// **'A4 sheets'**
+  String get qrSheets;
+
+  /// No description provided for @qrCreatePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Create PDF'**
+  String get qrCreatePdf;
+
   /// No description provided for @queenConnectedToHive.
   ///
   /// In en, this message translates to:
@@ -4263,7 +4317,7 @@ abstract class AppLocalizations {
   /// No description provided for @nfcSettings.
   ///
   /// In en, this message translates to:
-  /// **'NFC support'**
+  /// **'NFC and QR support'**
   String get nfcSettings;
 
   /// No description provided for @nfcModeOff.

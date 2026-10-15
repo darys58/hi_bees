@@ -1952,6 +1952,33 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rateAppSub => 'A sua avaliação na loja ajuda outros apicultores';
 
   @override
+  String get qrSection => 'Códigos QR';
+
+  @override
+  String get qrPrint => 'Imprimir códigos QR das colmeias';
+
+  @override
+  String get qrPrintDesc => 'Etiquetas de 6×6 cm, 12 por folha A4. O código contém o número do apiário e da colmeia – depois de mudar uma colmeia, imprima um código novo.';
+
+  @override
+  String get qrFromHive => 'Da colmeia';
+
+  @override
+  String get qrToHive => 'Até à colmeia';
+
+  @override
+  String get qrNoHives => 'Sem colmeias no intervalo escolhido';
+
+  @override
+  String get qrLabels => 'Etiquetas';
+
+  @override
+  String get qrSheets => 'Folhas A4';
+
+  @override
+  String get qrCreatePdf => 'Criar PDF';
+
+  @override
   String get queenConnectedToHive => 'associada à colmeia';
 
   @override
@@ -2156,7 +2183,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sinceLastInspection => 'dias desde a última inspeção';
 
   @override
-  String get nfcSettings => 'Suporte NFC';
+  String get nfcSettings => 'Suporte NFC e QR';
 
   @override
   String get nfcModeOff => 'Desativar suporte NFC';

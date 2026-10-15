@@ -1952,6 +1952,33 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rateAppSub => 'La tua recensione nello store aiuta altri apicoltori';
 
   @override
+  String get qrSection => 'Codici QR';
+
+  @override
+  String get qrPrint => 'Stampa i codici QR delle arnie';
+
+  @override
+  String get qrPrintDesc => 'Etichette 6×6 cm, 12 per foglio A4. Il codice contiene il numero di apiario e arnia – dopo aver spostato un\'arnia stampa un nuovo codice.';
+
+  @override
+  String get qrFromHive => 'Dall\'arnia';
+
+  @override
+  String get qrToHive => 'All\'arnia';
+
+  @override
+  String get qrNoHives => 'Nessun\'arnia nell\'intervallo scelto';
+
+  @override
+  String get qrLabels => 'Etichette';
+
+  @override
+  String get qrSheets => 'Fogli A4';
+
+  @override
+  String get qrCreatePdf => 'Crea PDF';
+
+  @override
   String get queenConnectedToHive => 'collegata all\'arnia';
 
   @override
@@ -2156,7 +2183,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sinceLastInspection => 'giorni dall\'ultima ispezione';
 
   @override
-  String get nfcSettings => 'Supporto NFC';
+  String get nfcSettings => 'Supporto NFC e QR';
 
   @override
   String get nfcModeOff => 'Disattiva supporto NFC';

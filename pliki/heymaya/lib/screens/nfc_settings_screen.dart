@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:heymaya/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
+import 'qr_codes_print_screen.dart';
 
 class NfcSettingsScreen extends StatefulWidget {
   static const routeName = '/nfc-settings';
@@ -79,6 +80,21 @@ class _NfcSettingsScreenState extends State<NfcSettingsScreen> {
             value: 'summary',
             groupValue: _selectedMode,
             onChanged: (value) => _onModeChanged(value!),
+          ),
+          //KODY QR (15.10.2026, plan pliki/plan_kody_qr.md) - etap 1: wydruk;
+          //wybór czytnika NFC / QR dojdzie w etapie 2 (odczyt)
+          Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+            child: Text(AppLocalizations.of(context)!.qrSection,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.qr_code_2),
+            title: Text(AppLocalizations.of(context)!.qrPrint),
+            subtitle: Text(AppLocalizations.of(context)!.qrPrintDesc, style: const TextStyle(fontSize: 12)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).pushNamed(QrCodesPrintScreen.routeName),
           ),
         ],
       ),

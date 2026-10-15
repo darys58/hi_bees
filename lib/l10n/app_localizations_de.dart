@@ -1955,6 +1955,34 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rateAppSub => 'Deine Bewertung im Store hilft anderen Imkern';
 
   @override
+  String get qrSection => 'QR-Codes';
+
+  @override
+  String get qrPrint => 'QR-Codes der Beuten drucken';
+
+  @override
+  String get qrPrintDesc =>
+      'Aufkleber 6×6 cm, 12 pro A4-Blatt. Der Code enthält Stand- und Beutennummer – nach dem Umsetzen einer Beute neuen Code drucken.';
+
+  @override
+  String get qrFromHive => 'Von Beute';
+
+  @override
+  String get qrToHive => 'Bis Beute';
+
+  @override
+  String get qrNoHives => 'Keine Beuten im gewählten Bereich';
+
+  @override
+  String get qrLabels => 'Aufkleber';
+
+  @override
+  String get qrSheets => 'A4-Blätter';
+
+  @override
+  String get qrCreatePdf => 'PDF erstellen';
+
+  @override
   String get queenConnectedToHive => 'dem Volk zugesetzt';
 
   @override
@@ -2138,7 +2166,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sinceLastInspection => 'Tage seit der letzten Durchsicht';
 
   @override
-  String get nfcSettings => 'NFC-Unterstützung';
+  String get nfcSettings => 'NFC- und QR-Unterstützung';
 
   @override
   String get nfcModeOff => 'NFC-Unterstützung deaktivieren';

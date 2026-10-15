@@ -1947,6 +1947,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rateAppSub => 'Your store review helps other beekeepers';
 
   @override
+  String get qrSection => 'QR codes';
+
+  @override
+  String get qrPrint => 'Print hive QR codes';
+
+  @override
+  String get qrPrintDesc =>
+      'Stickers 6×6 cm, 12 per A4 sheet. The code holds the apiary and hive number – print a new code after moving a hive.';
+
+  @override
+  String get qrFromHive => 'From hive';
+
+  @override
+  String get qrToHive => 'To hive';
+
+  @override
+  String get qrNoHives => 'No hives in the selected range';
+
+  @override
+  String get qrLabels => 'Stickers';
+
+  @override
+  String get qrSheets => 'A4 sheets';
+
+  @override
+  String get qrCreatePdf => 'Create PDF';
+
+  @override
   String get queenConnectedToHive => 'connected to the hive';
 
   @override
@@ -2129,7 +2157,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sinceLastInspection => 'days since last inspection';
 
   @override
-  String get nfcSettings => 'NFC support';
+  String get nfcSettings => 'NFC and QR support';
 
   @override
   String get nfcModeOff => 'Disable NFC support';
