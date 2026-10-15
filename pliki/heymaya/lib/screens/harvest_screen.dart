@@ -20,6 +20,66 @@ class HarvestScreen extends StatefulWidget {
   State<HarvestScreen> createState() => _HarvestScreenState();
 }
 
+//sumy zbiorów jednej pasieki (albo wszystkich razem) - przeliczenia jak dotąd:
+//miód, pyłek, pierzga w litrach (kg -> l), wosk i propolis tylko w kg
+class _SumyZbiorow {
+  double miod = 0;
+  double pylek = 0;
+  double pierzga = 0;
+  double wosk = 0;
+  double propolis = 0;
+
+  void dodaj(Harvest z) {
+    switch (z.zasobId) {
+      case 1: miod += z.miara == 1 ? z.ilosc : z.ilosc * 0.725; break; //1kg = 0.725l
+      case 2: pylek += z.miara == 1 ? z.ilosc : z.ilosc * 1.579; break; //1kg = 1.579l
+      case 3: pierzga += z.miara == 1 ? z.ilosc : z.ilosc * 1.8; break; //1kg = 1.8l
+      case 4: if (z.miara != 1) wosk += z.ilosc; break; //tylko w kilogramach
+      case 5: if (z.miara != 1) propolis += z.ilosc; break; //tylko w kilogramach
+    }
+  }
+
+  bool get puste => miod == 0 && pylek == 0 && pierzga == 0 && wosk == 0 && propolis == 0;
+}
+
+//zasoby w kolejności podsumowań i wykresu: nazwa, suma, jednostka sumy,
+//przelicznik na kg (pyłek 0,56 wszędzie - ustalenie usera 15.10.2026), kolor w PDF
+class _ZasobSum {
+  final String Function(AppLocalizations l) nazwa;
+  final double Function(_SumyZbiorow s) ile;
+  final String jm;
+  final double naKg;
+  final PdfColor kolor;
+  const _ZasobSum(this.nazwa, this.ile, this.jm, this.naKg, this.kolor);
+}
+
+final List<_ZasobSum> _zasobySum = [
+  _ZasobSum((l) => l.honey, (s) => s.miod, 'l', 1.45, PdfColors.amber),
+  _ZasobSum((l) => l.beePollen, (s) => s.pylek, 'l', 0.56, PdfColors.orange),
+  _ZasobSum((l) => l.perga, (s) => s.pierzga, 'l', 0.56, PdfColors.green),
+  _ZasobSum((l) => l.wax, (s) => s.wosk, 'kg', 1, PdfColor.fromInt(0xFFBDB76B)),
+  _ZasobSum((l) => 'propolis', (s) => s.propolis, 'kg', 1, PdfColors.brown),
+];
+
+//sumy zbiorów wybranego roku osobno dla każdej pasieki, pasieki rosnąco
+Map<int, _SumyZbiorow> _sumyPasiek(List<Harvest> zbiory, String rok) {
+  final Map<int, _SumyZbiorow> sumy = {};
+  for (final z in zbiory) {
+    if (!z.data.startsWith(rok)) continue;
+    sumy.putIfAbsent(z.pasiekaNr, () => _SumyZbiorow()).dodaj(z);
+  }
+  sumy.removeWhere((_, s) => s.puste);
+  final klucze = sumy.keys.toList()..sort();
+  return {for (final k in klucze) k: sumy[k]!};
+}
+
+//jaśniejszy odcień koloru zasobu dla kolejnej pasieki na wykresie (pierwsza - kolor bazowy)
+PdfColor _odcien(PdfColor c, int i, int ile) {
+  if (ile <= 1 || i == 0) return c;
+  final f = 0.6 * i / (ile - 1);
+  return PdfColor(c.red + (1 - c.red) * f, c.green + (1 - c.green) * f, c.blue + (1 - c.blue) * f);
+}
+
 class _HarvestScreenState extends State<HarvestScreen> {
   bool _isInit = true;
   String wybranaData = DateTime.now().toString().substring(0, 4); //aktualny rok
@@ -82,32 +142,63 @@ class _HarvestScreenState extends State<HarvestScreen> {
         isPl ? 'Uwagi' : 'Notes',
       ],
     ];
+    //przy kilku pasiekach (15.10.2026) - wpisy i podsumowanie osobno dla każdej
+    //pasieki, na końcu podsumowanie razem
+    final sumyPasiek = _sumyPasiek(zbiory, wybranaData);
+    final bool kilka = sumyPasiek.length > 1;
+    final List<String> naglowek = wiersze.removeLast(); //wiersz z nazwami kolumn - przed każdą sekcją
     final zbiorySorted = zbiory.reversed.toList(); //od najstarszego, jak w PDF
-    for (int i = 0; i < zbiorySorted.length; i++) {
-      final z = zbiorySorted[i];
-      wiersze.add([
-        '${i + 1}',
-        data(z.data),
-        zasob(z.zasobId),
-        liczbaCsv(z.ilosc),
-        miara(z.miara),
-        z.uwagi,
-      ]);
+    void wpisy(List<Harvest> lista) {
+      for (int i = 0; i < lista.length; i++) {
+        final z = lista[i];
+        wiersze.add([
+          '${i + 1}',
+          data(z.data),
+          zasob(z.zasobId),
+          liczbaCsv(z.ilosc),
+          miara(z.miara),
+          z.uwagi,
+        ]);
+      }
     }
-
-    //podsumowanie - to samo co legenda przy wykresie w PDF (przeliczniki l -> kg jak w PDF)
-    wiersze.add([]);
-    wiersze.add([
-      isPl ? 'Zasób' : 'Resource',
-      isPl ? 'Ilość' : 'Qty',
-      isPl ? 'J.m.' : 'Unit',
-      isPl ? 'Ilość (kg)' : 'Qty (kg)',
-    ]);
-    if (miod > 0) wiersze.add([loc.honey, liczbaCsv(miod), 'l', liczbaCsv(miod * 1.45)]);
-    if (pylek > 0) wiersze.add([loc.beePollen, liczbaCsv(pylek), 'l', liczbaCsv(pylek * 0.56)]);
-    if (pierzga > 0) wiersze.add([loc.perga, liczbaCsv(pierzga), 'l', liczbaCsv(pierzga * 0.56)]);
-    if (wosk > 0) wiersze.add([loc.wax, liczbaCsv(wosk), 'kg', liczbaCsv(wosk)]);
-    if (propolis > 0) wiersze.add(['propolis', liczbaCsv(propolis), 'kg', liczbaCsv(propolis)]);
+    void podsumowanie(_SumyZbiorow s) {
+      wiersze.add([
+        isPl ? 'Zasób' : 'Resource',
+        isPl ? 'Ilość' : 'Qty',
+        isPl ? 'J.m.' : 'Unit',
+        isPl ? 'Ilość (kg)' : 'Qty (kg)',
+      ]);
+      for (final r in _zasobySum) {
+        final v = r.ile(s);
+        if (v > 0) wiersze.add([r.nazwa(loc), liczbaCsv(v), r.jm, liczbaCsv(v * r.naKg)]);
+      }
+    }
+    if (!kilka) {
+      wiersze.add(naglowek);
+      wpisy(zbiorySorted);
+      //podsumowanie - to samo co legenda przy wykresie w PDF (przeliczniki l -> kg jak w PDF)
+      wiersze.add([]);
+      final razem = _SumyZbiorow();
+      for (final z in zbiorySorted) {
+        if (z.data.startsWith(wybranaData)) razem.dodaj(z);
+      }
+      podsumowanie(razem);
+    } else {
+      sumyPasiek.forEach((nr, sumy) {
+        wiersze.add(['${loc.aPiary} $nr']);
+        wiersze.add(naglowek);
+        wpisy(zbiorySorted.where((z) => z.pasiekaNr == nr).toList());
+        wiersze.add([]);
+        podsumowanie(sumy);
+        wiersze.add([]);
+      });
+      wiersze.add([loc.total]);
+      final razem = _SumyZbiorow();
+      for (final z in zbiorySorted) {
+        if (z.data.startsWith(wybranaData)) razem.dodaj(z);
+      }
+      podsumowanie(razem);
+    }
 
     await udostepnijCsv(context, 'harvest_$wybranaData', wiersze);
   }
@@ -122,35 +213,20 @@ class _HarvestScreenState extends State<HarvestScreen> {
       final fontRegular = await PdfGoogleFonts.robotoRegular();
       final fontBold = await PdfGoogleFonts.robotoBold();
 
-      // Dane do wykresu kołowego
+      // Dane do wykresu kołowego. Przy kilku pasiekach (15.10.2026) JEDEN wykres,
+      // ale kawałek każdego zasobu podzielony na pasieki (odcienie koloru zasobu).
+      final sumyPasiek = _sumyPasiek(zbiory, wybranaData);
+      final bool kilka = sumyPasiek.length > 1;
+      final List<int> nrPasiek = sumyPasiek.keys.toList();
       final pieColors = <PdfColor>[];
       final pieValues = <double>[];
-      final pieNames = <String>[];
-
-      if (miod > 0) {
-        pieNames.add(loc.honey);
-        pieValues.add(miod);
-        pieColors.add(PdfColors.amber);
-      }
-      if (pylek > 0) {
-        pieNames.add(loc.beePollen);
-        pieValues.add(pylek);
-        pieColors.add(PdfColors.orange);
-      }
-      if (pierzga > 0) {
-        pieNames.add(loc.perga);
-        pieValues.add(pierzga);
-        pieColors.add(PdfColors.green);
-      }
-      if (wosk > 0) {
-        pieNames.add(loc.wax);
-        pieValues.add(wosk);
-        pieColors.add(PdfColor.fromInt(0xFFBDB76B));
-      }
-      if (propolis > 0) {
-        pieNames.add('propolis');
-        pieValues.add(propolis);
-        pieColors.add(PdfColors.brown);
+      for (final r in _zasobySum) {
+        for (int i = 0; i < nrPasiek.length; i++) {
+          final v = r.ile(sumyPasiek[nrPasiek[i]]!);
+          if (v <= 0) continue;
+          pieValues.add(v);
+          pieColors.add(_odcien(r.kolor, i, nrPasiek.length));
+        }
       }
 
       List<pw.Dataset> pieDatasets = [];
@@ -219,37 +295,35 @@ class _HarvestScreenState extends State<HarvestScreen> {
         );
       }
 
+      //wiersz legendy: "miód: 12,40 l (17,98 kg)"; przy kilku pasiekach pod sumą
+      //zasobu wiersz każdej pasieki w jej odcieniu z wykresu
+      String opisSumy(_ZasobSum r, double v) => r.jm == 'l'
+          ? '${formatValue(v)} l (${formatValue(v * r.naKg)} kg)'
+          : '${formatValue(v)} kg';
       List<pw.Widget> legendRows = [];
-
-      if (miod > 0) {
-        String t = isPl
-            ? '${loc.honey}: ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.45).toStringAsFixed(2).replaceAll('.', ',')} kg)'
-            : '${loc.honey}: ${miod.toStringAsFixed(2)} l (${(miod * 1.45).toStringAsFixed(2)} kg)';
-        legendRows.add(buildLegendRow(PdfColors.amber, t));
+      final razem = _SumyZbiorow();
+      for (final sumy in sumyPasiek.values) {
+        razem
+          ..miod += sumy.miod
+          ..pylek += sumy.pylek
+          ..pierzga += sumy.pierzga
+          ..wosk += sumy.wosk
+          ..propolis += sumy.propolis;
       }
-      if (pylek > 0) {
-        String t = isPl
-            ? '${loc.beePollen}: ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)'
-            : '${loc.beePollen}: ${pylek.toStringAsFixed(2)} l (${(pylek * 0.56).toStringAsFixed(2)} kg)';
-        legendRows.add(buildLegendRow(PdfColors.orange, t));
-      }
-      if (pierzga > 0) {
-        String t = isPl
-            ? '${loc.perga}: ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)'
-            : '${loc.perga}: ${pierzga.toStringAsFixed(2)} l (${(pierzga * 0.56).toStringAsFixed(2)} kg)';
-        legendRows.add(buildLegendRow(PdfColors.green, t));
-      }
-      if (wosk > 0) {
-        String t = isPl
-            ? '${loc.wax}: ${wosk.toStringAsFixed(2).replaceAll('.', ',')} kg'
-            : '${loc.wax}: ${wosk.toStringAsFixed(2)} kg';
-        legendRows.add(buildLegendRow(PdfColor.fromInt(0xFFBDB76B), t));
-      }
-      if (propolis > 0) {
-        String t = isPl
-            ? 'propolis: ${propolis.toStringAsFixed(2).replaceAll('.', ',')} kg'
-            : 'propolis: ${propolis.toStringAsFixed(2)} kg';
-        legendRows.add(buildLegendRow(PdfColors.brown, t));
+      for (final r in _zasobySum) {
+        final v = r.ile(razem);
+        if (v <= 0) continue;
+        legendRows.add(buildLegendRow(r.kolor, '${r.nazwa(loc)}: ${opisSumy(r, v)}'));
+        if (!kilka) continue;
+        for (int i = 0; i < nrPasiek.length; i++) {
+          final vp = r.ile(sumyPasiek[nrPasiek[i]]!);
+          if (vp <= 0) continue;
+          legendRows.add(pw.Padding(
+            padding: const pw.EdgeInsets.only(left: 12),
+            child: buildLegendRow(_odcien(r.kolor, i, nrPasiek.length),
+                '${loc.aPiary} ${nrPasiek[i]}: ${opisSumy(r, vp)}'),
+          ));
+        }
       }
 
       // Komórka tabeli
@@ -270,35 +344,47 @@ class _HarvestScreenState extends State<HarvestScreen> {
         );
       }
 
-      // Wiersze tabeli - sortowanie od najstarszego do najnowszego
+      // Wiersze tabeli - sortowanie od najstarszego do najnowszego; przy kilku
+      // pasiekach osobna tabela dla każdej (numeracja od 1 w każdej)
       final zbiorySorted = zbiory.reversed.toList();
 
-      List<pw.TableRow> tableRows = [
-        pw.TableRow(children: [
-          headerCell('L.p.'),
-          headerCell(isPl ? 'Data' : 'Date'),
-          headerCell(isPl ? 'Zasób' : 'Resource'),
-          headerCell(isPl ? 'Ilość' : 'Qty'),
-          headerCell(isPl ? 'Uwagi' : 'Notes'),
-        ]),
-      ];
-
-      for (int i = 0; i < zbiorySorted.length; i++) {
-        final z = zbiorySorted[i];
-        String miaraText = getMiaraText(z.miara);
-        String iloscText = miaraText.isNotEmpty
-            ? '${formatValue(z.ilosc)} $miaraText'
-            : formatValue(z.ilosc);
-
-        tableRows.add(pw.TableRow(
-          children: [
-            cell('${i + 1}', alignment: pw.Alignment.center),
-            cell(formatDate(z.data), alignment: pw.Alignment.center),
-            cell(getZasobText(z.zasobId)),
-            cell(iloscText, alignment: pw.Alignment.centerRight),
-            cell(z.uwagi),
-          ],
-        ));
+      pw.Widget tabela(List<Harvest> lista) {
+        final List<pw.TableRow> tableRows = [
+          pw.TableRow(children: [
+            headerCell('L.p.'),
+            headerCell(isPl ? 'Data' : 'Date'),
+            headerCell(isPl ? 'Zasób' : 'Resource'),
+            headerCell(isPl ? 'Ilość' : 'Qty'),
+            headerCell(isPl ? 'Uwagi' : 'Notes'),
+          ]),
+        ];
+        for (int i = 0; i < lista.length; i++) {
+          final z = lista[i];
+          String miaraText = getMiaraText(z.miara);
+          String iloscText = miaraText.isNotEmpty
+              ? '${formatValue(z.ilosc)} $miaraText'
+              : formatValue(z.ilosc);
+          tableRows.add(pw.TableRow(
+            children: [
+              cell('${i + 1}', alignment: pw.Alignment.center),
+              cell(formatDate(z.data), alignment: pw.Alignment.center),
+              cell(getZasobText(z.zasobId)),
+              cell(iloscText, alignment: pw.Alignment.centerRight),
+              cell(z.uwagi),
+            ],
+          ));
+        }
+        return pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey300),
+          columnWidths: {
+            0: const pw.FixedColumnWidth(28),
+            1: const pw.FixedColumnWidth(55),
+            2: const pw.FlexColumnWidth(0.8),
+            3: const pw.FixedColumnWidth(55),
+            4: const pw.FlexColumnWidth(4),
+          },
+          children: tableRows,
+        );
       }
 
       // Tworzenie PDF
@@ -363,20 +449,19 @@ class _HarvestScreenState extends State<HarvestScreen> {
               content.add(pw.SizedBox(height: 20));
             }
 
-            // Tabela
-            content.add(
-              pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey300),
-                columnWidths: {
-                  0: const pw.FixedColumnWidth(28),
-                  1: const pw.FixedColumnWidth(55),
-                  2: const pw.FlexColumnWidth(0.8),
-                  3: const pw.FixedColumnWidth(55),
-                  4: const pw.FlexColumnWidth(4),
-                },
-                children: tableRows,
-              ),
-            );
+            // Tabela - przy kilku pasiekach nagłówek "Pasieka N" i tabela każdej
+            if (!kilka) {
+              content.add(tabela(zbiorySorted));
+            } else {
+              for (final nr in nrPasiek) {
+                content.add(pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 8, bottom: 4),
+                  child: pw.Text('${loc.aPiary} $nr',
+                      style: pw.TextStyle(fontSize: 12, font: fontBold)),
+                ));
+                content.add(tabela(zbiorySorted.where((z) => z.pasiekaNr == nr).toList()));
+              }
+            }
 
             return content;
           },
@@ -478,6 +563,17 @@ class _HarvestScreenState extends State<HarvestScreen> {
           default:
         }
     }
+
+    //sumy osobno dla każdej pasieki (prośba usera 15.10.2026) - przy jednej pasiece
+    //ekran jak dotąd, przy kilku: każda pasieka, a pod spodem "Razem"
+    final Map<int, _SumyZbiorow> sumyPasiek = _sumyPasiek(zbiory, wybranaData);
+    final List<int> pasiekiZeZbiorami = sumyPasiek.keys.toList();
+    final razem = _SumyZbiorow()
+      ..miod = miod
+      ..pylek = pylek
+      ..pierzga = pierzga
+      ..wosk = wosk
+      ..propolis = propolis;
 
     if (miod != 0) wysokoscStatystyk = wysokoscStatystyk + 20;
     if (pylek != 0) wysokoscStatystyk = wysokoscStatystyk + 20;
@@ -648,170 +744,31 @@ class _HarvestScreenState extends State<HarvestScreen> {
                       }),
                 ),
 
-//Statystyki zbiorów dla biezacego roku
-                //if (wybranaKategoria == 'harvest')
-                Container(
-                  // decoration: BoxDecoration( 
-                  //     border: Border.all(
-                  //     color: Colors.black,
-                  //     width: 2.0,
-                  //   ),),        
-                  margin: EdgeInsets.all(1),
-                  height: wysokoscStatystyk,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (miod != 0)
-                         RichText(
-                            text: TextSpan(
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                                  globals.isEuropeanFormat()
-                                  ? TextSpan(
-                                      //miód: ilość w litrach (ilość w kg) - po polsku
-                                      text: AppLocalizations.of(context)!.honey + ': ',
-                                        style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    )
-                                  : TextSpan(
-                                      //miód: ilość w litrach (ilość w kg) - po angielsku
-                                      text: AppLocalizations.of(context)!.honey + ': ',
-                                        style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    ),
-                                  globals.isEuropeanFormat()
-                                  ? TextSpan(
-                                      //miód: ilość w litrach (ilość w kg) - po polsku
-                                      text: '${miod.toStringAsFixed(2).replaceAll('.', ',')} l',
-                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    )
-                                  : TextSpan(
-                                      //miód: ilość w litrach (ilość w kg) - po angielsku
-                                      text: '${miod.toStringAsFixed(2)} l',
-                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    ),
-                                  globals.isEuropeanFormat()
-                                  ? TextSpan(
-                                      //miód: ilość w litrach (ilość w kg) - po polsku
-                                      text: ' (${(miod * 1.45).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                                        style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    )
-                                  : TextSpan(
-                                      //miód: ilość w litrach (ilość w kg) - po angielsku
-                                      text: ' (${(miod * 1.45).toStringAsFixed(2)} kg)',
-                                        style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    ),
-                                ])),
-
-                        // globals.isEuropeanFormat()
-                        //   ? Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2).replaceAll('.', ',')} l (${(miod * 1.45).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                        //     style:  TextStyle(fontSize: 16))
-                        //   : Text(AppLocalizations.of(context)!.honey + ': ${miod.toStringAsFixed(2)} l (${(miod * 1.45).toStringAsFixed(2)} kg)',
-                        //     style:  TextStyle(fontSize: 16)),
-                      if (pylek != 0)
-                         RichText(
-                            text: TextSpan(
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                                  globals.isEuropeanFormat()
-                                  ? TextSpan(
-                                      text: AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                                      style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    )
-                                  : TextSpan(
-                                      text: AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2)} l (${(pylek * 0.67).toStringAsFixed(2)} kg)',
-                                      style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    ),
-
-                                ])),
-                      // if (pylek != 0)
-                      //   globals.isEuropeanFormat()
-                      //     ? Text(AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2).replaceAll('.', ',')} l (${(pylek * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                      //       style: TextStyle(fontSize: 16))
-                      //     : Text(AppLocalizations.of(context)!.beePollen + ': ${pylek.toStringAsFixed(2)} l (${(pylek * 0.67).toStringAsFixed(2)} kg)',
-                      //       style: TextStyle(fontSize: 16)),
-                      if (pierzga != 0)
-                         RichText(
-                            text: TextSpan(
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                                  globals.isEuropeanFormat()
-                                  ? TextSpan(
-                                      text: AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                                      style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    )
-                                  : TextSpan(
-                                      text: AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2)} l (${(pierzga * 0.56).toStringAsFixed(2)} kg)',
-                                      style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    ),
-
-                                ])),
-                      // if (pierzga != 0)
-                      //   globals.isEuropeanFormat()
-                      //     ? Text(AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2).replaceAll('.', ',')} l (${(pierzga * 0.56).toStringAsFixed(2).replaceAll('.', ',')} kg)',
-                      //       style: TextStyle(fontSize: 16))
-                      //     : Text(AppLocalizations.of(context)!.perga + ': ${pierzga.toStringAsFixed(2)} l (${(pierzga * 0.56).toStringAsFixed(2)} kg)',
-                      //       style: TextStyle(fontSize: 16)),
-                      
-                      if (wosk != 0)
-                         RichText(
-                            text: TextSpan(
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                                  globals.isEuropeanFormat()
-                                  ? TextSpan(
-                                      text: AppLocalizations.of(context)!.wax + ': ${wosk.toString().replaceAll('.', ',')} kg',
-                                      style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    )
-                                  : TextSpan(
-                                      text: AppLocalizations.of(context)!.wax + ': ${wosk} kg',
-                                      style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    ),
-
-                                ])),
-                      // if (wosk != 0)
-                      //   globals.isEuropeanFormat()
-                      //     ? Text(AppLocalizations.of(context)!.wax + ': ${wosk.toString().replaceAll('.', ',')} kg',
-                      //       style: TextStyle(fontSize: 16))
-                      //     : Text(AppLocalizations.of(context)!.wax + ': ${wosk} kg',
-                      //       style: TextStyle(fontSize: 16)),
-                      if (propolis != 0)
-                         RichText(
-                            text: TextSpan(
-                              style: TextStyle(color: Colors.black),
-                              children: [
-                                  globals.isEuropeanFormat()
-                                  ? TextSpan(
-                                      text: 'propolis: ${propolis.toString().replaceAll('.', ',')} kg',
-                                      style: TextStyle(fontSize: 18, //fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    )
-                                  : TextSpan(
-                                      text: 'propolis: ${propolis} kg',
-                                      style: TextStyle(fontSize: 18,//fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 0, 0, 0)),
-                                    ),
-
-                                ])),
-                      
-                      // if (propolis != 0)
-                      //   globals.isEuropeanFormat()
-                      //     ? Text('propolis: ${propolis.toString().replaceAll('.', ',')} kg',
-                      //       style: TextStyle(fontSize: 16))
-                      //     : Text('propolis: ${propolis} kg',
-                      //       style: TextStyle(fontSize: 16)),
-                    ],
+//Statystyki zbiorów dla biezacego roku - przy kilku pasiekach osobno każda i "Razem"
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.4),
+                  child: SingleChildScrollView(
+                    child: Container(
+                      margin: EdgeInsets.all(1), //bez width - blok wyśrodkowany jak dotąd
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (pasiekiZeZbiorami.length > 1) ...[
+                            for (final nr in pasiekiZeZbiorami) ...[
+                              Text('${AppLocalizations.of(context)!.aPiary} $nr',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              ..._wierszeSum(context, sumyPasiek[nr]!, 16),
+                              const SizedBox(height: 6),
+                            ],
+                            Text(AppLocalizations.of(context)!.total,
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          ],
+                          ..._wierszeSum(context, razem, 18),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const Divider(
@@ -831,5 +788,31 @@ class _HarvestScreenState extends State<HarvestScreen> {
                   ),
                 )
               ]));
+  }
+
+  //wiersze sum zbiorów: miód "l (kg)" z ilością pogrubioną, pozostałe jak dotąd
+  List<Widget> _wierszeSum(BuildContext context, _SumyZbiorow s, double rozmiar) {
+    final loc = AppLocalizations.of(context)!;
+    final eu = globals.isEuropeanFormat();
+    String l2(double v) => eu ? v.toStringAsFixed(2).replaceAll('.', ',') : v.toStringAsFixed(2);
+    String kg(double v) => eu ? v.toString().replaceAll('.', ',') : '$v';
+    final styl = TextStyle(fontSize: rozmiar, color: const Color.fromARGB(255, 0, 0, 0));
+    final gruby = styl.copyWith(fontWeight: FontWeight.bold);
+    return [
+      if (s.miod != 0)
+        RichText(text: TextSpan(style: const TextStyle(color: Colors.black), children: [
+          TextSpan(text: loc.honey + ': ', style: styl),
+          TextSpan(text: '${l2(s.miod)} l', style: gruby),
+          TextSpan(text: ' (${l2(s.miod * 1.45)} kg)', style: styl),
+        ])),
+      if (s.pylek != 0)
+        Text(loc.beePollen + ': ${l2(s.pylek)} l (${l2(s.pylek * 0.56)} kg)', style: styl),
+      if (s.pierzga != 0)
+        Text(loc.perga + ': ${l2(s.pierzga)} l (${l2(s.pierzga * 0.56)} kg)', style: styl),
+      if (s.wosk != 0)
+        Text(loc.wax + ': ${kg(s.wosk)} kg', style: styl),
+      if (s.propolis != 0)
+        Text('propolis: ${kg(s.propolis)} kg', style: styl),
+    ];
   }
 }
