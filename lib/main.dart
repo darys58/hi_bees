@@ -61,6 +61,7 @@ import './screens/queen_rearing_screen.dart';
 import './screens/summary_screen.dart';
 import './screens/nfc_settings_screen.dart';
 import './screens/qr_codes_print_screen.dart';
+import './screens/qr_scan_screen.dart';
 import './screens/apiarys_map_screen.dart';
 import './screens/apiarys_all_map_screen.dart';
 import './screens/notification_settings_screen.dart';
@@ -402,6 +403,7 @@ class _MyAppState extends State<MyApp> {
           SummaryScreen.routeName: (ctx) => SummaryScreen(),
           NfcSettingsScreen.routeName: (ctx) => NfcSettingsScreen(),
           QrCodesPrintScreen.routeName: (ctx) => QrCodesPrintScreen(),
+          QrScanScreen.routeName: (ctx) => QrScanScreen(),
           ApiaryMapScreen.routeName: (ctx) => ApiaryMapScreen(),
           ApiarysAllMapScreen.routeName: (ctx) => ApiarysAllMapScreen(),
           NotificationSettingsScreen.routeName: (ctx) => NotificationSettingsScreen(),

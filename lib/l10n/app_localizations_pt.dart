@@ -1983,6 +1983,35 @@ class AppLocalizationsPt extends AppLocalizations {
   String get qrCreatePdf => 'Criar PDF';
 
   @override
+  String get qrScanTitle => 'Ler o código QR da colmeia';
+
+  @override
+  String get qrScanHint => 'Aponte a câmara para o código QR da colmeia';
+
+  @override
+  String get qrNotHiveCode => 'Não é um código de colmeia Hey Maya';
+
+  @override
+  String get qrOtherAccount =>
+      'Este código é de outra conta – não do seu apiário';
+
+  @override
+  String get qrHiveNotFound => 'Essa colmeia não existe';
+
+  @override
+  String get qrReaderTitle => 'Leitor no ecrã inicial';
+
+  @override
+  String get qrReaderNfc => 'Etiqueta NFC';
+
+  @override
+  String get qrReaderQr => 'Código QR';
+
+  @override
+  String get qrReaderQrDesc =>
+      'No ecrã inicial o botão QR abre o leitor da câmara';
+
+  @override
   String get queenConnectedToHive => 'associada à colmeia';
 
   @override

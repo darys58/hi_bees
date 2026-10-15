@@ -3955,6 +3955,60 @@ abstract class AppLocalizations {
   /// **'Create PDF'**
   String get qrCreatePdf;
 
+  /// No description provided for @qrScanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan hive QR code'**
+  String get qrScanTitle;
+
+  /// No description provided for @qrScanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the QR code on the hive'**
+  String get qrScanHint;
+
+  /// No description provided for @qrNotHiveCode.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a Hey Maya hive code'**
+  String get qrNotHiveCode;
+
+  /// No description provided for @qrOtherAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'This code belongs to another account – not your apiary'**
+  String get qrOtherAccount;
+
+  /// No description provided for @qrHiveNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No such hive'**
+  String get qrHiveNotFound;
+
+  /// No description provided for @qrReaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reader on the start screen'**
+  String get qrReaderTitle;
+
+  /// No description provided for @qrReaderNfc.
+  ///
+  /// In en, this message translates to:
+  /// **'NFC tag'**
+  String get qrReaderNfc;
+
+  /// No description provided for @qrReaderQr.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code'**
+  String get qrReaderQr;
+
+  /// No description provided for @qrReaderQrDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'On the start screen the QR button opens the camera scanner'**
+  String get qrReaderQrDesc;
+
   /// No description provided for @queenConnectedToHive.
   ///
   /// In en, this message translates to:

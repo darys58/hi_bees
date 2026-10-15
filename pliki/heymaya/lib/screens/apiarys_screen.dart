@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 //import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import '../helpers/nfc_helper.dart'; //NfcHelper.skanujKodQr - czytnik kodów QR (15.10.2026)
 import 'package:provider/provider.dart';
 import '../globals.dart' as globals;
 import '../main.dart';
@@ -397,7 +398,9 @@ class _ApiarysScreenState extends State<ApiarysScreen>
               globals.raportIleUliNaStronie = int.parse(dod1[0].h);
               //odczytanie trybu NFC z bazy
               if (dod1[0].c != '0' && dod1[0].c != '') {
-                globals.nfcMode = dod1[0].c;
+                //przyrostek ".qr" = czytnik kodów QR (patrz globals.czytnikUla)
+                globals.czytnikUla = dod1[0].c.endsWith('.qr') ? 'qr' : 'nfc';
+                globals.nfcMode = dod1[0].c.replaceAll('.qr', '');
               }
               //odczytanie ustawienia pokazywania przycisków Zakupy/Sprzedaż
               globals.showZakupySprzedaz = dod1[0].d != 'false';
@@ -2227,9 +2230,12 @@ class _ApiarysScreenState extends State<ApiarysScreen>
       //2. JĘZYK - vosk_engine.dart/voice_vosk_screen.dart mają model+gramatykę
       //   tylko dla 'pl_PL' i 'en_US' (03.09.2026, patrz assets/grammar/eng_vosk.yml).
       //   Dla pozostałych języków przycisk nie ma czego uruchomić.
-      bottomSheet: (globals.key == '' ||
-              globals.key == 'bez_klucza' ||
-              (globals.jezyk != 'pl_PL' && globals.jezyk != 'en_US'))
+      //Czytnik QR (15.10.2026): przy wyborze "Kod QR" w "Obsługa NFC i QR" dochodzi
+      //przycisk QR obok głosu - tagi NFC dalej działają same, jak dotąd.
+      bottomSheet: globals.key == '' ||
+              ((globals.key == 'bez_klucza' ||
+                      (globals.jezyk != 'pl_PL' && globals.jezyk != 'en_US')) &&
+                  globals.czytnikUla != 'qr')
           ? null
           : Container(
               height: 100,
@@ -2237,6 +2243,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+                  if (globals.key != 'bez_klucza' &&
+                      (globals.jezyk == 'pl_PL' || globals.jezyk == 'en_US'))
                   SizedBox(
                       width: 220,
                       height: 50,
@@ -2268,6 +2276,20 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                                 fontSize: 14,
                                 color: Color.fromARGB(255, 0, 0, 0))),
                       )),
+                  //przycisk QR (czytnik 'qr' w "Obsługa NFC i QR", 15.10.2026)
+                  if (globals.czytnikUla == 'qr') ...[
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 100,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: buttonStyle,
+                        onPressed: () => NfcHelper.skanujKodQr(context),
+                        child: const Text('QR',
+                            style: TextStyle(height: 1.0, fontSize: 14, color: Color.fromARGB(255, 0, 0, 0))),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

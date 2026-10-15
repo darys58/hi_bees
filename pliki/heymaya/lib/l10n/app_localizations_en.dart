@@ -1971,6 +1971,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrCreatePdf => 'Create PDF';
 
   @override
+  String get qrScanTitle => 'Scan hive QR code';
+
+  @override
+  String get qrScanHint => 'Point the camera at the QR code on the hive';
+
+  @override
+  String get qrNotHiveCode => 'This is not a Hey Maya hive code';
+
+  @override
+  String get qrOtherAccount => 'This code belongs to another account – not your apiary';
+
+  @override
+  String get qrHiveNotFound => 'No such hive';
+
+  @override
+  String get qrReaderTitle => 'Reader on the start screen';
+
+  @override
+  String get qrReaderNfc => 'NFC tag';
+
+  @override
+  String get qrReaderQr => 'QR code';
+
+  @override
+  String get qrReaderQrDesc => 'On the start screen the QR button opens the camera scanner';
+
+  @override
   String get queenConnectedToHive => 'connected to the hive';
 
   @override

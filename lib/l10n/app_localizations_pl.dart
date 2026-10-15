@@ -1979,6 +1979,35 @@ class AppLocalizationsPl extends AppLocalizations {
   String get qrCreatePdf => 'Utwórz PDF';
 
   @override
+  String get qrScanTitle => 'Zeskanuj kod QR ula';
+
+  @override
+  String get qrScanHint => 'Skieruj aparat na kod QR na ulu';
+
+  @override
+  String get qrNotHiveCode => 'To nie jest kod ula Hey Maya';
+
+  @override
+  String get qrOtherAccount =>
+      'Ten kod jest z innego konta – nie dotyczy Twojej pasieki';
+
+  @override
+  String get qrHiveNotFound => 'Nie ma takiego ula';
+
+  @override
+  String get qrReaderTitle => 'Czytnik na stronie startowej';
+
+  @override
+  String get qrReaderNfc => 'Tag NFC';
+
+  @override
+  String get qrReaderQr => 'Kod QR';
+
+  @override
+  String get qrReaderQrDesc =>
+      'Na stronie startowej przycisk QR uruchamia skaner aparatem';
+
+  @override
   String get queenConnectedToHive => 'podłączona do ula';
 
   @override

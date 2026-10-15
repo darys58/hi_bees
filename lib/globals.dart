@@ -193,6 +193,10 @@ String wykresZbiory = 'miod'; //wyświetlany wykres "miod" lub "pylek"
 //właściciel bieżącego numeru.
 int nfcSesja = 0;
 String nfcMode = 'summary'; //tryb NFC: 'off' - wyłączony, 'info' - otwieraj informacje, 'summary' - otwieraj podsumowanie
+//czytnik uli na stronie startowej: 'nfc' albo 'qr' (15.10.2026). Zapis w dodatki1.c
+//razem z nfcMode jako przyrostek ".qr" ("info.qr") - w dodatkach nie ma wolnej kolumny
+String czytnikUla = 'nfc';
+String zapisTrybuNfc() => czytnikUla == 'qr' ? '$nfcMode.qr' : nfcMode;
 
 bool showZakupySprzedaz = true; //pokazuj/ukrywaj przyciski Zakupy i Sprzedaż na stronie startowej
 

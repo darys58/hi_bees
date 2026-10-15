@@ -393,7 +393,9 @@ class _ApiarysScreenState extends State<ApiarysScreen>
               globals.raportIleUliNaStronie = int.parse(dod1[0].h);
               //odczytanie trybu NFC z bazy
               if (dod1[0].c != '0' && dod1[0].c != '') {
-                globals.nfcMode = dod1[0].c;
+                //przyrostek ".qr" = czytnik kodów QR (patrz globals.czytnikUla)
+                globals.czytnikUla = dod1[0].c.endsWith('.qr') ? 'qr' : 'nfc';
+                globals.nfcMode = dod1[0].c.replaceAll('.qr', '');
               }
               //odczytanie ustawienia pokazywania przycisków Zakupy/Sprzedaż
               globals.showZakupySprzedaz = dod1[0].d != 'false';
@@ -2068,10 +2070,15 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                               // globals.key == '' || globals.key == "bez_klucza"
                               //     ? null
                               //     :
-                                  NfcHelper.handleNfcScan(context);
+                              //czytnik wybrany w "Obsługa NFC i QR" (15.10.2026)
+                              if (globals.czytnikUla == 'qr') {
+                                NfcHelper.skanujKodQr(context);
+                              } else {
+                                NfcHelper.handleNfcScan(context);
+                              }
                             },
                             child: Text(
-                                AppLocalizations.of(context)!.nfcButton,
+                                globals.czytnikUla == 'qr' ? 'QR' : AppLocalizations.of(context)!.nfcButton,
                                 style: TextStyle(
                                     height: 1.0,
                                     fontSize: 14,

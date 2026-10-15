@@ -25,7 +25,13 @@ class _NfcSettingsScreenState extends State<NfcSettingsScreen> {
       _selectedMode = value;
     });
     globals.nfcMode = value;
-    DBHelper.updateDodatki1('c', value);
+    DBHelper.updateDodatki1('c', globals.zapisTrybuNfc()); //z przyrostkiem czytnika QR
+  }
+
+  //czytnik na stronie startowej: tag NFC albo kod QR (etap 2 kodów QR, 15.10.2026)
+  void _onReaderChanged(String value) {
+    setState(() => globals.czytnikUla = value);
+    DBHelper.updateDodatki1('c', globals.zapisTrybuNfc());
   }
 
   @override
@@ -49,6 +55,26 @@ class _NfcSettingsScreenState extends State<NfcSettingsScreen> {
       ),
       body: ListView(
         children: <Widget>[
+          //wybór czytnika - przycisk na stronie startowej uruchamia wybrany
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(AppLocalizations.of(context)!.qrReaderTitle,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          ),
+          RadioListTile<String>(
+            title: Text(AppLocalizations.of(context)!.qrReaderNfc),
+            value: 'nfc',
+            groupValue: globals.czytnikUla,
+            onChanged: (value) => _onReaderChanged(value!),
+          ),
+          RadioListTile<String>(
+            title: Text(AppLocalizations.of(context)!.qrReaderQr),
+            subtitle: Text(AppLocalizations.of(context)!.qrReaderQrDesc, style: const TextStyle(fontSize: 12)),
+            value: 'qr',
+            groupValue: globals.czytnikUla,
+            onChanged: (value) => _onReaderChanged(value!),
+          ),
+          Divider(height: 1),
           // RadioListTile<String>(
           //   title: Text(AppLocalizations.of(context)!.nfcModeOff),
           //   subtitle: Text(

@@ -10,6 +10,8 @@ import '../screens/infos_screen.dart';
 import '../screens/summary_screen.dart';
 import '../widgets/nfc_hive_selection_dialog.dart';
 
+import '../screens/qr_scan_screen.dart'; //skaner kodów QR uli (15.10.2026)
+
 class NfcHelper {
 
  
@@ -128,6 +130,18 @@ class NfcHelper {
     }
     return null;
   }
+
+  /// Skaner kodu QR ula (czytnik 'qr' w "Obsługa NFC i QR") - po odczycie ul
+  /// otwiera się tak samo jak z tagu NFC.
+  static Future<void> skanujKodQr(BuildContext context) async {
+    final wynik = await Navigator.of(context).pushNamed(QrScanScreen.routeName);
+    if (wynik is Map<String, dynamic> && context.mounted) await otworzUl(context, wynik);
+  }
+
+  /// Otwarcie ula z odczytanego tagu NFC ALBO kodu QR (15.10.2026) - jedna ścieżka,
+  /// cel wg globals.nfcMode (informacje szczegółowe / ostatnie informacje).
+  static Future<void> otworzUl(BuildContext context, Map<String, dynamic> hiveData) =>
+      _navigateToHive(context, hiveData);
 
   // Nawigacja do ula
   static Future<void> _navigateToHive(BuildContext context, Map<String, dynamic> hiveData) async {

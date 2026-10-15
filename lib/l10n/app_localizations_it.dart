@@ -1984,6 +1984,35 @@ class AppLocalizationsIt extends AppLocalizations {
   String get qrCreatePdf => 'Crea PDF';
 
   @override
+  String get qrScanTitle => 'Scansiona il codice QR dell\'arnia';
+
+  @override
+  String get qrScanHint => 'Inquadra il codice QR sull\'arnia';
+
+  @override
+  String get qrNotHiveCode => 'Non è un codice arnia Hey Maya';
+
+  @override
+  String get qrOtherAccount =>
+      'Questo codice è di un altro account – non del tuo apiario';
+
+  @override
+  String get qrHiveNotFound => 'Quest\'arnia non esiste';
+
+  @override
+  String get qrReaderTitle => 'Lettore nella schermata iniziale';
+
+  @override
+  String get qrReaderNfc => 'Tag NFC';
+
+  @override
+  String get qrReaderQr => 'Codice QR';
+
+  @override
+  String get qrReaderQrDesc =>
+      'Nella schermata iniziale il pulsante QR apre lo scanner della fotocamera';
+
+  @override
   String get queenConnectedToHive => 'collegata all\'arnia';
 
   @override

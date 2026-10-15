@@ -1983,6 +1983,35 @@ class AppLocalizationsDe extends AppLocalizations {
   String get qrCreatePdf => 'PDF erstellen';
 
   @override
+  String get qrScanTitle => 'QR-Code der Beute scannen';
+
+  @override
+  String get qrScanHint => 'Kamera auf den QR-Code an der Beute richten';
+
+  @override
+  String get qrNotHiveCode => 'Das ist kein Hey-Maya-Beutencode';
+
+  @override
+  String get qrOtherAccount =>
+      'Dieser Code gehört zu einem anderen Konto – nicht zu deinem Bienenstand';
+
+  @override
+  String get qrHiveNotFound => 'Diese Beute gibt es nicht';
+
+  @override
+  String get qrReaderTitle => 'Lesegerät auf dem Startbildschirm';
+
+  @override
+  String get qrReaderNfc => 'NFC-Tag';
+
+  @override
+  String get qrReaderQr => 'QR-Code';
+
+  @override
+  String get qrReaderQrDesc =>
+      'Auf dem Startbildschirm öffnet die QR-Taste den Kamera-Scanner';
+
+  @override
   String get queenConnectedToHive => 'dem Volk zugesetzt';
 
   @override

@@ -1984,6 +1984,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get qrCreatePdf => 'Créer le PDF';
 
   @override
+  String get qrScanTitle => 'Scanner le code QR de la ruche';
+
+  @override
+  String get qrScanHint => 'Dirigez l’appareil photo vers le code QR de la ruche';
+
+  @override
+  String get qrNotHiveCode => 'Ce n\'est pas un code de ruche Hey Maya';
+
+  @override
+  String get qrOtherAccount => 'Ce code appartient à un autre compte – pas à votre rucher';
+
+  @override
+  String get qrHiveNotFound => 'Cette ruche n\'existe pas';
+
+  @override
+  String get qrReaderTitle => 'Lecteur sur l\'écran d\'accueil';
+
+  @override
+  String get qrReaderNfc => 'Tag NFC';
+
+  @override
+  String get qrReaderQr => 'Code QR';
+
+  @override
+  String get qrReaderQrDesc => 'Sur l\'écran d\'accueil, le bouton QR ouvre le scanner de l\'appareil photo';
+
+  @override
   String get queenConnectedToHive => 'introduite dans la ruche';
 
   @override

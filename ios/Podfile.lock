@@ -15,6 +15,9 @@ PODS:
     - Flutter
   - image_picker_ios (0.0.1):
     - Flutter
+  - mobile_scanner (7.0.0):
+    - Flutter
+    - FlutterMacOS
   - nfc_manager (0.0.1):
     - Flutter
   - package_info_plus (0.4.5):
@@ -55,6 +58,7 @@ DEPENDENCIES:
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_timezone (from `.symlinks/plugins/flutter_timezone/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - nfc_manager (from `.symlinks/plugins/nfc_manager/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -90,6 +94,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_timezone/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  mobile_scanner:
+    :path: ".symlinks/plugins/mobile_scanner/darwin"
   nfc_manager:
     :path: ".symlinks/plugins/nfc_manager/ios"
   package_info_plus:
@@ -124,6 +130,7 @@ SPEC CHECKSUMS:
   flutter_local_notifications: ad39620c743ea4c15127860f4b5641649a988100
   flutter_timezone: ee50ce7786b5fde27e2fe5375bbc8c9661ffc13f
   image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   nfc_manager: 9c40fe22528ab871ca11e52ea8b95790e9d92ca2
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   permission_handler_apple: 92d754bbaa7361d436db2d6c3c1c2a0fdcec462e

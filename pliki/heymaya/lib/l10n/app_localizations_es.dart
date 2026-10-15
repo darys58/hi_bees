@@ -1979,6 +1979,33 @@ class AppLocalizationsEs extends AppLocalizations {
   String get qrCreatePdf => 'Crear PDF';
 
   @override
+  String get qrScanTitle => 'Escanear código QR de la colmena';
+
+  @override
+  String get qrScanHint => 'Apunta la cámara al código QR de la colmena';
+
+  @override
+  String get qrNotHiveCode => 'No es un código de colmena de Hey Maya';
+
+  @override
+  String get qrOtherAccount => 'Este código es de otra cuenta, no de tu colmenar';
+
+  @override
+  String get qrHiveNotFound => 'No existe esa colmena';
+
+  @override
+  String get qrReaderTitle => 'Lector en la pantalla de inicio';
+
+  @override
+  String get qrReaderNfc => 'Etiqueta NFC';
+
+  @override
+  String get qrReaderQr => 'Código QR';
+
+  @override
+  String get qrReaderQrDesc => 'En la pantalla de inicio el botón QR abre el escáner de la cámara';
+
+  @override
   String get queenConnectedToHive => 'conectada a la colmena';
 
   @override

@@ -39,7 +39,7 @@
 	<key>NFCReaderUsageDescription</key>
 	<string>Aplikacja używa NFC do odczytu tagów</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Aplikacja potrzebuje dostępu do aparatu aby robić zdjęcia uli</string>
+	<string>Aplikacja potrzebuje dostępu do aparatu, aby robić zdjęcia uli i odczytywać kody QR naklejone na ulach</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>For voice processing</string>
 	<key>NSPhotoLibraryUsageDescription</key>
