@@ -1924,6 +1924,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dIsconnectQueenConfirm => 'Voulez-vous vraiment détacher la reine de la ruche ?';
 
   @override
+  String get queenDelete => 'Supprimer la reine';
+
+  @override
+  String get queenDeleteConfirm => 'Supprimer définitivement la reine ? Si elle a déjà été envoyée dans le cloud, elle reviendra après une importation des données.';
+
+  @override
+  String get queenDeleteRefused => 'Cette reine ne peut pas être supprimée car elle a un historique d\'entrées. Seule une reine enregistrée par erreur, sans entrées autres que son rattachement à une ruche, peut être supprimée. Marquez une reine avec historique comme perdue (date de perte dans la modification).';
+
+  @override
   String get queenConnectedToHive => 'introduite dans la ruche';
 
   @override

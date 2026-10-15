@@ -1919,6 +1919,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dIsconnectQueenConfirm => 'Königin wirklich vom Volk trennen?';
 
   @override
+  String get queenDelete => 'Königin löschen';
+
+  @override
+  String get queenDeleteConfirm =>
+      'Königin endgültig löschen? Wurde sie bereits in die Cloud gesendet, kehrt sie nach einem Datenimport zurück.';
+
+  @override
+  String get queenDeleteRefused =>
+      'Diese Königin kann nicht gelöscht werden, da sie Einträge hat. Löschen lässt sich nur eine versehentlich erfasste Königin ohne Einträge außer dem Zuordnen zu einem Volk. Eine Königin mit Einträgen als verloren markieren (Verlustdatum in der Bearbeitung).';
+
+  @override
   String get queenConnectedToHive => 'dem Volk zugesetzt';
 
   @override

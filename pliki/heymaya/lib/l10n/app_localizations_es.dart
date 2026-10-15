@@ -1919,6 +1919,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dIsconnectQueenConfirm => '¿Seguro que quieres desconectar la reina de la colmena?';
 
   @override
+  String get queenDelete => 'Eliminar reina';
+
+  @override
+  String get queenDeleteConfirm => '¿Eliminar la reina definitivamente? Si ya se envió a la nube, volverá tras importar los datos.';
+
+  @override
+  String get queenDeleteRefused => 'Esta reina no se puede eliminar porque tiene historial de entradas. Solo se puede eliminar una reina registrada por error, sin entradas aparte de su conexión a una colmena. Marca una reina con historial como perdida (fecha de pérdida en la edición).';
+
+  @override
   String get queenConnectedToHive => 'conectada a la colmena';
 
   @override

@@ -1919,6 +1919,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Tem a certeza de que quer desassociar a rainha da colmeia?';
 
   @override
+  String get queenDelete => 'Eliminar rainha';
+
+  @override
+  String get queenDeleteConfirm =>
+      'Eliminar a rainha definitivamente? Se já foi enviada para a nuvem, voltará após uma importação de dados.';
+
+  @override
+  String get queenDeleteRefused =>
+      'Esta rainha não pode ser eliminada porque tem histórico de registos. Só pode ser eliminada uma rainha registada por engano, sem registos além da ligação a uma colmeia. Marque uma rainha com histórico como perdida (data de perda na edição).';
+
+  @override
   String get queenConnectedToHive => 'associada à colmeia';
 
   @override

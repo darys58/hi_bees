@@ -3834,6 +3834,24 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to disconnect the queen from the hive?'**
   String get dIsconnectQueenConfirm;
 
+  /// No description provided for @queenDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete queen'**
+  String get queenDelete;
+
+  /// No description provided for @queenDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the queen permanently? If it was already sent to the cloud, it will come back after a data import.'**
+  String get queenDeleteConfirm;
+
+  /// No description provided for @queenDeleteRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'This queen cannot be deleted because it has a history of entries. Only a queen registered by mistake, with no entries other than connecting to a hive, can be deleted. Mark a queen with history as lost (loss date in editing).'**
+  String get queenDeleteRefused;
+
   /// No description provided for @queenConnectedToHive.
   ///
   /// In en, this message translates to:

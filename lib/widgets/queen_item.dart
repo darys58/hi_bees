@@ -43,7 +43,9 @@ class _QueenItemState extends State<QueenItem> {
   //jak przy ręcznym wpisie "brak" w infos_edit_screen: matka2 = 'brak', pozostałe
   //cechy puste, ikona czerwona. Id z przyrostkiem [kIdOdlaczeniaMatki], żeby
   //podłączenie nowej matki tego samego dnia nie nadpisało tego wpisu.
-  Future<void> _zapiszOdlaczenie(BuildContext context, Queen matki) async {
+  //[wpis] false - usuwanie matki zarejestrowanej przez pomyłkę (15.10.2026): belka
+  //ula jak przy odłączeniu, ale BEZ wpisu "matka brak" w historii
+  Future<void> _zapiszOdlaczenie(BuildContext context, Queen matki, {bool wpis = true}) async {
     final loc = AppLocalizations.of(context)!;
     final int pasieka = matki.pasieka;
     final int ul = matki.ul;
@@ -54,7 +56,7 @@ class _QueenItemState extends State<QueenItem> {
     final List<int> pozostale = matkiPrzed.where((id) => id != matki.id).toList();
     //wpis "brak" z ID TEJ matki zostaje zawsze - jest jej historią; cechy innych
     //matek liczą się po ich ID, więc ten wpis ich nie rusza
-    await Infos.insertInfo(
+    if (wpis) await Infos.insertInfo(
       //.m<ID> - dwie matki odłączone tego samego dnia z jednego ula (12.10.2026)
       '$data.$pasieka.$ul.queen. ' + loc.queen + '.m${matki.id}' + kIdOdlaczeniaMatki,
       data,
@@ -111,6 +113,64 @@ class _QueenItemState extends State<QueenItem> {
       if (ul == globals.ulID) {
         await Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(pasieka, ul);
       }
+    }
+  }
+
+  //Matka BEZ HISTORII (15.10.2026) - jej jedyne wpisy to podłączenie/odłączenie od
+  //ula (id z przyrostkiem .connect/.disconnect). Tylko taką da się usunąć: chodzi
+  //o matkę zarejestrowaną przez pomyłkę albo testowo. Podłączenia sprzed 11.10.2026
+  //nie mają przyrostka - taka matka liczy się jako "z historią" (bezpieczniej).
+  Future<List<String>?> _wpisyMatkiBezHistorii(Queen matki) async {
+    final wpisy = await DBHelper.getInfosOfQueen(matki.id.toString());
+    final ids = wpisy.map((w) => '${w['id']}').toList();
+    final bool bezHistorii = ids.every((id) =>
+        id.endsWith(kIdPodlaczeniaMatki) || id.endsWith(kIdOdlaczeniaMatki));
+    return bezHistorii ? ids : null;
+  }
+
+  Future<void> _usunMatke(BuildContext context, Queen matki) async {
+    final loc = AppLocalizations.of(context)!;
+    final ids = await _wpisyMatkiBezHistorii(matki);
+    if (!context.mounted) return;
+    if (ids == null) {
+      //matka z historią - odmowa (oznaczyć jako utraconą)
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          content: Text(loc.queenDeleteRefused),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK')),
+          ],
+        ),
+      );
+      return;
+    }
+    final bool? usun = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(loc.queenDeleteConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(loc.cancel)),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(loc.queenDelete)),
+        ],
+      ),
+    );
+    if (usun != true || !context.mounted) return;
+    //wpisy podłączenia to historia ula - prawo do info
+    if (ids.isNotEmpty && !mogeZapisac(context, [czInfo], pasieka: matki.pasieka)) return;
+    //matka w ulu - belka jak po odłączeniu (bez wpisu "brak"), zanim zniknie z tabeli
+    if (matkaZyje(matki.dataStraty) && matki.ul != 0) {
+      await _zapiszOdlaczenie(context, matki, wpis: false);
+    }
+    for (final id in ids) {
+      await DBHelper.deleteInfo(id);
+    }
+    await DBHelper.deleteQueen(matki.id);
+    if (!context.mounted) return;
+    await Provider.of<Queens>(context, listen: false).fetchAndSetQueens();
+    if (!context.mounted) return;
+    if (matki.pasieka == globals.pasiekaID && matki.ul == globals.ulID && matki.ul != 0) {
+      await Provider.of<Infos>(context, listen: false).fetchAndSetInfosForHive(matki.pasieka, matki.ul);
     }
   }
 
@@ -283,6 +343,18 @@ class _QueenItemState extends State<QueenItem> {
                     ),
                   },
                   child: Text(AppLocalizations.of(context)!.eDit), //Edytuj matkę
+                ),
+                //Usuń - tylko matka bez historii (błędna/testowa rejestracja),
+                //z historią - komunikat o odmowie (15.10.2026)
+                if (blokadaMatki == null)
+                TextButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop(false);
+                    //this.context - kontekst elementu listy; "context" tutaj to
+                    //zamknięte właśnie okno dialogowe
+                    await _usunMatke(this.context, matki);
+                  },
+                  child: Text(AppLocalizations.of(context)!.queenDelete),
                 ),
                 //Anuluj
                 TextButton(

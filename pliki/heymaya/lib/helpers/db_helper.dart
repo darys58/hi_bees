@@ -1140,12 +1140,12 @@ class DBHelper {
     db.delete('notatki', where: 'id= ?', whereArgs: [id]);
   }
 
-   //usuniecie rekordu o podanym id z tabeli matki - dla , queen_item
-  // static Future<void> deleteQueen(int id) async {
-  //   final db = await DBHelper.database();
-  // //  print('DBhelper: delete matki id = $id');
-  //   db.delete('matki', where: 'id= ?', whereArgs: [id]);
-  // }
+   //usuniecie rekordu o podanym id z tabeli matki - dla queen_item (15.10.2026:
+  //tylko matka BEZ historii, patrz matkaBezHistorii w queen_item)
+  static Future<void> deleteQueen(int id) async {
+    final db = await DBHelper.database();
+    await db.delete('matki', where: 'id= ?', whereArgs: [id]);
+  }
 
   //usuniecie rekordu o podanym id z tabeli sprzedaz - dla sale_edit_screen, sale_item
   static Future<void> deleteSprzedaz(int id) async {

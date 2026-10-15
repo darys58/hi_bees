@@ -1919,6 +1919,17 @@ class AppLocalizationsIt extends AppLocalizations {
       'Vuoi davvero scollegare la regina dall\'arnia?';
 
   @override
+  String get queenDelete => 'Elimina regina';
+
+  @override
+  String get queenDeleteConfirm =>
+      'Eliminare definitivamente la regina? Se è già stata inviata al cloud, tornerà dopo un\'importazione dei dati.';
+
+  @override
+  String get queenDeleteRefused =>
+      'Questa regina non può essere eliminata perché ha una cronologia di voci. Si può eliminare solo una regina registrata per errore, senza voci oltre al collegamento a un\'arnia. Segna una regina con cronologia come persa (data di perdita nella modifica).';
+
+  @override
   String get queenConnectedToHive => 'collegata all\'arnia';
 
   @override
