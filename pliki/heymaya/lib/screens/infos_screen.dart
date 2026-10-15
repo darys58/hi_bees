@@ -254,6 +254,9 @@ class _InfoScreenState extends State<InfoScreen> {
         if(wartoscZnaku == loc.unmarked) wartoscM2 = loc.unmarked1;
         else if(wartoscZnaku == loc.missing) wartoscM2 = loc.missing1;
         else if(wartoscZnaku == loc.gone) wartoscM2 = loc.gone1;
+        //po polsku bez "ma" ("biały znak" zamiast "ma biały znak") - krótszy wiersz
+        //statystyki (prośba usera 15.10.2026); "nie ma znaku" zostaje
+        if (loc.localeName == 'pl' && wartoscM2.startsWith('ma ')) wartoscM2 = wartoscM2.substring(3);
         c.wartosc2 = 'ID' + inf.pogoda + ' ' + wartoscM2 + ' ' + miaraWBiezacym(context, inf.miara, parametr: inf.parametr) +
             ' (${zmienDate_cala(inf.data)})';
       }
@@ -344,9 +347,7 @@ class _InfoScreenState extends State<InfoScreen> {
         Row(
           children: [
             c.image4,
-            Text(' (1) ${c.wartosc4}',
-                style: TextStyle(fontSize: 16,
-                  color: c.przeniesiona4 ? _kolorPrzeniesionej : null)),
+            Flexible(child: _tekstCechy(' (1) ', c.wartosc4, c.przeniesiona4)),
           ],
         ),
       //jakość matki
@@ -355,9 +356,7 @@ class _InfoScreenState extends State<InfoScreen> {
           children: [
             SizedBox(width: 6),
             c.icon1,
-            Text(' (2) ${c.wartosc1}',
-                style: TextStyle(fontSize: 16,
-                  color: c.przeniesiona1 ? _kolorPrzeniesionej : null)),
+            Flexible(child: _tekstCechy(' (2) ', c.wartosc1, c.przeniesiona1)),
           ],
         ),
       //unasiennienie
@@ -366,36 +365,59 @@ class _InfoScreenState extends State<InfoScreen> {
           children: [
             SizedBox(width: 6),
             c.icon3,
-            Text(' (3) ${c.wartosc3}',
-                style: TextStyle(fontSize: 16,
-                  color: c.przeniesiona3 ? _kolorPrzeniesionej : null)),
+            Flexible(child: _tekstCechy(' (3) ', c.wartosc3, c.przeniesiona3)),
           ],
         ),
-      //znak
+      //znak; ikonka podłączenia matki do ula (jak w historii matki) W TEKŚCIE -
+      //jako osobny element wiersza uciekała do prawej krawędzi, gdy tekst się zawijał
       if (c.wartosc2 != '')
         Row(
           children: [
             SizedBox(width: 6),
             c.icon2,
             Flexible(
-              child: Text(' (4) ${c.wartosc2}',
-                  style: const TextStyle(fontSize: 16)),
+              child: _tekstCechy(' (4) ', c.wartosc2, false,
+                  naKoncu: c.podlaczenie
+                      ? const Padding(
+                          padding: EdgeInsets.only(left: 6),
+                          child: Icon(Icons.login, size: 18,
+                              color: Color.fromARGB(255, 46, 125, 50)),
+                        )
+                      : null),
             ),
-            //podłączenie matki do ula - jak w historii matki
-            if (c.podlaczenie)
-              const Padding(
-                padding: EdgeInsets.only(left: 6),
-                child: Icon(Icons.login, size: 18,
-                    color: Color.fromARGB(255, 46, 125, 50)),
-              ),
           ],
         ),
       //rocznik
       if (c.wartosc5 != '')
-        Text('${c.rocznik} (5) ${c.wartosc5}',
-            style: TextStyle(fontSize: 16,
-              color: c.przeniesiona5 ? _kolorPrzeniesionej : null)),
+        _tekstCechy('${c.rocznik} (5) ', c.wartosc5, c.przeniesiona5),
     ];
+  }
+
+  //wiersz cechy matki: "(n) ID… opis (data)". ID (z numerem stanowiska bywa
+  //długie) drobną szarą czcionką, żeby wiersz mieścił się w jednej linii
+  //(prośba usera 15.10.2026); [naKoncu] - ikonka zaraz za tekstem
+  Widget _tekstCechy(String przedrostek, String wartosc, bool przeniesiona, {Widget? naKoncu}) {
+    final kolor = przeniesiona ? _kolorPrzeniesionej : null;
+    String id = '';
+    String reszta = wartosc;
+    if (wartosc.startsWith('ID')) {
+      final spacja = wartosc.indexOf(' ');
+      id = spacja < 0 ? wartosc : wartosc.substring(0, spacja);
+      reszta = spacja < 0 ? '' : wartosc.substring(spacja);
+    }
+    return Text.rich(
+      TextSpan(
+        style: TextStyle(fontSize: 16, color: kolor),
+        children: [
+          TextSpan(text: przedrostek),
+          if (id.isNotEmpty)
+            TextSpan(text: id, style: TextStyle(fontSize: 11, color: kolor ?? Colors.grey[700])),
+          TextSpan(text: reszta),
+          if (naKoncu != null)
+            WidgetSpan(alignment: PlaceholderAlignment.middle, child: naKoncu),
+        ],
+      ),
+    );
   }
 
   //odzyskanie zdjęcia po restarcie Activity na Androidzie
@@ -2942,7 +2964,7 @@ class _InfoScreenState extends State<InfoScreen> {
             //wyrównanie do lewej jak w statystyce matki (prośba usera 15.10.2026)
             if (wybranaKategoria == 'colony')
               Padding(
-                padding: const EdgeInsets.only(left: 30, top: 8, bottom: 8),
+                padding: const EdgeInsets.only(left: 25, top: 8, bottom: 8),
                 child: Container(
                   //margin: EdgeInsets.all(10),
                  // height: wysokoscStatystyk + dodatek,
@@ -2985,7 +3007,7 @@ class _InfoScreenState extends State<InfoScreen> {
   //Ostatnie infa  queen dla biezacego roku
             if (wybranaKategoria == 'queen')
               Padding(
-                padding: const EdgeInsets.only(left: 30, bottom: 8),
+                padding: const EdgeInsets.only(left: 25, bottom: 8),
                 child: Container(
                   //margin: EdgeInsets.all(10),
                   //height: wysokoscStatystyk + dodatek,
