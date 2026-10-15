@@ -1930,6 +1930,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta reina no se puede eliminar porque tiene historial de entradas. Solo se puede eliminar una reina registrada por error, sin entradas aparte de su conexión a una colmena. Marca una reina con historial como perdida (fecha de pérdida en la edición).';
 
   @override
+  String get hivesExistWarning =>
+      'Este colmenar ya tiene colmenas con los números:';
+
+  @override
+  String get hivesExistLiquidated => 'eliminada';
+
+  @override
+  String get hivesSkipExisting => 'Omitir las existentes';
+
+  @override
+  String get hivesAddAnyway => 'Añadir de todos modos';
+
+  @override
   String get queenConnectedToHive => 'conectada a la colmena';
 
   @override

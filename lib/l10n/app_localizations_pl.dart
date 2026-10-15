@@ -1927,6 +1927,18 @@ class AppLocalizationsPl extends AppLocalizations {
       'Tej matki nie można usunąć, bo ma historię wpisów. Usunąć można tylko matkę zarejestrowaną przez pomyłkę, bez wpisów poza podłączeniem do ula. Matkę z historią oznacz jako utraconą (data straty w edycji).';
 
   @override
+  String get hivesExistWarning => 'W tej pasiece są już ule o numerach:';
+
+  @override
+  String get hivesExistLiquidated => 'zlikwidowany';
+
+  @override
+  String get hivesSkipExisting => 'Pomiń istniejące';
+
+  @override
+  String get hivesAddAnyway => 'Dodaj mimo to';
+
+  @override
   String get queenConnectedToHive => 'podłączona do ula';
 
   @override

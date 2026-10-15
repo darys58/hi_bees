@@ -1930,6 +1930,19 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta rainha não pode ser eliminada porque tem histórico de registos. Só pode ser eliminada uma rainha registada por engano, sem registos além da ligação a uma colmeia. Marque uma rainha com histórico como perdida (data de perda na edição).';
 
   @override
+  String get hivesExistWarning =>
+      'Este apiário já tem colmeias com os números:';
+
+  @override
+  String get hivesExistLiquidated => 'eliminada';
+
+  @override
+  String get hivesSkipExisting => 'Ignorar as existentes';
+
+  @override
+  String get hivesAddAnyway => 'Adicionar mesmo assim';
+
+  @override
   String get queenConnectedToHive => 'associada à colmeia';
 
   @override

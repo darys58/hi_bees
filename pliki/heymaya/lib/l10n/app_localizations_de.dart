@@ -1929,6 +1929,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get queenDeleteRefused => 'Diese Königin kann nicht gelöscht werden, da sie Einträge hat. Löschen lässt sich nur eine versehentlich erfasste Königin ohne Einträge außer dem Zuordnen zu einem Volk. Eine Königin mit Einträgen als verloren markieren (Verlustdatum in der Bearbeitung).';
 
   @override
+  String get hivesExistWarning => 'In diesem Bienenstand gibt es bereits Beuten mit den Nummern:';
+
+  @override
+  String get hivesExistLiquidated => 'aufgelöst';
+
+  @override
+  String get hivesSkipExisting => 'Vorhandene überspringen';
+
+  @override
+  String get hivesAddAnyway => 'Trotzdem hinzufügen';
+
+  @override
   String get queenConnectedToHive => 'dem Volk zugesetzt';
 
   @override

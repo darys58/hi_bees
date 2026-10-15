@@ -1930,6 +1930,19 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questa regina non può essere eliminata perché ha una cronologia di voci. Si può eliminare solo una regina registrata per errore, senza voci oltre al collegamento a un\'arnia. Segna una regina con cronologia come persa (data di perdita nella modifica).';
 
   @override
+  String get hivesExistWarning =>
+      'In questo apiario ci sono già arnie con i numeri:';
+
+  @override
+  String get hivesExistLiquidated => 'eliminata';
+
+  @override
+  String get hivesSkipExisting => 'Salta le esistenti';
+
+  @override
+  String get hivesAddAnyway => 'Aggiungi comunque';
+
+  @override
   String get queenConnectedToHive => 'collegata all\'arnia';
 
   @override

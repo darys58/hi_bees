@@ -1920,6 +1920,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queenDeleteRefused => 'This queen cannot be deleted because it has a history of entries. Only a queen registered by mistake, with no entries other than connecting to a hive, can be deleted. Mark a queen with history as lost (loss date in editing).';
 
   @override
+  String get hivesExistWarning => 'This apiary already has hives with numbers:';
+
+  @override
+  String get hivesExistLiquidated => 'liquidated';
+
+  @override
+  String get hivesSkipExisting => 'Skip existing';
+
+  @override
+  String get hivesAddAnyway => 'Add anyway';
+
+  @override
   String get queenConnectedToHive => 'connected to the hive';
 
   @override

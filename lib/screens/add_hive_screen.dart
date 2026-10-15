@@ -12,6 +12,7 @@ import '../models/hives.dart';
 import '../models/harvest.dart';
 import 'package:flutter/services.dart';
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/db_helper.dart'; //getHives - ule już istniejące w pasiece
 
 class AddHiveScreen extends StatefulWidget {
   static const routeName = '/add_hive';
@@ -126,6 +127,29 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
   }
 
 
+  //Ule o tych numerach JUŻ są w pasiece (15.10.2026). Zapis ula zastępuje cały wiersz
+  //tabeli "ule" (zasoby, matka, ikona na belce - ConflictAlgorithm.replace), historia
+  //wpisów zostaje; w oknie sama lista numerów (decyzja usera). Odtworzenie ula
+  //zlikwidowanego to normalny przypadek - oznaczony na liście.
+  //Wynik: null - anuluj, 'pomin' - dodaj tylko nowe numery, 'dodaj' - wszystkie.
+  Future<String?> _ostrzezenieOIstniejacych(List<int> istniejace, Map<int, String> ikony, bool saNowe) {
+    final loc = AppLocalizations.of(context)!;
+    final lista = istniejace
+        .map((n) => ikony[n] == 'black' ? '$n (${loc.hivesExistLiquidated})' : '$n')
+        .join(', ');
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text('${loc.hivesExistWarning} $lista.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(loc.cancel)),
+          if (saNowe)
+            TextButton(onPressed: () => Navigator.of(ctx).pop('pomin'), child: Text(loc.hivesSkipExisting)),
+          TextButton(onPressed: () => Navigator.of(ctx).pop('dodaj'), child: Text(loc.hivesAddAnyway)),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -493,6 +517,23 @@ class _AddHiveScreenState extends State<AddHiveScreen> {
                                     for (var i = nowyNrUla; i < nowyNrUla + iloscUli; i++) { 
                                       items.add(i); //utworzenie listy numerów wszystkich uli do dodania - dla pętli for asynchronicznej
                                     }
+
+                                    //ostrzeżenie o numerach, które już są w pasiece (15.10.2026)
+                                    final ule = await DBHelper.getHives(nowyNrPasieki);
+                                    final Map<int, String> ikony = {
+                                      for (final u in ule) u['ulNr'] as int: '${u['ikona'] ?? ''}'
+                                    };
+                                    final istniejace = items.where(ikony.containsKey).toList();
+                                    if (istniejace.isNotEmpty) {
+                                      if (!mounted) return;
+                                      final wybor = await _ostrzezenieOIstniejacych(
+                                          istniejace, ikony, istniejace.length < items.length);
+                                      if (wybor == null) return; //anuluj
+                                      if (wybor == 'pomin') {
+                                        items = items.where((n) => !ikony.containsKey(n)).toList();
+                                      }
+                                    }
+                                    if (items.isEmpty || !mounted) return;
 
                                     for (var item in items) {
                                       await dodajUle(item); //tworzenie uli

@@ -1936,6 +1936,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette reine ne peut pas être supprimée car elle a un historique d\'entrées. Seule une reine enregistrée par erreur, sans entrées autres que son rattachement à une ruche, peut être supprimée. Marquez une reine avec historique comme perdue (date de perte dans la modification).';
 
   @override
+  String get hivesExistWarning =>
+      'Ce rucher a déjà des ruches portant les numéros :';
+
+  @override
+  String get hivesExistLiquidated => 'supprimée';
+
+  @override
+  String get hivesSkipExisting => 'Ignorer les existantes';
+
+  @override
+  String get hivesAddAnyway => 'Ajouter quand même';
+
+  @override
   String get queenConnectedToHive => 'introduite dans la ruche';
 
   @override
