@@ -3276,6 +3276,38 @@ class _InfoScreenState extends State<InfoScreen> {
                         ),
                       ],
                     ),
+                    //NOWE RAMKI Z WĘZĄ w roku statystyk, osobno dla korpusów (rodnia
+                    //to zwykle korpus 1) - wymiana starych ramek (15.10.2026). Z bazy przy
+                    //każdym odświeżeniu ekranu, więc po edycji ramek liczba jest aktualna.
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: DBHelper.getNoweRamkiZWeza(globals.pasiekaID, globals.ulID),
+                      builder: (ctx, snap) {
+                        if (!snap.hasData) return const SizedBox.shrink();
+                        final loc = AppLocalizations.of(context)!;
+                        final Map<int, int> wKorpusach = {};
+                        for (final r in snap.data!) {
+                          final data = '${r['data'] ?? ''}';
+                          if (rokStatystyk != 'wszystkie' && !data.startsWith(rokStatystyk)) continue;
+                          final k = (r['korpusNr'] as int?) ?? 0;
+                          wKorpusach[k] = (wKorpusach[k] ?? 0) + 1;
+                        }
+                        //każdy korpus w osobnej linii, kolejność jak w ulu: najwyższy
+                        //korpus na górze, korpus 1 na dole (prośba usera 15.10.2026)
+                        final korpusy = wKorpusach.keys.toList()..sort((a, b) => b.compareTo(a));
+                        const styl = TextStyle(fontSize: 15);
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Column(
+                            children: korpusy.isEmpty
+                                ? [Text('${loc.newFramesFoundation}: 0 ${loc.pcs}', style: styl)]
+                                : [
+                                    for (final k in korpusy)
+                                      Text('${loc.newFramesInBody} $k: ${wKorpusach[k]} ${loc.pcs}', style: styl),
+                                  ],
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

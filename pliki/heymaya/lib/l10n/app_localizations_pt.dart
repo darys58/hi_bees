@@ -1940,6 +1940,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get hivesAddAnyway => 'Adicionar mesmo assim';
 
   @override
+  String get newFramesFoundation => 'Quadros novos com cera moldada';
+
+  @override
+  String get newFramesInBody => 'Quadros novos com cera moldada no corpo';
+
+  @override
   String get queenConnectedToHive => 'associada à colmeia';
 
   @override

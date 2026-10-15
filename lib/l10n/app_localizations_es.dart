@@ -1943,6 +1943,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get hivesAddAnyway => 'Añadir de todos modos';
 
   @override
+  String get newFramesFoundation => 'Cuadros nuevos con cera estampada';
+
+  @override
+  String get newFramesInBody =>
+      'Cuadros nuevos con cera estampada en el cuerpo';
+
+  @override
   String get queenConnectedToHive => 'conectada a la colmena';
 
   @override

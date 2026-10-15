@@ -637,6 +637,8 @@
     "hivesExistLiquidated": "zlikwidowany",
     "hivesSkipExisting": "Pomiń istniejące",
     "hivesAddAnyway": "Dodaj mimo to",
+    "newFramesFoundation": "Nowe ramki z węzą",
+    "newFramesInBody": "Nowe ramki z węzą w korpusie",
     "queenConnectedToHive": "podłączona do ula",
     "sElectDate": "Wybierz datę",
     "lOst":"Stracona",

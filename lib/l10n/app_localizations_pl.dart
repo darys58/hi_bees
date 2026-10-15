@@ -1939,6 +1939,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get hivesAddAnyway => 'Dodaj mimo to';
 
   @override
+  String get newFramesFoundation => 'Nowe ramki z węzą';
+
+  @override
+  String get newFramesInBody => 'Nowe ramki z węzą w korpusie';
+
+  @override
   String get queenConnectedToHive => 'podłączona do ula';
 
   @override

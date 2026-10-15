@@ -1932,6 +1932,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hivesAddAnyway => 'Add anyway';
 
   @override
+  String get newFramesFoundation => 'New frames with foundation';
+
+  @override
+  String get newFramesInBody => 'New frames with foundation in body';
+
+  @override
   String get queenConnectedToHive => 'connected to the hive';
 
   @override

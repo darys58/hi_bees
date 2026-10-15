@@ -1945,6 +1945,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hivesAddAnyway => 'Ajouter quand même';
 
   @override
+  String get newFramesFoundation => 'Nouveaux cadres avec cire gaufrée';
+
+  @override
+  String get newFramesInBody => 'Nouveaux cadres avec cire gaufrée dans le corps';
+
+  @override
   String get queenConnectedToHive => 'introduite dans la ruche';
 
   @override

@@ -1943,6 +1943,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get hivesAddAnyway => 'Trotzdem hinzufügen';
 
   @override
+  String get newFramesFoundation => 'Neue Rähmchen mit Mittelwand';
+
+  @override
+  String get newFramesInBody => 'Neue Rähmchen mit Mittelwand in Zarge';
+
+  @override
   String get queenConnectedToHive => 'dem Volk zugesetzt';
 
   @override

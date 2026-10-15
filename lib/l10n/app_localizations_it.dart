@@ -1943,6 +1943,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get hivesAddAnyway => 'Aggiungi comunque';
 
   @override
+  String get newFramesFoundation => 'Telaini nuovi con foglio cereo';
+
+  @override
+  String get newFramesInBody => 'Telaini nuovi con foglio cereo nel corpo';
+
+  @override
   String get queenConnectedToHive => 'collegata all\'arnia';
 
   @override

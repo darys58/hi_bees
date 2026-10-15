@@ -756,6 +756,20 @@ class DBHelper {
   //znaki zapytania dla "parametr IN (...)"
   static String _znakiZapytania(int ile) => List.filled(ile, '?').join(',');
 
+  //NOWE RAMKI Z WĘZĄ (15.10.2026) - ramka WSTAWIONA w przeglądzie (przed = 0, po > 0;
+  //tak zapisuje ją formularz i głos "wstaw ramkę numer X") z węzą - zasob 8 (NIE 9 -
+  //to susz; komentarz w models/frame.dart miał je zamienione, poprawione 15.10.2026).
+  //Jedna ramka = jeden wiersz (DISTINCT bez strony), więc węza na obu stronach albo
+  //w kolejnych przeglądach (ta ramka ma wtedy przed > 0) nie liczy się podwójnie.
+  static Future<List<Map<String, dynamic>>> getNoweRamkiZWeza(int pasieka, int ul) async {
+    final db = await DBHelper.database();
+    return db.rawQuery(
+        'SELECT DISTINCT data, korpusNr, ramkaNrPo FROM ramka WHERE pasiekaNr = ? AND ulNr = ? '
+        "AND zasob = 8 AND ramkaNr = 0 AND ramkaNrPo > 0 "
+        "AND wartosc NOT IN ('', '0', '0%')", //wartość zapisywana z "%", np. "100%"
+        [pasieka, ul]);
+  }
+
   //wpisy o stanie rodziny ("rodzina jest", parametry we wszystkich językach) - do
   //koloru ikony na belce ula (colony_helpers.stanyRodzinUli); pasieka null = wszystkie
   static Future<List<Map<String, dynamic>>> getStanyRodziny(Iterable<String> parametry, Object? pasieka) async {

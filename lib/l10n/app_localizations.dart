@@ -3876,6 +3876,18 @@ abstract class AppLocalizations {
   /// **'Add anyway'**
   String get hivesAddAnyway;
 
+  /// No description provided for @newFramesFoundation.
+  ///
+  /// In en, this message translates to:
+  /// **'New frames with foundation'**
+  String get newFramesFoundation;
+
+  /// No description provided for @newFramesInBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New frames with foundation in body'**
+  String get newFramesInBody;
+
   /// No description provided for @queenConnectedToHive.
   ///
   /// In en, this message translates to:
