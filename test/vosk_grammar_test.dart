@@ -40,9 +40,11 @@ void main() {
       // wyrażeń nie dotknęła.
       //
       // 75 i 29 intencji (15.10.2026, ZMIERZONE flutter test): NFC (246c99e), aparat i zdjęcie (e5e58cc), notatka do przeglądu jako osobna intencja voiceNoteInspection (da0fd63) - te commity liczb nie podbiły.
-      expect(silnik.liczbaWyrazen, 75,
+      // 76 i 30 intencji = + voiceQr "czytaj kod" (15.10.2026, kody QR uli).
+      // 77 = + "zamknij/wyłącz skaner" w voiceCameraClose (15.10.2026).
+      expect(silnik.liczbaWyrazen, 77,
           reason: 'zmieniła się liczba wyrażeń w assets/grammar/pol_vosk.yml');
-      expect(silnik.intencje.length, 29); // + voiceNoteInspection, voiceNfc, voiceCamera, voicePhoto, voiceCameraClose
+      expect(silnik.intencje.length, 30); // + voiceNoteInspection, voiceNfc, voiceCamera, voicePhoto, voiceCameraClose, voiceQr
       expect(silnik.intencje, contains('setStore'));
       expect(silnik.intencje, contains('setMoveBody'));
     });
@@ -70,7 +72,9 @@ void main() {
       //
       // 241 = 239 + "struty" i "wiała" (15.10.2026, alias "strutowiała" spoza
       // słownika modelu; vosk_parser_ref.py, zero OOV).
-      expect(silnik.slowa().length, 241,
+      // 242 = 241 + "kod" (voiceQr, 15.10.2026).
+      // 243 = + "skaner" (15.10.2026).
+      expect(silnik.slowa().length, 243,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec słownika modelu');
       expect(silnik.slowa(), isNot(contains('zła')),
           reason: 'jakość matki "zła" zastąpiona przez "do wymiany"');
@@ -255,7 +259,9 @@ void main() {
       // 3372 = 3369 + "struty wiała" (15.10.2026, vosk_parser_ref.py --frazy
       // daje dla HEAD te same 3369 co flutter test).
       // 3376 = 3372 + "matka jest struty wiała" (15.10.2026, ta sama referencja).
-      expect(silnik.frazy().length, 3376);
+      // 3382 = 3376 + voiceQr (15.10.2026, vosk_parser_ref.py --frazy).
+      // 3386 = + "zamknij/wyłącz skaner" (15.10.2026).
+      expect(silnik.frazy().length, 3386);
     });
   });
 
@@ -379,6 +385,16 @@ void main() {
         expect(w.slots, isNotEmpty);
       });
     }
+  });
+
+  group('kod QR ula (voiceQr)', () {
+    test('czytaj/odczytaj/skanuj kod, hej maja opcjonalne; nie myli się z tagiem', () {
+      for (final t in ['czytaj kod', 'odczytaj kod', 'skanuje kod', 'hej maja czytaj kod']) {
+        expect(silnik.rozpoznaj(t).intent, 'voiceQr', reason: t);
+      }
+      expect(silnik.rozpoznaj('czytaj tag').intent, 'voiceNfc');
+      expect(silnik.rozpoznaj('zamknij skaner').intent, 'voiceCameraClose');
+    });
   });
 
   group('sloty wielosłowne i wartości opisowe', () {

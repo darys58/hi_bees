@@ -43,9 +43,11 @@ void main() {
       // ten sam zestaw kluczy intencji/slotów w obu plikach).
       //
       // 76 i 29 intencji (15.10.2026, ZMIERZONE flutter test): NFC (246c99e), aparat i zdjęcie (e5e58cc), notatka do przeglądu jako osobna intencja voiceNoteInspection (da0fd63) - te commity liczb nie podbiły.
-      expect(silnik.liczbaWyrazen, 76,
+      // 77 and 30 intents = + voiceQr "read code" (15.10.2026).
+      // 78 = + "close scanner" (15.10.2026).
+      expect(silnik.liczbaWyrazen, 78,
           reason: 'zmieniła się liczba wyrażeń w assets/grammar/eng_vosk.yml');
-      expect(silnik.intencje.length, 29);
+      expect(silnik.intencje.length, 30);
       expect(silnik.intencje, contains('setStore'));
       expect(silnik.intencje, contains('setMoveBody'));
       expect(silnik.intencje, contains('voiceStart'));
@@ -59,7 +61,9 @@ void main() {
       // 181 (15.10.2026, ZMIERZONE flutter test, zgodne z vosk_parser_ref.py):
       // 180 po commitach 246c99e, e5e58cc, da0fd63 + "sick" w $colonyState.
       // 182 = 181 + "laying" ("colony is drone laying", 15.10.2026).
-      expect(silnik.slowa().length, 182,
+      // 183 = 182 + "code" (voiceQr, 15.10.2026).
+      // 184 = + "scanner" (15.10.2026).
+      expect(silnik.slowa().length, 184,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec '
               'pliki/vosk_slownik_eng.txt');
       expect(silnik.liczebniki(), contains('twenty'));
@@ -266,6 +270,8 @@ void main() {
       expect(silnik.rozpoznaj('colony is sick').slots!['colonyState'], 'sick');
       expect(silnik.rozpoznaj('colony is drone laying').slots!['colonyState'], 'drone laying');
       expect(silnik.rozpoznaj('queen is drone laying').slots!['queenState'], 'drone laying');
+      expect(silnik.rozpoznaj('hey maya scan code').intent, 'voiceQr');
+      expect(silnik.rozpoznaj('close scanner').intent, 'voiceCameraClose');
     });
   });
 

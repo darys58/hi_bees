@@ -124,6 +124,14 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
             ? ' - otwiera czytnik NFC.\n'
             : ' - tagi NFC są czytane cały czas.\n',
         style: _komentarz),
+    //voiceQr (15.10.2026) - jak tag, "skanuj" przez alias "skanuje"
+    _punktor,
+    TextSpan(text: 'Czytaj/odczytaj/skanuj kod', style: _wymagany),
+    TextSpan(text: ' - skaner kodu QR na ulu, otwiera pasiekę i ul.\n',
+        style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Zamknij/wyłącz skaner', style: _wymagany),
+    TextSpan(text: ' - zamyka skaner kodu QR.\n', style: _komentarz),
     //voiceCamera / voicePhoto / voiceCameraClose
     _punktor,
     TextSpan(text: 'Otwórz/włącz aparat', style: _wymagany),
@@ -185,6 +193,13 @@ List<TextSpan> _sekcjaSesjaEn() {
             ? ' - opens the NFC reader.\n'
             : ' - NFC tags are read all the time.\n',
         style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Read/scan code', style: _wymagany),
+    TextSpan(text: ' - hive QR code scanner, opens the apiary and hive.\n',
+        style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Close scanner', style: _wymagany),
+    TextSpan(text: ' - closes the QR code scanner.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Open camera', style: _wymagany),
     TextSpan(text: ' - camera preview (only with a hive open).\n',

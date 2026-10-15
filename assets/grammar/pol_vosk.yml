@@ -101,6 +101,12 @@ context:
     # Wszystkie słowa sprawdzone w słowniku modelu (pliki/vosk_slownik_pl.txt).
     voiceNfc:
       - (hej maja) [czytaj,odczytaj,skanuje] tag
+    # --- kod QR ula (15.10.2026, pliki/plan_kody_qr.md etap 3) ------------------
+    # Otwiera skaner aparatem nad ekranem głosu; odczytany kod otwiera pasiekę i ul
+    # jak tag NFC. Nic nie zapisuje. "kod" jest w słowniku modelu, "skanuj" przez
+    # alias "skanuje" (jak przy tagu).
+    voiceQr:
+      - (hej maja) [czytaj,odczytaj,skanuje] kod
     # --- aparat (11.10.2026) -------------------------------------------------
     # Podgląd aparatu w ekranie głosu, tylko przy otwartym ulu; zdjęcie trafia
     # do zdjęć ula (tabela zdjecia) i nie podlega cofaniu. "zrób zdjęcie" przy
@@ -113,6 +119,8 @@ context:
       - pstryk
     voiceCameraClose:
       - (hej maja) [zamknij,wyłącz] aparat
+      # skaner kodów QR (15.10.2026) - ta sama komenda zamyka podgląd i skaner
+      - (hej maja) [zamknij,wyłącz] skaner
     setApiary:
       - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

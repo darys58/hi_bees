@@ -58,6 +58,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'dart:io' show Platform, File; //NFC: iOS czytnik na komendę, Android ciągły; plik zdjęcia
 import 'package:camera/camera.dart'
     show CameraController, CameraPreview, CameraLensDirection, ResolutionPreset, FlashMode, XFile, availableCameras;
+import 'package:mobile_scanner/mobile_scanner.dart'
+    show MobileScanner, MobileScannerController, BarcodeCapture, BarcodeFormat, DetectionSpeed;
+import 'qr_scan_screen.dart' show sprawdzKodQrUla; //kody QR uli (15.10.2026)
 import '../helpers/photo_helper.dart'; //zapis zdjęcia ula (wspólny z infos_screen)
 import 'package:nfc_manager/nfc_manager.dart';
 import '../helpers/nfc_helper.dart'; //ID tagu NFC
@@ -370,18 +373,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           blad = l.voiceNfcHiveOutOfRange;
         } else {
           debugPrint('NFC (głos): tag $id → pasieka $pasieka, ul $ul');
-          //pasiekę otwieramy tylko, gdy to inna niż bieżąca - inaczej dwa
-          //sygnały potwierdzenia jeden po drugim
-          if (!readyApiary || nrXXOfApiary != pasieka) {
-            _obsluzKomende(VoskInference(isUnderstood: true, intent: 'setApiary', slots: {
-              'apiaryState': l.open,
-              'nrXXOfApiary': '$pasieka',
-            }));
-          }
-          _obsluzKomende(VoskInference(isUnderstood: true, intent: 'setHive', slots: {
-            'hiveState': l.open,
-            'nrXXOfHive': '$ul',
-          }));
+          _otworzUlPasieki(pasieka, ul);
         }
       }
     }
@@ -390,6 +382,135 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       _powiedzOZapisie(blad);
     }
     return blad;
+  }
+
+  //"Otwórz pasiekę X, otwórz ul Y" z tagu NFC albo kodu QR - jak wypowiedziane.
+  //Pasiekę otwieramy tylko, gdy to inna niż bieżąca - inaczej dwa sygnały
+  //potwierdzenia jeden po drugim.
+  void _otworzUlPasieki(int pasieka, int ul) {
+    final l = AppLocalizations.of(context)!;
+    if (!readyApiary || nrXXOfApiary != pasieka) {
+      _obsluzKomende(VoskInference(isUnderstood: true, intent: 'setApiary', slots: {
+        'apiaryState': l.open,
+        'nrXXOfApiary': '$pasieka',
+      }));
+    }
+    _obsluzKomende(VoskInference(isUnderstood: true, intent: 'setHive', slots: {
+      'hiveState': l.open,
+      'nrXXOfHive': '$ul',
+    }));
+  }
+
+  //KOD QR ULA W STEROWANIU GŁOSEM (15.10.2026, pliki/plan_kody_qr.md etap 3).
+  //Komenda voiceQr ("czytaj kod") otwiera skaner jako nakładkę na ekran głosu (jak
+  //podgląd aparatu - nasłuch Vosk działa dalej, komunikaty Mai widać na pasku stanu).
+  //Odczytany kod = otwarcie pasieki i ula jak z tagu NFC; zły kod - komunikat
+  //i skanowanie dalej. Jeden aparat naraz: skaner zamyka podgląd do zdjęć.
+  //Zamknięcie: poprawny kod, "zamknij aparat", przycisk, koniec sesji, tło, 60 s.
+  MobileScannerController? _skanerQr; //null = skaner zamknięty
+  bool _sprawdzamQr = false;
+  Timer? _timerSkaneraQr;
+  static const Duration _kSkanerQrCzas = Duration(seconds: 60);
+
+  void _otworzSkanerQr() {
+    if (_skanerQr != null) return;
+    final l = AppLocalizations.of(context)!;
+    _zamknijAparat();
+    setState(() {
+      _skanerQr = MobileScannerController(
+        formats: const [BarcodeFormat.qrCode],
+        detectionSpeed: DetectionSpeed.noDuplicates,
+      );
+    });
+    _powiedzOZapisie(l.qrScanHint);
+    _timerSkaneraQr?.cancel();
+    _timerSkaneraQr = Timer(_kSkanerQrCzas, _zamknijSkanerQr);
+  }
+
+  void _zamknijSkanerQr() {
+    _timerSkaneraQr?.cancel();
+    final MobileScannerController? skaner = _skanerQr;
+    if (skaner == null) return;
+    if (mounted) {
+      setState(() => _skanerQr = null);
+    } else {
+      _skanerQr = null;
+    }
+    skaner.dispose();
+  }
+
+  Future<void> _odczytQr(BarcodeCapture odczyt) async {
+    if (_sprawdzamQr || _skanerQr == null) return;
+    final String? tresc = odczyt.barcodes.isEmpty ? null : odczyt.barcodes.first.rawValue;
+    if (tresc == null || tresc.isEmpty) return;
+    //poza sesją komend kod nic nie otwiera (jak tag NFC)
+    if (_engine?.tryb != TrybNasluchu.komendy) {
+      _zamknijSkanerQr();
+      return;
+    }
+    _sprawdzamQr = true;
+    final wynik = await sprawdzKodQrUla(context, tresc);
+    if (!mounted) return;
+    if (wynik is Map<String, dynamic>) {
+      _zamknijSkanerQr();
+      final int pasieka = int.tryParse('${wynik['pasiekaNr']}') ?? 0;
+      final int ul = int.tryParse('${wynik['ulNr']}') ?? 0;
+      debugPrint('QR (głos): pasieka $pasieka, ul $ul');
+      if (pasieka > 0 && ul > 0) _otworzUlPasieki(pasieka, ul);
+      _sprawdzamQr = false;
+      return;
+    }
+    beep('error');
+    _powiedzOZapisie(wynik as String);
+    await Future.delayed(const Duration(seconds: 2)); //chwila na komunikat
+    _sprawdzamQr = false;
+  }
+
+  Widget _buildSkanerQr(BuildContext context) {
+    final double ramka = MediaQuery.of(context).size.width * 0.6;
+    return Container(
+      color: const Color.fromARGB(255, 0, 0, 0),
+      child: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                MobileScanner(controller: _skanerQr!, onDetect: _odczytQr),
+                Center(
+                  child: Container(
+                    width: ramka,
+                    height: ramka,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color.fromARGB(255, 252, 193, 104), width: 3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: IconButton(
+                    iconSize: 34,
+                    icon: const Icon(Icons.close, color: Color.fromARGB(255, 255, 255, 255)),
+                    onPressed: _zamknijSkanerQr,
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: IconButton(
+                    iconSize: 30,
+                    icon: const Icon(Icons.flashlight_on_outlined, color: Color.fromARGB(255, 255, 255, 255)),
+                    onPressed: () => _skanerQr?.toggleTorch(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          buildPasekStanu(context),
+        ],
+      ),
+    );
   }
 
   //APARAT W STEROWANIU GŁOSEM (11.10.2026). Pakiet camera, nie image_picker: podgląd
@@ -411,8 +532,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   Future<void> _komendaAparatu(String intent) async {
     final l = AppLocalizations.of(context)!;
     if (intent == 'voiceCameraClose') {
-      if (_aparat != null) {
+      if (_aparat != null || _skanerQr != null) {
         _zamknijAparat();
+        _zamknijSkanerQr(); //skaner kodów QR też używa aparatu
         beep('close');
       }
       return;
@@ -433,6 +555,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
   Future<void> _otworzAparat() async {
     if (_aparatStartuje || _aparat != null) return;
+    _zamknijSkanerQr(); //jeden aparat naraz
     _aparatStartuje = true;
     final l = AppLocalizations.of(context)!;
     CameraController? aparat;
@@ -1161,6 +1284,13 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
 
+    //6a. kod QR ula ("czytaj kod") - skaner nad ekranem; odczytany kod otwiera
+    //pasiekę i ul jak tag NFC (15.10.2026). Nic nie zapisuje.
+    if (f.inference.intent == 'voiceQr') {
+      _otworzSkanerQr();
+      return;
+    }
+
     //7. aparat - podgląd, zdjęcie, zamknięcie. Zdjęcie nie podlega cofaniu.
     if (f.inference.intent == 'voiceCamera' ||
         f.inference.intent == 'voicePhoto' ||
@@ -1239,6 +1369,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     await e.ustawTryb(TrybNasluchu.czuwanie);
     if (!mounted) return;
     _zamknijAparat(); //koniec sesji = koniec zdjęć
+    _zamknijSkanerQr(); //i skanowania kodów QR
     setState(() {
       isProcessing = false;
       rhinoText = "";
@@ -2121,6 +2252,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //czytnika NFC na iOS, a wtedy podgląd ma zostać)
     if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
       _zamknijAparat();
+      _zamknijSkanerQr();
     }
     if (!_silnikGotowy) return;
     if (state == AppLifecycleState.paused ||
@@ -8546,6 +8678,7 @@ print('openDialog = $openDialog');
           },
           )),
           if (_aparat != null) Positioned.fill(child: _buildAparat(context)),
+          if (_skanerQr != null) Positioned.fill(child: _buildSkanerQr(context)),
         ]),
       ),
     );

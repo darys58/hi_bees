@@ -128,6 +128,10 @@ context:
     # All words checked in pliki/vosk_slownik_eng.txt.
     voiceNfc:
       - (hey maya) [read,scan] tag
+    # Hive QR code (15.10.2026): opens the camera scanner over the voice screen;
+    # the code opens apiary and hive like an NFC tag. Saves nothing.
+    voiceQr:
+      - (hey maya) [read,scan] code
     # --- camera (11.10.2026) -------------------------------------------------
     # In-screen camera preview, only with a hive open; the photo goes to the
     # hive photos (table zdjecia), no undo. "take photo" with the camera closed
@@ -140,6 +144,8 @@ context:
       - snap
     voiceCameraClose:
       - (hey maya) close camera
+      # QR code scanner (15.10.2026) - the same command closes preview and scanner
+      - (hey maya) close scanner
     setApiary:
       - $state:apiaryState apiary (number) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:
