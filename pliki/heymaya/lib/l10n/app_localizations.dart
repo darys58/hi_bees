@@ -3889,6 +3889,18 @@ abstract class AppLocalizations {
   /// **'New frames with foundation in body'**
   String get newFramesInBody;
 
+  /// No description provided for @rateApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the app'**
+  String get rateApp;
+
+  /// No description provided for @rateAppSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your store review helps other beekeepers'**
+  String get rateAppSub;
+
   /// No description provided for @queenConnectedToHive.
   ///
   /// In en, this message translates to:

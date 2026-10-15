@@ -1949,6 +1949,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get newFramesInBody => 'Quadros novos com cera moldada no corpo';
 
   @override
+  String get rateApp => 'Avaliar a aplicação';
+
+  @override
+  String get rateAppSub => 'A sua avaliação na loja ajuda outros apicultores';
+
+  @override
   String get queenConnectedToHive => 'associada à colmeia';
 
   @override

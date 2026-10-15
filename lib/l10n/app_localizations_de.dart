@@ -1949,6 +1949,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newFramesInBody => 'Neue Rähmchen mit Mittelwand in Zarge';
 
   @override
+  String get rateApp => 'App bewerten';
+
+  @override
+  String get rateAppSub => 'Deine Bewertung im Store hilft anderen Imkern';
+
+  @override
   String get queenConnectedToHive => 'dem Volk zugesetzt';
 
   @override

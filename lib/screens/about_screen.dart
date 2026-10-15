@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -210,6 +211,30 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
              ),
+  //oceń aplikację (15.10.2026) - strona aplikacji w sklepie; sklepy nie pozwalają
+  //wysłać opinii z aplikacji, ocenę wystawia się tam. iOS: action=write-review
+  //otwiera od razu okno pisania opinii; Play - stronę aplikacji z sekcją ocen
+            GestureDetector(
+              onTap: () => _otworz(context, Platform.isAndroid
+                  ? 'https://play.google.com/store/apps/details?id=eu.darys.heymaya'
+                  : 'https://apps.apple.com/app/id6447341365?action=write-review'),
+              child: Card(
+                child: ListTile(
+                  //pięć pustych gwiazdek po tekście (prośba usera 15.10.2026)
+                  title: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(AppLocalizations.of(context)!.rateApp),
+                      const SizedBox(width: 8),
+                      for (int i = 0; i < 5; i++)
+                        Icon(Icons.star_border_rounded, size: 20, color: Colors.orange[700]),
+                    ],
+                  ),
+                  subtitle: Text(AppLocalizations.of(context)!.rateAppSub),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+              ),
+            ),
   //usuń konto (08.10.2026) - wymóg Apple 5.1.1(v); okna potwierdzenia i sprzątanie w helpers/usun_konto.dart
             if (mem.isNotEmpty && globals.key != '')
               GestureDetector(

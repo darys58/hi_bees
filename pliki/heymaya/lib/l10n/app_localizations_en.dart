@@ -1938,6 +1938,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newFramesInBody => 'New frames with foundation in body';
 
   @override
+  String get rateApp => 'Rate the app';
+
+  @override
+  String get rateAppSub => 'Your store review helps other beekeepers';
+
+  @override
   String get queenConnectedToHive => 'connected to the hive';
 
   @override

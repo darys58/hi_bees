@@ -1945,6 +1945,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get newFramesInBody => 'Nowe ramki z węzą w korpusie';
 
   @override
+  String get rateApp => 'Oceń aplikację';
+
+  @override
+  String get rateAppSub => 'Twoja opinia w sklepie pomaga innym pszczelarzom';
+
+  @override
   String get queenConnectedToHive => 'podłączona do ula';
 
   @override

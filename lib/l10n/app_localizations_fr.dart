@@ -1956,6 +1956,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Nouveaux cadres avec cire gaufrée dans le corps';
 
   @override
+  String get rateApp => 'Noter l\'application';
+
+  @override
+  String get rateAppSub =>
+      'Votre avis sur la boutique aide d\'autres apiculteurs';
+
+  @override
   String get queenConnectedToHive => 'introduite dans la ruche';
 
   @override

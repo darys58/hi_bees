@@ -1946,6 +1946,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get newFramesInBody => 'Telaini nuovi con foglio cereo nel corpo';
 
   @override
+  String get rateApp => 'Valuta l\'app';
+
+  @override
+  String get rateAppSub => 'La tua recensione nello store aiuta altri apicoltori';
+
+  @override
   String get queenConnectedToHive => 'collegata all\'arnia';
 
   @override
