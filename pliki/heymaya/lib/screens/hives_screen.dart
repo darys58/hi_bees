@@ -160,6 +160,36 @@ class _HivesScreenState extends State<HivesScreen> {
           globals.belkiDLKategoria = ''; //powrót do trybu domyślnego (dokarmianie lub leczenie)
         }
 
+        //ODŚWIEŻANIE "O RODZINIE" - na belce pszczoła + ikonki stanu i siły rodziny
+        //(colony_helpers). Jak dokarmianie: zasoby i matki zerowane, wracają po
+        //"o zasobach i matkach". Ul bez wpisów o rodzinie - sama pszczoła.
+        if(globals.odswiezBelkiUliR == true){ //tylko ręcznie z ikony odświezania
+          globals.odswiezBelkiUliR = false;
+          final cechy = await cechyRodzinUli(globals.pasiekaID);
+          for (final h in hivesAll) {
+            final c = cechy[h.id] ?? CechyRodzinyUla();
+            await Hives.insertHive(
+              h.id, h.pasiekaNr, h.ulNr,
+              c.data.isNotEmpty ? c.data : h.przeglad, //data ostatniego wpisu o rodzinie
+              h.ikona, h.ramek,
+              0, //korpusNr - bez belki zasobów
+              0, 0, 0, 0, 0, 0, 0, 0, 0, //trut, czerw, larwy, jaja, pierzga, miod, dojrzaly, weza, susz
+              0, 0, 0, //matka, mateczniki, usunmat
+              '0', //todo
+              'colony', //kategoria - tryb belki
+              '0', //parametr
+              c.stan, //wartosc - stan rodziny
+              c.sila, //miara - siła rodziny
+              '0', '0', '0', '0', '0', //matka1..5
+              h.h1, h.h2, h.h3,
+              0, //aktual
+            );
+          }
+          if (!mounted) return;
+          await Provider.of<Hives>(context, listen: false).fetchAndSetHives(globals.pasiekaID);
+          if (mounted) setState(() {});
+        }
+
          //ODŚWIEZANIE ZBIOROW
         if(globals.odswiezBelkiUliZ == true){ //tylko ręcznie z ikony odświezania
           List<int> items = [];
@@ -1667,6 +1697,17 @@ class _HivesScreenState extends State<HivesScreen> {
                   );
               }, child: Text((AppLocalizations.of(context)!.oZasobachMatkach),style: TextStyle(fontSize: 18))
               ), 
+
+              TextButton(onPressed: (){
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                globals.odswiezBelkiUliR = true;
+                Navigator.of(context).pushNamed(
+                    HivesScreen.routeName,
+                    arguments: {'numerPasieki': globals.pasiekaID },
+                  );
+              }, child: Text((AppLocalizations.of(context)!.oRodzinie),style: TextStyle(fontSize: 18))
+              ),
         
               TextButton(onPressed: (){
                 Navigator.of(context).pop();

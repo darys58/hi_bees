@@ -106,18 +106,53 @@ String _kluczCzasu(Object? data, Object? czas) {
 /// NIE zapisywane do tabeli "ule" - źródłem prawdy zostaje info, więc nie trzeba
 /// niczego przeliczać po imporcie, edycji czy usunięciu wpisu.
 Future<Map<String, String>> stanyRodzinUli([Object? pasieka]) async {
-  final rows = await DBHelper.getStanyRodziny(_parametryStanu, pasieka);
-  final Map<String, String> stany = {};
+  final najnowsze = await _najnowszeWpisy(_parametryStanu, pasieka);
+  return najnowsze.map((id, r) => MapEntry(id, (r['wartosc'] as String?) ?? ''));
+}
+
+//najnowszy (data, czas) wpis o podanych parametrach dla każdego ula: 'pasieka.ul' -> wiersz
+Future<Map<String, Map<String, dynamic>>> _najnowszeWpisy(Set<String> parametry, Object? pasieka) async {
+  final rows = await DBHelper.getStanyRodziny(parametry, pasieka);
+  final Map<String, Map<String, dynamic>> wynik = {};
   final Map<String, String> klucze = {};
   for (final r in rows) {
     final id = '${r['pasiekaNr']}.${r['ulNr']}';
     final k = _kluczCzasu(r['data'], r['czas']);
     if (klucze[id] == null || k.compareTo(klucze[id]!) > 0) {
       klucze[id] = k;
-      stany[id] = (r['wartosc'] as String?) ?? '';
+      wynik[id] = r;
     }
   }
-  return stany;
+  return wynik;
+}
+
+final Set<String> _parametrySily = wszystkieJezyki((l) => " " + l.colony + " " + l.isIs);
+
+/// Ostatni stan i siła rodziny ula - do belki "o rodzinie" (Ostatnie informacje).
+class CechyRodzinyUla {
+  String stan = '';
+  String stanData = '';
+  String sila = '';
+  String silaData = '';
+  /// data nowszego z dwóch wpisów - "przegląd" na belce (ile dni temu)
+  String get data => stanData.compareTo(silaData) >= 0 ? stanData : silaData;
+}
+
+Future<Map<String, CechyRodzinyUla>> cechyRodzinUli(Object? pasieka) async {
+  final stany = await _najnowszeWpisy(_parametryStanu, pasieka);
+  final sily = await _najnowszeWpisy(_parametrySily, pasieka);
+  final Map<String, CechyRodzinyUla> wynik = {};
+  stany.forEach((id, r) {
+    final c = wynik.putIfAbsent(id, () => CechyRodzinyUla());
+    c.stan = (r['wartosc'] as String?) ?? '';
+    c.stanData = (r['data'] as String?) ?? '';
+  });
+  sily.forEach((id, r) {
+    final c = wynik.putIfAbsent(id, () => CechyRodzinyUla());
+    c.sila = (r['wartosc'] as String?) ?? '';
+    c.silaData = (r['data'] as String?) ?? '';
+  });
+  return wynik;
 }
 
 //kolejność od najlepszego: kolor NAJGORSZY wygrywa (ustalenie 15.10.2026)

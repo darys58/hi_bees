@@ -31,8 +31,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
   bool _isInit = true;
   String _inspectionNote = '';
   List<Queen> _queens = [];
-  String _colonyForce = '';
-  String _colonyState = '';
+  String _colonyForce = ''; //data ostatniego wpisu siły rodziny
+  String _colonyState = ''; //data ostatniego wpisu stanu rodziny
+  Icon? _colonyForceIcon; //buźka siły rodziny (colony_helpers)
+  Icon? _colonyStateIcon; //ikonka stanu rodziny (colony_helpers)
+  String _colonyForceName = ''; //podpis pod ikonką siły (np. "silna")
+  String _colonyStateName = ''; //podpis pod ikonką stanu (np. "agresywna")
   Info? _lastFeeding;
   Info? _lastTreatment;
   double _lastHarvestHoneyKg = 0;
@@ -81,21 +85,34 @@ class _SummaryScreenState extends State<SummaryScreen> {
         _queens = queensData.items.where((q) =>
             q.pasieka == pasiekaNr && q.ul == ulNr && q.dataStraty == '').toList();
 
-        // Colony info (siła i stan rodziny)
+        // Colony info (siła i stan rodziny) - DATA wpisu, nazwę zastępuje ikonka.
+        // Po DOKŁADNYM parametrze: kategoria colony to też osyp ("martwe pszczoły"),
+        // który wchodził tu jako stan rodziny i pokazywał liczbę (zgłoszenie 15.10.2026).
+        final locR = AppLocalizations.of(context)!;
+        final pStan = locR.colony + " " + locR.isIs;
+        final pSila = " " + locR.colony + " " + locR.isIs;
         DateTime latestColonyForce = DateTime(2000);
         DateTime latestColonyState = DateTime(2000);
         for (final info in infosData.items) {
-          if (info.kategoria == 'colony') {
-            final infoDate = DateTime.parse(info.data);
-            if (info.parametr.startsWith(' ') && infoDate.isAfter(latestColonyForce)) {
-              latestColonyForce = infoDate;
-              _colonyForce = wartoscWBiezacym(context, info.wartosc); //wpis z innego języka na ekran w bieżącym
-            } else if (!info.parametr.startsWith(' ') && infoDate.isAfter(latestColonyState)) {
-              latestColonyState = infoDate;
-              _colonyState = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
-            }
+          if (info.kategoria != 'colony' || info.wartosc.isEmpty) continue;
+          final infoDate = DateTime.parse(info.data);
+          final parametr = parametrWBiezacym(context, info.parametr);
+          if (parametr == pSila && infoDate.isAfter(latestColonyForce)) {
+            latestColonyForce = infoDate;
+            _colonyForce = _zmienDateCala(info.data);
+            _colonyForceIcon = ikonaSilyRodziny(info.wartosc, size: 24);
+            _colonyForceName = wartoscWBiezacym(context, info.wartosc);
+          } else if (parametr == pStan && infoDate.isAfter(latestColonyState)) {
+            latestColonyState = infoDate;
+            _colonyState = _zmienDateCala(info.data);
+            _colonyStateIcon = ikonaStanuRodziny(info.wartosc, size: 24);
+            _colonyStateName = wartoscWBiezacym(context, info.wartosc, parametr: info.parametr);
           }
         }
+
+        //zapis "zła"/"norma" -> etykiety "agresywna"/"normalna", jak w statystyce rodziny
+        if (_colonyStateName == locR.aggressive) _colonyStateName = locR.aggressive1;
+        if (_colonyForceName == locR.normal) _colonyForceName = locR.normal1;
 
         // Last feeding
         DateTime latestFeeding = DateTime(2000);
@@ -600,37 +617,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
               ),
        //     ),
 
-          // --- Segment: Rodzina ---
-          if ((_colonyForce.isNotEmpty || _colonyState.isNotEmpty) && globals.showSummaryColony)
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '${AppLocalizations.of(context)!.cOlony}  ',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      TextSpan(
-                        text: [
-                          if (_colonyForce.isNotEmpty) _colonyForce,
-                          if (_colonyState.isNotEmpty) _colonyState,
-                        ].join(', '),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
           // --- Segment: Matka ---
           if (_queens.isNotEmpty && globals.showSummaryQueen)
             Card(
@@ -763,6 +749,36 @@ class _SummaryScreenState extends State<SummaryScreen> {
                             ],
                           ),
                         ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+          // --- Segment: Rodzina ---
+          //pod segmentem Matka, bez słowa "Rodzina" (mieści się w jednej linii) -
+          //pszczoła, potem ikonka stanu i siły rodziny z DATĄ wpisu w nawiasie (bez nazw,
+          //prośba usera 15.10.2026). Miejsce na kolejne cechy - dokładać do Wrap.
+          if ((_colonyForce.isNotEmpty || _colonyState.isNotEmpty) && globals.showSummaryColony)
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    Image.asset('assets/image/pszczola1.png', width: 22, height: 22, fit: BoxFit.fill),
+                    if (_colonyState.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      _cechaRodziny(_colonyStateIcon, _colonyState, _colonyStateName),
+                    ],
+                    if (_colonyForce.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      _cechaRodziny(_colonyForceIcon, _colonyForce, _colonyForceName),
                     ],
                   ],
                 ),
@@ -1125,6 +1141,29 @@ class _SummaryScreenState extends State<SummaryScreen> {
     } else {
       return '$rok-$miesiac-$dzien';
     }
+  }
+
+  //cecha rodziny w Aktualnościach: ikonka + (data), pod spodem drobna nazwa
+  //cechy - sama ikonka nie mówi dokładnie, o co chodzi (prośba usera 15.10.2026)
+  Widget _cechaRodziny(Icon? ikona, String data, String nazwa) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (ikona != null) ...[ikona, const SizedBox(width: 4)],
+            Text('($data)', style: const TextStyle(fontSize: 14)),
+          ],
+        ),
+        if (nazwa.isNotEmpty)
+          Text(nazwa,
+              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+      ],
+    );
   }
 
   String _zmienDateCala(String data) {

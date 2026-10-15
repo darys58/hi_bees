@@ -182,6 +182,7 @@ bool odswiezBelkiUli = false;//czy odswiezyć belki po imporcie danych lub ręcz
 bool odswiezBelkiUliDL = false;//czy odswiezyć ręcznie ikoną odswiezania
 String belkiDLKategoria = ''; //co ma trafić na belkę przy odświezaniu DL: '' - dokarmianie lub leczenie, 'feeding' - tylko dokarmianie, 'treatment' - tylko leczenie
 bool odswiezBelkiUliZ = false;//czy odswiezyć ręcznie ikoną odswiezania
+bool odswiezBelkiUliR = false;//belki "o rodzinie" - ręcznie z ikony odświeżania (Ostatnie informacje)
 
 String wykresZbiory = 'miod'; //wyświetlany wykres "miod" lub "pylek"
 

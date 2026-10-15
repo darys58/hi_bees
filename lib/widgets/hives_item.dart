@@ -13,7 +13,7 @@ import '../helpers/queen_helpers.dart';
 import '../models/hive.dart';
 //import '../models/info.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
-import '../helpers/colony_helpers.dart'; //ikonaNaBelce, kolorIkonyUla
+import '../helpers/colony_helpers.dart'; //ikonaNaBelce, kolorIkonyUla, ikonki rodziny
 
 class HivesItem extends StatelessWidget {
   @override
@@ -339,11 +339,26 @@ class HivesItem extends StatelessWidget {
 
 
 
+//info o rodzinie (Ostatnie informacje -> o rodzinie): pszczoła, ikonka stanu
+//(wartosc) i buźka siły (miara) - colony_helpers
+                      if (hive.korpusNr == 0 && hive.kategoria == 'colony') ...[
+                        Image.asset('assets/image/pszczola1.png',
+                            width: 20, height: 20, fit: BoxFit.fill),
+                        SizedBox(width: 8),
+                        if (ikonaStanuRodziny(hive.wartosc) != null) ...[
+                          ikonaStanuRodziny(hive.wartosc)!,
+                          SizedBox(width: 8),
+                        ],
+                        if (ikonaSilyRodziny(hive.miara) != null)
+                          ikonaSilyRodziny(hive.miara)!,
+                      ],
+
 //info o matce jezeli nie ma belki             
 //matki NIEGŁÓWNE (12.10.2026): ikona ograniczenia i znak każdej, przed matką główną
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))
+                              hive.kategoria != 'treatment' &&
+                              hive.kategoria != 'colony'))
                         for (final m in (dodatkoweMatkiUli['${hive.pasiekaNr}.${hive.ulNr}'] ?? const <MatkaNaBelce>[]).reversed) ...[
                           if (m.ograniczenie == 'wolna')
                             Image.asset('assets/image/matka12.png',
