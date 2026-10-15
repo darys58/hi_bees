@@ -288,6 +288,9 @@ context:
       - dziewicza
       - sztuczna
       - naturalna
+      # matka trutowa - jak przy rodzinie alias "struty wiała" ("strutowiała" spoza
+      # słownika modelu) -> l10n.droneLaying ("strutowiała"), 15.10.2026
+      - struty wiała
     queenStart:
       - wolna
       - zamknięta
@@ -349,6 +352,9 @@ context:
       - zawiązała kłąb
       - agresywna
       - łagodna
+      # "strutowiała" NIE MA w słowniku modelu - alias "struty wiała" (oba słowa są),
+      # przeliczany na kanoniczne "strutowiała" (_mapowanieSlotowPl), 15.10.2026
+      - struty wiała
       - chora
       - nie żyje
     help:

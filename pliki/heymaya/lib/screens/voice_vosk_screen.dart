@@ -2628,6 +2628,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         //infos_screen ~504, queen_history_screen ~269
         'queenState': {
           'dziewicza': l10n.virgine, //"dziewica"
+          'struty wiała': l10n.droneLaying, //alias - "strutowiała" spoza słownika modelu
         },
         //ikona matki: matka2 = niez (switch ~6168), hives_screen ~946,
         //queen_helpers.dart _allMarkTranslations
@@ -2651,6 +2652,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         'colonyState': {
           'agresywna': l10n.aggressive, //"zła"
           'zawiązała kłąb': l10n.inCluster, //"w kłębie"
+          'struty wiała': l10n.droneBees, //alias - "strutowiała" spoza słownika modelu
           'okej': 'ok',
         },
         //dennica - wartość idzie do info jako tekst, ale ma brzmieć tak samo jak
@@ -2705,6 +2707,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           //pełne "swarming mood" - bez tego przeliczenia krótka forma
           //zapisywałaby się inaczej niż ta sama rzecz wybrana z listy.
           'swarming': l10n.swarmingMood,
+          //"colony is drone laying" - zapis jak z listy (droneBees = "drone bees")
+          'drone laying': l10n.droneBees,
         },
         'bottomBoard': {
           'cleaned': l10n.clean, //app_en.arb clean = "clean"
@@ -7744,6 +7748,12 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
               if (ikona == 'red') { //bo był brak matki
                 ikona = 'orange';
                 // globals.ikonaPasieki = 'orange';
+              }
+              if (matka2 == 'brak') matka2 = '';
+            } else if (czyMatkaTrutowa(wart)) { //"matka jest strutowiała" (15.10.2026)
+              matka3 = 'trutowa';
+              if (ikona == 'red') { //bo był brak matki
+                ikona = 'orange';
               }
               if (matka2 == 'brak') matka2 = '';
             } else {

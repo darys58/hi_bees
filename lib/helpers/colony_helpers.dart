@@ -170,8 +170,12 @@ String _gorsza(String a, String b) {
 /// zmian. 'dead' = rodzina nie żyje: czarna ikona, ale belka NIE jest
 /// zaciemniona i ul liczy się dalej do pasieki (zaciemnienie i odliczanie
 /// sprawdzają ikona == 'black').
-String ikonaNaBelce(String ikona, String stanRodziny) {
+/// [matka3] = `ule.matka3`: 'trutowa' (matka strutowiała) daje czerwony - liczone
+/// tu, a nie zapisywane w `ule.ikona`, bo tam czerwony znaczy "brak matki"
+/// i każda kolejna cecha matki zamieniała go na pomarańczowy (15.10.2026).
+String ikonaNaBelce(String ikona, String stanRodziny, {String matka3 = ''}) {
   if (ikona == 'black') return ikona;
+  if (matka3 == 'trutowa') ikona = _gorsza(ikona, 'red');
   switch (ocenaStanuRodziny(stanRodziny)) {
     case OcenaRodziny.brak:
     case OcenaRodziny.dobra:

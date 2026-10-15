@@ -18,6 +18,7 @@
 #   nakrop -> "na grób"      węza  -> "węża"       pierzga -> "pierzcha"
 #   trut   -> "trud"         mateczniki -> "matecznik i"/"matecznik ów"
 #   półkorpus -> "pół korpus"    miodobranie -> "miodu branie"
+#   strutowiała -> "struty wiała"
 # To NIE są błędy pomocy - nie "poprawiać" jej do postaci z pliku YML.
 #
 # Użycie:
@@ -97,6 +98,7 @@ POMOC = [
     ('matka', [
         'matka jest z roku dwadzieścia trzy',
         'matka jest dziewicza', 'matka jest sztuczna', 'matka jest naturalna',
+        'matka jest struty wiała',
         'matka jest wolna', 'matka jest zamknięta', 'matka jest w klatce',
         'matka nie ma znaku',
         'matka ma biały znak numer pięćdziesiąt pięć',
@@ -110,7 +112,7 @@ POMOC = [
     ('rodzina', [
         'rodzina jest łagodna', 'rodzina jest agresywna', 'rodzina jest ok',
         'rodzina jest w nastroju do ucieczki', 'rodzina zawiązała kłąb',
-        'rodzina jest chora', 'rodzina nie żyje',
+        'rodzina jest struty wiała', 'rodzina jest chora', 'rodzina nie żyje',
         'rodzina jest bardzo silna', 'rodzina jest silna',
         'rodzina jest normalna', 'rodzina jest słaba',
         'rodzina jest bardzo słaba',

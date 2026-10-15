@@ -96,8 +96,9 @@ final List<String Function(AppLocalizations l)> _szablonyParametrow = [
 /// list musi tu być - inaczej edycja starego wpisu przy innym języku dawała
 /// wartość spoza listy i DropdownButton wywracał ekran, 05.10.2026).
 /// "usuń"/"zabierz" mają w ES, FR i PT ten sam napis - obie idą w statystyce
-/// do tej samej gałęzi. "trutówka" (matka) i "strutowiała" (rodzina) - ten sam
-/// napis w DE, ES, FR, IT, PT: rozstrzyga parametr (patrz wartoscWBiezacym).
+/// do tej samej gałęzi. Matka trutowa i "strutowiała" (rodzina) - ten sam
+/// napis w PL (od 15.10.2026, wcześniej "trutówka"), DE, ES, FR, IT, PT:
+/// rozstrzyga parametr (patrz wartoscWBiezacym).
 final List<String Function(AppLocalizations l)> _szablonyWartosci = [
   (l) => l.virgine,
   (l) => l.naturallyMated,
@@ -155,7 +156,19 @@ Map<String, int> _indeksSzablonow(List<String Function(AppLocalizations l)> szab
 }
 
 final Map<String, int> _indeksParametrow = _indeksSzablonow(_szablonyParametrow);
-final Map<String, int> _indeksWartosci = _indeksSzablonow(_szablonyWartosci);
+final Map<String, int> _indeksWartosci = _indeksSzablonow(_szablonyWartosci)
+  //dawny polski napis matki trutowej (do 15.10.2026) - stare wpisy na ekran
+  //jako bieżące droneLaying
+  ..putIfAbsent(kDawnaTrutowka, () => _iTrutowka);
+
+/// Dawny polski napis stanu matki trutowej - `info.wartosc` wpisów sprzed
+/// 15.10.2026 (teraz "strutowiała", jak przy rodzinie).
+const String kDawnaTrutowka = 'trutówka';
+
+/// Czy `info.wartosc` wpisu "matka -" to matka trutowa (wszystkie języki + dawne "trutówka").
+bool czyMatkaTrutowa(String wartosc) =>
+    wartosc == kDawnaTrutowka || _wartosciTrutowki.contains(wartosc);
+final Set<String> _wartosciTrutowki = wszystkieJezyki((l) => l.droneLaying);
 
 /// Zapisany `info.parametr` przełożony na BIEŻĄCY język interfejsu.
 ///

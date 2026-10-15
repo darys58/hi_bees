@@ -2964,7 +2964,7 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
 
                                 //ustawienie ikony dla pasieki
                                 //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
-                                globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny)));
+                                globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3)));
                                 for (var i = 0; i < hives.length; i++) {
                                   //print('i=$i');
                                   //print( 'hives[i].ikona = ${hives[i].ikona}');

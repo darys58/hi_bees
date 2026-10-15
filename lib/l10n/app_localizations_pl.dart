@@ -496,7 +496,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bornIn => 'rocznik';
 
   @override
-  String get isVirgine => 'jest dziewicza/sztuczna/naturalna';
+  String get isVirgine => 'jest dziewicza/sztuczna/naturalna/strutowiała';
 
   @override
   String get isFreed => 'jest wolna/zamknięta/w klatce';
@@ -517,7 +517,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get deadFlight =>
-      'agresywna/łagodna/zawiązała kłąb/ok/w nastroju do ucieczki/chora/nie żyje';
+      'agresywna/łagodna/zawiązała kłąb/ok/w nastroju do ucieczki/strutowiała/chora/nie żyje';
 
   @override
   String get veryWeakStrong => 'bardzo silna/silna/normalna/słaba/bardzo słaba';
@@ -1312,7 +1312,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get virgine => 'dziewica';
 
   @override
-  String get droneLaying => 'trutówka';
+  String get droneLaying => 'strutowiała';
 
   @override
   String get virgine1 => 'nieunasienniona';

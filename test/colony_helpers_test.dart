@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hi_bees/helpers/colony_helpers.dart';
+import 'package:hi_bees/helpers/parametr_nazwy.dart';
 
 void main() {
   group('ocenaStanuRodziny', () {
@@ -50,10 +51,27 @@ void main() {
       expect(ikonaNaBelce('yellow', 'chora'), 'red');
       expect(ikonaNaBelce('orange', 'strutowiała'), 'red');
     });
+    test('matka strutowiała (matka3 trutowa) daje czerwony', () {
+      expect(ikonaNaBelce('green', '', matka3: 'trutowa'), 'red');
+      expect(ikonaNaBelce('orange', 'ok', matka3: 'trutowa'), 'red');
+      expect(ikonaNaBelce('green', 'nie żyje', matka3: 'trutowa'), 'dead');
+      expect(ikonaNaBelce('black', '', matka3: 'trutowa'), 'black');
+      expect(ikonaNaBelce('green', '', matka3: 'unasienniona'), 'green');
+    });
     test('nie żyje = dead, ul zlikwidowany zostaje black', () {
       expect(ikonaNaBelce('red', 'nie żyje'), 'dead');
       expect(ikonaNaBelce('black', 'chora'), 'black');
       expect(ikonaNaBelce('black', 'nie żyje'), 'black');
+    });
+  });
+
+  group('czyMatkaTrutowa', () {
+    test('nowy napis, dawne "trutówka" i inne języki', () {
+      expect(czyMatkaTrutowa('strutowiała'), isTrue);
+      expect(czyMatkaTrutowa('trutówka'), isTrue); //wpisy sprzed 15.10.2026
+      expect(czyMatkaTrutowa('drone laying'), isTrue);
+      expect(czyMatkaTrutowa('drohnenbrütig'), isTrue);
+      expect(czyMatkaTrutowa('dziewica'), isFalse);
     });
   });
 

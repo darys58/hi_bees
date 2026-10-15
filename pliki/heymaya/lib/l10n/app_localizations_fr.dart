@@ -499,7 +499,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get isVirgine =>
-      'est vierge/inséminée artificiellement/fécondée naturellement';
+      'est vierge/inséminée artificiellement/fécondée naturellement/pondeuse de mâles';
 
   @override
   String get isFreed => 'est libre/en cage/en isoloir';
@@ -519,7 +519,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cOlony => 'Colonie';
 
   @override
-  String get deadFlight => 'agressive/douce/en grappe/ok/essaimage/malade/morte';
+  String get deadFlight => 'agressive/douce/en grappe/ok/essaimage/pondeuse de mâles/malade/morte';
 
   @override
   String get veryWeakStrong => 'très forte/forte/normale/faible/très faible';

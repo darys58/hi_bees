@@ -498,7 +498,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get isVirgine =>
-      'é virgem/inseminada artificialmente/fecundada naturalmente';
+      'é virgem/inseminada artificialmente/fecundada naturalmente/zanganeira';
 
   @override
   String get isFreed => 'está livre/na gaiola/no isolador';
@@ -519,7 +519,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deadFlight =>
-      'agressiva/calma/em cacho/ok/com tendência à enxameação/doente/morta';
+      'agressiva/calma/em cacho/ok/com tendência à enxameação/zanganeira/doente/morta';
 
   @override
   String get veryWeakStrong => 'muito forte/forte/normal/fraca/muito fraca';

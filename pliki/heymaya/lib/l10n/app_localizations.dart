@@ -1059,7 +1059,7 @@ abstract class AppLocalizations {
   /// No description provided for @isVirgine.
   ///
   /// In en, this message translates to:
-  /// **'is virgin/artificially inseminated/naturally mated'**
+  /// **'is virgin/artificially inseminated/naturally mated/drone laying'**
   String get isVirgine;
 
   /// No description provided for @isFreed.
@@ -1095,7 +1095,7 @@ abstract class AppLocalizations {
   /// No description provided for @deadFlight.
   ///
   /// In en, this message translates to:
-  /// **'aggressive/gentle/in a cluster/ok/swarming mood/sick/dead'**
+  /// **'aggressive/gentle/in a cluster/ok/swarming mood/drone laying/sick/dead'**
   String get deadFlight;
 
   /// No description provided for @veryWeakStrong.

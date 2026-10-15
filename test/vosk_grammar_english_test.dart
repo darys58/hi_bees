@@ -58,7 +58,8 @@ void main() {
       // pierwsza, udokumentowana opcja alternatywy [excluder,grid,grate].
       // 181 (15.10.2026, ZMIERZONE flutter test, zgodne z vosk_parser_ref.py):
       // 180 po commitach 246c99e, e5e58cc, da0fd63 + "sick" w $colonyState.
-      expect(silnik.slowa().length, 181,
+      // 182 = 181 + "laying" ("colony is drone laying", 15.10.2026).
+      expect(silnik.slowa().length, 182,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec '
               'pliki/vosk_slownik_eng.txt');
       expect(silnik.liczebniki(), contains('twenty'));
@@ -263,6 +264,8 @@ void main() {
           'okay');
       expect(silnik.rozpoznaj('colony is okay').slots!['colonyState'], 'okay');
       expect(silnik.rozpoznaj('colony is sick').slots!['colonyState'], 'sick');
+      expect(silnik.rozpoznaj('colony is drone laying').slots!['colonyState'], 'drone laying');
+      expect(silnik.rozpoznaj('queen is drone laying').slots!['queenState'], 'drone laying');
     });
   });
 

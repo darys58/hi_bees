@@ -320,7 +320,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
     //ikona koloru ula
     Icon hiveIcon = Icon(Icons.hive, size: 30,
-        color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny)));
+        color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny, matka3: hive.matka3)));
 
     // Szerokość belki zasobów
     final double barWidth = MediaQuery.of(context).size.width - 80;
@@ -713,7 +713,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                               else if (hive.matka3 == 'nieunasienniona' || hive.matka3 == 'virgine')
                                 const Icon(Icons.egg_outlined, size: 24.0, color: Color.fromARGB(255, 255, 0, 0))
                               else if (hive.matka3 == 'trutowa' || hive.matka3 == 'drone laying')
-                                const Icon(Icons.egg_outlined, size: 24.0, color: Color.fromARGB(255, 219, 170, 9)),
+                                const Icon(Icons.egg_outlined, size: 24.0, color: Color.fromARGB(255, 255, 0, 0)),
                               if (hive.matka3 != '' && hive.matka3 != '0')
                                 const SizedBox(width: 10),
                               // matka2 - znak (kolor)

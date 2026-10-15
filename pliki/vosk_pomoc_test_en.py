@@ -117,6 +117,7 @@ POMOC = [
     ('queen', [
         'queen was born in twenty three',
         'queen is virgin',                        # POPRAWKA: było "virgine"
+        'queen is drone laying',
         'queen is artificially inseminated',
         'queen is naturally mated',
         'queen is freed',
@@ -146,6 +147,7 @@ POMOC = [
         'colony is swarming mood',
         'colony is swarming',
         'colony is in a cluster',
+        'colony is drone laying',
         'colony is sick',
         'colony is dead',
         'colony is very strong',

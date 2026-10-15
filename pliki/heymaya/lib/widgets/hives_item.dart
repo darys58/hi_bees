@@ -373,7 +373,7 @@ class HivesItem extends StatelessWidget {
                         ],
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))
 //czy jest ograniczona
                         if(hive.matka4  == 'wolna')
                           Image.asset('assets/image/matka12.png',
@@ -383,13 +383,13 @@ class HivesItem extends StatelessWidget {
                              width: 25, height: 15, fit: BoxFit.fill),
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))  
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))  
                         if(hive.matka4 != '' && hive.matka4 != '0')
                           SizedBox(width: 8),
 //ok?
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))
                         //jakość matki liczy queen_helpers (jedno miejsce dla belek,
                         //list i głosu) - literały łapały tylko 'ok' i 'zła'
                         if (jednaMatka) if(qualityIsSet(hive.matka1))
@@ -398,23 +398,23 @@ class HivesItem extends StatelessWidget {
                             : Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),),
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))  
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))  
                         if (jednaMatka) if(hive.matka1 != '' && hive.matka1 != '0')
                           SizedBox(width: 5),
 //unasienniona?                    
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))  
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))  
                         if (jednaMatka) if(hive.matka3 == 'unasienniona') Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
                         else if(hive.matka3 == 'nieunasienniona') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),) 
-                        else if(hive.matka3 == 'trutowa') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),), 
-                        if (hive.korpusNr == 0 && (hive.kategoria != 'feeding' && hive.kategoria != 'treatment' ))  
+                        else if(hive.matka3 == 'trutowa') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),), 
+                        if (hive.korpusNr == 0 && (hive.kategoria != 'feeding' && hive.kategoria != 'treatment' && hive.kategoria != 'colony' ))  
                         if (jednaMatka) if(hive.matka3 != '' && hive.matka3 != '0')
                           SizedBox(width: 5),
 //znak? numer?     
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))  
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))  
                         if(hive.matka2 != '' && hive.matka2 != '0') if(hive.matka2.substring(0, 4) == 'niez')
                           Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
                         else if(hive.matka2 != '' && hive.matka2 != '0') if(hive.matka2.substring(0, 4) == 'brak')
@@ -434,7 +434,7 @@ class HivesItem extends StatelessWidget {
 //numer opalitka                      
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))   
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))   
                         if (jednaMatka) if(hive.matka2 != '' && hive.matka2 != '0') if(hive.matka2.substring(4) != '')
                           Text(
                           '${hive.matka2.substring(4)}',
@@ -447,7 +447,7 @@ class HivesItem extends StatelessWidget {
 //rok urodzenia                   
                       if (hive.korpusNr == 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))   
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))   
                         if (jednaMatka) if(hive.matka5 != '' && hive.matka5 != '0')
                           Text(
                           '  \'${hive.matka5.substring(2)}',
@@ -477,7 +477,7 @@ class HivesItem extends StatelessWidget {
 //matki NIEGŁÓWNE (12.10.2026): ikona ograniczenia i znak każdej, przed matką główną
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))
                         for (final m in (dodatkoweMatkiUli['${hive.pasiekaNr}.${hive.ulNr}'] ?? const <MatkaNaBelce>[]).reversed) ...[
                           if (m.ograniczenie == 'wolna')
                             Image.asset('assets/image/matka12.png',
@@ -492,7 +492,7 @@ class HivesItem extends StatelessWidget {
                         ],
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))
 //czy jest ograniczona
                         if(hive.matka4 == 'wolna')
                           Image.asset('assets/image/matka12.png',
@@ -502,13 +502,13 @@ class HivesItem extends StatelessWidget {
                              width: 25, height: 15, fit: BoxFit.fill),
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))  
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))  
                         if(hive.matka4 != '' && hive.matka4 != '0')
                           SizedBox(width: 8),
 //ok?
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))
                         //jw. - ten sam kciuk dla wiersza z korpusem
                         if (jednaMatka) if(qualityIsSet(hive.matka1))
                           qualityIsBad(hive.matka1)
@@ -516,23 +516,23 @@ class HivesItem extends StatelessWidget {
                             : Icon(Icons.thumb_up_outlined, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),),
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))  
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))  
                         if (jednaMatka) if(hive.matka1 != '' && hive.matka1 != '0')
                           SizedBox(width: 5),
 //unasienniona?                    
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))  
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))  
                         if (jednaMatka) if(hive.matka3 == 'unasienniona') Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),)
                         else if(hive.matka3 == 'nieunasienniona') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),) 
-                        else if(hive.matka3 == 'trutowa') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),), 
-                        if (hive.korpusNr > 0 && (hive.kategoria != 'feeding' && hive.kategoria != 'treatment' ))  
+                        else if(hive.matka3 == 'trutowa') Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),), 
+                        if (hive.korpusNr > 0 && (hive.kategoria != 'feeding' && hive.kategoria != 'treatment' && hive.kategoria != 'colony' ))  
                         if (jednaMatka) if(hive.matka3 != '' && hive.matka3 != '0')
                           SizedBox(width: 5),
 //znak? numer?     
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))  
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))  
                         if(hive.matka2 != '' && hive.matka2 != '0') if(hive.matka2.substring(0, 4) == 'niez')
                           Icon(Icons.circle, size: 20.0, color: Color.fromARGB(255, 61, 61, 61),)
                         else if(hive.matka2 != '' && hive.matka2 != '0') if(hive.matka2.substring(0, 4) == 'brak')
@@ -551,7 +551,7 @@ class HivesItem extends StatelessWidget {
                           Icon(Icons.check_circle_rounded, size: 20.0, color: Color.fromARGB(255, 0, 102, 255),),
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))   
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))   
                         if (jednaMatka) if(hive.matka2 != '' && hive.matka2 != '0') if(hive.matka2.substring(4) != '')
                           Text(
                           '${hive.matka2.substring(4)}',
@@ -564,7 +564,7 @@ class HivesItem extends StatelessWidget {
 //rok urodzenia                   
                       if (hive.korpusNr > 0 &&
                           (hive.kategoria != 'feeding' &&
-                              hive.kategoria != 'treatment'))   
+                              hive.kategoria != 'treatment' && hive.kategoria != 'colony'))   
                         if (jednaMatka) if(hive.matka5 != '' && hive.matka5 != '0')
                           Text(
                           '  \'${hive.matka5.substring(2)}',
@@ -585,7 +585,7 @@ class HivesItem extends StatelessWidget {
               //'dead' (rodzina nie żyje) = czarna ikona bez zaciemnienia belki
               trailing: Icon(
                 Icons.hive,
-                color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny)),
+                color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny, matka3: hive.matka3)),
               ),
             )),
       ),

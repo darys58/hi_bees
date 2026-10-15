@@ -67,7 +67,10 @@ void main() {
       // 239 (15.10.2026, ZMIERZONE flutter test, zgodne z vosk_parser_ref.py):
       // 238 po commitach NFC (246c99e), aparat i zdjęcie (e5e58cc), notatka do przeglądu jako osobna intencja voiceNoteInspection (da0fd63) + "chora" w $colonyState.
       // Zero OOV: pliki/vosk_gramatyka_test.py.
-      expect(silnik.slowa().length, 239,
+      //
+      // 241 = 239 + "struty" i "wiała" (15.10.2026, alias "strutowiała" spoza
+      // słownika modelu; vosk_parser_ref.py, zero OOV).
+      expect(silnik.slowa().length, 241,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec słownika modelu');
       expect(silnik.slowa(), isNot(contains('zła')),
           reason: 'jakość matki "zła" zastąpiona przez "do wymiany"');
@@ -249,7 +252,10 @@ void main() {
       //
       // 3369 (15.10.2026, ZMIERZONE flutter test): NFC, aparat, notatki
       // (246c99e, e5e58cc, da0fd63) i "chora" w $colonyState.
-      expect(silnik.frazy().length, 3369);
+      // 3372 = 3369 + "struty wiała" (15.10.2026, vosk_parser_ref.py --frazy
+      // daje dla HEAD te same 3369 co flutter test).
+      // 3376 = 3372 + "matka jest struty wiała" (15.10.2026, ta sama referencja).
+      expect(silnik.frazy().length, 3376);
     });
   });
 
@@ -357,6 +363,8 @@ void main() {
       ['ustaw inny dzień dwadzieścia jeden', 'setDate'],
       ['rodzina zawiązała kłąb', 'setColony'],
       ['rodzina jest chora', 'setColony'],
+      ['rodzina jest struty wiała', 'setColony'],
+      ['matka jest struty wiała', 'setQueen'],
       ['zbiór miodu dwa razy mała ramka', 'setHarvest'],
       ['ustaw ramkę od dwa do dziewięć', 'setFrames'],
       ['ramka numer jeden po przeglądzie numer dziesięć', 'setChange'],

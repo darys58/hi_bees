@@ -180,7 +180,7 @@ class _HivesScreenState extends State<HivesScreen> {
               '0', //parametr
               c.stan, //wartosc - stan rodziny
               c.sila, //miara - siła rodziny
-              '0', '0', '0', '0', '0', //matka1..5
+              '0', '0', h.matka3, '0', '0', //matka1..5 - matka3 zostaje: matka trutowa barwi ikonę ula
               h.h1, h.h2, h.h3,
               0, //aktual
             );
@@ -699,7 +699,7 @@ class _HivesScreenState extends State<HivesScreen> {
               miara,
               '0', //matka1,
               '0', //matka2,
-              '0', //matka3,
+              hive[0].matka3, //matka3 zostaje - matka trutowa barwi ikonę ula (ikonki matki ukryte)
               '0', //matka4,
               '0', //matka5,
               rodzajUla, // h1
@@ -796,7 +796,7 @@ class _HivesScreenState extends State<HivesScreen> {
               miara,
               '0', //matka1,
               '0', //matka2,
-              '0', //matka3,
+              hive[0].matka3, //matka3 zostaje - matka trutowa barwi ikonę ula (ikonki matki ukryte)
               '0', //matka4,
               '0', //matka5,
               rodzajUla, // h1
@@ -1011,7 +1011,7 @@ class _HivesScreenState extends State<HivesScreen> {
                   //globals.ikonaPasieki = 'orange';
                 }
                 if (matka2 == 'brak') matka2 = ''; //usuwanie informacji o unasiennieniu
-              } else if (wszystkieJezyki((l) => l.droneLaying).contains(wpisMatka3.wartosc)) {
+              } else if (czyMatkaTrutowa(wpisMatka3.wartosc)) { //także dawne "trutówka"
                 matka3 = 'trutowa';
                 if (ikona == 'red') { //bo był brak matki
                   ikona = 'orange';
@@ -1828,7 +1828,7 @@ class _HivesScreenState extends State<HivesScreen> {
     
     //ustawienie ikony dla pasieki na podstawie ikon ulowych
     //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
-    globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny)));
+    globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3)));
     
     //aktualizacja ikony pasieki
     DBHelper.updateIkonaPasieki(int.parse(numerPasieki.toString()), globals.ikonaPasieki ); 

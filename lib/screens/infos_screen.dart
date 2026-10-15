@@ -183,7 +183,7 @@ class _InfoScreenState extends State<InfoScreen> {
         c.icon3 = Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8),);
         wartoscM3 = loc.artificiallyInseminated1;
       } else if(wartoscWBiezacym(context, inf.wartosc) == loc.droneLaying){
-        c.icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9),);
+        c.icon3 = Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0),); //matka strutowiała - czerwone (15.10.2026)
         wartoscM3 = loc.droneLaying;
       }
       c.wartosc3 = 'ID' + inf.pogoda + ' ' + wartoscM3 +

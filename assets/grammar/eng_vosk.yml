@@ -405,6 +405,7 @@ context:
       - virgin
       - artificially inseminated
       - naturally mated
+      - drone laying
     queenStart:
       - in a cage
       - in the insulator
@@ -491,6 +492,8 @@ context:
     colonyState:
       - dead
       - sick
+      # "drone laying" -> kanoniczne droneBees ("drone bees") w _mapowanieSlotowEn, 15.10.2026
+      - drone laying
       - ok
       - okay
       - swarming mood

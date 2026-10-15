@@ -495,7 +495,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bornIn => 'born in';
 
   @override
-  String get isVirgine => 'is virgin/artificially inseminated/naturally mated';
+  String get isVirgine => 'is virgin/artificially inseminated/naturally mated/drone laying';
 
   @override
   String get isFreed => 'is freed/in a cage/in the insulator';
@@ -516,7 +516,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deadFlight =>
-      'aggressive/gentle/in a cluster/ok/swarming mood/sick/dead';
+      'aggressive/gentle/in a cluster/ok/swarming mood/drone laying/sick/dead';
 
   @override
   String get veryWeakStrong => 'very strong/strong/normal/weak/very weak';

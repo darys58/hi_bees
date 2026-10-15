@@ -497,7 +497,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get bornIn => 'Jahrgang';
 
   @override
-  String get isVirgine => 'ist unbegattet/künstlich/natürlich';
+  String get isVirgine => 'ist unbegattet/künstlich/natürlich/drohnenbrütig';
 
   @override
   String get isFreed => 'ist frei/eingesperrt/im Käfig';
@@ -518,7 +518,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deadFlight =>
-      'aggressiv/sanft/in der Traube/ok/in Schwarmstimmung/krank/tot';
+      'aggressiv/sanft/in der Traube/ok/in Schwarmstimmung/drohnenbrütig/krank/tot';
 
   @override
   String get veryWeakStrong => 'sehr stark/stark/normal/schwach/sehr schwach';

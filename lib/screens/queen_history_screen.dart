@@ -152,7 +152,7 @@ class _QueenHistoryScreenState extends State<QueenHistoryScreen> {
       if (u == loc.naturallyMated || u == loc.artificiallyInseminated) {
         return const Icon(Icons.egg, size: 20.0, color: Color.fromARGB(255, 15, 200, 8));
       }
-      if (u == loc.droneLaying) return const Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 219, 170, 9));
+      if (u == loc.droneLaying || czyMatkaTrutowa(info.wartosc)) return const Icon(Icons.egg_outlined, size: 20.0, color: Color.fromARGB(255, 255, 0, 0));
       return null;
     }
     if (p == loc.queenIs) { //ograniczenie: wolna / w klatce
