@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:heymaya/helpers/db_helper.dart';
 import '../helpers/eksport_kod.dart'; //etap 1b: kod konta w eksporcie
+import '../helpers/usuniete_helper.dart'; //synchronizacja usunięć z chmurą (16.10.2026)
 //import 'package:heymaya/models/purchase.dart';
 // import 'package:url_launcher/url_launcher.dart';
 // import '../all_translations.dart';
@@ -459,6 +460,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               // Faza 1: Pobranie wszystkich danych z lokalnej bazy
               await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
@@ -614,6 +616,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               // Faza 1: Pobranie danych do archiwizacji (arch=0)
               await Provider.of<Notes>(context, listen: false).fetchAndSetNotatkiToArch();
@@ -913,6 +916,9 @@ class _ImportScreenState extends State<ImportScreen> {
                 }
               }
 
+              // 0. Kolejka usunięć do chmury - zanim import przywróci usunięte wpisy (16.10.2026)
+              await UsunieteHelper.wyslij();
+
               // 1. Import notatek
               _updateProgress(loc.nOtes + '...');
               await Notes.fetchNotatkiFromSerwer(
@@ -973,6 +979,9 @@ class _ImportScreenState extends State<ImportScreen> {
                   },
               );
               _updateProgress('${loc.frames}: $ramkiCount');
+              // 8a. Usunięcia z chmury i z kolejki - przed odbudową uli z ramek
+              final usunieteChmury = await UsunieteHelper.pobierz(globals.prefiksTabel(globals.kod));
+              await UsunieteHelper.zastosuj(usunieteChmury);
               await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
 
               // 9. Odbudowa uli z ramek (SQL DISTINCT + batch)
@@ -996,6 +1005,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   },
               );
               _updateProgress('Info: $infoCount');
+              await UsunieteHelper.zastosuj(usunieteChmury); //11a. to samo dla info - przed aktualizacją uli z info
               await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
 
               // 12. Aktualizacja uli z info (SELECT filtrowany + batch, najnowszy wpis wygrywa)
@@ -1148,6 +1158,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       }
                     }
 
+                    // 0. Kolejka usunięć do chmury - zanim import przywróci usunięte wpisy (16.10.2026)
+                    await UsunieteHelper.wyslij();
+
                     // 1. Import notatek
                     _updateProgress(loc.nOtes + '...');
                     await Notes.fetchNotatkiFromSerwer(
@@ -1208,6 +1221,9 @@ class _ImportScreenState extends State<ImportScreen> {
                         },
                     );
                     _updateProgress('${loc.frames}: $ramkiCount');
+                    // 8a. Usunięcia z chmury i z kolejki - przed odbudową uli z ramek
+                    final usunieteChmury = await UsunieteHelper.pobierz(globals.prefiksTabel(globals.kod));
+                    await UsunieteHelper.zastosuj(usunieteChmury);
                     await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
 
                     // 9. Odbudowa uli z ramek (SQL DISTINCT + batch)
@@ -1231,6 +1247,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         },
                     );
                     _updateProgress('Info: $infoCount');
+                    await UsunieteHelper.zastosuj(usunieteChmury); //11a. to samo dla info - przed aktualizacją uli z info
                     await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
 
                     // 12. Aktualizacja uli z info (SELECT filtrowany + batch, najnowszy wpis wygrywa)
@@ -1361,6 +1378,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Notes>(context, listen: false).fetchAndSetNotatki();
               final notatki = Provider.of<Notes>(context, listen: false).items;
@@ -1431,6 +1449,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupy();
               final zakupy = Provider.of<Purchases>(context, listen: false).items;
@@ -1501,6 +1520,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedaz();
               final sprzedaz = Provider.of<Sales>(context, listen: false).items;
@@ -1571,6 +1591,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Queens>(context, listen: false).fetchAndSetQueens();
               final matki = Provider.of<Queens>(context, listen: false).items;
@@ -1641,6 +1662,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Harvests>(context, listen: false).fetchAndSetZbiory();
               final zbiory = Provider.of<Harvests>(context, listen: false).items;
@@ -1713,6 +1735,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
               final info = Provider.of<Infos>(context, listen: false).items.where((inf) {
@@ -1763,6 +1786,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Infos>(context, listen: false).fetchAndSetInfos();
               final info = Provider.of<Infos>(context, listen: false).items;
@@ -1839,6 +1863,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
               final ramki = Provider.of<Frames>(context, listen: false).items.where((ra) {
@@ -1889,6 +1914,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Frames>(context, listen: false).fetchAndSetFrames();
               final ramki = Provider.of<Frames>(context, listen: false).items;
@@ -3515,6 +3541,7 @@ class _ImportScreenState extends State<ImportScreen> {
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
+              await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               await Provider.of<Photos>(context, listen: false).fetchAndSetPhotos();
               final zdjecia = Provider.of<Photos>(context, listen: false).items;

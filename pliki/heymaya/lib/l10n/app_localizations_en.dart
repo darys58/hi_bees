@@ -1914,7 +1914,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queenDelete => 'Delete queen';
 
   @override
-  String get queenDeleteConfirm => 'Delete the queen permanently? If it was already sent to the cloud, it will come back after a data import.';
+  String get queenDeleteConfirm => 'Delete the queen permanently?';
 
   @override
   String get queenDeleteRefused => 'This queen cannot be deleted because it has a history of entries. Only a queen registered by mistake, with no entries other than connecting to a hive, can be deleted. Mark a queen with history as lost (loss date in editing).';

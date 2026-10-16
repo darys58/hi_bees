@@ -319,12 +319,17 @@ class StosCofania {
         //1. wiersze, których w migawce NIE MA, komenda dodała - kasujemy je
         final teraz = await txn.rawQuery('SELECT id FROM $tabela $where', argumenty);
         final byly = zapisane.map((w) => w['id']).toSet();
+        final dodane = <Object?>[];
         for (final w in teraz) {
           final id = w['id'];
           if (!byly.contains(id)) {
             await txn.rawDelete('DELETE FROM $tabela WHERE id = ?', [id]);
+            dodane.add(id);
           }
         }
+        //kolejka usunięć do chmury (tylko ramka i info - ule i pasieki nie idą do chmury);
+        //wiersze przywracane niżej z tym samym id kolejka pomija przy wysyłaniu
+        await DBHelper.zglosUsuniete(txn, tabela, dodane);
 
         //2. wiersze z migawki wracają dosłownie. UPSERT, a nie INSERT - bo
         //komenda mogła je nadpisać, nie dodać ("czerw 50" -> "czerw 70")

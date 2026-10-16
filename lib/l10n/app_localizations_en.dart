@@ -1915,8 +1915,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queenDelete => 'Delete queen';
 
   @override
-  String get queenDeleteConfirm =>
-      'Delete the queen permanently? If it was already sent to the cloud, it will come back after a data import.';
+  String get queenDeleteConfirm => 'Delete the queen permanently?';
 
   @override
   String get queenDeleteRefused =>

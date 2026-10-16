@@ -631,7 +631,7 @@
     "dIsconnectQueen": "Desassociar rainha",
     "dIsconnectQueenConfirm": "Tem a certeza de que quer desassociar a rainha da colmeia?",
     "queenDelete": "Eliminar rainha",
-    "queenDeleteConfirm": "Eliminar a rainha definitivamente? Se já foi enviada para a nuvem, voltará após uma importação de dados.",
+    "queenDeleteConfirm": "Eliminar a rainha definitivamente?",
     "queenDeleteRefused": "Esta rainha não pode ser eliminada porque tem histórico de registos. Só pode ser eliminada uma rainha registada por engano, sem registos além da ligação a uma colmeia. Marque uma rainha com histórico como perdida (data de perda na edição).",
     "hivesExistWarning": "Este apiário já tem colmeias com os números:",
     "hivesExistLiquidated": "eliminada",

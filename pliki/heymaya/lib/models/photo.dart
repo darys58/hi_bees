@@ -178,7 +178,8 @@ class Photos with ChangeNotifier {
   }
 
   //usunięcie zdjęcia z bazy lokalnej
-  static Future<void> deletePhoto(String id) async {
-    await DBHelper.deletePhoto(id);
+  //[zglos] = false - bez zgłoszenia usunięcia do chmury (patrz DBHelper.deletePhoto)
+  static Future<void> deletePhoto(String id, {bool zglos = true}) async {
+    await DBHelper.deletePhoto(id, zglos: zglos);
   }
 }

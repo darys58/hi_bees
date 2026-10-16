@@ -51,6 +51,7 @@ class DBHelper {
       await db.execute(
           'CREATE TABLE powiadomienia(id INTEGER PRIMARY KEY AUTOINCREMENT, infoId TEXT, pasiekaNr INTEGER, ulNr INTEGER, kategoria TEXT, parametr TEXT, dni INTEGER, godzina INTEGER, minuta INTEGER, dataInfo TEXT, dataNotif TEXT, aktywne INTEGER)');
       await db.execute(_createNagrania);
+      await db.execute(_createUsuniete);
 
       //    'CREATE TABLE podkategorie(id TEXT PRIMARY KEY, kolejnosc TEXT, kaId TEXT, nazwa TEXT)');
     }, onUpgrade: (db, oldVersion, newVersion) async {
@@ -80,10 +81,14 @@ class DBHelper {
           //stanowisko instalacji w bazie (etap 2, 07.10.2026) - do unikalnych id wpisów, patrz insertZNowymId
           await db.execute('ALTER TABLE memory ADD COLUMN stanowisko TEXT');
         }
+        if (oldVersion < 8) {
+          //kolejka usunięć do chmury (16.10.2026) - patrz _createUsuniete
+          await db.execute(_createUsuniete);
+        }
       } catch (e) {
         debugPrint('Błąd migracji bazy danych (v$oldVersion -> v$newVersion): $e');
       }
-    }, version: 7);
+    }, version: 8);
   }
 
   //Nagrania dyktowanych notatek. Zbudowane jak "zdjecia" (ten sam zestaw pól
@@ -98,6 +103,148 @@ class DBHelper {
       'CREATE TABLE IF NOT EXISTS nagrania(id TEXT PRIMARY KEY, data TEXT, czas TEXT, '
       'pasiekaNr INTEGER, ulNr INTEGER, zrodlo TEXT, powiazanieId TEXT, sciezka TEXT, '
       'sekundy INTEGER, bajty INTEGER, tekst TEXT, uwagi TEXT, arch INTEGER)';
+
+  //KOLEJKA USUNIĘĆ do chmury (16.10.2026, pliki/plan_synchronizacja_usuniec.md).
+  //Każde usunięcie wiersza z tabel wysyłanych do chmury (ramka, info, zbiory, sprzedaz, zakupy,
+  //notatki, matki, zdjecia) zapisuje tu jego id - bez względu na arch, bo arch = 0 znaczy
+  //"jest zmiana do wysłania", a nie "nigdy nie wysłany". Kolejka idzie do cbt_hi_usuniete.php
+  //PRZED wierszami w każdym eksporcie (UsunieteHelper.wyslij); serwer zapamiętuje tylko id,
+  //które naprawdę miał. Kolejka nie jest częścią eksportu "wierszy".
+  static const String _createUsuniete =
+      'CREATE TABLE IF NOT EXISTS usuniete(tabela TEXT, id TEXT, data TEXT, PRIMARY KEY(tabela, id))';
+
+  //tabele synchronizowane z chmurą - tylko z nich usunięcia trafiają do kolejki
+  static const List<String> tabeleChmury = [
+    'ramka', 'info', 'zbiory', 'sprzedaz', 'zakupy', 'notatki', 'matki', 'zdjecia'
+  ];
+
+  //zapis usuniętych id do kolejki - w tej samej bazie/transakcji co samo usunięcie
+  //(db albo txn), żeby nie zgubić zgłoszenia
+  static Future<void> zglosUsuniete(DatabaseExecutor db, String tabela, Iterable<Object?> idy) async {
+    if (!tabeleChmury.contains(tabela) || idy.isEmpty) return;
+    //błąd kolejki nie może zatrzymać samego usuwania (np. tabela nie powstała przy migracji)
+    try {
+      final teraz = DateTime.now().toString().substring(0, 19);
+      final batch = db.batch();
+      for (final id in idy) {
+        final tekst = '${id ?? ''}';
+        if (tekst.isEmpty) continue;
+        batch.insert('usuniete', {'tabela': tabela, 'id': tekst, 'data': teraz},
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      await batch.commit(noResult: true);
+    } catch (e) {
+      debugPrint('Kolejka usunięć - błąd zapisu: $e');
+    }
+  }
+
+  //id wierszy spełniających warunek - przed usunięciem wielu wierszy naraz
+  static Future<List<Object?>> _idyGdzie(DatabaseExecutor db, String tabela, String where, List<Object?> args) async {
+    final w = await db.query(tabela, columns: ['id'], where: where, whereArgs: args);
+    return w.map((e) => e['id']).toList();
+  }
+
+  //cała kolejka usunięć
+  static Future<List<Map<String, dynamic>>> getUsuniete() async {
+    final db = await DBHelper.database();
+    return db.query('usuniete', orderBy: 'data');
+  }
+
+  //zdjęcie z kolejki wpisów przyjętych przez serwer
+  static Future<void> usunZKolejki(List<Map<String, dynamic>> wpisy) async {
+    if (wpisy.isEmpty) return;
+    final db = await DBHelper.database();
+    final batch = db.batch();
+    for (final w in wpisy) {
+      batch.delete('usuniete', where: 'tabela = ? AND id = ?', whereArgs: [w['tabela'], '${w['id']}']);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  //Usunięcie lokalne wierszy wskazanych przez chmurę (import) albo przez własną kolejkę
+  //(gdy jej wysłanie się nie udało - żeby import nie przywrócił usuniętych).
+  //D2: wiersz z arch = 0 (niewysłana zmiana) zostaje; przy eksporcie wróci na serwer i zdejmie
+  //swoje id z listy usuniętych. Bez zgłaszania do kolejki - to nie są nowe usunięcia.
+  //Zwraca: pliki - ścieżki usuniętych zdjęć, których nie używa już żaden wiersz (do skasowania z dysku),
+  //ule - "pasieka.ul" uli, z których usunięto ramki albo info (patrz usunPusteUle).
+  static Future<({List<String> pliki, Set<String> ule})> usunWskazane(List<Map<String, String>> wpisy) async {
+    final List<String> pliki = [];
+    final Set<String> ule = {};
+    if (wpisy.isEmpty) return (pliki: pliki, ule: ule);
+    final db = await DBHelper.database();
+    await db.transaction((txn) async {
+      final Set<String> sciezki = {};
+      const warunek = 'id = ? AND (arch IS NULL OR arch != 0)';
+      for (final w in wpisy) {
+        final tabela = w['tabela'] ?? '';
+        final id = w['id'] ?? '';
+        if (!tabeleChmury.contains(tabela) || id.isEmpty) continue;
+        if (tabela == 'zdjecia') {
+          final z = await txn.query('zdjecia', columns: ['sciezka'], where: warunek, whereArgs: [id]);
+          for (final r in z) {
+            final s = '${r['sciezka'] ?? ''}';
+            if (s.isNotEmpty) sciezki.add(s);
+          }
+        } else if (tabela == 'ramka' || tabela == 'info') {
+          final u = await txn.query(tabela, columns: ['pasiekaNr', 'ulNr'], where: warunek, whereArgs: [id]);
+          for (final r in u) {
+            ule.add('${r['pasiekaNr']}.${r['ulNr']}');
+          }
+        }
+        await txn.delete(tabela, where: warunek, whereArgs: [id]);
+      }
+      //plik zdjęcia tylko wtedy, gdy żaden inny wiersz go nie wskazuje (przeniesiony ul: nowe id, ten sam plik)
+      for (final s in sciezki) {
+        final ile = await txn.rawQuery('SELECT COUNT(*) AS c FROM zdjecia WHERE sciezka = ?', [s]);
+        if (((ile.first['c'] as int?) ?? 0) == 0) pliki.add(s);
+      }
+    });
+    return (pliki: pliki, ule: ule);
+  }
+
+  //Po usunięciach z chmury: ul bez żadnej ramki i info znika (usunięty albo przeniesiony na innym
+  //telefonie), a pasieka bez uli - też (jak przy usuwaniu ula w apiarys_screen). Tylko wskazane ule -
+  //nowo dodany ul bez przeglądów na tym telefonie zostaje.
+  static Future<void> usunPusteUle(Set<String> ule) async {
+    if (ule.isEmpty) return;
+    final db = await DBHelper.database();
+    await db.transaction((txn) async {
+      final Set<int> pasieki = {};
+      for (final klucz in ule) {
+        final cz = klucz.split('.');
+        if (cz.length != 2) continue;
+        final p = int.tryParse(cz[0]);
+        final u = int.tryParse(cz[1]);
+        if (p == null || u == null) continue;
+        final r = await txn.rawQuery(
+            'SELECT (SELECT COUNT(*) FROM ramka WHERE pasiekaNr = ? AND ulNr = ?) + '
+            '(SELECT COUNT(*) FROM info WHERE pasiekaNr = ? AND ulNr = ?) AS c', [p, u, p, u]);
+        if (((r.first['c'] as int?) ?? 0) > 0) continue;
+        await txn.delete('ule', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [p, u]);
+        pasieki.add(p);
+      }
+      for (final p in pasieki) {
+        final r = await txn.rawQuery('SELECT COUNT(*) AS c FROM ule WHERE pasiekaNr = ?', [p]);
+        if (((r.first['c'] as int?) ?? 0) == 0) {
+          await txn.delete('pasieki', where: 'pasiekaNr = ?', whereArgs: [p]);
+        }
+      }
+    });
+  }
+
+  //id z listy, które istnieją lokalnie (wpis odtworzony z tym samym id) - tych nie wysyłamy jako usuniętych
+  static Future<Set<String>> istniejaceId(String tabela, List<String> idy) async {
+    final Set<String> wynik = {};
+    if (!tabeleChmury.contains(tabela) || idy.isEmpty) return wynik;
+    final db = await DBHelper.database();
+    for (int i = 0; i < idy.length; i += 500) {
+      final porcja = idy.sublist(i, i + 500 < idy.length ? i + 500 : idy.length);
+      final w = await db.query(tabela, columns: ['id'],
+          where: 'id IN (${_znakiZapytania(porcja.length)})', whereArgs: porcja);
+      wynik.addAll(w.map((e) => '${e['id']}'));
+    }
+    return wynik;
+  }
 
   static Future<void> deleteBase() async {
     final dbPath = await sql.getDatabasesPath();
@@ -1117,6 +1264,7 @@ class DBHelper {
     final db = await DBHelper.database();
     //print('DBhelper: delete info id = $id');
     await db.delete('info', where: 'id= ?', whereArgs: [id]);
+    await zglosUsuniete(db, 'info', [id]); //kolejka usunięć do chmury
   }
 
   //usuniecie rekordu z tabeli ule - dla info_item
@@ -1137,21 +1285,24 @@ class DBHelper {
   static Future<void> deleteFrame(String id) async {
     final db = await DBHelper.database();
   //  print('DBhelper: delete ramka id = $id');
-    db.delete('ramka', where: 'id= ?', whereArgs: [id]);
+    await db.delete('ramka', where: 'id= ?', whereArgs: [id]);
+    await zglosUsuniete(db, 'ramka', [id]); //kolejka usunięć do chmury
   }
 
   //usuniecie rekordu o podanym id z tabeli zbiory - dla harvest_edit_screen, harvest_item
   static Future<void> deleteZbiory(int id) async {
     final db = await DBHelper.database();
   //  print('DBhelper: delete zbiory id = $id');
-    db.delete('zbiory', where: 'id= ?', whereArgs: [id]);
+    await db.delete('zbiory', where: 'id= ?', whereArgs: [id]);
+    await zglosUsuniete(db, 'zbiory', [id]); //kolejka usunięć do chmury
   }
 
   //usuniecie rekordu o podanym id z tabeli notatki - dla notes_edit_screen, harvest_item
   static Future<void> deleteNotatki(int id) async {
     final db = await DBHelper.database();
   //  print('DBhelper: delete notatki id = $id');
-    db.delete('notatki', where: 'id= ?', whereArgs: [id]);
+    await db.delete('notatki', where: 'id= ?', whereArgs: [id]);
+    await zglosUsuniete(db, 'notatki', [id]); //kolejka usunięć do chmury
   }
 
    //usuniecie rekordu o podanym id z tabeli matki - dla queen_item (15.10.2026:
@@ -1159,29 +1310,33 @@ class DBHelper {
   static Future<void> deleteQueen(int id) async {
     final db = await DBHelper.database();
     await db.delete('matki', where: 'id= ?', whereArgs: [id]);
+    await zglosUsuniete(db, 'matki', [id]); //kolejka usunięć do chmury
   }
 
   //usuniecie rekordu o podanym id z tabeli sprzedaz - dla sale_edit_screen, sale_item
   static Future<void> deleteSprzedaz(int id) async {
     final db = await DBHelper.database();
   //  print('DBhelper: delete sprzedaz id = $id');
-    db.delete('sprzedaz', where: 'id= ?', whereArgs: [id]);
+    await db.delete('sprzedaz', where: 'id= ?', whereArgs: [id]);
+    await zglosUsuniete(db, 'sprzedaz', [id]); //kolejka usunięć do chmury
   }
 
   //usuniecie rekordu o podanym id z tabeli zakupy - dla sale_edit_screen, sale_item
   static Future<void> deleteZakupy(int id) async {
     final db = await DBHelper.database();
   //  print('DBhelper: delete zakupy id = $id');
-    db.delete('zakupy', where: 'id= ?', whereArgs: [id]);
+    await db.delete('zakupy', where: 'id= ?', whereArgs: [id]);
+    await zglosUsuniete(db, 'zakupy', [id]); //kolejka usunięć do chmury
   }
 
   //usuniecie rekordów z tabeli ramka dla danej daty, pasieki i ula - dla frame_detail_screen
   static Future<void> deleteInspection(String data, int pasieka, int ul) async {
     final db = await DBHelper.database();
   //  print('DBhelper: delete ramki dla: data = $data, pasieka = $pasieka, ul = $ul');
-    db.delete('ramka',
-        where: 'data=? and pasiekaNr=? and ulNr =?',
-        whereArgs: [data, pasieka, ul]);
+    const where = 'data=? and pasiekaNr=? and ulNr =?';
+    final idy = await _idyGdzie(db, 'ramka', where, [data, pasieka, ul]);
+    await db.delete('ramka', where: where, whereArgs: [data, pasieka, ul]);
+    await zglosUsuniete(db, 'ramka', idy); //kolejka usunięć do chmury
   }
 
   //pobieranie zdjęć dla danego ula i pasieki - dla infos_screen
@@ -1194,9 +1349,11 @@ class DBHelper {
   }
 
   //usuniecie zdjęcia z tabeli zdjecia - dla infos_screen
-  static Future<void> deletePhoto(String id) async {
+  //[zglos] = false - ciche sprzątanie wpisu bez pliku na tym telefonie (nie usuwa zdjęcia z chmury)
+  static Future<void> deletePhoto(String id, {bool zglos = true}) async {
     final db = await DBHelper.database();
-    db.delete('zdjecia', where: 'id= ?', whereArgs: [id]);
+    await db.delete('zdjecia', where: 'id= ?', whereArgs: [id]);
+    if (zglos) await zglosUsuniete(db, 'zdjecia', [id]); //kolejka usunięć do chmury
   }
 
   //=== NAGRANIA dyktowanych notatek (patrz RecordingHelper) ==================
@@ -1349,6 +1506,12 @@ class DBHelper {
         .map((p) => p['sciezka'] as String)
         .toList();
 
+    //1a. id usuwanych wierszy - do kolejki usunięć do chmury
+    const gdzieUl = 'pasiekaNr = ? AND ulNr = ?';
+    final Map<String, List<Object?>> usuwane = {
+      for (final t in ['ramka', 'info', 'notatki', 'zdjecia']) t: await _idyGdzie(db, t, gdzieUl, [pasieka, ul]),
+    };
+
     //2. usunięcie ramek
     await db.delete('ramka', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
     //3. usunięcie info
@@ -1364,6 +1527,10 @@ class DBHelper {
         where: 'pasieka = ? AND ul = ?', whereArgs: [pasieka, ul]);
     //8. usunięcie ula
     await db.delete('ule', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
+    //9. zgłoszenie usunięć do chmury
+    for (final e in usuwane.entries) {
+      await zglosUsuniete(db, e.key, e.value);
+    }
 
     return photoPaths;
   }
@@ -1418,6 +1585,7 @@ class DBHelper {
       newData['arch'] = 0;
       await db.delete('ramka', where: 'id = ?', whereArgs: [oldId]);
       await db.insert('ramka', newData, conflictAlgorithm: ConflictAlgorithm.replace);
+      if (newId != oldId) await zglosUsuniete(db, 'ramka', [oldId]); //stary id do usunięcia z chmury
     }
 
     //2. info - przebudowa ID
@@ -1436,6 +1604,7 @@ class DBHelper {
       newData['arch'] = 0;
       await db.delete('info', where: 'id = ?', whereArgs: [oldId]);
       await db.insert('info', newData, conflictAlgorithm: ConflictAlgorithm.replace);
+      if (newId != oldId) await zglosUsuniete(db, 'info', [oldId]); //stary id do usunięcia z chmury
     }
 
     //3. notatki - UPDATE (autoincrement ID)
@@ -1455,6 +1624,7 @@ class DBHelper {
       newData['arch'] = 0;
       await db.delete('zdjecia', where: 'id = ?', whereArgs: [oldId]);
       await db.insert('zdjecia', newData, conflictAlgorithm: ConflictAlgorithm.replace);
+      if (newId != oldId) await zglosUsuniete(db, 'zdjecia', [oldId]); //stary id do usunięcia z chmury
     }
 
     //5. powiadomienia - UPDATE + przebudowa infoId

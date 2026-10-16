@@ -20,6 +20,7 @@ import 'dart:typed_data';
 import 'dart:io';
 import '../helpers/db_helper.dart';
 import '../helpers/eksport_kod.dart'; //etap 1b: kod konta w eksporcie
+import '../helpers/usuniete_helper.dart'; //synchronizacja usunięć z chmurą (16.10.2026)
 import '../helpers/baza_zespolu.dart'; //odswiezPrawaBazy (etap 2 część B)
 import 'team_screen.dart'; //pasek bazy właściciela (etap 2)
 import '../helpers/notification_helper.dart';
@@ -416,6 +417,9 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                 //BACKUP BAZY LOKALNEJ
                 //czy jest wpis w bazie memory dla tego deviceId? kod potrzebny do nazwy tabeli backupu
                 if (mem.isNotEmpty && mem[0].kod != '') {
+                  //kolejka usunięć do chmury (16.10.2026) - po cichu; id odtworzone lokalnie pomija,
+                  //więc kolejność względem wysyłki wierszy niżej nie ma znaczenia
+                  UsunieteHelper.wyslij();
                   //BACKUP tabeli ramka - tylko wpisy z arch=0
                   Provider.of<Frames>(context, listen: false)
                       .fetchAndSetFramesToArch()

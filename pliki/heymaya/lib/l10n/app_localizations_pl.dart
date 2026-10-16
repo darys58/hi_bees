@@ -1920,7 +1920,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get queenDelete => 'Usuń matkę';
 
   @override
-  String get queenDeleteConfirm => 'Usunąć matkę na stałe? Jeśli była już wysłana do chmury, wróci po imporcie danych.';
+  String get queenDeleteConfirm => 'Usunąć matkę na stałe?';
 
   @override
   String get queenDeleteRefused => 'Tej matki nie można usunąć, bo ma historię wpisów. Usunąć można tylko matkę zarejestrowaną przez pomyłkę, bez wpisów poza podłączeniem do ula. Matkę z historią oznacz jako utraconą (data straty w edycji).';

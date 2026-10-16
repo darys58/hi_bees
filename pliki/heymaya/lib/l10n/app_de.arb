@@ -631,7 +631,7 @@
     "dIsconnectQueen": "Königin trennen",
     "dIsconnectQueenConfirm": "Königin wirklich vom Volk trennen?",
     "queenDelete": "Königin löschen",
-    "queenDeleteConfirm": "Königin endgültig löschen? Wurde sie bereits in die Cloud gesendet, kehrt sie nach einem Datenimport zurück.",
+    "queenDeleteConfirm": "Königin endgültig löschen?",
     "queenDeleteRefused": "Diese Königin kann nicht gelöscht werden, da sie Einträge hat. Löschen lässt sich nur eine versehentlich erfasste Königin ohne Einträge außer dem Zuordnen zu einem Volk. Eine Königin mit Einträgen als verloren markieren (Verlustdatum in der Bearbeitung).",
     "hivesExistWarning": "In diesem Bienenstand gibt es bereits Beuten mit den Nummern:",
     "hivesExistLiquidated": "aufgelöst",

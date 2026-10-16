@@ -1919,8 +1919,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get queenDelete => 'Usuń matkę';
 
   @override
-  String get queenDeleteConfirm =>
-      'Usunąć matkę na stałe? Jeśli była już wysłana do chmury, wróci po imporcie danych.';
+  String get queenDeleteConfirm => 'Usunąć matkę na stałe?';
 
   @override
   String get queenDeleteRefused =>

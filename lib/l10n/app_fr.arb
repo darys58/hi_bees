@@ -631,7 +631,7 @@
     "dIsconnectQueen": "Détacher la reine",
     "dIsconnectQueenConfirm": "Voulez-vous vraiment détacher la reine de la ruche ?",
     "queenDelete": "Supprimer la reine",
-    "queenDeleteConfirm": "Supprimer définitivement la reine ? Si elle a déjà été envoyée dans le cloud, elle reviendra après une importation des données.",
+    "queenDeleteConfirm": "Supprimer définitivement la reine ?",
     "queenDeleteRefused": "Cette reine ne peut pas être supprimée car elle a un historique d'entrées. Seule une reine enregistrée par erreur, sans entrées autres que son rattachement à une ruche, peut être supprimée. Marquez une reine avec historique comme perdue (date de perte dans la modification).",
     "hivesExistWarning": "Ce rucher a déjà des ruches portant les numéros :",
     "hivesExistLiquidated": "supprimée",

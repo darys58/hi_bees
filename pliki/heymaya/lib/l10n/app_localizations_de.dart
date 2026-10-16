@@ -1923,7 +1923,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get queenDelete => 'Königin löschen';
 
   @override
-  String get queenDeleteConfirm => 'Königin endgültig löschen? Wurde sie bereits in die Cloud gesendet, kehrt sie nach einem Datenimport zurück.';
+  String get queenDeleteConfirm => 'Königin endgültig löschen?';
 
   @override
   String get queenDeleteRefused => 'Diese Königin kann nicht gelöscht werden, da sie Einträge hat. Löschen lässt sich nur eine versehentlich erfasste Königin ohne Einträge außer dem Zuordnen zu einem Volk. Eine Königin mit Einträgen als verloren markieren (Verlustdatum in der Bearbeitung).';

@@ -453,7 +453,8 @@ class _InfoScreenState extends State<InfoScreen> {
         existingPhotos.add(photo);
       } else {
         //usunięcie z bazy wpisów zdjęć których pliki nie istnieją
-        await Photos.deletePhoto(photo.id);
+        //bez zgłoszenia do chmury - brak pliku na TYM telefonie nie znaczy, że zdjęcie usunięto
+        await Photos.deletePhoto(photo.id, zglos: false);
       }
     }
     if (!mounted) return;

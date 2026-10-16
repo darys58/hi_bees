@@ -631,7 +631,7 @@
     "dIsconnectQueen": "Odłącz matkę",
     "dIsconnectQueenConfirm": "Czy na pewno odłączyć matkę od ula?",
     "queenDelete": "Usuń matkę",
-    "queenDeleteConfirm": "Usunąć matkę na stałe? Jeśli była już wysłana do chmury, wróci po imporcie danych.",
+    "queenDeleteConfirm": "Usunąć matkę na stałe?",
     "queenDeleteRefused": "Tej matki nie można usunąć, bo ma historię wpisów. Usunąć można tylko matkę zarejestrowaną przez pomyłkę, bez wpisów poza podłączeniem do ula. Matkę z historią oznacz jako utraconą (data straty w edycji).",
     "hivesExistWarning": "W tej pasiece są już ule o numerach:",
     "hivesExistLiquidated": "zlikwidowany",

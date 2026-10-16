@@ -1922,8 +1922,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get queenDelete => 'Königin löschen';
 
   @override
-  String get queenDeleteConfirm =>
-      'Königin endgültig löschen? Wurde sie bereits in die Cloud gesendet, kehrt sie nach einem Datenimport zurück.';
+  String get queenDeleteConfirm => 'Königin endgültig löschen?';
 
   @override
   String get queenDeleteRefused =>

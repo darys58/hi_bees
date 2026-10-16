@@ -3843,7 +3843,7 @@ abstract class AppLocalizations {
   /// No description provided for @queenDeleteConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete the queen permanently? If it was already sent to the cloud, it will come back after a data import.'**
+  /// **'Delete the queen permanently?'**
   String get queenDeleteConfirm;
 
   /// No description provided for @queenDeleteRefused.

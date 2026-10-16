@@ -631,7 +631,7 @@
     "dIsconnectQueen": "Desconectar reina",
     "dIsconnectQueenConfirm": "¿Seguro que quieres desconectar la reina de la colmena?",
     "queenDelete": "Eliminar reina",
-    "queenDeleteConfirm": "¿Eliminar la reina definitivamente? Si ya se envió a la nube, volverá tras importar los datos.",
+    "queenDeleteConfirm": "¿Eliminar la reina definitivamente?",
     "queenDeleteRefused": "Esta reina no se puede eliminar porque tiene historial de entradas. Solo se puede eliminar una reina registrada por error, sin entradas aparte de su conexión a una colmena. Marca una reina con historial como perdida (fecha de pérdida en la edición).",
     "hivesExistWarning": "Este colmenar ya tiene colmenas con los números:",
     "hivesExistLiquidated": "eliminada",
