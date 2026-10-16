@@ -361,32 +361,35 @@ class DBHelper {
     db.update('ramka', {'arch': 1}, where: 'id = ?', whereArgs: [id]);
   }
 
+  //Zmiany "w miejscu" (to samo id) ustawiają arch = 0 - inaczej nie trafiłyby do chmury
+  //(eksport "wyślij nowe" bierze tylko arch = 0), 16.10.2026.
+
   //update tabeli ramki - przeniesienie ramki do innego korpusa - dla voice_screen
   static Future<void> moveRamkaToBody(String id, int ul, int korpus, int ramka) async {
     final db = await DBHelper.database();
     //print('db_helpers: przenieś ramka - id=$id, ulNr=$ul, korpusNr=$korpus, ramkaNr = $ramka');
-    db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 2, 'ramkaNr': 0, 'ramkaNrPo': ramka}, where: 'id = ?', whereArgs: [id]);
+    db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 2, 'ramkaNr': 0, 'ramkaNrPo': ramka, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
   }
 
   //update tabeli ramki - przeniesienie ramki do innego półkorpusa - dla voice_screen
   static Future<void> moveRamkaToHalfBody(String id, int ul, int korpus, int ramka) async {
     final db = await DBHelper.database();
     //print('db_helpers: przenieś ramka - id=$id, ulNr=$ul, korpusNr=$korpus, ramkaNr = $ramka');
-    db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 1, 'ramkaNr': 0, 'ramkaNrPo': ramka}, where: 'id = ?', whereArgs: [id]);
+    db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 1, 'ramkaNr': 0, 'ramkaNrPo': ramka, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
   }
   
   //update tabeli ramki - ustawienie "ramkaNrPo" - dla frame_edit_screen i voice_screen
   static Future<void> updateRamkaNrPo(String id, int ramkaNrPo) async {
     final db = await DBHelper.database();
     //print('db_helpers: update ramkaNrPo - id=$id, ramkaNrPo = $ramkaNrPo');
-    db.update('ramka', {'ramkaNrPo': ramkaNrPo}, where: 'id = ?', whereArgs: [id]);
+    db.update('ramka', {'ramkaNrPo': ramkaNrPo, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
   }
 
    //update tabeli ramki - ustawienie "ramkaNr" - dla frame_edit_screen? i voice_screen
   static Future<void> updateRamkaNr(String id, int ramkaNr) async {
     final db = await DBHelper.database();
     //print('db_helpers: update ramkaNr - id=$id, ramkaNr = $ramkaNr');
-    db.update('ramka', {'ramkaNr': ramkaNr}, where: 'id = ?', whereArgs: [id]);
+    db.update('ramka', {'ramkaNr': ramkaNr, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
   }
 
   //update tabeli info - rekord zarchiwizowany - dla import_screen
@@ -441,7 +444,7 @@ class DBHelper {
   static Future<void> updateInfoWartosc(String id,  String wart) async {
     final db = await DBHelper.database();
   //  print('db_helpers: update info - id=$id');
-    db.update('info', {'wartosc': wart}, where: 'id = ?', whereArgs: [id]);
+    db.update('info', {'wartosc': wart, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
   }
 
   //uwagi z rekordu info - dla dyktowanej notatki (voice_vosk_screen)
@@ -1522,8 +1525,8 @@ class DBHelper {
     await db.delete('zdjecia', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
     //6. usunięcie powiadomień
     await db.delete('powiadomienia', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
-    //7. zerowanie matek (nie usuwamy, przenosimy do "wolnych")
-    await db.update('matki', {'pasieka': 0, 'ul': 0},
+    //7. zerowanie matek (nie usuwamy, przenosimy do "wolnych") - arch = 0, żeby zmiana poszła do chmury
+    await db.update('matki', {'pasieka': 0, 'ul': 0, 'arch': 0},
         where: 'pasieka = ? AND ul = ?', whereArgs: [pasieka, ul]);
     //8. usunięcie ula
     await db.delete('ule', where: 'pasiekaNr = ? AND ulNr = ?', whereArgs: [pasieka, ul]);
