@@ -583,6 +583,139 @@ class _ImportScreenState extends State<ImportScreen> {
     );
   }
 
+  //NOWE wpisy (arch=0) do wysłania - wspólne dla "wyślij nowe" i eksportu przed importem
+  Future<_NoweWpisy> _pobierzNowe(BuildContext context) async {
+    await Provider.of<Notes>(context, listen: false).fetchAndSetNotatkiToArch();
+    final notatki = Provider.of<Notes>(context, listen: false).items;
+
+    await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupyToArch();
+    final zakupy = Provider.of<Purchases>(context, listen: false).items;
+
+    await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedazToArch();
+    final sprzedaz = Provider.of<Sales>(context, listen: false).items;
+
+    await Provider.of<Queens>(context, listen: false).fetchAndSetQueensToArch();
+    final matki = Provider.of<Queens>(context, listen: false).items;
+
+    await Provider.of<Harvests>(context, listen: false).fetchAndSetZbioryToArch();
+    final zbiory = Provider.of<Harvests>(context, listen: false).items;
+
+    await Provider.of<Infos>(context, listen: false).fetchAndSetInfosToArch();
+    final info = Provider.of<Infos>(context, listen: false).items;
+
+    await Provider.of<Photos>(context, listen: false).fetchAndSetPhotosToArch();
+    final zdjecia = Provider.of<Photos>(context, listen: false).items;
+
+    await Provider.of<Frames>(context, listen: false).fetchAndSetFramesToArch();
+    final ramki = Provider.of<Frames>(context, listen: false).items;
+
+    return _NoweWpisy(notatki, zakupy, sprzedaz, matki, zbiory, info, zdjecia, ramki);
+  }
+
+  //wysłanie nowych wpisów i oznaczenie arch=1 części przyjętych przez serwer; zwraca liczbę przyjętych
+  //[postep] - etykieta kroku (w "wyślij nowe" także krok paska postępu)
+  Future<int> _wyslijNowe(BuildContext context, _NoweWpisy n, String prefix, List<String> komunikaty,
+      void Function(String) postep) async {
+    final Set<String> przyjete = {}; //części do oznaczenia jako wysłane
+    int wyslane = 0;
+    final notatki = n.notatki, zakupy = n.zakupy, sprzedaz = n.sprzedaz, matki = n.matki;
+    final zbiory = n.zbiory, info = n.info, zdjecia = n.zdjecia, ramki = n.ramki;
+    final infoBatches = n.infoPaczki, frameBatches = n.ramkiPaczki;
+
+    // 1. Notatki
+    postep(AppLocalizations.of(context)!.nOtes + '...');
+    if (notatki.isNotEmpty &&
+        await _wyslijBatch(_buildNotatkiJson(notatki, '${prefix}_notatki'), komunikaty)) {
+      przyjete.add(czNotatki);
+      wyslane += notatki.length;
+    }
+
+    // 2. Zakupy
+    postep(AppLocalizations.of(context)!.pUrchase + '...');
+    if (zakupy.isNotEmpty &&
+        await _wyslijBatch(_buildZakupyJson(zakupy, '${prefix}_zakupy'), komunikaty)) {
+      przyjete.add(czZakupy);
+      wyslane += zakupy.length;
+    }
+
+    // 3. Sprzedaż
+    postep(AppLocalizations.of(context)!.sAle + '...');
+    if (sprzedaz.isNotEmpty &&
+        await _wyslijBatch(_buildSprzedazJson(sprzedaz, '${prefix}_sprzedaz'), komunikaty)) {
+      przyjete.add(czSprzedaz);
+      wyslane += sprzedaz.length;
+    }
+
+    // 4. Matki
+    postep(AppLocalizations.of(context)!.queens + '...');
+    if (matki.isNotEmpty &&
+        await _wyslijBatch(_buildMatkiJson(matki, '${prefix}_matki'), komunikaty)) {
+      przyjete.add(czMatki);
+      wyslane += matki.length;
+    }
+
+    // 5. Zbiory
+    postep(AppLocalizations.of(context)!.harvest + '...');
+    if (zbiory.isNotEmpty &&
+        await _wyslijBatch(_buildZbioryJson(zbiory, '${prefix}_zbiory'), komunikaty)) {
+      przyjete.add(czZbiory);
+      wyslane += zbiory.length;
+    }
+
+    // 6. Info w paczkach po _batchSize
+    bool infoOk = true;
+    for (int b = 0; b < infoBatches; b++) {
+      int start = b * _batchSize;
+      int end = min(start + _batchSize, info.length);
+      postep('Info ${b + 1}/$infoBatches...');
+      if (!await _wyslijBatch(_buildInfoJson(info.sublist(start, end), '${prefix}_info'), komunikaty)) infoOk = false;
+    }
+    if (info.isNotEmpty && infoOk) {
+      przyjete.add(czInfo);
+      wyslane += info.length;
+    }
+
+    // 7. Zdjęcia po jednym
+    for (int i = 0; i < zdjecia.length; i++) {
+      postep('${AppLocalizations.of(context)!.pHotos} ${i + 1}/${zdjecia.length}...');
+      if (await _wyslijJednoZdjecieAwait(zdjecia[i], prefix, komunikaty)) wyslane++;
+    }
+
+    // 8. Ramki w paczkach po _batchSize
+    bool ramkiOk = true;
+    for (int b = 0; b < frameBatches; b++) {
+      int start = b * _batchSize;
+      int end = min(start + _batchSize, ramki.length);
+      postep('${AppLocalizations.of(context)!.frames} ${b + 1}/$frameBatches...');
+      if (!await _wyslijBatch(_buildRamkiJson(ramki.sublist(start, end), '${prefix}_ramka'), komunikaty)) ramkiOk = false;
+    }
+    if (ramki.isNotEmpty && ramkiOk) {
+      przyjete.add(czRamka);
+      wyslane += ramki.length;
+    }
+
+    // Faza 4: Oznaczenie arch=1
+    await _markArchAll(przyjete); //etap 2 część B: tylko części przyjęte przez serwer
+    await wyslijUstawieniaBazy(); //lokalizacje pasiek i typy uli (tylko własna baza)
+
+    return wyslane;
+  }
+
+  //Eksport przed importem (16.10.2026): kolejka usunięć i NOWE wpisy (arch=0) idą do chmury, zanim
+  //import nadpisze je kopią z serwera (ConflictAlgorithm.replace). Po cichu, w oknie postępu importu;
+  //części odrzucone przez prawa zespołu zostają niewysłane jak dotąd.
+  Future<void> _eksportPrzedImportem(BuildContext context) async {
+    await UsunieteHelper.wyslij();
+    final mem = Provider.of<Memory>(context, listen: false).items;
+    if (mem.isEmpty || mem[0].kod == '') return;
+    await odswiezPrawaBazy();
+    if (!context.mounted) return;
+    final nowe = await _pobierzNowe(context);
+    if (nowe.ile == 0 || !context.mounted) return;
+    await _wyslijNowe(context, nowe, globals.prefiksTabel(mem[0].kod), [],
+        (etykieta) => _progressLabelNotifier.value = etykieta);
+  }
+
   //eksport NOWYCH danych (arch=0) - wersja 3 - sekwencyjna z paczkami
   void _showAlertExportNewV3(BuildContext context, String nazwa, String text) {
     showDialog(
@@ -610,129 +743,22 @@ class _ImportScreenState extends State<ImportScreen> {
               //etap 2 część B: prawa sprzed eksportu (właściciel mógł je zmienić)
               await odswiezPrawaBazy();
               if (!context.mounted) return;
-              final Set<String> przyjete = {}; //części do oznaczenia jako wysłane
               final List<String> komunikaty = []; //odrzucone przez serwer - do podsumowania
-              int wyslane = 0;
               final memData = Provider.of<Memory>(context, listen: false);
               final mem = memData.items;
               final prefix = globals.prefiksTabel(mem[0].kod);
               await UsunieteHelper.wyslij(); //kolejka usunięć do chmury - PRZED wierszami (16.10.2026)
 
               // Faza 1: Pobranie danych do archiwizacji (arch=0)
-              await Provider.of<Notes>(context, listen: false).fetchAndSetNotatkiToArch();
-              final notatki = Provider.of<Notes>(context, listen: false).items;
-
-              await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupyToArch();
-              final zakupy = Provider.of<Purchases>(context, listen: false).items;
-
-              await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedazToArch();
-              final sprzedaz = Provider.of<Sales>(context, listen: false).items;
-
-              await Provider.of<Queens>(context, listen: false).fetchAndSetQueensToArch();
-              final matki = Provider.of<Queens>(context, listen: false).items;
-
-              await Provider.of<Harvests>(context, listen: false).fetchAndSetZbioryToArch();
-              final zbiory = Provider.of<Harvests>(context, listen: false).items;
-
-              await Provider.of<Infos>(context, listen: false).fetchAndSetInfosToArch();
-              final info = Provider.of<Infos>(context, listen: false).items;
-
-              await Provider.of<Photos>(context, listen: false).fetchAndSetPhotosToArch();
-              final zdjecia = Provider.of<Photos>(context, listen: false).items;
-
-              await Provider.of<Frames>(context, listen: false).fetchAndSetFramesToArch();
-              final ramki = Provider.of<Frames>(context, listen: false).items;
-
-              iloscDoWyslania = notatki.length + zakupy.length + sprzedaz.length +
-                  matki.length + zbiory.length + info.length +
-                  zdjecia.length + ramki.length;
+              final nowe = await _pobierzNowe(context);
+              iloscDoWyslania = nowe.ile;
 
               // Faza 2: Obliczenie kroków dynamicznie
-              int infoBatches = info.isEmpty ? 0 : (info.length / _batchSize).ceil();
-              int frameBatches = ramki.isEmpty ? 0 : (ramki.length / _batchSize).ceil();
-              int totalSteps = 5 + infoBatches + zdjecia.length + frameBatches;
-              if (totalSteps < 1) totalSteps = 1;
-
-              showProgressDialog(context, AppLocalizations.of(context)!.eXportData, totalSteps);
+              showProgressDialog(context, AppLocalizations.of(context)!.eXportData, nowe.kroki);
               await Future.delayed(const Duration(milliseconds: 500));
 
-              // Faza 3: Wysyłanie sekwencyjne z progress barem
-
-              // 1. Notatki
-              _updateProgress(AppLocalizations.of(context)!.nOtes + '...');
-              if (notatki.isNotEmpty &&
-                  await _wyslijBatch(_buildNotatkiJson(notatki, '${prefix}_notatki'), komunikaty)) {
-                przyjete.add(czNotatki);
-                wyslane += notatki.length;
-              }
-
-              // 2. Zakupy
-              _updateProgress(AppLocalizations.of(context)!.pUrchase + '...');
-              if (zakupy.isNotEmpty &&
-                  await _wyslijBatch(_buildZakupyJson(zakupy, '${prefix}_zakupy'), komunikaty)) {
-                przyjete.add(czZakupy);
-                wyslane += zakupy.length;
-              }
-
-              // 3. Sprzedaż
-              _updateProgress(AppLocalizations.of(context)!.sAle + '...');
-              if (sprzedaz.isNotEmpty &&
-                  await _wyslijBatch(_buildSprzedazJson(sprzedaz, '${prefix}_sprzedaz'), komunikaty)) {
-                przyjete.add(czSprzedaz);
-                wyslane += sprzedaz.length;
-              }
-
-              // 4. Matki
-              _updateProgress(AppLocalizations.of(context)!.queens + '...');
-              if (matki.isNotEmpty &&
-                  await _wyslijBatch(_buildMatkiJson(matki, '${prefix}_matki'), komunikaty)) {
-                przyjete.add(czMatki);
-                wyslane += matki.length;
-              }
-
-              // 5. Zbiory
-              _updateProgress(AppLocalizations.of(context)!.harvest + '...');
-              if (zbiory.isNotEmpty &&
-                  await _wyslijBatch(_buildZbioryJson(zbiory, '${prefix}_zbiory'), komunikaty)) {
-                przyjete.add(czZbiory);
-                wyslane += zbiory.length;
-              }
-
-              // 6. Info w paczkach po _batchSize
-              bool infoOk = true;
-              for (int b = 0; b < infoBatches; b++) {
-                int start = b * _batchSize;
-                int end = min(start + _batchSize, info.length);
-                _updateProgress('Info ${b + 1}/$infoBatches...');
-                if (!await _wyslijBatch(_buildInfoJson(info.sublist(start, end), '${prefix}_info'), komunikaty)) infoOk = false;
-              }
-              if (info.isNotEmpty && infoOk) {
-                przyjete.add(czInfo);
-                wyslane += info.length;
-              }
-
-              // 7. Zdjęcia po jednym
-              for (int i = 0; i < zdjecia.length; i++) {
-                _updateProgress('${AppLocalizations.of(context)!.pHotos} ${i + 1}/${zdjecia.length}...');
-                if (await _wyslijJednoZdjecieAwait(zdjecia[i], prefix, komunikaty)) wyslane++;
-              }
-
-              // 8. Ramki w paczkach po _batchSize
-              bool ramkiOk = true;
-              for (int b = 0; b < frameBatches; b++) {
-                int start = b * _batchSize;
-                int end = min(start + _batchSize, ramki.length);
-                _updateProgress('${AppLocalizations.of(context)!.frames} ${b + 1}/$frameBatches...');
-                if (!await _wyslijBatch(_buildRamkiJson(ramki.sublist(start, end), '${prefix}_ramka'), komunikaty)) ramkiOk = false;
-              }
-              if (ramki.isNotEmpty && ramkiOk) {
-                przyjete.add(czRamka);
-                wyslane += ramki.length;
-              }
-
-              // Faza 4: Oznaczenie arch=1
-              await _markArchAll(przyjete); //etap 2 część B: tylko części przyjęte przez serwer
-              await wyslijUstawieniaBazy(); //lokalizacje pasiek i typy uli (tylko własna baza)
+              // Faza 3 i 4: Wysyłanie sekwencyjne z progress barem, oznaczenie arch=1
+              final wyslane = await _wyslijNowe(context, nowe, prefix, komunikaty, _updateProgress);
 
               // Faza 5: Podsumowanie - liczba PRZYJĘTYCH + komunikaty o odrzuconych
               if (iloscDoWyslania > 0)
@@ -916,8 +942,9 @@ class _ImportScreenState extends State<ImportScreen> {
                 }
               }
 
-              // 0. Kolejka usunięć do chmury - zanim import przywróci usunięte wpisy (16.10.2026)
-              await UsunieteHelper.wyslij();
+              // 0. Kolejka usunięć i NOWE wpisy do chmury - zanim import przywróci usunięte i nadpisze niewysłane (16.10.2026)
+              _progressLabelNotifier.value = '${loc.eXportData}...';
+              await _eksportPrzedImportem(context);
 
               // 1. Import notatek
               _updateProgress(loc.nOtes + '...');
@@ -1158,8 +1185,9 @@ class _ImportScreenState extends State<ImportScreen> {
                       }
                     }
 
-                    // 0. Kolejka usunięć do chmury - zanim import przywróci usunięte wpisy (16.10.2026)
-                    await UsunieteHelper.wyslij();
+                    // 0. Kolejka usunięć i NOWE wpisy do chmury - zanim import przywróci usunięte i nadpisze niewysłane (16.10.2026)
+                    _progressLabelNotifier.value = '${loc.eXportData}...';
+                    await _eksportPrzedImportem(context);
 
                     // 1. Import notatek
                     _updateProgress(loc.nOtes + '...');
@@ -4010,3 +4038,16 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 }
 
+//nowe wpisy (arch=0) z lokalnej bazy - patrz _pobierzNowe
+class _NoweWpisy {
+  final List notatki, zakupy, sprzedaz, matki, zbiory, info, zdjecia, ramki;
+  _NoweWpisy(this.notatki, this.zakupy, this.sprzedaz, this.matki, this.zbiory, this.info,
+      this.zdjecia, this.ramki);
+
+  int get ile => notatki.length + zakupy.length + sprzedaz.length + matki.length + zbiory.length +
+      info.length + zdjecia.length + ramki.length;
+  int get infoPaczki => info.isEmpty ? 0 : (info.length / _ImportScreenState._batchSize).ceil();
+  int get ramkiPaczki => ramki.isEmpty ? 0 : (ramki.length / _ImportScreenState._batchSize).ceil();
+  //kroki paska postępu w "wyślij nowe": 5 części + paczki info + zdjęcia + paczki ramek
+  int get kroki => 5 + infoPaczki + zdjecia.length + ramkiPaczki;
+}
