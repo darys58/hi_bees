@@ -5,6 +5,7 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import '../helpers/db_helper.dart';
 import '../helpers/qr_helper.dart';
+import '../helpers/sound_helper.dart';
 import '../models/memory.dart';
 
 /// Odczytany kod QR -> wiersz ula z tabeli "ule" (Map) albo komunikat (String).
@@ -55,6 +56,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
     final String? tresc = odczyt.barcodes.isEmpty ? null : odczyt.barcodes.first.rawValue;
     if (tresc == null || tresc.isEmpty) return;
     _sprawdzam = true;
+    SoundHelper().skan(); //dźwięk odczytu kodu (16.10.2026)
     final wynik = await sprawdzKodQrUla(context, tresc);
     if (!mounted) return;
     if (wynik is Map<String, dynamic>) {

@@ -449,6 +449,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
     _sprawdzamQr = true;
+    await _dzwiekSkanuQr(); //dźwięk odczytu kodu (16.10.2026)
+    if (!mounted) return;
     final wynik = await sprawdzKodQrUla(context, tresc);
     if (!mounted) return;
     if (wynik is Map<String, dynamic>) {
@@ -464,6 +466,19 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _powiedzOZapisie(wynik as String);
     await Future.delayed(const Duration(seconds: 2)); //chwila na komunikat
     _sprawdzamQr = false;
+  }
+
+  //Dźwięk odczytu kodu - jak _beepPotwierdzenia: mikrofon wyciszony na czas tonu,
+  //żeby nie przeciekł do Voska.
+  Future<void> _dzwiekSkanuQr() async {
+    final VoskEngine? e = _engine;
+    e?.wyciszNaOdzywke();
+    try {
+      await _sound.skan();
+      await Future.delayed(const Duration(milliseconds: 250));
+    } finally {
+      e?.wznowPoOdzywce();
+    }
   }
 
   Widget _buildSkanerQr(BuildContext context) {

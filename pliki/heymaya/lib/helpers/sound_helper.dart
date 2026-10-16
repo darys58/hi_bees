@@ -273,6 +273,23 @@ class SoundHelper {
     }
   }
 
+  /// Odczyt kodu QR ula (16.10.2026) - krótki dźwięk systemowy inny niż
+  /// potwierdzenie komendy: iOS 1057 („tink", `AppDelegate.swift`), Android
+  /// TONE_PROP_ACK (`MainActivity.kt`). Build bez metody `skan` (albo kanał
+  /// odmówił) - zwykły sygnał [beep], więc odczyt nigdy nie jest bezgłośny.
+  Future<void> skan() async {
+    if (_kanalSygnaluIstnieje) {
+      try {
+        final Object? odpowiedz = await _kanalSygnalu.invokeMethod<Object>('skan');
+        if (odpowiedz == true || (odpowiedz is String && odpowiedz.startsWith('ok'))) return;
+      } catch (e) {
+        //MissingPluginException tu NIE wyłącza kanału - może brakować tylko metody `skan`
+        debugPrint('SoundHelper: dźwięk skanu nie zagrał - $e');
+      }
+    }
+    await beep();
+  }
+
   Future<void> beep() async {
     // Opis budujemy w ZMIENNEJ LOKALNEJ, a do [ostatniSygnal] wkładamy dopiero
     // gotowy. Doklejanie do pola dawałoby napis rosnący z każdą komendą, gdy

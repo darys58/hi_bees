@@ -21,6 +21,9 @@ import AudioToolbox
   //identyfikator systemowego dźwięku (patrz wyżej - dawne iOSSoundIDs.JBL_NoMatch)
   private let idDzwiekuPotwierdzenia: SystemSoundID = 1116
 
+  //odczyt kodu QR ula (16.10.2026) - krótkie systemowe „tink", inne niż potwierdzenie komendy
+  private let idDzwiekuSkanu: SystemSoundID = 1057
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -37,7 +40,7 @@ import AudioToolbox
         name: kanalSygnalu,
         binaryMessenger: controller.binaryMessenger)
       kanal.setMethodCallHandler { [weak self] call, result in
-        guard call.method == "beep" else {
+        guard call.method == "beep" || call.method == "skan" else {
           result(FlutterMethodNotImplemented)
           return
         }
@@ -47,7 +50,9 @@ import AudioToolbox
         //ustawienia głosu mogą pokazać, czym właściwie zagrał sygnał.
         //`AudioServicesPlaySystemSound` nie zwraca statusu - jeśli nic nie
         //słychać, dźwięk został wyciszony przez system, nie przez nas.
-        let identyfikator = self?.idDzwiekuPotwierdzenia ?? 1116
+        let identyfikator = call.method == "skan"
+          ? (self?.idDzwiekuSkanu ?? 1057)
+          : (self?.idDzwiekuPotwierdzenia ?? 1116)
         AudioServicesPlaySystemSound(identyfikator)
         result("ok: dźwięk systemowy iOS \(identyfikator)")
       }

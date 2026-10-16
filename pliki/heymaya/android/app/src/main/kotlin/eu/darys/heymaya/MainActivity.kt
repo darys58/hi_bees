@@ -77,6 +77,10 @@ class MainActivity : FlutterActivity() {
   private val nazwaTonu = "TONE_PROP_PROMPT"
   private val czasTonuMs = 150
 
+  //ODCZYT KODU QR ULA (16.10.2026) - ton inny niż potwierdzenie komendy, żeby przy
+  //skanowaniu w sterowaniu głosem dało się odróżnić „kod odczytany" od „ul otwarty"
+  private val tonSkanu = ToneGenerator.TONE_PROP_ACK
+
   //Kolejność prób. STREAM_MUSIC jest pierwszy, bo tam stoi suwak, którego
   //pszczelarz w terenie faktycznie używa (tym samym reguluje odzywki Mai).
   //Dalsze dwa to ścieżki, które system trzyma dla dźwięków własnych - bywają
@@ -113,6 +117,7 @@ class MainActivity : FlutterActivity() {
       .setMethodCallHandler { call, result ->
         when (call.method) {
           "beep" -> result.success(zagrajSygnal())
+          "skan" -> result.success(zagrajSygnal(tonSkanu, "TONE_PROP_ACK"))
           "migawka" -> result.success(zagrajMigawke())
           else -> result.notImplemented()
         }
@@ -126,14 +131,14 @@ class MainActivity : FlutterActivity() {
    * od „ok" znaczy „zagrałem, nie sięgaj po plik". Cokolwiek innego to powód
    * porażki, który Dart pokaże w ustawieniach głosu i zagra plik zapasowy.
    */
-  private fun zagrajSygnal(): String {
+  private fun zagrajSygnal(ton: Int = tonPotwierdzenia, nazwa: String = nazwaTonu): String {
     val powody = mutableListOf<String>()
     for (strumien in strumienieDoProby) {
       //w opisie NAZWA TONU, nie tylko strumień: przy przymiarkach kolejnych
       //stałych to jedyny sposób, żeby z telefonu potwierdzić, że build jest
       //świeży i gra naprawdę ten ton, który był ustawiany
-      val powod = sprobujTon(strumien)
-        ?: return "ok: ton $nazwaTonu na ${nazwaStrumienia(strumien)}"
+      val powod = sprobujTon(strumien, ton)
+        ?: return "ok: ton $nazwa na ${nazwaStrumienia(strumien)}"
       powody += powod
     }
     val powodEfektu = sprobujEfektSystemowy()
@@ -148,7 +153,7 @@ class MainActivity : FlutterActivity() {
   }
 
   /** `null` = zagrało; tekst = dlaczego nie zagrało na tym strumieniu. */
-  private fun sprobujTon(strumien: Int): String? {
+  private fun sprobujTon(strumien: Int, ton: Int): String? {
     return try {
       //jawne `if` z `!!` zamiast lokalnej zmiennej nullowalnej - nie zostawiamy
       //kompilatorowi zgadywania, czy po przypisaniu w gałęzi da się zrobić
@@ -166,7 +171,7 @@ class MainActivity : FlutterActivity() {
       //stopTone przed startem: przy szybkiej serii komend poprzedni ton mógłby
       //jeszcze brzmieć i kolejne wywołanie zostałoby po cichu zignorowane
       generator.stopTone()
-      if (generator.startTone(tonPotwierdzenia, czasTonuMs)) {
+      if (generator.startTone(ton, czasTonuMs)) {
         null
       } else {
         //generator żyje, ale odmówił zagrania - następna próba ma dostać
