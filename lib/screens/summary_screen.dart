@@ -18,6 +18,7 @@ import '../helpers/colony_helpers.dart'; //kolor ikony ula ze stanem rodziny
 import '../widgets/hives_item.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
+import '../helpers/db_helper.dart';
 
 class SummaryScreen extends StatefulWidget {
   static const routeName = '/screen-summary';
@@ -30,6 +31,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
   bool _isLoading = true;
   bool _isInit = true;
   String _inspectionNote = '';
+  Map<String, int> _zadaniaRamek = {}; //zadanie ramki (bieżący język) -> ile ramek, z ostatniego przeglądu każdego korpusu
   List<Queen> _queens = [];
   String _colonyForce = ''; //data ostatniego wpisu siły rodziny
   String _colonyState = ''; //data ostatniego wpisu stanu rodziny
@@ -223,6 +225,32 @@ class _SummaryScreenState extends State<SummaryScreen> {
           }
         }
 
+        // Zadania ramek ("Do zrobienia") - z ostatniego przeglądu każdego korpusu (jak belki)
+        final ramki = await DBHelper.getFramesOfHive(pasiekaNr, ulNr);
+        if (!mounted) return;
+        final ostatniaData = <int, String>{}; //korpusNr -> data ostatniego przeglądu
+        for (final r in ramki) {
+          final korpus = r['korpusNr'] as int;
+          final data = r['data'] as String;
+          if ((ostatniaData[korpus] ?? '').compareTo(data) < 0) ostatniaData[korpus] = data;
+        }
+        final zadania = <String, Set<String>>{}; //zadanie -> korpus.ramka (jedna ramka liczona raz, obie strony)
+        for (final r in ramki) {
+          final zadanie = r['wartosc'] as String;
+          if (r['zasob'] == 13 &&
+              r['data'] == ostatniaData[r['korpusNr']] &&
+              zadanie.isNotEmpty && zadanie != '0') {
+            zadania.putIfAbsent(zadanie, () => <String>{}).add('${r['korpusNr']}.${r['ramkaNr']}');
+          }
+        }
+        final kolejne = zadania.keys.toList()
+          ..sort((a, b) => kolejnoscZadaniaRamki(a).compareTo(kolejnoscZadaniaRamki(b)));
+        _zadaniaRamek = {};
+        for (final zadanie in kolejne) { //zadanie z innego języka - w bieżącym; ten sam napis z różnych języków sumowany
+          final nazwa = zadanieRamkiWBiezacym(context, zadanie);
+          _zadaniaRamek[nazwa] = (_zadaniaRamek[nazwa] ?? 0) + zadania[zadanie]!.length;
+        }
+
         // Photos for this hive
         if (!mounted) return;
         final photosProvider = Provider.of<Photos>(context, listen: false);
@@ -329,7 +357,15 @@ class _SummaryScreenState extends State<SummaryScreen> {
     final bool hasFrameReviewData = allKorpus.isNotEmpty ||
         hive.matka > 0 || hive.mateczniki > 0 || hive.usunmat > 0 ||
         (hive.todo.isNotEmpty && hive.todo != '0') ||
+        _zadaniaRamek.isNotEmpty ||
         _inspectionNote.isNotEmpty;
+
+    // "Do zrobienia": wszystkie zadania ramek z liczbą ramek; bez ramek - zadanie z belki
+    final String todoTekst = _zadaniaRamek.isNotEmpty
+        ? _zadaniaRamek.entries.map((e) => '${e.key} (${e.value})').join(', ')
+        : (hive.todo.isNotEmpty && hive.todo != '0')
+            ? zadanieRamkiWBiezacym(context, hive.todo)
+            : '';
 
     return Scaffold(
       appBar: AppBar(
@@ -523,7 +559,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                     ),
 
                   // Do zrobienia
-                  if (hive.todo.isNotEmpty && hive.todo != '0')
+                  if (todoTekst.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Row(
@@ -538,7 +574,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                           ),
                           Expanded(
                             child: Text(
-                              zadanieRamkiWBiezacym(context, hive.todo), //zadanie z innego języka - w bieżącym
+                              todoTekst, //zadania ramek w bieżącym języku z liczbą ramek
                               style: const TextStyle(fontSize: 14),
                             ),
                           ),

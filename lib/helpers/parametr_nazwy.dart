@@ -287,3 +287,8 @@ final List<String Function(AppLocalizations l)> _szablonyZadan = [
   (l) => l.movedRight,
 ];
 final Map<String, int> _indeksZadan = _indeksSzablonow(_szablonyZadan);
+
+/// Pozycja zadania ramki na liście (ramka pracy, trzeba wirować, trzeba usunąć...)
+/// niezależnie od języka zapisu - do sortowania w "Aktualnościach ula";
+/// nieznane na końcu.
+int kolejnoscZadaniaRamki(String zadanie) => _indeksZadan[zadanie] ?? 999;
