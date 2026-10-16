@@ -461,7 +461,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                         (inter) {
                           if (inter) {
                             // print('$inter - jest internet');
-                            wyslijBackupRamka(jsonData); //jsonData
+                            wyslijBackupRamka(jsonData, ramki.map((r) => r.id).toList()); //jsonData + id wysłanych
                           } else {
                             // print('braaaaaak internetu');
                             //   _showAlertOK(
@@ -514,7 +514,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                       _isInternet().then(
                         (inter) {
                           if (inter) {
-                            wyslijBackupInfo(jsonData); //jsonData
+                            wyslijBackupInfo(jsonData, info.map((r) => r.id).toList()); //jsonData + id wysłanych
                           } else {
                             //print('braaaaaak internetu');
                             //komunikat na dole ekranu
@@ -576,7 +576,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                       _isInternet().then(
                         (inter) {
                           if (inter) {
-                            wyslijBackupMatki(jsonData); //jsonData
+                            wyslijBackupMatki(jsonData, matki.map((r) => r.id).toList()); //jsonData + id wysłanych
                           } else {
                             //print('braaaaaak internetu');
                             //komunikat na dole ekranu
@@ -940,7 +940,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   }
 
   //wysyłanie backupu ramka
-  Future<void> wyslijBackupRamka(String jsonData1) async {
+  //[idy] - id wierszy w paczce: tylko one dostają arch = 1 (16.10.2026, patrz DBHelper.oznaczWyslane)
+  Future<void> wyslijBackupRamka(String jsonData1, List<Object?> idy) async {
     await odswiezPrawaJesliTrzeba(); //etap 2 część B: prawa sprzed eksportu
     //String jsonData1
     //print("z funkcji wysyłania");
@@ -959,19 +960,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
-        Provider.of<Frames>(context, listen: false)
-            .fetchAndSetFramesToArch()
-            .then((_) {
-          //dla tabeli RAMKI
-          final framesAllData = Provider.of<Frames>(context, listen: false);
-          final ramki = framesAllData.items;
-          //print('ilość potrzebnych wpisów arch = 1 w tabeli ramka');
-          //print(ramki.length);
-          int i = 0;
-          while (ramki.length > i) {
-            DBHelper.updateRamkaArch(ramki[i].id); //zapis arch = 1
-            i++;
-          }
+        DBHelper.oznaczWyslane('ramka', idy).then((_) { //zapis arch = 1 - tylko wysłanych
           //komunikat na dole ekranu
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -990,7 +979,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   }
 
   //wysyłanie backupu info
-  Future<void> wyslijBackupInfo(String jsonData1) async {
+  //[idy] - id wierszy w paczce: tylko one dostają arch = 1 (16.10.2026, patrz DBHelper.oznaczWyslane)
+  Future<void> wyslijBackupInfo(String jsonData1, List<Object?> idy) async {
     await odswiezPrawaJesliTrzeba(); //etap 2 część B: prawa sprzed eksportu
     //String jsonData1
     final http.Response response = await http.post(
@@ -1008,19 +998,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
-        Provider.of<Infos>(context, listen: false)
-            .fetchAndSetInfosToArch()
-            .then((_) {
-          //dla tabeli RAMKI
-          final infoArchData = Provider.of<Infos>(context, listen: false);
-          final info = infoArchData.items;
-          //print('ilość potrzebnych wpisów arch = 1 w tabeli info');
-          //print(info.length);
-          int i = 0;
-          while (info.length > i) {
-            DBHelper.updateInfoArch(info[i].id); //zapis arch = 1
-            i++;
-          }
+        DBHelper.oznaczWyslane('info', idy).then((_) { //zapis arch = 1 - tylko wysłanych
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.infoDataSend),
@@ -1038,7 +1016,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   }
 
   //wysyłanie backupu matki
-  Future<void> wyslijBackupMatki(String jsonData1) async {
+  //[idy] - id wierszy w paczce: tylko one dostają arch = 1 (16.10.2026, patrz DBHelper.oznaczWyslane)
+  Future<void> wyslijBackupMatki(String jsonData1, List<Object?> idy) async {
     await odswiezPrawaJesliTrzeba(); //etap 2 część B: prawa sprzed eksportu
     //String jsonData1
     final http.Response response = await http.post(
@@ -1056,19 +1035,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
         // _showAlertOK(context, AppLocalizations.of(context)!.success,
         //    AppLocalizations.of(context)!.willBeActiveUntil + odpPost['be_do']);
         //zapis do bazy lokalnej
-        Provider.of<Queens>(context, listen: false)
-            .fetchAndSetQueensToArch()
-            .then((_) {
-          //dla tabeli Matki
-          final matkiArchData = Provider.of<Queens>(context, listen: false);
-          final matki = matkiArchData.items;
-          //print('ilość potrzebnych wpisów arch = 1 w tabeli matki');
-          //print(matki.length);
-          int i = 0;
-          while (matki.length > i) {
-            DBHelper.updateMatkiArch(matki[i].id); //zapis arch = 1
-            i++;
-          }
+        DBHelper.oznaczWyslane('matki', idy).then((_) { //zapis arch = 1 - tylko wysłanych
 
 //Navigator.pop(context); //wyjscie z wskaźnika wysyłki
           ScaffoldMessenger.of(context).showSnackBar(

@@ -354,6 +354,19 @@ class DBHelper {
     return db.rawQuery('SELECT * FROM pasieki ORDER BY pasiekaNr ASC');
   }
 
+  //Oznaczenie jako wysłanych (arch = 1) TYLKO wierszy z wysłanej paczki (16.10.2026). Dotąd po wysłaniu
+  //czytano z bazy wszystkie arch = 0 od nowa, więc wpis dodany w trakcie wysyłania (auto-eksport w tle
+  //przy starcie + polecenie głosowe) dostawał arch = 1, choć nie poszedł do chmury.
+  static Future<void> oznaczWyslane(String tabela, Iterable<Object?> idy) async {
+    if (idy.isEmpty) return;
+    final db = await DBHelper.database();
+    final batch = db.batch();
+    for (final id in idy) {
+      batch.update(tabela, {'arch': 1}, where: 'id = ?', whereArgs: [id]);
+    }
+    await batch.commit(noResult: true);
+  }
+
   //update tabeli ramki - rekord zarchiwizowany - dla import_screen
   static Future<void> updateRamkaArch(String id) async {
     final db = await DBHelper.database();

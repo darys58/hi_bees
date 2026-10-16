@@ -384,51 +384,17 @@ class _ImportScreenState extends State<ImportScreen> {
     return jsonData;
   }
 
-  //oznaczanie arch=1 po eksporcie
+  //oznaczanie arch=1 po eksporcie - TYLKO wierszy z wysłanej paczki [n] (16.10.2026, patrz DBHelper.oznaczWyslane)
   //[czesci] - tylko te części (etap 2 część B: części odrzucone przez serwer zostają do wysłania); null = wszystkie
-  Future<void> _markArchAll([Set<String>? czesci]) async {
-    bool oznacz(String c) => czesci == null || czesci.contains(c);
-    //notatki
-    if (oznacz(czNotatki)) {
-      await Provider.of<Notes>(context, listen: false).fetchAndSetNotatkiToArch();
-      final notatkiArch = Provider.of<Notes>(context, listen: false).items;
-      for (var n in notatkiArch) { DBHelper.updateNotatkiArch(n.id); }
-    }
-    //zakupy
-    if (oznacz(czZakupy)) {
-      await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupyToArch();
-      final zakupyArch = Provider.of<Purchases>(context, listen: false).items;
-      for (var z in zakupyArch) { DBHelper.updateZakupyArch(z.id); }
-    }
-    //sprzedaz
-    if (oznacz(czSprzedaz)) {
-      await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedazToArch();
-      final sprzedazArch = Provider.of<Sales>(context, listen: false).items;
-      for (var s in sprzedazArch) { DBHelper.updateSprzedazArch(s.id); }
-    }
-    //matki
-    if (oznacz(czMatki)) {
-      await Provider.of<Queens>(context, listen: false).fetchAndSetQueensToArch();
-      final matkiArch = Provider.of<Queens>(context, listen: false).items;
-      for (var m in matkiArch) { DBHelper.updateMatkiArch(m.id); }
-    }
-    //zbiory
-    if (oznacz(czZbiory)) {
-      await Provider.of<Harvests>(context, listen: false).fetchAndSetZbioryToArch();
-      final zbioryArch = Provider.of<Harvests>(context, listen: false).items;
-      for (var z in zbioryArch) { DBHelper.updateZbioryArch(z.id); }
-    }
-    //info
-    if (oznacz(czInfo)) {
-      await Provider.of<Infos>(context, listen: false).fetchAndSetInfosToArch();
-      final infoArch = Provider.of<Infos>(context, listen: false).items;
-      for (var inf in infoArch) { DBHelper.updateInfoArch(inf.id); }
-    }
-    //ramki
-    if (oznacz(czRamka)) {
-      await Provider.of<Frames>(context, listen: false).fetchAndSetFramesToArch();
-      final ramkiArch = Provider.of<Frames>(context, listen: false).items;
-      for (var r in ramkiArch) { DBHelper.updateRamkaArch(r.id); }
+  Future<void> _markArchAll(_NoweWpisy n, [Set<String>? czesci]) async {
+    final Map<String, List> wyslane = {
+      czNotatki: n.notatki, czZakupy: n.zakupy, czSprzedaz: n.sprzedaz, czMatki: n.matki,
+      czZbiory: n.zbiory, czInfo: n.info, czRamka: n.ramki,
+    };
+    for (final e in wyslane.entries) {
+      if (czesci == null || czesci.contains(e.key)) {
+        await DBHelper.oznaczWyslane(e.key, e.value.map((w) => w.id));
+      }
     }
     //zdjecia - arch oznaczane per zdjęcie w _wyslijJednoZdjecieAwait
   }
@@ -555,7 +521,7 @@ class _ImportScreenState extends State<ImportScreen> {
               }
 
               // Faza 4: Oznaczenie arch=1
-              await _markArchAll();
+              await _markArchAll(_NoweWpisy(notatki, zakupy, sprzedaz, matki, zbiory, info, zdjecia, ramki));
 
               // Faza 5: Podsumowanie
               if (iloscDoWyslania > 0)
@@ -695,7 +661,7 @@ class _ImportScreenState extends State<ImportScreen> {
     }
 
     // Faza 4: Oznaczenie arch=1
-    await _markArchAll(przyjete); //etap 2 część B: tylko części przyjęte przez serwer
+    await _markArchAll(n, przyjete); //etap 2 część B: tylko części przyjęte przez serwer
     await wyslijUstawieniaBazy(); //lokalizacje pasiek i typy uli (tylko własna baza)
 
     return wyslane;
@@ -1423,9 +1389,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Notes>(context, listen: false).fetchAndSetNotatkiToArch();
-              final notatkiArch = Provider.of<Notes>(context, listen: false).items;
-              for (var n in notatkiArch) { DBHelper.updateNotatkiArch(n.id); }
+              await DBHelper.oznaczWyslane('notatki', notatki.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
@@ -1494,9 +1458,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Purchases>(context, listen: false).fetchAndSetZakupyToArch();
-              final zakupyArch = Provider.of<Purchases>(context, listen: false).items;
-              for (var z in zakupyArch) { DBHelper.updateZakupyArch(z.id); }
+              await DBHelper.oznaczWyslane('zakupy', zakupy.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
@@ -1565,9 +1527,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Sales>(context, listen: false).fetchAndSetSprzedazToArch();
-              final sprzedazArch = Provider.of<Sales>(context, listen: false).items;
-              for (var s in sprzedazArch) { DBHelper.updateSprzedazArch(s.id); }
+              await DBHelper.oznaczWyslane('sprzedaz', sprzedaz.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
@@ -1636,9 +1596,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Queens>(context, listen: false).fetchAndSetQueensToArch();
-              final matkiArch = Provider.of<Queens>(context, listen: false).items;
-              for (var m in matkiArch) { DBHelper.updateMatkiArch(m.id); }
+              await DBHelper.oznaczWyslane('matki', matki.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
@@ -1707,9 +1665,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Harvests>(context, listen: false).fetchAndSetZbioryToArch();
-              final zbioryArch = Provider.of<Harvests>(context, listen: false).items;
-              for (var z in zbioryArch) { DBHelper.updateZbioryArch(z.id); }
+              await DBHelper.oznaczWyslane('zbiory', zbiory.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
@@ -1787,9 +1743,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Infos>(context, listen: false).fetchAndSetInfosToArch();
-              final infoArch = Provider.of<Infos>(context, listen: false).items;
-              for (var inf in infoArch) { DBHelper.updateInfoArch(inf.id); }
+              await DBHelper.oznaczWyslane('info', info.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
@@ -1836,9 +1790,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Infos>(context, listen: false).fetchAndSetInfosToArch();
-              final infoArch = Provider.of<Infos>(context, listen: false).items;
-              for (var inf in infoArch) { DBHelper.updateInfoArch(inf.id); }
+              await DBHelper.oznaczWyslane('info', info.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
@@ -1915,9 +1867,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Frames>(context, listen: false).fetchAndSetFramesToArch();
-              final ramkiArch = Provider.of<Frames>(context, listen: false).items;
-              for (var r in ramkiArch) { DBHelper.updateRamkaArch(r.id); }
+              await DBHelper.oznaczWyslane('ramka', ramki.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
@@ -1964,9 +1914,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
               // arch=1
               _updateProgress('arch...');
-              await Provider.of<Frames>(context, listen: false).fetchAndSetFramesToArch();
-              final ramkiArch = Provider.of<Frames>(context, listen: false).items;
-              for (var r in ramkiArch) { DBHelper.updateRamkaArch(r.id); }
+              await DBHelper.oznaczWyslane('ramka', ramki.map((w) => w.id)); //tylko wysłane, nie wszystkie arch=0 (16.10.2026)
 
               if (iloscDoWyslania > 0)
                 _showAlertOK(context, AppLocalizations.of(context)!.alert,
