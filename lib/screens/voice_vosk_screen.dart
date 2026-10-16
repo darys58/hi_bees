@@ -725,6 +725,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   Timer? _inferenceTimer; //timer zastępujący Future.delayed - anulowalny przy nowej komendzie
   //flaga odroczonego dźwięku 'okej' - gra się dopiero po pętli slotów, jezeli 'zapisałam' (success) nie wyparł go
   bool _pendingOpenBeep = false;
+  //czy bieżąca komenda dała jakąkolwiek odpowiedź dźwiękiem (beep / zapisałam) - patrz koniec prettyPrintInference
+  bool _odpowiedzKomendy = false;
+  //komendy dla ula (korpus, ramki, zasoby, matka, rodzina, dokarmianie...) - bez ula i bez trybu
+  //zbiorczego nie mają gdzie się zapisać
+  static const Set<String> _intencjeUla = {
+    'setStore', 'setFrame', 'setChange', 'setMoveBody', 'setBody', 'setHalfBody', 'setQueen',
+    'setEquipment', 'setFeeding', 'setTreatment', 'setColony', 'setFrames',
+  };
   double heightScreen = 601;
   //WARIANT WIERSZY STREFY 1: true = pudełka niższe i węższe, cyfry mniejsze.
   //Liczony RAZ na budowę ekranu, w [LayoutBuilder] - patrz komentarz tam.
@@ -2865,6 +2873,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
   String prettyPrintInference(VoskInference inference) {
     _pendingOpenBeep = false; //reset przed każdą nową inferencją - zabezpieczenie przed stanem z poprzedniej komendy
+    _odpowiedzKomendy = false;
     _ujednolicWartosciSlotow(inference); //MUSI być przed switchem intencji
     if (siteOfFrame == '0') siteOfFrame = AppLocalizations.of(context)!.both;
     if (sizeOfFrame == '0') sizeOfFrame = AppLocalizations.of(context)!.big;
@@ -6706,6 +6715,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       } //od switch intent
     } //od if (inference.isUnderstood!)
 
+    //komenda dla ula bez otwartego ula (i bez trybu "wszystkie ule"), która nie dała żadnej odpowiedzi -
+    //np. "otwórz korpus 1" przy samej pasiece: gałęzie "else" w switchu tylko zapamiętywały numery
+    //po cichu. Teraz "nie tutaj" jak przy innych komendach, których nie da się wykonać (16.10.2026).
+    if (!_odpowiedzKomendy && inference.isUnderstood! && _intencjeUla.contains(inference.intent) &&
+        !readyHive && !readyAllHives) {
+      beep('error');
+    }
+
     //koniec przetwarzania inferencji - odtwórz odroczone 'okej' jezeli nic go nie wyparło
     //(zapisałam/zamknięte/błąd kasują odroczone 'okej', dzięki czemu nie słychać podwójnych dźwięków)
     _flushPendingOpenBeep();
@@ -8114,6 +8131,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //stan i służy jako ręczna awaryjna alternatywa, gdy w pasiece jest za głośno.
 
   beep(m) {
+    _odpowiedzKomendy = true; //komenda odpowiedziała (patrz koniec prettyPrintInference)
     switch (m) {
       case 'close':
         _pendingOpenBeep = false; //zamknięcie kasuje odroczone 'okej'
@@ -8139,6 +8157,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
   //potwierdź zapis i skasuj ewentualne odroczone potwierdzenie (to je wypiera)
   void _playSuccess() {
+    _odpowiedzKomendy = true;
     _pendingOpenBeep = false;
     //_zagraj('success'); //zmiana do testów bo jest za długie
     _beepPotwierdzenia(); //było _zagraj('open') = okej.mp3
