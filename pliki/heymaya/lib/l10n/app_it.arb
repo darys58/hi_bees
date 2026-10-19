@@ -1360,5 +1360,11 @@
     "accDeleteButton": "Elimina",
     "accDeleted": "L'account è stato eliminato.",
     "accDeleteError": "Impossibile eliminare l'account. Controlla la connessione a internet e riprova.",
-    "accDeleteNoToken": "Per eliminare l'account, l'app deve prima connettersi al server. Riavviala con l'accesso a internet e riprova."
+    "accDeleteNoToken": "Per eliminare l'account, l'app deve prima connettersi al server. Riavviala con l'accesso a internet e riprova.",
+    "newsletterTitle": "Novità via e-mail",
+    "newsletterSubtitle": "Nuove funzioni e offerte di Hey Maya, al massimo qualche volta all’anno. Puoi revocare il consenso in qualsiasi momento.",
+    "newsletterActivation": "Desidero ricevere via e-mail novità e offerte di Hey Maya (facoltativo – il consenso può essere revocato in qualsiasi momento nelle Impostazioni).",
+    "newsletterOn": "Consenso alle novità via e-mail salvato.",
+    "newsletterOff": "Consenso alle novità via e-mail revocato.",
+    "newsletterError": "Impossibile salvare la modifica. Controlla la connessione a Internet e riprova."
 }

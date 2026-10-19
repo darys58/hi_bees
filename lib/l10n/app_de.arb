@@ -1360,5 +1360,11 @@
     "accDeleteButton": "Löschen",
     "accDeleted": "Das Konto wurde gelöscht.",
     "accDeleteError": "Das Konto konnte nicht gelöscht werden. Prüfen Sie die Internetverbindung und versuchen Sie es erneut.",
-    "accDeleteNoToken": "Um das Konto zu löschen, muss sich die App zuerst mit dem Server verbinden. Starten Sie sie mit Internetzugang neu und versuchen Sie es erneut."
+    "accDeleteNoToken": "Um das Konto zu löschen, muss sich die App zuerst mit dem Server verbinden. Starten Sie sie mit Internetzugang neu und versuchen Sie es erneut.",
+    "newsletterTitle": "Neuigkeiten per E-Mail",
+    "newsletterSubtitle": "Neue Funktionen und Angebote von Hey Maya, höchstens einige Male im Jahr. Sie können Ihre Einwilligung jederzeit widerrufen.",
+    "newsletterActivation": "Ich möchte von Hey Maya Neuigkeiten und Angebote per E-Mail erhalten (freiwillig – die Einwilligung kann jederzeit in den Einstellungen widerrufen werden).",
+    "newsletterOn": "Einwilligung in Neuigkeiten per E-Mail gespeichert.",
+    "newsletterOff": "Einwilligung in Neuigkeiten per E-Mail widerrufen.",
+    "newsletterError": "Die Änderung konnte nicht gespeichert werden. Prüfen Sie die Internetverbindung und versuchen Sie es erneut."
 }

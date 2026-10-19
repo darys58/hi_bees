@@ -6473,6 +6473,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To delete the account, the app must first connect to the server. Restart it with internet access and try again.'**
   String get accDeleteNoToken;
+
+  /// No description provided for @newsletterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'News by e-mail'**
+  String get newsletterTitle;
+
+  /// No description provided for @newsletterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New features and offers from Hey Maya, a few times a year at most. You can withdraw your consent at any time.'**
+  String get newsletterSubtitle;
+
+  /// No description provided for @newsletterActivation.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to receive news and offers from Hey Maya by e-mail (optional – consent can be withdrawn at any time in Settings).'**
+  String get newsletterActivation;
+
+  /// No description provided for @newsletterOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Consent to news by e-mail saved.'**
+  String get newsletterOn;
+
+  /// No description provided for @newsletterOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Consent to news by e-mail withdrawn.'**
+  String get newsletterOff;
+
+  /// No description provided for @newsletterError.
+  ///
+  /// In en, this message translates to:
+  /// **'The change could not be saved. Check your internet connection and try again.'**
+  String get newsletterError;
 }
 
 class _AppLocalizationsDelegate

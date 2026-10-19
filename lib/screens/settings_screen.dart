@@ -16,6 +16,7 @@ import '../screens/apiarys_all_map_screen.dart';
 import '../screens/notification_settings_screen.dart';
 import '../screens/team_screen.dart'; //praca zespołowa (etap 2)
 import '../screens/voice_settings_screen.dart'; //ustawienia sterowania głosem
+import '../widgets/newsletter_tile.dart'; //zgoda na informacje o nowościach
 
 class SettingsScreen extends StatelessWidget {
   static const routeName = '/settings';
@@ -378,6 +379,8 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
+//zgoda na informacje o nowościach e-mailem (18.10.2026) - tylko z kontem na serwerze (token)
+            if (globals.token.isNotEmpty) const NewsletterTile(),
 //Subskrypcja aplikacji
             GestureDetector(
               onTap: () {

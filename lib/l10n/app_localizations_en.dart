@@ -3345,4 +3345,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accDeleteNoToken =>
       'To delete the account, the app must first connect to the server. Restart it with internet access and try again.';
+
+  @override
+  String get newsletterTitle => 'News by e-mail';
+
+  @override
+  String get newsletterSubtitle =>
+      'New features and offers from Hey Maya, a few times a year at most. You can withdraw your consent at any time.';
+
+  @override
+  String get newsletterActivation =>
+      'I want to receive news and offers from Hey Maya by e-mail (optional – consent can be withdrawn at any time in Settings).';
+
+  @override
+  String get newsletterOn => 'Consent to news by e-mail saved.';
+
+  @override
+  String get newsletterOff => 'Consent to news by e-mail withdrawn.';
+
+  @override
+  String get newsletterError =>
+      'The change could not be saved. Check your internet connection and try again.';
 }

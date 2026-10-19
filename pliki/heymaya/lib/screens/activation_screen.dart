@@ -12,6 +12,7 @@ import 'dart:convert'; //obsługa json'a
 import '../screens/apiarys_screen.dart';
 import '../models/memory.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/newsletter.dart'; //zgoda na informacje o nowościach
 
 class ActivationScreen extends StatefulWidget {
   static const routeName = '/activation';
@@ -22,6 +23,16 @@ class ActivationScreen extends StatefulWidget {
 
 class _ActivationScreenState extends State<ActivationScreen> {
   final _formKey3 = GlobalKey<FormState>();
+  bool _newsletter = false; //zgoda na informacje o nowościach - domyślnie NIEzaznaczona
+
+  @override
+  void initState() {
+    super.initState();
+    //zaznaczenie z wpisywania e-maila zostaje do wpisania kodu (ekran jest między nimi zamykany)
+    Newsletter.przyAktywacji().then((v) {
+      if (mounted) setState(() => _newsletter = v);
+    });
+  }
 
 // @override
   Future<void> wyslijKod(String kod) async {
@@ -57,6 +68,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
         //token urządzenia (etap 1b pkt 3); stary serwer go nie przyśle - wtedy zostaje dotychczasowy
         final String nowyToken = (odpPost['be_token'] ?? globals.token).toString();
         globals.token = nowyToken;
+        Newsletter.poAktywacji(); //zgoda zaznaczona przy aktywacji - na serwer (jest już token)
         if (globals.aktywnaBaza.isEmpty) { //w bazie właściciela stanowisko zostaje z listy zespołu
           globals.stanowisko = 0; //nowa aktywacja = stanowisko z serwera (albo nieznane), nie z poprzedniego konta
           globals.ustawStanowisko(odpPost['be_stanowisko']); //etap 2: unikalne id wpisów
@@ -97,8 +109,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
   }
 
   //sprawdzenie czy jest internet
-  Future<bool> _isInternet() async {
-       final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+  Future<bool> _isInternet() async { 
+    final List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult.contains(ConnectivityResult.mobile)) {
       // Mobile network available.
       return true;
@@ -235,6 +247,35 @@ class _ActivationScreenState extends State<ActivationScreen> {
                       globals.kod = value;
                       return null;
                     }),
+              ),
+            ),
+            //zgoda na informacje o nowościach (regulamin rozdz. 4 ust. 6) - dobrowolna, niezaznaczona
+            Container(
+              padding: const EdgeInsets.only(left: 8, right: 20, top: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Checkbox(
+                    value: _newsletter,
+                    onChanged: (v) {
+                      setState(() => _newsletter = v ?? false);
+                      Newsletter.ustawPrzyAktywacji(_newsletter);
+                    },
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _newsletter = !_newsletter);
+                        Newsletter.ustawPrzyAktywacji(_newsletter);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(AppLocalizations.of(context)!.newsletterActivation,
+                            style: TextStyle(fontSize: 13, color: Colors.grey[800])),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             //Przyciski
