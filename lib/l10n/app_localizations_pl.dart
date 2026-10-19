@@ -3353,11 +3353,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Aby usunąć konto, aplikacja musi najpierw połączyć się z serwerem. Uruchom ją ponownie z dostępem do internetu i spróbuj jeszcze raz.';
 
   @override
-  String get newsletterTitle => 'Informacje o nowościach e-mailem';
-
-  @override
-  String get newsletterSubtitle =>
-      'Nowe funkcje i oferty Hey Maya, najwyżej kilka razy w roku. Zgodę możesz wycofać w każdej chwili.';
+  String get newsletterTitle => 'Nowości i oferty e-mailem';
 
   @override
   String get newsletterActivation =>

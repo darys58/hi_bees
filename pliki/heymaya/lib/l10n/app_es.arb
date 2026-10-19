@@ -1362,7 +1362,6 @@
     "accDeleteError": "No se pudo eliminar la cuenta. Comprueba la conexión a internet e inténtalo de nuevo.",
     "accDeleteNoToken": "Para eliminar la cuenta, la aplicación debe conectarse primero al servidor. Reiníciala con acceso a internet e inténtalo de nuevo.",
     "newsletterTitle": "Novedades por correo electrónico",
-    "newsletterSubtitle": "Nuevas funciones y ofertas de Hey Maya, como mucho unas pocas veces al año. Puede retirar su consentimiento en cualquier momento.",
     "newsletterActivation": "Quiero recibir por correo electrónico novedades y ofertas de Hey Maya (opcional – el consentimiento se puede retirar en cualquier momento en Ajustes).",
     "newsletterOn": "Consentimiento a las novedades por correo guardado.",
     "newsletterOff": "Consentimiento a las novedades por correo retirado.",

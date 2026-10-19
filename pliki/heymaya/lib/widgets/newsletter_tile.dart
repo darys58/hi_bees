@@ -57,7 +57,6 @@ class _NewsletterTileState extends State<NewsletterTile> {
       child: SwitchListTile(
         secondary: Icon(Icons.mark_email_unread_outlined),
         title: Text(loc.newsletterTitle),
-        subtitle: Text(loc.newsletterSubtitle),
         value: _zgoda,
         onChanged: _zapisuje ? null : _zmien,
       ),

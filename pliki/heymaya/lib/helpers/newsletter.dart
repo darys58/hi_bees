@@ -15,8 +15,8 @@ class Newsletter {
   static const String _adres = 'https://darys.pl/cbt_hi_zgoda.php';
   static const String _kStan = 'hb_newsletter_zgoda';
   static const String _kPrzyAktywacji = 'hb_newsletter_przy_aktywacji';
-  //wersja treści zgody (napisy newsletterActivation / newsletterSubtitle) - zmienić przy zmianie treści
-  static const String wersjaTresci = '2026-10';
+  //wersja treści zgody (napisy newsletterActivation / newsletterTitle) - zmienić przy zmianie treści
+  static const String wersjaTresci = '2026-10b'; //2026-10b (19.10.2026): PL tytuł „Nowości i oferty e-mailem”, bez opisu pod tytułem
 
   static Future<Map<String, dynamic>?> _zapytaj(Map<String, dynamic> dane) async {
     if (globals.token.isEmpty) return null;

@@ -6481,12 +6481,6 @@ abstract class AppLocalizations {
   /// **'News by e-mail'**
   String get newsletterTitle;
 
-  /// No description provided for @newsletterSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'New features and offers from Hey Maya, a few times a year at most. You can withdraw your consent at any time.'**
-  String get newsletterSubtitle;
-
   /// No description provided for @newsletterActivation.
   ///
   /// In en, this message translates to:

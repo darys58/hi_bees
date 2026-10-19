@@ -3321,10 +3321,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Neuigkeiten per E-Mail';
 
   @override
-  String get newsletterSubtitle =>
-      'Neue Funktionen und Angebote von Hey Maya, höchstens einige Male im Jahr. Sie können Ihre Einwilligung jederzeit widerrufen.';
-
-  @override
   String get newsletterActivation =>
       'Ich möchte von Hey Maya Neuigkeiten und Angebote per E-Mail erhalten (freiwillig – die Einwilligung kann jederzeit in den Einstellungen widerrufen werden).';
 

@@ -3313,11 +3313,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get newsletterTitle =>
-      'Informacje o nowościach e-mailem';
-
-  @override
-  String get newsletterSubtitle =>
-      'Nowe funkcje i oferty Hey Maya, najwyżej kilka razy w roku. Zgodę możesz wycofać w każdej chwili.';
+      'Nowości i oferty e-mailem';
 
   @override
   String get newsletterActivation =>
