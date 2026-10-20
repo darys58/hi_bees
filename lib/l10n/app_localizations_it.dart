@@ -2749,6 +2749,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get hiveNews => 'Novità dell\'arnia';
 
   @override
+  String get hiveNewsSettingsInfo =>
+      'Novità dell\'arnia è un riepilogo delle informazioni più importanti su un\'arnia. Per aprirlo, scorri un\'arnia verso sinistra nell\'elenco delle arnie. Scegli con gli interruttori quali sezioni mostrare.';
+
+  @override
   String get photos => 'Foto';
 
   @override

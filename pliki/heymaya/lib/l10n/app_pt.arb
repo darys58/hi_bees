@@ -961,6 +961,8 @@
     "@withoutApiary": {},
     "hiveNews": "Novidades da colmeia",
     "@hiveNews": {},
+    "hiveNewsSettingsInfo": "Novidades da colmeia é um resumo das informações mais importantes sobre uma colmeia. Para o abrir, deslize uma colmeia para a esquerda na lista de colmeias. Escolha com os interruptores que secções são mostradas.",
+    "@hiveNewsSettingsInfo": {},
     "photos": "Fotos",
     "@photos": {},
     "legendWorkFrame": "quadro de trabalho",

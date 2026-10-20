@@ -2761,6 +2761,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get hiveNews => 'Novedades de la colmena';
 
   @override
+  String get hiveNewsSettingsInfo =>
+      'Novedades de la colmena es un resumen de la información más importante sobre una colmena. Para abrirlo, desliza una colmena hacia la izquierda en la lista de colmenas. Elige con los interruptores qué secciones se muestran.';
+
+  @override
   String get photos => 'Fotos';
 
   @override

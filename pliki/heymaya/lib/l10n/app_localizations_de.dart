@@ -2764,6 +2764,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get hiveNews => 'Beuten-Neuigkeiten';
 
   @override
+  String get hiveNewsSettingsInfo =>
+      'Beuten-Neuigkeiten sind eine Übersicht der wichtigsten Informationen über eine Beute. Zum Öffnen wischen Sie eine Beute in der Beutenliste nach links. Wählen Sie mit den Schaltern, welche Abschnitte dort angezeigt werden.';
+
+  @override
   String get photos => 'Fotos';
 
   @override

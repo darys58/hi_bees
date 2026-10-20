@@ -59,6 +59,30 @@ pracownik, który ma prawo do danej części.
 Prawa można w każdej chwili zmienić, dotykając pracownika na liście „Moi pracownicy”.
 Przycisk „Odwołaj dostęp” kończy współpracę – pracownik traci dostęp do bazy właściciela.
 
+### Ochrona wcześniejszych danych
+
+Prawo „odczyt i zapis” dotyczy **wszystkich** wpisów danej części w wybranych pasiekach –
+także tych, które właściciel wprowadził, zanim zaprosił pracownika. Taki pracownik może
+je poprawiać i usuwać. Chmura nie przechowuje poprzednich wersji wpisów, więc zmienionego
+albo usuniętego wpisu nie da się z niej przywrócić.
+
+Właściciel, który chce chronić wcześniejsze dane, a jednocześnie dać pracownikowi
+dostęp do nich, może postąpić tak:
+
+1. nadać pracownikowi prawo „odczyt i zapis”,
+2. poczekać, aż pracownik pobierze dane („Import danych z chmury”),
+3. odebrać pracownikowi prawo „odczyt” (zostawiając „zapis”).
+
+Pracownik zachowuje w telefonie pobrane dane i może je przeglądać, ale nie może ich już
+poprawiać ani usuwać – ani w aplikacji, ani w chmurze. Może dopisywać nowe wpisy, a własny
+nowy wpis może poprawić albo usunąć tylko do chwili jego wysłania do chmury. Nie pobierze
+już jednak nowych danych z bazy właściciela, dopóki właściciel nie przywróci mu prawa
+odczytu.
+
+Zmiana praw dociera do telefonu pracownika z niewielkim opóźnieniem. Gdyby w tym czasie
+zdążył on coś zmienić, chmura i tak odrzuci tę zmianę przy wysyłaniu – zostanie ona tylko
+w jego telefonie, a dane właściciela pozostaną nienaruszone.
+
 ## Praca w bazie właściciela
 
 Pracownik przełącza się między bazami w części „Baza, na której pracujesz”: „Moja baza”

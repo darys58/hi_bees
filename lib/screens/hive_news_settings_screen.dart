@@ -62,8 +62,19 @@ class _HiveNewsSettingsScreenState extends State<HiveNewsSettingsScreen> {
         ),
       ),
       body: ListView.builder(
-        itemCount: categories.length,
-        itemBuilder: (ctx, i) {
+        //pozycja 0 - tekst wyjaśniający nad przełącznikami
+        itemCount: categories.length + 1,
+        itemBuilder: (ctx, index) {
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                l.hiveNewsSettingsInfo,
+                style: TextStyle(fontSize: 15, color: Colors.grey[700]),
+              ),
+            );
+          }
+          final i = index - 1;
           return Card(
             child: ListTile(
               leading: Icon(categories[i]['icon'] as IconData),

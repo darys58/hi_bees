@@ -961,6 +961,8 @@
     "@withoutApiary": {},
     "hiveNews": "Actualités de la ruche",
     "@hiveNews": {},
+    "hiveNewsSettingsInfo": "Les actualités de la ruche résument les informations les plus importantes sur une ruche. Pour les ouvrir, faites glisser une ruche vers la gauche dans la liste des ruches. Choisissez avec les interrupteurs les sections à afficher.",
+    "@hiveNewsSettingsInfo": {},
     "photos": "Photos",
     "@photos": {},
     "legendWorkFrame": "cadre de travail",
