@@ -8,7 +8,7 @@ import 'parametr_nazwy.dart'; //wszystkieJezyki
 ///
 /// Ustalone z userem 15.10.2026:
 /// - dobra: łagodna, ok, w kłębie - zielony kciuk w górę
-/// - uwaga: agresywna, w nastroju do ucieczki - żółty znak ostrzeżenia
+/// - uwaga: agresywna, w nastroju do ucieczki - pomarańczowy znak ostrzeżenia (20.10.2026, było żółte)
 /// - zla: strutowiała, chora - czerwony kciuk w dół
 /// - martwa: nie żyje - czarny krzyżyk
 /// Ta sama ocena ma wyznaczać kolor ikony na belce ula (kolor najgorszy
@@ -47,7 +47,7 @@ Icon? ikonaStanuRodziny(String wartosc, {double size = 20.0}) {
     case OcenaRodziny.dobra:
       return Icon(Icons.thumb_up_outlined, size: size, color: const Color.fromARGB(255, 15, 200, 8));
     case OcenaRodziny.uwaga:
-      return Icon(Icons.warning_amber_rounded, size: size, color: const Color.fromARGB(255, 233, 229, 1));
+      return Icon(Icons.warning_amber_rounded, size: size, color: const Color.fromARGB(255, 233, 132, 1));
     case OcenaRodziny.zla:
       return Icon(Icons.thumb_down_outlined, size: size, color: const Color.fromARGB(255, 255, 1, 1));
     case OcenaRodziny.martwa:
@@ -158,6 +158,9 @@ Future<Map<String, CechyRodzinyUla>> cechyRodzinUli(Object? pasieka) async {
 //kolejność od najlepszego: kolor NAJGORSZY wygrywa (ustalenie 15.10.2026)
 const List<String> _kolejnoscIkon = ['green', 'yellow', 'orange', 'red', 'dead'];
 
+/// Gorszy z dwóch kolorów ikony (green < yellow < orange < red < dead).
+String gorszaIkona(String a, String b) => _gorsza(a, b);
+
 String _gorsza(String a, String b) {
   final ia = _kolejnoscIkon.indexOf(a), ib = _kolejnoscIkon.indexOf(b);
   if (ia < 0) return b;
@@ -165,23 +168,47 @@ String _gorsza(String a, String b) {
   return ia >= ib ? a : b;
 }
 
+//"można izolować" to podpowiedź, nie zadanie - nie barwi przeglądu ani belki (20.10.2026)
+final Set<String> _zadaniaBezKoloru = wszystkieJezyki((l) => l.toInsulate);
+
+/// Czy zadanie ramki ("do zrobienia", zasób 13 / `ule.todo`) barwi przegląd
+/// i belkę na żółto. Puste i '0' = brak zadania.
+bool zadanieDoZrobienia(String? todo) {
+  final t = (todo ?? '').trim();
+  return t.isNotEmpty && t != '0' && !_zadaniaBezKoloru.contains(t);
+}
+
+/// Mateczniki nieusunięte: więcej mateczników (zasób 11) niż usuniętych (zasób 12)
+/// - pomarańczowy przegląd i belka (20.10.2026).
+bool otwarteMateczniki(int mateczniki, int usuniete) => mateczniki > usuniete;
+
 /// Kolor ikony na belce ula: najgorszy z zapisanej `ule.ikona` (matka,
-/// "do zrobienia") i stanu rodziny. 'black' = ul zlikwidowany - zostaje bez
+/// "do zrobienia"), zasobów z belki i stanu rodziny. 'black' = ul zlikwidowany - zostaje bez
 /// zmian. 'dead' = rodzina nie żyje: czarna ikona, ale belka NIE jest
 /// zaciemniona i ul liczy się dalej do pasieki (zaciemnienie i odliczanie
 /// sprawdzają ikona == 'black').
 /// [matka3] = `ule.matka3`: 'trutowa' (matka strutowiała) daje czerwony - liczone
 /// tu, a nie zapisywane w `ule.ikona`, bo tam czerwony znaczy "brak matki"
 /// i każda kolejna cecha matki zamieniała go na pomarańczowy (15.10.2026).
-String ikonaNaBelce(String ikona, String stanRodziny, {String matka3 = ''}) {
+/// [todo], [mateczniki], [usunmat] = kolumny `ule` (belka). Żółty w `ule.ikona`
+/// pochodzi wyłącznie z "do zrobienia", więc liczony jest tu od nowa z [todo]
+/// (stare wpisy "można izolować" przestają barwić bez ponownego zapisu);
+/// nieusunięte mateczniki dają pomarańczowy (20.10.2026). [todo] null = bez zmian.
+String ikonaNaBelce(String ikona, String stanRodziny,
+    {String matka3 = '', String? todo, int mateczniki = 0, int usunmat = 0}) {
   if (ikona == 'black') return ikona;
   if (matka3 == 'trutowa') ikona = _gorsza(ikona, 'red');
+  if (todo != null) {
+    if (ikona == 'yellow') ikona = 'green';
+    if (zadanieDoZrobienia(todo)) ikona = _gorsza(ikona, 'yellow');
+  }
+  if (otwarteMateczniki(mateczniki, usunmat)) ikona = _gorsza(ikona, 'orange');
   switch (ocenaStanuRodziny(stanRodziny)) {
     case OcenaRodziny.brak:
     case OcenaRodziny.dobra:
       return ikona;
     case OcenaRodziny.uwaga:
-      return _gorsza(ikona, 'yellow');
+      return _gorsza(ikona, 'orange');
     case OcenaRodziny.zla:
       return _gorsza(ikona, 'red');
     case OcenaRodziny.martwa:

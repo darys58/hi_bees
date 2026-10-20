@@ -3,6 +3,8 @@ import 'package:sqflite/sqflite.dart' as sql;
 import 'package:path/path.dart';
 import 'package:sqflite/sqlite_api.dart';
 import '../globals.dart' as globals; //plikBazy() - własna baza albo baza właściciela (etap 2)
+import 'kolor_przegladu.dart'; //kolor przeglądu po zmianie ramek
+import '../models/apiarys.dart'; //przeładowanie kafelków pasiek po zmianie daty przeglądu
 
 //metody statyczne w klasie są po to, zeby nie tworzyć instancji tej klasy
 //ale pracować z tymi metodami jak z funkcjami. Klasa jest opakowaniem dla metod,
@@ -381,21 +383,24 @@ class DBHelper {
   static Future<void> moveRamkaToBody(String id, int ul, int korpus, int ramka) async {
     final db = await DBHelper.database();
     //print('db_helpers: przenieś ramka - id=$id, ulNr=$ul, korpusNr=$korpus, ramkaNr = $ramka');
-    db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 2, 'ramkaNr': 0, 'ramkaNrPo': ramka, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
+    await db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 2, 'ramkaNr': 0, 'ramkaNrPo': ramka, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
+    zaplanujKolorPrzegladuRamki(id, ulDocelowy: ul); //kolor przeglądu obu uli
   }
 
   //update tabeli ramki - przeniesienie ramki do innego półkorpusa - dla voice_screen
   static Future<void> moveRamkaToHalfBody(String id, int ul, int korpus, int ramka) async {
     final db = await DBHelper.database();
     //print('db_helpers: przenieś ramka - id=$id, ulNr=$ul, korpusNr=$korpus, ramkaNr = $ramka');
-    db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 1, 'ramkaNr': 0, 'ramkaNrPo': ramka, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
+    await db.update('ramka', {'ulNr': ul, 'korpusNr': korpus, 'typ': 1, 'ramkaNr': 0, 'ramkaNrPo': ramka, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
+    zaplanujKolorPrzegladuRamki(id, ulDocelowy: ul); //kolor przeglądu obu uli
   }
   
   //update tabeli ramki - ustawienie "ramkaNrPo" - dla frame_edit_screen i voice_screen
   static Future<void> updateRamkaNrPo(String id, int ramkaNrPo) async {
     final db = await DBHelper.database();
     //print('db_helpers: update ramkaNrPo - id=$id, ramkaNrPo = $ramkaNrPo');
-    db.update('ramka', {'ramkaNrPo': ramkaNrPo, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
+    await db.update('ramka', {'ramkaNrPo': ramkaNrPo, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
+    zaplanujKolorPrzegladuRamki(id); //ramka usunięta (po = 0) przestaje liczyć się do koloru
   }
 
    //update tabeli ramki - ustawienie "ramkaNr" - dla frame_edit_screen? i voice_screen
@@ -457,7 +462,36 @@ class DBHelper {
   static Future<void> updateInfoWartosc(String id,  String wart) async {
     final db = await DBHelper.database();
   //  print('db_helpers: update info - id=$id');
-    db.update('info', {'wartosc': wart, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
+    await db.update('info', {'wartosc': wart, 'arch': 0}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  //wartość rekordu info (null = nie ma rekordu) - kolor przeglądu (kolor_przegladu.dart)
+  static Future<String?> getInfoWartosc(String id) async {
+    final db = await DBHelper.database();
+    final result = await db.query('info', columns: ['wartosc'], where: 'id = ?', whereArgs: [id], limit: 1);
+    return result.isEmpty ? null : result[0]['wartosc'] as String?;
+  }
+
+  //zadania (13), mateczniki (11) i usunięte mateczniki (12) z ramek przeglądu - widok "po"
+  //(ramkaNrPo <> 0, jak belka), wszystkie korpusy - kolor przeglądu (kolor_przegladu.dart)
+  static Future<List<Map<String, dynamic>>> getZadaniaIMatecznikiPrzegladu(String data, int pasieka, int ul) async {
+    final db = await DBHelper.database();
+    return db.rawQuery(
+        'SELECT zasob, wartosc FROM ramka WHERE data = ? AND pasiekaNr = ? AND ulNr = ? '
+        'AND zasob IN (11, 12, 13) AND ramkaNrPo <> 0',
+        [data, pasieka, ul]);
+  }
+
+  //mateczniki, usunięte mateczniki i zadania z OSTATNIEGO przeglądu każdego korpusu każdego
+  //ula pasieki (widok "po") - podsumowanie widoku uli z problemami (problemy_pasieki.dart)
+  static Future<List<Map<String, dynamic>>> getZadaniaIMatecznikiPasieki(int pasieka) async {
+    final db = await DBHelper.database();
+    return db.rawQuery(
+        'SELECT r.ulNr, r.korpusNr, r.ramkaNr, r.zasob, r.wartosc FROM ramka r '
+        'JOIN (SELECT ulNr, korpusNr, MAX(data) AS d FROM ramka WHERE pasiekaNr = ? '
+        'GROUP BY ulNr, korpusNr) o ON r.ulNr = o.ulNr AND r.korpusNr = o.korpusNr AND r.data = o.d '
+        'WHERE r.pasiekaNr = ? AND r.zasob IN (11, 12, 13) AND r.ramkaNrPo <> 0',
+        [pasieka, pasieka]);
   }
 
   //uwagi z rekordu info - dla dyktowanej notatki (voice_vosk_screen)
@@ -539,10 +573,33 @@ class DBHelper {
   //Osobna metoda zamiast Apiarys.insertApiary: insert to ConflictAlgorithm.replace
   //po id, więc przepisałby przy okazji ileUli, ikonę i opis - notatka nie ma o nich
   //pojęcia i wstawiłaby tam wartości zastępcze.
+  //DATA PRZEGLĄDU PASIEKI (20.10.2026) = najnowszy przegląd ramek w pasiece - patrz
+  //getDataPrzegladuPasieki; [data] tylko gdy pasieka nie ma jeszcze żadnych ramek.
   static Future<void> updatePrzegladPasieki(int pasieka, String data) async {
     final db = await DBHelper.database();
-    await db.update('pasieki', {'przeglad': data},
+    await db.update('pasieki', {'przeglad': await getDataPrzegladuPasieki(pasieka) ?? data},
         where: 'pasiekaNr = ?', whereArgs: [pasieka]);
+  }
+
+  //DATA PRZEGLĄDU PASIEKI (20.10.2026) - dni od przeglądu na kafelku pasieki (apiarys_item).
+  //Do 20.10.2026 pole pasieki.przeglad nadpisywał każdy zapis własną datą (wpis z datą
+  //wsteczną cofał ją, odświeżanie dokarmiania/leczenia wpisywało dzisiejszą) - teraz jest
+  //to zawsze najnowsza data przeglądu ramek w pasiece. null - pasieka bez ramek.
+  static Future<String?> getDataPrzegladuPasieki(int pasieka) async {
+    final db = await DBHelper.database();
+    final r = await db.rawQuery('SELECT MAX(data) AS d FROM ramka WHERE pasiekaNr = ?', [pasieka]);
+    final d = r.isEmpty ? null : r.first['d'] as String?;
+    return (d == null || d.isEmpty) ? null : d;
+  }
+
+  //przeliczenie daty przeglądu pasieki po usunięciu/przeniesieniu ramek
+  //(pasieka bez ramek - data zostaje)
+  static Future<void> odswiezPrzegladPasieki(int pasieka) async {
+    final d = await getDataPrzegladuPasieki(pasieka);
+    if (d == null) return;
+    final db = await DBHelper.database();
+    await db.update('pasieki', {'przeglad': d}, where: 'pasiekaNr = ?', whereArgs: [pasieka]);
+    await Apiarys.przeladujBiezacy(); //kafelek pasieki na ekranie startowym
   }
 
   //update pasieki- ikona pasieki - dla voice_screen
@@ -1303,6 +1360,9 @@ class DBHelper {
   //  print('DBhelper: delete ramka id = $id');
     await db.delete('ramka', where: 'id= ?', whereArgs: [id]);
     await zglosUsuniete(db, 'ramka', [id]); //kolejka usunięć do chmury
+    zaplanujKolorPrzegladuRamki(id); //kolor przeglądu z zadań i mateczników
+    final pasieka = int.tryParse(id.split('.').length > 1 ? id.split('.')[1] : '');
+    if (pasieka != null) await odswiezPrzegladPasieki(pasieka); //data przeglądu pasieki
   }
 
   //usuniecie rekordu o podanym id z tabeli zbiory - dla harvest_edit_screen, harvest_item
@@ -1353,6 +1413,7 @@ class DBHelper {
     final idy = await _idyGdzie(db, 'ramka', where, [data, pasieka, ul]);
     await db.delete('ramka', where: where, whereArgs: [data, pasieka, ul]);
     await zglosUsuniete(db, 'ramka', idy); //kolejka usunięć do chmury
+    await odswiezPrzegladPasieki(pasieka); //data przeglądu pasieki
   }
 
   //pobieranie zdjęć dla danego ula i pasieki - dla infos_screen
@@ -1547,6 +1608,7 @@ class DBHelper {
     for (final e in usuwane.entries) {
       await zglosUsuniete(db, e.key, e.value);
     }
+    await odswiezPrzegladPasieki(pasieka); //data przeglądu pasieki
 
     return photoPaths;
   }
@@ -1674,6 +1736,9 @@ class DBHelper {
       hiveData['ulNr'] = dstUl;
       await db.insert('ule', hiveData, conflictAlgorithm: ConflictAlgorithm.replace);
     }
+    //data przeglądu obu pasiek
+    await odswiezPrzegladPasieki(srcPasieka);
+    if (dstPasieka != srcPasieka) await odswiezPrzegladPasieki(dstPasieka);
   }
 
   // === Optymalizacja odbudowy uli i pasiek (import_screen) ===
@@ -1822,14 +1887,20 @@ class DBHelper {
     final db = await DBHelper.database();
     final rows = await db.rawQuery('SELECT DISTINCT pasiekaNr FROM ule');
     if (rows.isEmpty) return 0;
+    //data przeglądu pasieki = najnowszy przegląd ramek (20.10.2026, patrz getDataPrzegladuPasieki)
+    final przeglady = {
+      for (final r in await db.rawQuery('SELECT pasiekaNr, MAX(data) AS d FROM ramka GROUP BY pasiekaNr'))
+        r['pasiekaNr']: r['d'] as String?
+    };
     final batch = db.batch();
     for (final row in rows) {
       final p = row['pasiekaNr'] as int;
+      final String? d = przeglady[p];
       batch.insert('pasieki', {
         'id': '$p',
         'pasiekaNr': p,
         'ileUli': 0,
-        'przeglad': formattedDate,
+        'przeglad': (d == null || d.isEmpty) ? formattedDate : d,
         'ikona': 'green',
         'opis': '??',
       }, conflictAlgorithm: ConflictAlgorithm.replace);

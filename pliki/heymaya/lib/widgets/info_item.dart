@@ -575,6 +575,14 @@ class InfoItem extends StatelessWidget {
                                         fontWeight: FontWeight.bold,
                                         color: Color.fromARGB(255, 205, 181, 1)),
                                   )
+                                  : info.wartosc == 'orange' //otwarte mateczniki (20.10.2026)
+                                  ? TextSpan(
+                                      text: ('${nazwaParametru(context, info.parametr)} '),
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 233, 132, 1)),
+                                    )
                                   : info.wartosc == 'red'
                                       ? TextSpan(
                                           text: ('${nazwaParametru(context, info.parametr)} '),

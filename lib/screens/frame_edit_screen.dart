@@ -7,6 +7,7 @@ import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 
 import '../helpers/db_helper.dart';
+import '../helpers/colony_helpers.dart'; //zadanieDoZrobienia - kolor belki
 import '../helpers/frame_capacity.dart';
 import '../models/apiarys.dart';
 import '../models/frame.dart';
@@ -1394,9 +1395,9 @@ class _FrameEditScreenState extends State<FrameEditScreen> {
       //print('$todo != '' && ($ikona != red || $ikona != orange)'); 
       // ikona ula zółta jezeli zasobem była czynność do zrobienia
       //o ile nie była czerwona lub pomarańczowa, bo problemy z matką są wazniejsze
-      if ((todo != '' && todo != '0') && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) {
+      if (zadanieDoZrobienia(todo) && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) { //"można izolować" nie barwi (20.10.2026)
         ikona = 'yellow';
-      }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';   
+      }else if (!zadanieDoZrobienia(todo) && (ikona =='yellow'))ikona ='green';   
     // print('ikona po  = $ikona');
       
       

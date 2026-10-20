@@ -2750,6 +2750,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'Novidades da colmeia é um resumo das informações mais importantes sobre uma colmeia. Para o abrir, deslize uma colmeia para a esquerda na lista de colmeias. Escolha com os interruptores que secções são mostradas.';
 
   @override
+  String get hivesWithProblems => 'Colmeias com problemas';
+
+  @override
   String get photos => 'Fotos';
 
   @override

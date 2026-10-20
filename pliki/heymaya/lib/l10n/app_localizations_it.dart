@@ -2768,6 +2768,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Novità dell\'arnia è un riepilogo delle informazioni più importanti su un\'arnia. Per aprirlo, scorri un\'arnia verso sinistra nell\'elenco delle arnie. Scegli con gli interruttori quali sezioni mostrare.';
 
   @override
+  String get hivesWithProblems => 'Arnie con problemi';
+
+  @override
   String get photos => 'Foto';
 
   @override

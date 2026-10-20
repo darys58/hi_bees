@@ -2751,6 +2751,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Beuten-Neuigkeiten sind eine Übersicht der wichtigsten Informationen über eine Beute. Zum Öffnen wischen Sie eine Beute in der Beutenliste nach links. Wählen Sie mit den Schaltern, welche Abschnitte dort angezeigt werden.';
 
   @override
+  String get hivesWithProblems => 'Beuten mit Problemen';
+
+  @override
   String get photos => 'Fotos';
 
   @override

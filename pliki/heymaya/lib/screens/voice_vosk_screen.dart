@@ -68,6 +68,7 @@ import 'package:heymaya/l10n/app_localizations.dart';
 import '../helpers/vosk_engine.dart';
 import '../helpers/vosk_grammar.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/colony_helpers.dart'; //zadanieDoZrobienia - kolor belki
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; //obsługa json'a
@@ -7304,9 +7305,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
 
     // ikona ula zółta jezeli zasobem była czynność do zrobienia
     //o ile nie była czerwona lub pomarańczowa, bo problemy z matką są wazniejsze
-    if ((todo != '' && todo != '0') && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) {
+    if (zadanieDoZrobienia(todo) && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) { //"można izolować" nie barwi (20.10.2026)
         ikona = 'yellow';
-    }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';
+    }else if (!zadanieDoZrobienia(todo) && (ikona =='yellow'))ikona ='green';
       
     
     // if (toDo != '' && (globals.ikonaPasieki != 'red' || globals.ikonaPasieki != 'orange')) {

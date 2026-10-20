@@ -575,7 +575,8 @@ class _MoveHiveScreenState extends State<MoveHiveScreen> {
                           child: Row(
                             children: _srcHives.map((hive) {
                               final isSelected = _srcUl == hive.ulNr;
-                              final statusColor = kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny, matka3: hive.matka3));
+                              final statusColor = kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny, matka3: hive.matka3,
+                                  todo: hive.todo, mateczniki: hive.mateczniki, usunmat: hive.usunmat));
                               return Padding(
                                 padding: const EdgeInsets.only(right: 10),
                                 child: GestureDetector(

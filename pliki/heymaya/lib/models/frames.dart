@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
 import '../helpers/serwer_token.dart'; //nagłówek X-HB-Token przy imporcie
+import '../helpers/kolor_przegladu.dart'; //kolor przeglądu po zapisie ramki
 import './frame.dart';
 
 class Frames with ChangeNotifier {
@@ -195,6 +196,8 @@ class Frames with ChangeNotifier {
       'wartosc': wartosc,
       'arch': arch,
     });
+    //zadania i mateczniki zmieniają kolor przeglądu (20.10.2026)
+    if (zasob >= 11 && zasob <= 13) zaplanujKolorPrzegladu(data, pasieka, ul);
   }
   
 }

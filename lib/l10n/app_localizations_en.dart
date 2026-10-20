@@ -2739,6 +2739,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hive news is a summary of the most important information about a hive. To open it, swipe a hive to the left in the list of hives. Use the switches to choose which sections are shown there.';
 
   @override
+  String get hivesWithProblems => 'Hives with problems';
+
+  @override
   String get photos => 'Photos';
 
   @override

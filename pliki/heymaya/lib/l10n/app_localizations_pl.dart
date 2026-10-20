@@ -2763,6 +2763,9 @@ class AppLocalizationsPl extends AppLocalizations {
       'Aktualności ula to podsumowanie najważniejszych informacji o ulu. Otwierasz je, przesuwając ul w lewo na liście uli. Przełącznikami wybierz, które sekcje mają się tam pojawiać.';
 
   @override
+  String get hivesWithProblems => 'Ule z problemami';
+
+  @override
   String get photos => 'Zdjęcia';
 
   @override

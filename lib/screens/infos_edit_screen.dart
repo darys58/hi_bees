@@ -1773,14 +1773,14 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
                                 style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 0, 0),),
                                 value: nowyWartosc,  
                                 items: _zWartoscia(nowyWartosc, [
-                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.aggressive1),
-                                                  value:AppLocalizations.of(context)!.aggressive),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.gentle),
                                                   value:AppLocalizations.of(context)!.gentle),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.inCluster),
                                                   value:AppLocalizations.of(context)!.inCluster),
                                   DropdownMenuItem(child: Text('ok'),
                                                   value:'ok'),
+                                  DropdownMenuItem(child: Text(AppLocalizations.of(context)!.aggressive1),
+                                                  value:AppLocalizations.of(context)!.aggressive),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.swarmingMood),
                                                   value:AppLocalizations.of(context)!.swarmingMood),
                                   DropdownMenuItem(child: Text(AppLocalizations.of(context)!.droneBees),
@@ -2964,7 +2964,8 @@ class _InfosEditScreenState extends State<InfosEditScreen> {
 
                                 //ustawienie ikony dla pasieki
                                 //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
-                                globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3)));
+                                globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3,
+        todo: h.todo, mateczniki: h.mateczniki, usunmat: h.usunmat)));
                                 for (var i = 0; i < hives.length; i++) {
                                   //print('i=$i');
                                   //print( 'hives[i].ikona = ${hives[i].ikona}');

@@ -6,6 +6,7 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 // import '../models/apiarys.dart';
 // import '../models/info.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/colony_helpers.dart'; //zadanieDoZrobienia - kolor belki
 import '../screens/frame_edit_screen.dart';
 //import '../screens/frame_edit_screen2.dart';
 import '../globals.dart' as globals;
@@ -712,9 +713,9 @@ class _FramesDetailItemState extends State<FramesDetailItem> {
                           }
 
                           //ewentualna zmiana ikony ula
-                          if ((todo != '' && todo != '0') && (ikona != 'red' || ikona != 'orange')) {
+                          if (zadanieDoZrobienia(todo) && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) { //"można izolować" nie barwi (20.10.2026)
                               ikona = 'yellow';
-                          }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';
+                          }else if (!zadanieDoZrobienia(todo) && (ikona =='yellow'))ikona ='green';
       
                           
                           Hives.insertHive(

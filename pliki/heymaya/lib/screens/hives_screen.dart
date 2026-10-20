@@ -16,6 +16,7 @@ import '../helpers/colony_helpers.dart'; //kolor ikony ula ze stanem rodziny
 import '../helpers/queen_helpers.dart';
 import '../helpers/parametr_nazwy.dart'; //wszystkieJezyki
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu
+import '../helpers/problemy_pasieki.dart'; //podsumowanie widoku uli z problemami
 import '../models/apiarys.dart';
 import '../models/dodatki1.dart';
 import '../models/frame.dart';
@@ -53,6 +54,12 @@ class _HivesScreenState extends State<HivesScreen> {
   List<Weather>? pogoda;
   //zmienne do aktualizacji belki
   List<Hive> hives = []; //lista wszystkich uli w wybranej pasiece
+  //WIDOK ULI Z PROBLEMAMI (20.10.2026) - kafelek w oknie "Ostatnie informacje": tylko ule
+  //z kolorową ikoną (żółta, pomarańczowa, czerwona, czarna); zielone ukryte. Kafelek
+  //odświeża belki "o zasobach i matkach" (cechy matek są tylko w tym trybie) i ustawia
+  //globals.widokProblemowUli; pod paskiem podsumowanie (problemy_pasieki.dart)
+  bool _tylkoProblemy = false;
+  Map<int, RamkiProblemuUla>? _ramkiProblemow; //zadania i mateczniki z ramek pasieki
   List<Frame> _daty = []; //unikalne daty z tabeli "ramki" (z zasobami na ramkach)
   List<Info> _datyInfo = []; //unikalne daty z tabeli "info" (dla kategorii i parametru)
   List<Info> _datyInfoDL = []; //unikalne daty z tabeli "info" (dla kategorii feeding i treatment)
@@ -111,6 +118,13 @@ class _HivesScreenState extends State<HivesScreen> {
     //_isInit = globals.isInit;
     //print('hives_screen - _isInit = $_isInit');
     if (_isInit) {
+      if (globals.widokProblemowUli) {
+        globals.widokProblemowUli = false;
+        _tylkoProblemy = true;
+        ramkiProblemowPasieki(globals.pasiekaID).then((r) {
+          if (mounted) setState(() => _ramkiProblemow = r);
+        });
+      }
       //pobranie danych o pogodzie dla pasieki
        Provider.of<Weathers>(context, listen: false)
         .fetchAndSetWeathers();
@@ -174,8 +188,8 @@ class _HivesScreenState extends State<HivesScreen> {
               h.ikona, h.ramek,
               0, //korpusNr - bez belki zasobów
               0, 0, 0, 0, 0, 0, 0, 0, 0, //trut, czerw, larwy, jaja, pierzga, miod, dojrzaly, weza, susz
-              0, 0, 0, //matka, mateczniki, usunmat
-              '0', //todo
+              0, h.mateczniki, h.usunmat, //matka; mateczniki i usunmat zostają - barwią ikonę ula (20.10.2026)
+              h.todo, //todo zostaje - barwi ikonę ula (ikonaNaBelce)
               'colony', //kategoria - tryb belki
               '0', //parametr
               c.stan, //wartosc - stan rodziny
@@ -465,9 +479,9 @@ class _HivesScreenState extends State<HivesScreen> {
               0, //weza,
               0, //susz,
               0, //matka,
-              0, //mateczniki,
-              0, //usunmat,
-              '0', //todo,
+              hive[0].mateczniki, //mateczniki, usunmat i todo zostają - barwią ikonę ula (ikonaNaBelce,
+              hive[0].usunmat,    //20.10.2026); na belce rysują się tylko przy korpusNr > 0
+              hive[0].todo,
               kategoria, 
               parametr ,
               wartosc,
@@ -563,9 +577,9 @@ class _HivesScreenState extends State<HivesScreen> {
               0, //weza,
               0, //susz,
               0, //matka,
-              0, //mateczniki,
-              0, //usunmat,
-              '0', //todo,
+              hive[0].mateczniki, //mateczniki, usunmat i todo zostają - barwią ikonę ula (ikonaNaBelce,
+              hive[0].usunmat,    //20.10.2026); na belce rysują się tylko przy korpusNr > 0
+              hive[0].todo,
               kategoria, 
               parametr ,
               wartosc,
@@ -690,9 +704,9 @@ class _HivesScreenState extends State<HivesScreen> {
               0, //weza,
               0, //susz,
               0, //matka,
-              0, //mateczniki,
-              0, //usunmat,
-              '0', //todo,
+              hive[0].mateczniki, //mateczniki, usunmat i todo zostają - barwią ikonę ula (ikonaNaBelce,
+              hive[0].usunmat,    //20.10.2026); na belce rysują się tylko przy korpusNr > 0
+              hive[0].todo,
               kategoria, 
               parametr ,
               wartosc,
@@ -787,9 +801,9 @@ class _HivesScreenState extends State<HivesScreen> {
               0, //weza,
               0, //susz,
               0, //matka,
-              0, //mateczniki,
-              0, //usunmat,
-              '0', //todo,
+              hive[0].mateczniki, //mateczniki, usunmat i todo zostają - barwią ikonę ula (ikonaNaBelce,
+              hive[0].usunmat,    //20.10.2026); na belce rysują się tylko przy korpusNr > 0
+              hive[0].todo,
               kategoria, 
               parametr ,
               wartosc,
@@ -1141,7 +1155,10 @@ class _HivesScreenState extends State<HivesScreen> {
             } else {matka2 = ''; dataPrzegladu = DateTime.now().toString().substring(0, 10);} //dataPrzeglądu ustawiona dla pasieki
              
              //matka z ostatniego wpisu siedzi dziś w innym ulu - belka bez matki (patrz matkaGdzieIndziej)
-             if (matkaGdzieIndziej) { matka1 = ''; matka2 = ''; matka3 = ''; matka4 = ''; matka5 = ''; }
+             //Wyjątek (20.10.2026): wpis "matka brak" niesie ID matki, która z ula WYSZŁA (odłączenie
+             //w queen_item), więc ta matka jest już gdzie indziej (albo w żadnym ulu) - to nie cudza
+             //matka, tylko informacja o braku. Bez wyjątku odświeżenie belek gasiło ikonkę braku matki.
+             if (matkaGdzieIndziej && matka2 != 'brak') { matka1 = ''; matka2 = ''; matka3 = ''; matka4 = ''; matka5 = ''; }
              DBHelper.updateUleMatka2('${globals.pasiekaID}.$numerUla',matka2);
             
             //jezeli matki brak (albo jest w innym ulu) to kasowanie innych parametrów matki w tabeli "ule" 
@@ -1340,9 +1357,9 @@ class _HivesScreenState extends State<HivesScreen> {
 //IKONA DLA ULA
               // ikona ula zółta jezeli zasobem była czynność do zrobienia
               //o ile nie była czerwona lub pomarańczowa, bo problemy z matką są wazniejsze
-              if ((todo != '' && todo != '0') && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) {
+              if (zadanieDoZrobienia(todo) && (ikona != 'red' && ikona != 'orange' && ikona != 'black')) { //"można izolować" nie barwi (20.10.2026)
                 ikona = 'yellow';
-              }else if ((todo == '' || todo == '0') && (ikona =='yellow'))ikona ='green';                
+              }else if (!zadanieDoZrobienia(todo) && (ikona =='yellow'))ikona ='green';                
               //print('${globals.pasiekaID}.${numerUla} = ');   
 //ZAPIS DANYCH O ULU              
                 Hives.insertHive(
@@ -1675,6 +1692,55 @@ class _HivesScreenState extends State<HivesScreen> {
     });
   }
 
+  //tryb belek z okna "Ostatnie informacje": [ustaw] wybiera tryb, potem jak dotąd -
+  //zamknięcie okna i ekranu uli, ekran uli od nowa
+  void _pokazBelki(BuildContext ctx, VoidCallback ustaw) {
+    Navigator.of(ctx).pop();
+    Navigator.of(ctx).pop();
+    ustaw();
+    Navigator.of(ctx).pushNamed(
+      HivesScreen.routeName,
+      arguments: {'numerPasieki': globals.pasiekaID},
+    );
+  }
+
+  //obrazek kafelka okna "Ostatnie informacje"
+  Widget _obrazekKafelka(String sciezka) =>
+      Image.asset(sciezka, width: 44, height: 44, fit: BoxFit.contain);
+
+  //kafelek okna "Ostatnie informacje" - zaokrąglona ramka z ikonami
+  Widget _kafelekBelek(BuildContext ctx, List<Widget> ikony, String opis, VoidCallback onTap) {
+    return Tooltip(
+      message: opis,
+      child: Semantics(
+        button: true,
+        label: opis,
+        excludeSemantics: true,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Container(
+            height: 64,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey, width: 1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < ikony.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 12),
+                  ikony[i],
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   // ręczne odswiezenie uli - wybór jaki widok ma być?
     void _showAlertOdswiez() {
     showDialog(
@@ -1686,63 +1752,56 @@ class _HivesScreenState extends State<HivesScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min, //minimalna wysokośc okna dialogowego
-          children: <Widget>[          
-              TextButton(onPressed: (){
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                globals.odswiezBelkiUli = true;
-                Navigator.of(context).pushNamed(
-                    HivesScreen.routeName,
-                    arguments: {'numerPasieki': globals.pasiekaID },
-                  );
-              }, child: Text((AppLocalizations.of(context)!.oZasobachMatkach),style: TextStyle(fontSize: 18))
-              ), 
-
-              TextButton(onPressed: (){
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                globals.odswiezBelkiUliR = true;
-                Navigator.of(context).pushNamed(
-                    HivesScreen.routeName,
-                    arguments: {'numerPasieki': globals.pasiekaID },
-                  );
-              }, child: Text((AppLocalizations.of(context)!.oRodzinie),style: TextStyle(fontSize: 18))
-              ),
-        
-              TextButton(onPressed: (){
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                globals.odswiezBelkiUliDL = true;
-                globals.belkiDLKategoria = 'feeding'; //na belce ma być tylko ta kategoria
-                Navigator.of(context).pushNamed(
-                    HivesScreen.routeName,
-                    arguments: {'numerPasieki': globals.pasiekaID },
-                  );
-              }, child: Text((AppLocalizations.of(context)!.oDokarmianiu),style: TextStyle(fontSize: 18))
-              ),
-
-              TextButton(onPressed: (){
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                globals.odswiezBelkiUliDL = true;
-                globals.belkiDLKategoria = 'treatment'; //na belce ma być tylko ta kategoria
-                Navigator.of(context).pushNamed(
-                    HivesScreen.routeName,
-                    arguments: {'numerPasieki': globals.pasiekaID },
-                  );
-              }, child: Text((AppLocalizations.of(context)!.oLeczeniu),style: TextStyle(fontSize: 18))
-              ),
-
-              TextButton(onPressed: (){
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                globals.odswiezBelkiUliZ = true;
-                Navigator.of(context).pushNamed(
-                    HivesScreen.routeName,
-                    arguments: {'numerPasieki': globals.pasiekaID },
-                  );
-              }, child: Text((AppLocalizations.of(context)!.oZ),style: TextStyle(fontSize: 18))
-              ),
+          children: <Widget>[
+              //KAFELKI (20.10.2026) zamiast napisów - obrazki jak w kategoriach info.
+              //Wiersz 1: zasoby i matki (szeroki), rodzina; wiersz 2: zbiory, dokarmianie, leczenie.
+              //Napis z menu zostaje jako podpowiedź (przytrzymanie) i dla czytnika ekranu.
+              Row(children: [
+                Expanded(flex: 2, child: _kafelekBelek(context,
+                    [_obrazekKafelka('assets/image/hi_bees.png'), _obrazekKafelka('assets/image/matka1.png')],
+                    AppLocalizations.of(context)!.oZasobachMatkach,
+                    () => _pokazBelki(context, () => globals.odswiezBelkiUli = true))),
+                const SizedBox(width: 8),
+                Expanded(child: _kafelekBelek(context,
+                    [_obrazekKafelka('assets/image/pszczola1.png')],
+                    AppLocalizations.of(context)!.oRodzinie,
+                    () => _pokazBelki(context, () => globals.odswiezBelkiUliR = true))),
+              ]),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(child: _kafelekBelek(context,
+                    [_obrazekKafelka('assets/image/zbiory.png')],
+                    AppLocalizations.of(context)!.oZ,
+                    () => _pokazBelki(context, () => globals.odswiezBelkiUliZ = true))),
+                const SizedBox(width: 8),
+                Expanded(child: _kafelekBelek(context,
+                    [_obrazekKafelka('assets/image/invert.png')],
+                    AppLocalizations.of(context)!.oDokarmianiu,
+                    () => _pokazBelki(context, () {
+                      globals.odswiezBelkiUliDL = true;
+                      globals.belkiDLKategoria = 'feeding'; //na belce ma być tylko ta kategoria
+                    }))),
+                const SizedBox(width: 8),
+                Expanded(child: _kafelekBelek(context,
+                    [_obrazekKafelka('assets/image/apivarol1.png')],
+                    AppLocalizations.of(context)!.oLeczeniu,
+                    () => _pokazBelki(context, () {
+                      globals.odswiezBelkiUliDL = true;
+                      globals.belkiDLKategoria = 'treatment'; //na belce ma być tylko ta kategoria
+                    }))),
+              ]),
+              const SizedBox(height: 8),
+              //ule z problemami - belki "o zasobach i matkach" i filtr listy z podsumowaniem
+              Row(children: [
+                Expanded(child: _kafelekBelek(context,
+                    [for (final k in const ['yellow', 'orange', 'red', 'black'])
+                      Icon(Icons.hive, size: 36, color: kolorIkonyUla(k))],
+                    AppLocalizations.of(context)!.hivesWithProblems,
+                    () => _pokazBelki(context, () {
+                      globals.odswiezBelkiUli = true; //cechy matek do podsumowania
+                      globals.widokProblemowUli = true;
+                    }))),
+              ]),
 
               SizedBox(height: 20,),
               Text(AppLocalizations.of(context)!.rAports + ':', style: TextStyle(fontSize: 22)),
@@ -1828,8 +1887,16 @@ class _HivesScreenState extends State<HivesScreen> {
     
     //ustawienie ikony dla pasieki na podstawie ikon ulowych
     //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
-    globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3)));
+    globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3,
+        todo: h.todo, mateczniki: h.mateczniki, usunmat: h.usunmat)));
     
+    //ule na liście - w widoku uli z problemami tylko z kolorową ikoną (ta sama ikona co na belce)
+    final List<Hive> widoczneUle = _tylkoProblemy
+        ? hives.where((h) => const {'yellow', 'orange', 'red', 'black', 'dead'}.contains(
+            ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3,
+                todo: h.todo, mateczniki: h.mateczniki, usunmat: h.usunmat))).toList()
+        : hives;
+
     //aktualizacja ikony pasieki
     DBHelper.updateIkonaPasieki(int.parse(numerPasieki.toString()), globals.ikonaPasieki ); 
     //aktualizacja pasieki  - pobranie danych z bazy
@@ -2062,13 +2129,43 @@ class _HivesScreenState extends State<HivesScreen> {
                 //   //     //width: 140,
                 //   fit: BoxFit.cover, //dopasowanie do pojemnika
                 // ),
+                //widok uli z problemami - pasek z liczbą uli i wyłączeniem filtra
+                if (_tylkoProblemy)
+                  Material(
+                    color: Colors.grey[200],
+                    child: InkWell(
+                      onTap: () => setState(() => _tylkoProblemy = false),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                        child: Row(children: [
+                          for (final k in const ['yellow', 'orange', 'red', 'black'])
+                            Icon(Icons.hive, size: 18, color: kolorIkonyUla(k)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${AppLocalizations.of(context)!.hivesWithProblems}: ${widoczneUle.length} / ${hives.length}',
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                          ),
+                          const Icon(Icons.close, size: 20),
+                        ]),
+                      ),
+                    ),
+                  ),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: hives.length,
-                    itemBuilder: (ctx, i) => ChangeNotifierProvider.value(
-                      value: hives[i],
-                      child: HivesItem(),
-                    ),
+                    //w widoku uli z problemami pierwszy element to podsumowanie (przewija się z listą)
+                    itemCount: widoczneUle.length + (_tylkoProblemy ? 1 : 0),
+                    itemBuilder: (ctx, i) {
+                      if (_tylkoProblemy) {
+                        if (i == 0) return panelProblemowPasieki(ctx, hives, _ramkiProblemow);
+                        i--;
+                      }
+                      return ChangeNotifierProvider.value(
+                        value: widoczneUle[i],
+                        child: HivesItem(),
+                      );
+                    },
                   ),
                 )
               ]));

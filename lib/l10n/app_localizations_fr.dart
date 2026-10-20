@@ -2763,6 +2763,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les actualités de la ruche résument les informations les plus importantes sur une ruche. Pour les ouvrir, faites glisser une ruche vers la gauche dans la liste des ruches. Choisissez avec les interrupteurs les sections à afficher.';
 
   @override
+  String get hivesWithProblems => 'Ruches à problèmes';
+
+  @override
   String get photos => 'Photos';
 
   @override

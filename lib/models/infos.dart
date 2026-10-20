@@ -4,8 +4,31 @@ import 'dart:convert'; //obsługa json'a
 import '../helpers/db_helper.dart'; //dostęp do bazy lokalnej
 import '../helpers/serwer_token.dart'; //nagłówek X-HB-Token przy imporcie
 import './info.dart';
+import '../helpers/kolor_przegladu.dart'; //kolor nowego wpisu przeglądu
 
 class Infos with ChangeNotifier {
+  //ostatnio utworzony provider - kolor przeglądu poprawiany w tle (kolor_przegladu.dart)
+  //podmienia wpis bez dostępu do context
+  static Infos? _biezacy;
+  Infos() {
+    _biezacy = this;
+  }
+
+  /// Nowa [wartosc] wpisu [id] w bieżącym providerze (gdy wpis jest na liście).
+  static void zmienWartoscWpisu(String id, String wartosc) {
+    final p = _biezacy;
+    if (p == null) return;
+    final i = p._items.indexWhere((e) => e.id == id);
+    if (i < 0) return;
+    final e = p._items[i];
+    p._items[i] = Info(
+      id: e.id, data: e.data, pasiekaNr: e.pasiekaNr, ulNr: e.ulNr, kategoria: e.kategoria,
+      parametr: e.parametr, wartosc: wartosc, miara: e.miara, pogoda: e.pogoda, temp: e.temp,
+      czas: e.czas, uwagi: e.uwagi, arch: 0,
+    );
+    p.notifyListeners();
+  }
+
   //klasa Meals jest zmiksowana z klasą ChangeNotifier która pozwala ustalać tunele komunikacyjne przy pomocy obiektu context
   List<Info> _items =
       []; //lista wpisów, dostępna tylko wewnątrz tej klasy, będzie się zmieniać, podkreślenie oznacza ze jest to wartość prywatna klasy
@@ -195,6 +218,8 @@ class Infos with ChangeNotifier {
     } else {
       await DBHelper.insert('info', wiersz);
     }
+    //wpis przeglądu dostaje kolor z zadań i mateczników, nie kolor belki z chwili zapisu
+    if (kategoria == 'inspection') zaplanujKolorPrzegladu(data, pasieka, ul);
   }
 
 

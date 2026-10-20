@@ -5449,6 +5449,12 @@ abstract class AppLocalizations {
   /// **'Hive news is a summary of the most important information about a hive. To open it, swipe a hive to the left in the list of hives. Use the switches to choose which sections are shown there.'**
   String get hiveNewsSettingsInfo;
 
+  /// No description provided for @hivesWithProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'Hives with problems'**
+  String get hivesWithProblems;
+
   /// No description provided for @photos.
   ///
   /// In en, this message translates to:

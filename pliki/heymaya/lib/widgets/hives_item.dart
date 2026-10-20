@@ -585,7 +585,8 @@ class HivesItem extends StatelessWidget {
               //'dead' (rodzina nie żyje) = czarna ikona bez zaciemnienia belki
               trailing: Icon(
                 Icons.hive,
-                color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny, matka3: hive.matka3)),
+                color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny, matka3: hive.matka3,
+                    todo: hive.todo, mateczniki: hive.mateczniki, usunmat: hive.usunmat)),
               ),
             )),
       ),

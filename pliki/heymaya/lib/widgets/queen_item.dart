@@ -101,7 +101,10 @@ class _QueenItemState extends State<QueenItem> {
     final stany = await stanyRodzinUli(pasieka); //stan rodziny też barwi ikonę
     final String ikonaPasieki = ikonaPasiekiZUli(ule.map((u) =>
         ikonaNaBelce((u['ikona'] as String?) ?? '', stany[u['id']] ?? '',
-            matka3: (u['matka3'] as String?) ?? '')));
+            matka3: (u['matka3'] as String?) ?? '',
+            todo: (u['todo'] as String?) ?? '',
+            mateczniki: (u['mateczniki'] as int?) ?? 0,
+            usunmat: (u['usunmat'] as int?) ?? 0)));
     await DBHelper.updateIkonaPasieki(pasieka, ikonaPasieki);
     if (pasieka == globals.pasiekaID) globals.ikonaPasieki = ikonaPasieki;
     if (!context.mounted) return;
@@ -459,7 +462,8 @@ class _QueenItemState extends State<QueenItem> {
 
                         //ustawienie ikony dla pasieki
                             //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
-                            globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3)));
+                            globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3,
+        todo: h.todo, mateczniki: h.mateczniki, usunmat: h.usunmat)));
                             for (var i = 0; i < hives.length; i++) {
                               //print('i=$i');
                               //print( 'hives[i].ikona = ${hives[i].ikona}');

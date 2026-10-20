@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hi_bees/helpers/colony_helpers.dart';
+import 'package:hi_bees/helpers/kolor_przegladu.dart';
 import 'package:hi_bees/helpers/parametr_nazwy.dart';
 
 void main() {
@@ -46,8 +47,10 @@ void main() {
       expect(ikonaNaBelce('yellow', ''), 'yellow');
     });
     test('najgorszy kolor wygrywa', () {
-      expect(ikonaNaBelce('green', 'zła'), 'yellow');
+      expect(ikonaNaBelce('green', 'zła'), 'orange'); //agresywna = pomarańczowy (20.10.2026)
+      expect(ikonaNaBelce('yellow', 'w nastroju do ucieczki'), 'orange');
       expect(ikonaNaBelce('orange', 'zła'), 'orange');
+      expect(ikonaNaBelce('red', 'zła'), 'red');
       expect(ikonaNaBelce('yellow', 'chora'), 'red');
       expect(ikonaNaBelce('orange', 'strutowiała'), 'red');
     });
@@ -72,6 +75,43 @@ void main() {
       expect(czyMatkaTrutowa('drone laying'), isTrue);
       expect(czyMatkaTrutowa('drohnenbrütig'), isTrue);
       expect(czyMatkaTrutowa('dziewica'), isFalse);
+    });
+  });
+
+  group('do zrobienia i mateczniki (20.10.2026)', () {
+    test('zadanieDoZrobienia - "można izolować" nie barwi', () {
+      expect(zadanieDoZrobienia('trzeba wirować'), isTrue);
+      expect(zadanieDoZrobienia('work frame'), isTrue);
+      expect(zadanieDoZrobienia('można izolować'), isFalse);
+      expect(zadanieDoZrobienia('to insulate'), isFalse);
+      expect(zadanieDoZrobienia('kann isoliert werden'), isFalse);
+      expect(zadanieDoZrobienia(''), isFalse);
+      expect(zadanieDoZrobienia('0'), isFalse);
+      expect(zadanieDoZrobienia(null), isFalse);
+    });
+    test('ikonaNaBelce z zadaniem i matecznikami', () {
+      expect(ikonaNaBelce('green', '', todo: 'trzeba usunąć'), 'yellow');
+      expect(ikonaNaBelce('yellow', '', todo: 'można izolować'), 'green'); //stary zapis
+      expect(ikonaNaBelce('yellow', '', todo: '0'), 'green');
+      expect(ikonaNaBelce('yellow', ''), 'yellow'); //bez todo - bez zmian
+      expect(ikonaNaBelce('green', '', todo: '', mateczniki: 3), 'orange');
+      expect(ikonaNaBelce('green', '', todo: '', mateczniki: 3, usunmat: 3), 'green');
+      expect(ikonaNaBelce('yellow', '', todo: 'ramka pracy', mateczniki: 2, usunmat: 1), 'orange');
+      expect(ikonaNaBelce('red', '', todo: '', mateczniki: 2), 'red');
+      expect(ikonaNaBelce('black', '', todo: 'ramka pracy', mateczniki: 2), 'black');
+    });
+    test('kolorPrzegladuZRamek', () {
+      expect(kolorPrzegladuZRamek([]), 'green');
+      expect(kolorPrzegladuZRamek([{'zasob': 13, 'wartosc': 'można izolować'}]), 'green');
+      expect(kolorPrzegladuZRamek([{'zasob': 13, 'wartosc': 'trzeba wirować'}]), 'yellow');
+      expect(kolorPrzegladuZRamek([{'zasob': 11, 'wartosc': '2'}]), 'orange');
+      expect(kolorPrzegladuZRamek([
+        {'zasob': 11, 'wartosc': '2'}, {'zasob': 11, 'wartosc': '1'}, {'zasob': 12, 'wartosc': '3'},
+        {'zasob': 13, 'wartosc': 'ramka pracy'},
+      ]), 'yellow'); //wszystkie mateczniki usunięte
+      expect(kolorPrzegladuZRamek([
+        {'zasob': 13, 'wartosc': 'ramka pracy'}, {'zasob': 11, 'wartosc': '1'},
+      ]), 'orange');
     });
   });
 

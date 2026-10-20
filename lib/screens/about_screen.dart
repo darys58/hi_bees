@@ -299,7 +299,7 @@ class AboutScreen extends StatelessWidget {
                         ),
                       ),
                     
-                      SizedBox(height: 22),
+                      SizedBox(height: 42),
      //regulamin i polityka prywatności (09.10.2026)
                       Wrap(
                         alignment: WrapAlignment.center,
