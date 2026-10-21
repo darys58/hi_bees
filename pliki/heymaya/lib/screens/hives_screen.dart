@@ -57,7 +57,7 @@ class _HivesScreenState extends State<HivesScreen> {
   //WIDOK ULI Z PROBLEMAMI (20.10.2026) - kafelek w oknie "Ostatnie informacje": tylko ule
   //z kolorową ikoną (żółta, pomarańczowa, czerwona, czarna); zielone ukryte. Kafelek
   //odświeża belki "o zasobach i matkach" (cechy matek są tylko w tym trybie) i ustawia
-  //globals.widokProblemowUli; pod paskiem podsumowanie (problemy_pasieki.dart)
+  //globals.widokProblemowUli; na końcu listy podsumowanie (problemy_pasieki.dart)
   bool _tylkoProblemy = false;
   Map<int, RamkiProblemuUla>? _ramkiProblemow; //zadania i mateczniki z ramek pasieki
   List<Frame> _daty = []; //unikalne daty z tabeli "ramki" (z zasobami na ramkach)
@@ -2154,12 +2154,11 @@ class _HivesScreenState extends State<HivesScreen> {
                   ),
                 Expanded(
                   child: ListView.builder(
-                    //w widoku uli z problemami pierwszy element to podsumowanie (przewija się z listą)
+                    //w widoku uli z problemami ostatni element to podsumowanie (po belkach uli)
                     itemCount: widoczneUle.length + (_tylkoProblemy ? 1 : 0),
                     itemBuilder: (ctx, i) {
-                      if (_tylkoProblemy) {
-                        if (i == 0) return panelProblemowPasieki(ctx, hives, _ramkiProblemow);
-                        i--;
+                      if (_tylkoProblemy && i == widoczneUle.length) {
+                        return panelProblemowPasieki(ctx, hives, _ramkiProblemow);
                       }
                       return ChangeNotifierProvider.value(
                         value: widoczneUle[i],

@@ -45,6 +45,11 @@ class _SummaryScreenState extends State<SummaryScreen> {
   String _lastHarvestHoneyDate = '';
   double _lastHarvestPollenL = 0;
   String _lastHarvestPollenDate = '';
+  //sumy roczne (rok ostatniego wpisu) - jak w statystyce dokarmiania "(2026: 12 l)"
+  double _yearHarvestHoneyKg = 0;
+  double _yearHarvestPollenL = 0;
+  double? _yearFeeding; //null - bez sumy (pokarm zabrany/pozostały)
+  double? _yearTreatment;
   List<Note> _hiveNotes = [];
   List<Photo> _photos = [];
 
@@ -140,6 +145,27 @@ class _SummaryScreenState extends State<SummaryScreen> {
           }
         }
 
+        //sumy roczne dokarmiania i leczenia - ten sam parametr i miara co ostatni wpis,
+        //w roku ostatniego wpisu (pokarm zabrany/pozostały bez sumy, jak w statystyce)
+        double? sumaRoczna(Info? ostatni) {
+          if (ostatni == null) return null;
+          final param = parametrWBiezacym(context, ostatni.parametr);
+          if (param == locR.removedFood || param == locR.leftFood) return null;
+          final miara = miaraWBiezacym(context, ostatni.miara, parametr: ostatni.parametr);
+          final rok = ostatni.data.substring(0, 4);
+          double suma = 0;
+          for (final info in infosData.items) {
+            if (info.kategoria == ostatni.kategoria && info.data.startsWith(rok) &&
+                parametrWBiezacym(context, info.parametr) == param &&
+                miaraWBiezacym(context, info.miara, parametr: info.parametr) == miara) {
+              suma += double.tryParse(info.wartosc.replaceAll(',', '.')) ?? 0;
+            }
+          }
+          return suma;
+        }
+        _yearFeeding = sumaRoczna(_lastFeeding);
+        _yearTreatment = sumaRoczna(_lastTreatment);
+
         // Last honey/pollen harvest from info records (same formula as chart in infos_screen)
         final loc = AppLocalizations.of(context)!;
         final dod1Data = Provider.of<Dodatki1>(context, listen: false);
@@ -171,57 +197,82 @@ class _SummaryScreenState extends State<SummaryScreen> {
           }
           }
 
-          // Sum all honey from the latest honey date (small frames + big frames + kg)
-          if (latestHoneyDate.isNotEmpty) {
-            double totalGrams = 0;
-            final defaultWagaDm2 = int.parse(dod1[0].b);
-            // Sprawdź czy istnieje harvest.g dla tej daty miodobrania
-            final harvestsData = Provider.of<Harvests>(context, listen: false);
-            int wagaDm2 = defaultWagaDm2;
+          // Waga 1 dm² miodu dla daty miodobrania - harvest.g z miodobrania +-3 dni, inaczej domyślna
+          final defaultWagaDm2 = int.parse(dod1[0].b);
+          final harvestsData = Provider.of<Harvests>(context, listen: false);
+          int wagaDlaDaty(String data) {
             for (var h in harvestsData.items) {
               if (h.zasobId == 1 && h.pasiekaNr == globals.pasiekaID && h.g.isNotEmpty) {
                 DateTime hDt = DateTime.parse(h.data.substring(0, 10));
-                DateTime lDt = DateTime.parse(latestHoneyDate.substring(0, 10));
+                DateTime lDt = DateTime.parse(data.substring(0, 10));
                 if (hDt.difference(lDt).inDays.abs() <= 3) {
-                  wagaDm2 = int.tryParse(h.g) ?? defaultWagaDm2;
-                  break;
+                  return int.tryParse(h.g) ?? defaultWagaDm2;
                 }
               }
             }
+            return defaultWagaDm2;
+          }
+          // Miód z wpisu w gramach (small frames + big frames + kg)
+          double gramyMiodu(Info info, int wagaDm2) {
+            final p = parametrWBiezacym(context, info.parametr);
+            if (p == paramHoneySmall) {
+              double dm = dmZWpisu(info.pogoda, mala: true) /*pogoda, nie miara - tam zapisuje ją wpis*/;
+              return (double.tryParse(info.wartosc) ?? 0) * wagaDm2 * dm / 10000;
+            } else if (p == paramHoneyBig) {
+              double dm = dmZWpisu(info.pogoda, mala: false) /*pogoda, nie miara - tam zapisuje ją wpis*/;
+              return (double.tryParse(info.wartosc) ?? 0) * wagaDm2 * dm / 10000;
+            } else if (p == paramHoneyKg) {
+              return (double.tryParse(info.wartosc) ?? 0) * 1000;
+            }
+            return 0;
+          }
+          // Pyłek z wpisu w ml (miarka/portion + ml + l)
+          final mlPerMiarka = int.tryParse(dod1[0].g) ?? 0;
+          double mlPylku(Info info) {
+            final p = parametrWBiezacym(context, info.parametr);
+            if (p == paramPollenPortion || p == paramPollenMiarka) {
+              return (double.tryParse(info.wartosc) ?? 0) * mlPerMiarka;
+            } else if (p == paramPollenMl) {
+              return double.tryParse(info.wartosc) ?? 0;
+            } else if (p == paramPollenL) {
+              return (double.tryParse(info.wartosc) ?? 0) * 1000;
+            }
+            return 0;
+          }
+
+          // Sum all honey from the latest honey date + w roku tego miodobrania
+          if (latestHoneyDate.isNotEmpty) {
+            double totalGrams = 0;
+            double yearGrams = 0;
+            final rok = latestHoneyDate.substring(0, 4);
+            final wagi = <String, int>{}; //data miodobrania -> waga dm²
             for (final info in infosData.items) {
-              if (info.kategoria == 'harvest' && info.data == latestHoneyDate && info.wartosc.isNotEmpty) {
-                if (parametrWBiezacym(context, info.parametr) == paramHoneySmall) {
-                  double dm = dmZWpisu(info.pogoda, mala: true) /*pogoda, nie miara - tam zapisuje ją wpis*/;
-                  totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
-                } else if (parametrWBiezacym(context, info.parametr) == paramHoneyBig) {
-                  double dm = dmZWpisu(info.pogoda, mala: false) /*pogoda, nie miara - tam zapisuje ją wpis*/;
-                  totalGrams += double.parse(info.wartosc) * wagaDm2 * dm / 10000;
-                } else if (parametrWBiezacym(context, info.parametr) == paramHoneyKg) {
-                  totalGrams += double.parse(info.wartosc) * 1000;
-                }
+              if (info.kategoria == 'harvest' && info.data.startsWith(rok) && info.wartosc.isNotEmpty) {
+                final g = gramyMiodu(info, wagi.putIfAbsent(info.data, () => wagaDlaDaty(info.data)));
+                yearGrams += g;
+                if (info.data == latestHoneyDate) totalGrams += g;
               }
             }
             _lastHarvestHoneyKg = totalGrams / 1000;
             _lastHarvestHoneyDate = latestHoneyDate;
+            _yearHarvestHoneyKg = yearGrams / 1000;
           }
 
-          // Sum all pollen from the latest pollen date (miarka/portion + ml + l)
+          // Sum all pollen from the latest pollen date + w roku tego zbioru
           if (latestPollenDate.isNotEmpty) {
             double totalMl = 0;
-            final mlPerMiarka = int.tryParse(dod1[0].g) ?? 0;
+            double yearMl = 0;
+            final rok = latestPollenDate.substring(0, 4);
             for (final info in infosData.items) {
-              if (info.kategoria == 'harvest' && info.data == latestPollenDate && info.wartosc.isNotEmpty) {
-                if (parametrWBiezacym(context, info.parametr) == paramPollenPortion || parametrWBiezacym(context, info.parametr) == paramPollenMiarka) {
-                  totalMl += (double.tryParse(info.wartosc) ?? 0) * mlPerMiarka;
-                } else if (parametrWBiezacym(context, info.parametr) == paramPollenMl) {
-                  totalMl += double.tryParse(info.wartosc) ?? 0;
-                } else if (parametrWBiezacym(context, info.parametr) == paramPollenL) {
-                  totalMl += (double.tryParse(info.wartosc) ?? 0) * 1000;
-                }
+              if (info.kategoria == 'harvest' && info.data.startsWith(rok) && info.wartosc.isNotEmpty) {
+                final ml = mlPylku(info);
+                yearMl += ml;
+                if (info.data == latestPollenDate) totalMl += ml;
               }
             }
             _lastHarvestPollenL = totalMl / 1000;
             _lastHarvestPollenDate = latestPollenDate;
+            _yearHarvestPollenL = yearMl / 1000;
           }
         }
 
@@ -654,6 +705,32 @@ class _SummaryScreenState extends State<SummaryScreen> {
               ),
        //     ),
 
+          // --- Segment: brak matki ---
+          //ul bez podłączonej matki, a przegląd zapisał "brak matki" (matka2) - segment
+          //Matka się nie pokazuje, więc informacja o braku osobno (zgłoszenie 21.10.2026)
+          if (_queens.isEmpty && globals.showSummaryQueen && hive.matka2.length >= 4 &&
+              ['brak', 'miss', 'gone', 'nie '].contains(hive.matka2.substring(0, 4)))
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Image.asset('assets/image/matka1.png', width: 22, height: 22, fit: BoxFit.contain),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.dangerous_outlined, size: 24.0, color: Color.fromARGB(255, 255, 0, 0)),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${AppLocalizations.of(context)!.qUeen}: ${AppLocalizations.of(context)!.missing}',
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           // --- Segment: Matka ---
           if (_queens.isNotEmpty && globals.showSummaryQueen)
             Card(
@@ -843,7 +920,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
                             '${AppLocalizations.of(context)!.honey} '
                             '${globals.isEuropeanFormat() ? _lastHarvestHoneyKg.toStringAsFixed(1).replaceAll('.', ',') : _lastHarvestHoneyKg.toStringAsFixed(1)} '
                             'kg '
-                              '(${_zmienDateCala(_lastHarvestHoneyDate)})',
+                              '(${_zmienDateCala(_lastHarvestHoneyDate)}) '
+                              '(${_lastHarvestHoneyDate.substring(0, 4)}: ${_liczba(_yearHarvestHoneyKg, 1)} kg)',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -861,7 +939,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
                               '${AppLocalizations.of(context)!.beePollen} '
                               '${globals.isEuropeanFormat() ? _lastHarvestPollenL.toStringAsFixed(2).replaceAll('.', ',') : _lastHarvestPollenL.toStringAsFixed(2)} '
                               'l '
-                              '(${_zmienDateCala(_lastHarvestPollenDate)})',
+                              '(${_zmienDateCala(_lastHarvestPollenDate)}) '
+                              '(${_lastHarvestPollenDate.substring(0, 4)}: ${_liczba(_yearHarvestPollenL, 2)} l)',
                               style: const TextStyle(fontSize: 14),
                             ),
                           ),
@@ -898,7 +977,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${nazwaParametru(context, _lastFeeding!.parametr)} ${_lastFeeding!.wartosc} ${miaraWBiezacym(context, _lastFeeding!.miara, parametr: _lastFeeding!.parametr)} (${_zmienDateCala(_lastFeeding!.data)})',
+                            '${nazwaParametru(context, _lastFeeding!.parametr)} ${_lastFeeding!.wartosc} ${miaraWBiezacym(context, _lastFeeding!.miara, parametr: _lastFeeding!.parametr)} (${_zmienDateCala(_lastFeeding!.data)})'
+                            '${_yearFeeding == null ? '' : ' (${_lastFeeding!.data.substring(0, 4)}: ${_liczba(_yearFeeding!, 2)} ${miaraWBiezacym(context, _lastFeeding!.miara, parametr: _lastFeeding!.parametr)})'}',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -934,7 +1014,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${nazwaParametru(context, _lastTreatment!.parametr)} ${_lastTreatment!.wartosc} ${miaraWBiezacym(context, _lastTreatment!.miara, parametr: _lastTreatment!.parametr)} (${_zmienDateCala(_lastTreatment!.data)})',
+                            '${nazwaParametru(context, _lastTreatment!.parametr)} ${_lastTreatment!.wartosc} ${miaraWBiezacym(context, _lastTreatment!.miara, parametr: _lastTreatment!.parametr)} (${_zmienDateCala(_lastTreatment!.data)})'
+                            '${_yearTreatment == null ? '' : ' (${_lastTreatment!.data.substring(0, 4)}: ${_liczba(_yearTreatment!, 2)} ${miaraWBiezacym(context, _lastTreatment!.miara, parametr: _lastTreatment!.parametr)})'}',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -1201,6 +1282,13 @@ class _SummaryScreenState extends State<SummaryScreen> {
               overflow: TextOverflow.ellipsis),
       ],
     );
+  }
+
+  //liczba na ekran - [miejsca] po przecinku bez końcowych zer, przecinek w formacie europejskim
+  String _liczba(double v, int miejsca) {
+    String t = v.toStringAsFixed(miejsca);
+    if (t.contains('.')) t = t.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+    return globals.isEuropeanFormat() ? t.replaceAll('.', ',') : t;
   }
 
   String _zmienDateCala(String data) {
