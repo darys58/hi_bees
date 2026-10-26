@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/photo_helper.dart'; //ścieżka zdjęcia w bieżącym katalogu aplikacji
 import '../helpers/serwer_token.dart'; //nagłówek X-HB-Token przy imporcie
 
 class Photo with ChangeNotifier {
@@ -38,6 +39,7 @@ class Photos with ChangeNotifier {
   //pobranie zdjęć dla danego ula z bazy lokalnej
   Future<void> fetchAndSetPhotosForHive(int pasieka, int ul) async {
     final dataList = await DBHelper.getPhotosOfHive(pasieka, ul);
+    final katalog = await PhotoHelper.katalogZdjec();
     _items = dataList
         .map(
           (item) => Photo(
@@ -46,7 +48,7 @@ class Photos with ChangeNotifier {
             czas: item['czas'] ?? '',
             pasiekaNr: item['pasiekaNr'],
             ulNr: item['ulNr'],
-            sciezka: item['sciezka'],
+            sciezka: PhotoHelper.wKatalogu(item['sciezka'] ?? '', katalog),
             uwagi: item['uwagi'] ?? '',
             arch: item['arch'] ?? 0,
           ),
@@ -58,6 +60,7 @@ class Photos with ChangeNotifier {
   //pobranie wpisów zdjęć z bazy lokalnej
   Future<void> fetchAndSetPhotos() async {
     final dataList = await DBHelper.getZdjecia();
+    final katalog = await PhotoHelper.katalogZdjec();
     _items = dataList
         .map(
            (item) => Photo(
@@ -66,7 +69,7 @@ class Photos with ChangeNotifier {
             czas: item['czas'] ?? '',
             pasiekaNr: item['pasiekaNr'],
             ulNr: item['ulNr'],
-            sciezka: item['sciezka'],
+            sciezka: PhotoHelper.wKatalogu(item['sciezka'] ?? '', katalog),
             uwagi: item['uwagi'] ?? '',
             arch: item['arch'] ?? 0,
           ),
@@ -80,6 +83,7 @@ class Photos with ChangeNotifier {
   //pobranie nowych zdjęć z bazy lokalnej do archiwizacji
   Future<void> fetchAndSetPhotosToArch() async {
     final dataList = await DBHelper.getPhotosToArch();
+    final katalog = await PhotoHelper.katalogZdjec();
     _items = dataList
         .map(
           (item) => Photo(
@@ -88,7 +92,7 @@ class Photos with ChangeNotifier {
             czas: item['czas'] ?? '',
             pasiekaNr: item['pasiekaNr'],
             ulNr: item['ulNr'],
-            sciezka: item['sciezka'],
+            sciezka: PhotoHelper.wKatalogu(item['sciezka'] ?? '', katalog),
             uwagi: item['uwagi'] ?? '',
             arch: item['arch'] ?? 0,
           ),

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../globals.dart' as globals;
 import 'db_helper.dart';
+import 'photo_helper.dart'; //ścieżka zdjęcia w bieżącym katalogu aplikacji
 import 'eksport_kod.dart';
 import 'serwer_token.dart';
 
@@ -116,7 +117,7 @@ class UsunieteHelper {
       final wynik = await DBHelper.usunWskazane(wpisy);
       for (final sciezka in wynik.pliki) {
         try {
-          final plik = File(sciezka);
+          final plik = File(await PhotoHelper.biezacaSciezka(sciezka));
           if (await plik.exists()) await plik.delete();
         } catch (_) {}
       }

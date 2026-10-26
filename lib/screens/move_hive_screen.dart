@@ -5,6 +5,7 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../helpers/db_helper.dart';
+import '../helpers/photo_helper.dart'; //ścieżka zdjęcia w bieżącym katalogu aplikacji
 import '../helpers/colony_helpers.dart'; //kolor ikony ula ze stanem rodziny
 import '../globals.dart' as globals;
 import '../models/apiarys.dart';
@@ -356,7 +357,7 @@ class _MoveHiveScreenState extends State<MoveHiveScreen> {
       final photoPaths = await DBHelper.deleteHiveCascade(srcP, srcU);
       for (final path in photoPaths) {
         try {
-          final file = File(path);
+          final file = File(await PhotoHelper.biezacaSciezka(path));
           if (await file.exists()) await file.delete();
         } catch (_) {}
       }

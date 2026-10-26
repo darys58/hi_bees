@@ -44,4 +44,24 @@ class PhotoHelper {
       0,
     );
   }
+
+  //Katalog zdjęć <Documents>/photos. Na iOS ścieżka kontenera aplikacji (UUID) ZMIENIA SIĘ
+  //po każdej instalacji/aktualizacji, a w bazie leży pełna ścieżka z chwili zapisu - po
+  //restarcie nowej wersji File(sciezka) nie istniał, a _loadPhotos kasował wpis z bazy
+  //(zgłoszenie 26.10.2026: zdjęcia znikały). Plik zawsze leży w photos/, więc liczy się
+  //tylko nazwa pliku - jak w nagraniach (RecordingHelper.plik).
+  static Future<String> katalogZdjec() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    return '${appDir.path}/photos';
+  }
+
+  //zapisana w bazie ścieżka -> ścieżka w bieżącym katalogu zdjęć
+  static String wKatalogu(String zapisana, String katalog) {
+    if (zapisana.isEmpty) return zapisana;
+    return '$katalog/${zapisana.split('/').last}';
+  }
+
+  //jw., gdy katalogu nie ma pod ręką (usuwanie plików)
+  static Future<String> biezacaSciezka(String zapisana) async =>
+      wKatalogu(zapisana, await katalogZdjec());
 }

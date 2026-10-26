@@ -1213,7 +1213,21 @@ class _SummaryScreenState extends State<SummaryScreen> {
                   IconButton(
                     icon: const Icon(Icons.share, color: Colors.white, size: 30),
                     onPressed: () async {
-                      await Share.shareXFiles([XFile(photo.sciezka)]);
+                      //iOS wymaga niezerowego prostokąta, z którego wysuwa się okno
+                      //udostępniania ("sharePositionOrigin: argument must be set") -
+                      //bez niego wyjątek i przycisk nic nie robił. Środek ekranu, 1x1.
+                      final Size ekran = MediaQuery.of(ctx).size;
+                      try {
+                        await Share.shareXFiles(
+                          [XFile(photo.sciezka, mimeType: 'image/jpeg')],
+                          sharePositionOrigin: Rect.fromLTWH(ekran.width / 2, ekran.height / 2, 1, 1),
+                        );
+                      } catch (e) {
+                        debugPrint('Błąd udostępniania zdjęcia: $e');
+                        if (ctx.mounted) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Share error: $e')));
+                        }
+                      }
                     },
                   ),
                   IconButton(

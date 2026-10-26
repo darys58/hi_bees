@@ -19,6 +19,7 @@ import 'dart:convert'; //obsługa json'a
 import 'dart:typed_data';
 import 'dart:io';
 import '../helpers/db_helper.dart';
+import '../helpers/photo_helper.dart'; //ścieżka zdjęcia w bieżącym katalogu aplikacji
 import '../helpers/eksport_kod.dart'; //etap 1b: kod konta w eksporcie
 import '../helpers/usuniete_helper.dart'; //synchronizacja usunięć z chmurą (16.10.2026)
 import '../helpers/baza_zespolu.dart'; //odswiezPrawaBazy (etap 2 część B)
@@ -1620,7 +1621,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
               //fizyczne usunięcie zdjęć
               for (final path in photoPaths) {
                 try {
-                  final file = File(path);
+                  final file = File(await PhotoHelper.biezacaSciezka(path));
                   if (await file.exists()) {
                     await file.delete();
                   }
