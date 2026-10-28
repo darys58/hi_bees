@@ -62,6 +62,7 @@ import 'package:mobile_scanner/mobile_scanner.dart'
     show MobileScanner, MobileScannerController, BarcodeCapture, BarcodeFormat, DetectionSpeed;
 import 'qr_scan_screen.dart' show sprawdzKodQrUla; //kody QR uli (15.10.2026)
 import '../helpers/photo_helper.dart'; //zapis zdjęcia ula (wspólny z infos_screen)
+import '../helpers/problemy_pasieki.dart'; //podsumowanie pasieki po "otwórz pasiekę X"
 import 'package:nfc_manager/nfc_manager.dart';
 import '../helpers/nfc_helper.dart'; //ID tagu NFC
 import 'package:hi_bees/l10n/app_localizations.dart';
@@ -575,6 +576,70 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   bool _komendyPoFilmie = false; //sesja była otwarta - po filmie wraca do komend
   bool _aparatPrzelacza = false; //wymiana kontrolera z/bez dźwięku - czarna nakładka
   bool _zamykamAparat = false; //zamknięcie czeka na zapis filmu - bez powrotu podglądu
+
+  //PODSUMOWANIE PASIEKI (28.10.2026): po "otwórz pasiekę X" nakładka z ulami z problemami,
+  //najpilniejsze na górze (problemy_pasieki.dart). Znika po otwarciu ula, zamknięciu albo
+  //zmianie pasieki i krzyżykiem. Bez osobnej komendy - decyzja usera.
+  PodsumowaniePasieki? _podsumowanie;
+  int _podsumowanieLicznik = 0; //starsze, wolniej policzone podsumowanie nie nadpisuje nowszego
+
+  Future<void> _pokazPodsumowanie(int pasieka) async {
+    final int nr = ++_podsumowanieLicznik;
+    try {
+      final d = await podsumowaniePasieki(pasieka);
+      if (!mounted || nr != _podsumowanieLicznik) return;
+      //w międzyczasie otwarto ul (np. tag NFC / kod QR) albo inną pasiekę
+      if (!readyApiary || readyHive || nrXXOfApiary != pasieka) return;
+      setState(() => _podsumowanie = d);
+    } catch (e) {
+      debugPrint('PODSUMOWANIE: pasieka $pasieka - $e');
+    }
+  }
+
+  void _schowajPodsumowanie() {
+    _podsumowanieLicznik++; //liczone w tle już się nie pokaże
+    if (_podsumowanie == null) return;
+    if (mounted) {
+      setState(() => _podsumowanie = null);
+    } else {
+      _podsumowanie = null;
+    }
+  }
+
+  //nakładka jak podgląd aparatu: korpus ekranu + pasek stanu Mai na dole
+  Widget _buildPodsumowanie(BuildContext context) {
+    final PodsumowaniePasieki d = _podsumowanie!;
+    return Container(
+      color: const Color.fromARGB(255, 255, 255, 255),
+      child: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  //w poziomie +30 z lewej - wycięcie ekranu iPhone'a zasłaniało ikony uli
+                  padding: EdgeInsets.fromLTRB(
+                      MediaQuery.of(context).orientation == Orientation.landscape ? 42 : 12,
+                      10, 44, 10),
+                  child: panelUliDoZrobienia(context, d),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: IconButton(
+                    iconSize: 30,
+                    icon: const Icon(Icons.close),
+                    onPressed: _schowajPodsumowanie,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          buildPasekStanu(context),
+        ],
+      ),
+    );
+  }
 
   //voiceCamera / voicePhoto / voiceCameraClose / voiceVideo / voiceVideoStop
   Future<void> _komendaAparatu(String intent) async {
@@ -2792,6 +2857,17 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     if (_aparat != null &&
         (!readyHive || nrXXOfApiary != _aparatPasieka || nrXXOfHive != _aparatUl)) {
       _zamknijAparat();
+    }
+
+    //podsumowanie pasieki: pokazane po jej otwarciu, schowane po otwarciu ula
+    //albo zamknięciu/zmianie pasieki
+    if (_podsumowanie != null &&
+        (readyHive || !readyApiary || nrXXOfApiary != _podsumowanie!.pasieka)) {
+      _schowajPodsumowanie();
+    }
+    if (inference.isUnderstood == true && inference.intent == 'setApiary' &&
+        readyApiary && !readyHive && nrXXOfApiary != 0) {
+      _pokazPodsumowanie(nrXXOfApiary);
     }
 
     //anulowalny timer zastępujący Future.delayed - przy nowej komendzie stary
@@ -8957,6 +9033,9 @@ print('openDialog = $openDialog');
             );
           },
           )),
+          //podsumowanie pasieki pod aparatem - aparat i tak wymaga otwartego ula
+          if (_podsumowanie != null && _aparat == null && !_aparatPrzelacza)
+            Positioned.fill(child: _buildPodsumowanie(context)),
           if (_aparat != null) Positioned.fill(child: _buildAparat(context)),
           //wymiana kontrolera przy filmie z dźwiękiem - podgląd gaśnie na chwilę
           if (_aparat == null && _aparatPrzelacza)

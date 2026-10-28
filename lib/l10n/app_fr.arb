@@ -964,6 +964,7 @@
     "hiveNewsSettingsInfo": "Les actualités de la ruche résument les informations les plus importantes sur une ruche. Pour les ouvrir, faites glisser une ruche vers la gauche dans la liste des ruches. Choisissez avec les interrupteurs les sections à afficher.",
     "@hiveNewsSettingsInfo": {},
     "hivesWithProblems": "Ruches à problèmes",
+    "noHivesWithProblems": "aucune ruche à problème",
     "@hivesWithProblems": {},
     "photos": "Photos",
     "@photos": {},

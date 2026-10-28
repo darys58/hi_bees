@@ -5515,6 +5515,12 @@ abstract class AppLocalizations {
   /// **'Hives with problems'**
   String get hivesWithProblems;
 
+  /// No description provided for @noHivesWithProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'no hives with problems'**
+  String get noHivesWithProblems;
+
   /// No description provided for @photos.
   ///
   /// In en, this message translates to:

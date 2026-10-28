@@ -488,7 +488,7 @@ class DBHelper {
   static Future<List<Map<String, dynamic>>> getZadaniaIMatecznikiPasieki(int pasieka) async {
     final db = await DBHelper.database();
     return db.rawQuery(
-        'SELECT r.ulNr, r.korpusNr, r.ramkaNr, r.zasob, r.wartosc FROM ramka r '
+        'SELECT r.ulNr, r.korpusNr, r.ramkaNr, r.zasob, r.wartosc, r.data FROM ramka r '
         'JOIN (SELECT ulNr, korpusNr, MAX(data) AS d FROM ramka WHERE pasiekaNr = ? '
         'GROUP BY ulNr, korpusNr) o ON r.ulNr = o.ulNr AND r.korpusNr = o.korpusNr AND r.data = o.d '
         'WHERE r.pasiekaNr = ? AND r.zasob IN (11, 12, 13) AND r.ramkaNrPo <> 0',

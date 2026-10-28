@@ -979,6 +979,7 @@
     "hiveNewsSettingsInfo": "Aktualności ula to podsumowanie najważniejszych informacji o ulu. Otwierasz je, przesuwając ul w lewo na liście uli. Przełącznikami wybierz, które sekcje mają się tam pojawiać.",
     "@hiveNewsSettingsInfo": {},
     "hivesWithProblems": "Ule z problemami",
+    "noHivesWithProblems": "brak uli z problemami",
     "@hivesWithProblems": {},
     "photos": "Zdjęcia",
     "@photos": {},

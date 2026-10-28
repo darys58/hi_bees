@@ -2802,6 +2802,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get hivesWithProblems => 'Colmeias com problemas';
 
   @override
+  String get noHivesWithProblems => 'nenhuma colmeia com problemas';
+
+  @override
   String get photos => 'Fotos';
 
   @override

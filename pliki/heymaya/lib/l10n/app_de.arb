@@ -964,6 +964,7 @@
     "hiveNewsSettingsInfo": "Beuten-Neuigkeiten sind eine Übersicht der wichtigsten Informationen über eine Beute. Zum Öffnen wischen Sie eine Beute in der Beutenliste nach links. Wählen Sie mit den Schaltern, welche Abschnitte dort angezeigt werden.",
     "@hiveNewsSettingsInfo": {},
     "hivesWithProblems": "Beuten mit Problemen",
+    "noHivesWithProblems": "keine Beuten mit Problemen",
     "@hivesWithProblems": {},
     "photos": "Fotos",
     "@photos": {},

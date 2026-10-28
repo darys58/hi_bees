@@ -964,6 +964,7 @@
     "hiveNewsSettingsInfo": "Novedades de la colmena es un resumen de la información más importante sobre una colmena. Para abrirlo, desliza una colmena hacia la izquierda en la lista de colmenas. Elige con los interruptores qué secciones se muestran.",
     "@hiveNewsSettingsInfo": {},
     "hivesWithProblems": "Colmenas con problemas",
+    "noHivesWithProblems": "no hay colmenas con problemas",
     "@hivesWithProblems": {},
     "photos": "Fotos",
     "@photos": {},

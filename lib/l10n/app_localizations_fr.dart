@@ -2766,6 +2766,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hivesWithProblems => 'Ruches à problèmes';
 
   @override
+  String get noHivesWithProblems => 'aucune ruche à problème';
+
+  @override
   String get photos => 'Photos';
 
   @override

@@ -2754,6 +2754,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get hivesWithProblems => 'Beuten mit Problemen';
 
   @override
+  String get noHivesWithProblems => 'keine Beuten mit Problemen';
+
+  @override
   String get photos => 'Fotos';
 
   @override
