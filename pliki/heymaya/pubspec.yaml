@@ -77,6 +77,8 @@ dependencies:
   share_plus: ^7.2.2
   image_picker: ^1.0.7
   camera: ^0.11.1 #aparat w sterowaniu głosem: podgląd w ekranie i migawka komendą (11.10.2026)
+  video_player: ^2.9.2 #odtwarzanie filmów ula w przeglądzie i Aktualnościach (28.10.2026)
+  fc_native_video_thumbnail: ^2.2.0 #miniatura filmu = pierwszy kadr (28.10.2026); 3.x wymaga Fluttera 3.44
   mobile_scanner: ^7.0.0 #odczyt kodów QR uli (15.10.2026, plan pliki/plan_kody_qr.md)
   flutter_map: ^6.2.1
   latlong2: ^0.9.1

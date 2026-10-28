@@ -121,6 +121,13 @@ context:
       - (hej maja) [zamknij,wyłącz] aparat
       # skaner kodów QR (15.10.2026) - ta sama komenda zamyka podgląd i skaner
       - (hej maja) [zamknij,wyłącz] skaner
+    # FILM (28.10.2026) na otwartym podglądzie aparatu, bez dźwięku (mikrofon zostaje
+    # dla Vosk), max 30 s. "hej maja stop" kończy sesję, więc stop filmu ma własny
+    # czasownik. Słowa sprawdzone w pliki/vosk_slownik_pl.txt.
+    voiceVideo:
+      - (hej maja) nagraj [film,filmik,wideo]
+    voiceVideoStop:
+      - (hej maja) [zatrzymaj,zakończ] [nagrywanie,film,filmik]
     setApiary:
       - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

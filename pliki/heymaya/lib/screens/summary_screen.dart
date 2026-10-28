@@ -19,6 +19,8 @@ import '../widgets/hives_item.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 import '../helpers/db_helper.dart';
+import '../helpers/photo_helper.dart'; //jestFilm - film wśród zdjęć ula
+import '../widgets/film_widgets.dart'; //miniatura i odtwarzacz filmu ula
 
 class SummaryScreen extends StatefulWidget {
   static const routeName = '/screen-summary';
@@ -677,7 +679,9 @@ class _SummaryScreenState extends State<SummaryScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
+                                child: PhotoHelper.jestFilm(photo.sciezka)
+                                    ? MiniaturaFilmu(sciezka: photo.sciezka)
+                                    : Image.file(
                                   File(photo.sciezka),
                                   width: 80,
                                   height: 80,
@@ -1170,6 +1174,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
   }
 
   void _showPhotoPreview(Photo photo) {
+    final bool film = PhotoHelper.jestFilm(photo.sciezka);
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -1177,6 +1182,9 @@ class _SummaryScreenState extends State<SummaryScreen> {
         insetPadding: EdgeInsets.zero,
         child: Stack(
           children: [
+            if (film)
+              OdtwarzaczFilmu(sciezka: photo.sciezka)
+            else
             Center(
               child: InteractiveViewer(
                 child: Image.file(
@@ -1219,7 +1227,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                       final Size ekran = MediaQuery.of(ctx).size;
                       try {
                         await Share.shareXFiles(
-                          [XFile(photo.sciezka, mimeType: 'image/jpeg')],
+                          [XFile(photo.sciezka, mimeType: film ? 'video/mp4' : 'image/jpeg')],
                           sharePositionOrigin: Rect.fromLTWH(ekran.width / 2, ekran.height / 2, 1, 1),
                         );
                       } catch (e) {

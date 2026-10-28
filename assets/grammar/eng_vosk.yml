@@ -146,6 +146,12 @@ context:
       - (hey maya) close camera
       # QR code scanner (15.10.2026) - the same command closes preview and scanner
       - (hey maya) close scanner
+    # VIDEO (28.10.2026) on the open camera preview, no sound (the microphone stays
+    # with Vosk), max 30 s. Words checked in pliki/vosk_slownik_eng.txt.
+    voiceVideo:
+      - (hey maya) record [video,film]
+    voiceVideoStop:
+      - (hey maya) [stop,finish,end] recording
     setApiary:
       - $state:apiaryState apiary (number) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

@@ -48,6 +48,8 @@ POMOC = [
         'zamknij skaner', 'wyłącz skaner', 'hej maja zamknij skaner',
         'otwórz aparat', 'włącz aparat', 'zrób zdjęcie', 'pstryk',
         'hej maja zrób zdjęcie', 'zamknij aparat', 'wyłącz aparat',
+        'nagraj film', 'nagraj filmik', 'nagraj wideo', 'hej maja nagraj film',
+        'zatrzymaj nagrywanie', 'zakończ nagrywanie', 'hej maja zatrzymaj nagrywanie',
     ]),
     ('lokacja', [
         'otwórz pasiekę numer jeden',

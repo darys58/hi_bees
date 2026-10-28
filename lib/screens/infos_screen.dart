@@ -32,6 +32,7 @@ import '../helpers/colony_helpers.dart'; //ikonka przed stanem rodziny
 import '../helpers/powierzchnia_ramki.dart'; //dmZWpisu - powierzchnia węzy z wpisu zbioru
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
 import '../helpers/photo_helper.dart'; //zapis zdjęcia ula
+import '../widgets/film_widgets.dart'; //miniatura i odtwarzacz filmu ula
 import '../helpers/eksport_helper.dart'; //menu PDF/CSV, zapis CSV
 
 class InfoScreen extends StatefulWidget {
@@ -475,8 +476,28 @@ class _InfoScreenState extends State<InfoScreen> {
     await _savePickedImage(image);
   }
 
+  //nagranie filmu systemowym aparatem (28.10.2026) - limit 15/30/60 s z ustawień, film
+  //zostaje tylko na telefonie (PhotoHelper.sqlBezFilmow). Z dźwiękiem - Vosk w tym ekranie
+  //nie słucha.
+  Future<void> _nagrajFilm() async {
+    if (!mogeZapisac(context, [czZdjecia], pasieka: globals.pasiekaID)) return;
+    await PhotoHelper.wczytajUstawieniaFilmu(); //długość z Ustawień -> Sterowanie głosem
+    if (!mounted) return;
+    final XFile? film = await _picker.pickVideo(
+      source: ImageSource.camera,
+      maxDuration: PhotoHelper.maxFilmu,
+    );
+    if (film == null || !mounted) return;
+    await PhotoHelper.zapiszFilm(film.path, globals.pasiekaID, globals.ulID);
+    try {
+      await File(film.path).delete(); //plik tymczasowy - kopia jest w photos/
+    } catch (_) {}
+    await _loadPhotos();
+  }
+
   //podgląd zdjęcia na pełnym ekranie
   void _showPhotoPreview(Photo photo) {
+    final bool film = PhotoHelper.jestFilm(photo.sciezka);
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -484,7 +505,10 @@ class _InfoScreenState extends State<InfoScreen> {
         insetPadding: EdgeInsets.zero,
         child: Stack(
           children: [
-            //zdjęcie z możliwością zoomowania
+            //zdjęcie z możliwością zoomowania albo odtwarzacz filmu
+            if (film)
+              OdtwarzaczFilmu(sciezka: photo.sciezka)
+            else
             Center(
               child: InteractiveViewer(
                 child: Image.file(
@@ -530,7 +554,7 @@ class _InfoScreenState extends State<InfoScreen> {
                       final Size ekran = MediaQuery.of(ctx).size;
                       try {
                         await Share.shareXFiles(
-                          [XFile(photo.sciezka, mimeType: 'image/jpeg')],
+                          [XFile(photo.sciezka, mimeType: film ? 'video/mp4' : 'image/jpeg')],
                           sharePositionOrigin: Rect.fromLTWH(ekran.width / 2, ekran.height / 2, 1, 1),
                         );
                       } catch (e) {
@@ -554,7 +578,9 @@ class _InfoScreenState extends State<InfoScreen> {
                       final confirm = await showDialog<bool>(
                         context: ctx,
                         builder: (c) => AlertDialog(
-                          title: Text(AppLocalizations.of(context)!.dEleteFoto), //Usuwanie zdjęcia
+                          title: Text(film
+                              ? AppLocalizations.of(context)!.dEleteVideo //Usuwanie filmu
+                              : AppLocalizations.of(context)!.dEleteFoto), //Usuwanie zdjęcia
                           content: Text(AppLocalizations.of(context)!.tORemove + '?'), //Usunąć ?
                           actions: [
                             TextButton(
@@ -575,8 +601,8 @@ class _InfoScreenState extends State<InfoScreen> {
                         if (await file.exists()) {
                           await file.delete();
                         }
-                        //kasowanie z bazy
-                        await Photos.deletePhoto(photo.id);
+                        //kasowanie z bazy; filmu nie ma w chmurze - bez kolejki usunięć
+                        await Photos.deletePhoto(photo.id, zglos: !film);
                         Navigator.of(ctx).pop();
                         await _loadPhotos();
                       }
@@ -3236,7 +3262,9 @@ class _InfoScreenState extends State<InfoScreen> {
                                   children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.file(
+                                      child: PhotoHelper.jestFilm(photo.sciezka)
+                                          ? MiniaturaFilmu(sciezka: photo.sciezka)
+                                          : Image.file(
                                         File(photo.sciezka),
                                         width: 80,
                                         height: 80,
@@ -3262,8 +3290,11 @@ class _InfoScreenState extends State<InfoScreen> {
                         ),
                       ),
                     if (_photos.isNotEmpty) SizedBox(height: 8),
-  //przyciski: aparat i galeria - wyśrodkowane
-                    Row(
+  //przyciski: aparat, galeria i film - wyśrodkowane; FittedBox zmniejsza rząd na wąskim
+  //ekranie (trzy przyciski, dłuższe napisy w DE/FR)
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton.icon(
@@ -3289,7 +3320,21 @@ class _InfoScreenState extends State<InfoScreen> {
 
                           ),
                         ),
+                        SizedBox(width: 10),
+                        //film do 30 s, tylko na telefonie (28.10.2026)
+                        ElevatedButton.icon(
+                          onPressed: _nagrajFilm,
+                          icon: Icon(Icons.videocam, size: 20),
+                          label: Text(AppLocalizations.of(context)!.vIdeo),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 252, 193, 104),
+                            foregroundColor: Colors.black,
+                            side: BorderSide(color: Colors.grey),
+
+                          ),
+                        ),
                       ],
+                    ),
                     ),
                     //NOWE RAMKI Z WĘZĄ w roku statystyk, osobno dla korpusów (rodnia
                     //to zwykle korpus 1) - wymiana starych ramek (15.10.2026). Z bazy przy

@@ -1193,10 +1193,20 @@
     "voiceNfcTagNotAssigned": "Esta etiqueta NFC no está asignada a ninguna colmena",
     "voiceNfcHiveOutOfRange": "La colmena de esta etiqueta está en un colmenar al que no tienes acceso",
     "voicePhotoNoHive": "A photo can only be taken with a hive open",
-    "voiceCameraHint": "Say “take photo” or “snap”; “close camera” to finish",
+    "voiceCameraHint": "Say “take photo”, “snap” or “record video”; “close camera” to finish",
     "voiceCameraError": "Could not start the camera – check camera permission in phone settings",
     "voicePhotoSaved": "Photo saved",
     "voicePhotoError": "Could not save the photo",
+    "vIdeo": "Vídeo",
+    "dEleteVideo": "Eliminando vídeo",
+    "voiceVideoStarted": "Recording – “stop recording” to finish",
+    "voiceVideoSaved": "Video saved",
+    "voiceVideoError": "Could not record the video",
+    "voiceSetVideoSound": "Video with sound",
+    "voiceSetVideoSoundInfo": "Voice commands are paused while recording. The video ends after the set time or with the stop button, then commands come back.",
+    "voiceSetVideoLength": "Video length",
+    "voiceSetVideoLengthInfo": "Also applies to the “Video” button in the hive inspection",
+    "voiceVideoCommandsPaused": "commands paused",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

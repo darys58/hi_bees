@@ -243,6 +243,13 @@ POMOC = [
         'snap',
         'hey maya take photo',
         'close camera',
+        'record video',
+        'record film',
+        'hey maya record video',
+        'stop recording',
+        'finish recording',
+        'end recording',
+        'hey maya stop recording',
     ]),
 ]
 

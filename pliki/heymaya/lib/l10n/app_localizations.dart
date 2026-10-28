@@ -4180,7 +4180,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceCameraHint.
   ///
   /// In en, this message translates to:
-  /// **'Say “take photo” or “snap”; “close camera” to finish'**
+  /// **'Say “take photo”, “snap” or “record video”; “close camera” to finish'**
   String get voiceCameraHint;
 
   /// No description provided for @voiceCameraError.
@@ -4200,6 +4200,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the photo'**
   String get voicePhotoError;
+
+  /// No description provided for @vIdeo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get vIdeo;
+
+  /// No description provided for @dEleteVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting video'**
+  String get dEleteVideo;
+
+  /// No description provided for @voiceVideoStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording – “stop recording” to finish'**
+  String get voiceVideoStarted;
+
+  /// No description provided for @voiceVideoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Video saved'**
+  String get voiceVideoSaved;
+
+  /// No description provided for @voiceVideoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not record the video'**
+  String get voiceVideoError;
+
+  /// No description provided for @voiceSetVideoSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Video with sound'**
+  String get voiceSetVideoSound;
+
+  /// No description provided for @voiceSetVideoSoundInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice commands are paused while recording. The video ends after the set time or with the stop button, then commands come back.'**
+  String get voiceSetVideoSoundInfo;
+
+  /// No description provided for @voiceSetVideoLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Video length'**
+  String get voiceSetVideoLength;
+
+  /// No description provided for @voiceSetVideoLengthInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Also applies to the “Video” button in the hive inspection'**
+  String get voiceSetVideoLengthInfo;
+
+  /// No description provided for @voiceVideoCommandsPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'commands paused'**
+  String get voiceVideoCommandsPaused;
 
   /// No description provided for @nfcAssignTag.
   ///

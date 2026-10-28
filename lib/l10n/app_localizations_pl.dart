@@ -3079,7 +3079,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get voiceCameraHint =>
-      'Powiedz „zrób zdjęcie” albo „pstryk”, a „zamknij aparat” kończy';
+      'Powiedz „zrób zdjęcie”, „pstryk” albo „nagraj film”, a „zamknij aparat” kończy';
 
   @override
   String get voiceCameraError =>
@@ -3090,6 +3090,38 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get voicePhotoError => 'Nie udało się zapisać zdjęcia';
+
+  @override
+  String get vIdeo => 'Film';
+
+  @override
+  String get dEleteVideo => 'Usuwanie filmu';
+
+  @override
+  String get voiceVideoStarted => 'Nagrywam – „zatrzymaj nagrywanie” kończy';
+
+  @override
+  String get voiceVideoSaved => 'Film zapisany';
+
+  @override
+  String get voiceVideoError => 'Nie udało się nagrać filmu';
+
+  @override
+  String get voiceSetVideoSound => 'Film z dźwiękiem';
+
+  @override
+  String get voiceSetVideoSoundInfo =>
+      'Na czas nagrania komendy głosowe są wstrzymane. Film kończy się po ustawionym czasie albo przyciskiem stop, potem komendy wracają.';
+
+  @override
+  String get voiceSetVideoLength => 'Długość filmu';
+
+  @override
+  String get voiceSetVideoLengthInfo =>
+      'Dotyczy też przycisku „Film” w przeglądzie ula';
+
+  @override
+  String get voiceVideoCommandsPaused => 'komendy wstrzymane';
 
   @override
   String get teamWork => 'Praca zespołowa';

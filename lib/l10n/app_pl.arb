@@ -1208,10 +1208,20 @@
     "voiceNfcTagNotAssigned": "Ten tag NFC nie jest przypisany do żadnego ula",
     "voiceNfcHiveOutOfRange": "Ul z tego tagu jest w pasiece, do której nie masz dostępu",
     "voicePhotoNoHive": "Zdjęcie można zrobić tylko przy otwartym ulu",
-    "voiceCameraHint": "Powiedz „zrób zdjęcie” albo „pstryk”, a „zamknij aparat” kończy",
+    "voiceCameraHint": "Powiedz „zrób zdjęcie”, „pstryk” albo „nagraj film”, a „zamknij aparat” kończy",
     "voiceCameraError": "Nie udało się włączyć aparatu – sprawdź zgodę na aparat w ustawieniach telefonu",
     "voicePhotoSaved": "Zdjęcie zapisane",
     "voicePhotoError": "Nie udało się zapisać zdjęcia",
+    "vIdeo": "Film",
+    "dEleteVideo": "Usuwanie filmu",
+    "voiceVideoStarted": "Nagrywam – „zatrzymaj nagrywanie” kończy",
+    "voiceVideoSaved": "Film zapisany",
+    "voiceVideoError": "Nie udało się nagrać filmu",
+    "voiceSetVideoSound": "Film z dźwiękiem",
+    "voiceSetVideoSoundInfo": "Na czas nagrania komendy głosowe są wstrzymane. Film kończy się po ustawionym czasie albo przyciskiem stop, potem komendy wracają.",
+    "voiceSetVideoLength": "Długość filmu",
+    "voiceSetVideoLengthInfo": "Dotyczy też przycisku „Film” w przeglądzie ula",
+    "voiceVideoCommandsPaused": "komendy wstrzymane",
     "@voiceQueenSavedInHives": {
         "placeholders": {
             "saved": {

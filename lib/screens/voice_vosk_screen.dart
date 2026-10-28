@@ -543,10 +543,46 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   int _aparatUl = 0;
   Timer? _timerAparatu; //zamknięcie po bezczynności - podgląd zjada baterię
   static const Duration _kAparatBezczynnosc = Duration(minutes: 2);
+  //FILM (28.10.2026) z tego samego podglądu: bez dźwięku (enableAudio: false - mikrofon
+  //zostaje dla Vosk), max PhotoHelper.maxFilmu (15/30/60 s z ustawień), zapis do zdjęć
+  //ula (tylko telefon). Zamknięcie aparatu w trakcie nagrania (zmiana ula, koniec sesji,
+  //"zamknij aparat") najpierw zapisuje film do ula, przy którym go zaczęto.
+  //Opcja "Film z dźwiękiem" (PhotoHelper.filmZDzwiekiem): Vosk oddaje mikrofon
+  //(wstrzymaj), aparat jest tworzony od nowa z enableAudio: true, po filmie wraca podgląd
+  //bez dźwięku i mikrofon Vosk - do komend, jeśli sesja była otwarta. W trakcie takiego
+  //filmu komendy nie działają: stop tylko przyciskiem albo po czasie.
+  bool _nagrywamFilm = false;
+  Timer? _timerFilmu; //automatyczny stop po ustawionym czasie
+  Timer? _timerOdliczania; //co sekundę odświeża pozostały czas przy "REC"
+  DateTime? _koniecFilmu; //kiedy film skończy się sam
 
-  //voiceCamera / voicePhoto / voiceCameraClose
+  //pozostały czas filmu "0:25" (zaokrąglony w górę - start pokazuje pełny czas)
+  String _pozostaloFilmu() {
+    final DateTime? koniec = _koniecFilmu;
+    if (koniec == null) return '';
+    int sek = (koniec.difference(DateTime.now()).inMilliseconds / 1000).ceil();
+    if (sek < 0) sek = 0;
+    return '${sek ~/ 60}:${(sek % 60).toString().padLeft(2, '0')}';
+  }
+
+  void _zatrzymajOdliczanie() {
+    _timerOdliczania?.cancel();
+    _timerOdliczania = null;
+    _koniecFilmu = null;
+  }
+  Future<void>? _konczenieFilmu; //zapis w toku - drugi stop czeka na ten sam
+  bool _filmZDzwiekiem = false; //bieżący film z dźwiękiem - Vosk wstrzymany
+  bool _komendyPoFilmie = false; //sesja była otwarta - po filmie wraca do komend
+  bool _aparatPrzelacza = false; //wymiana kontrolera z/bez dźwięku - czarna nakładka
+  bool _zamykamAparat = false; //zamknięcie czeka na zapis filmu - bez powrotu podglądu
+
+  //voiceCamera / voicePhoto / voiceCameraClose / voiceVideo / voiceVideoStop
   Future<void> _komendaAparatu(String intent) async {
     final l = AppLocalizations.of(context)!;
+    if (intent == 'voiceVideoStop') {
+      if (_nagrywamFilm) await _zatrzymajFilm();
+      return;
+    }
     if (intent == 'voiceCameraClose') {
       if (_aparat != null || _skanerQr != null) {
         _zamknijAparat();
@@ -567,6 +603,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
     if (intent == 'voicePhoto') await _zrobZdjecie();
+    if (intent == 'voiceVideo') await _nagrajFilm();
   }
 
   Future<void> _otworzAparat() async {
@@ -576,15 +613,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     final l = AppLocalizations.of(context)!;
     CameraController? aparat;
     try {
-      final kamery = await availableCameras();
-      if (kamery.isEmpty) throw StateError('brak aparatu');
-      final tylna = kamery.firstWhere((k) => k.lensDirection == CameraLensDirection.back,
-          orElse: () => kamery.first);
-      aparat = CameraController(tylna, ResolutionPreset.high, enableAudio: false);
-      await aparat.initialize();
-      try {
-        await aparat.setFlashMode(FlashMode.off); //bez lampy przy ulu
-      } catch (_) {} //aparat bez lampy
+      aparat = await _nowyAparat(zDzwiekiem: false);
       if (!mounted) {
         aparat.dispose();
         return;
@@ -609,10 +638,80 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     }
   }
 
+  //tylny aparat bez lampy; zDzwiekiem tylko na czas filmu z dźwiękiem
+  Future<CameraController> _nowyAparat({required bool zDzwiekiem}) async {
+    final kamery = await availableCameras();
+    if (kamery.isEmpty) throw StateError('brak aparatu');
+    final tylna = kamery.firstWhere((k) => k.lensDirection == CameraLensDirection.back,
+        orElse: () => kamery.first);
+    final aparat = CameraController(tylna, ResolutionPreset.high, enableAudio: zDzwiekiem);
+    try {
+      await aparat.initialize();
+    } catch (e) {
+      aparat.dispose();
+      rethrow;
+    }
+    try {
+      await aparat.setFlashMode(FlashMode.off); //bez lampy przy ulu
+    } catch (_) {} //aparat bez lampy
+    return aparat;
+  }
+
+  //wymiana kontrolera (dźwięku nie da się włączyć w działającym). Stary znika z drzewa
+  //PRZED dispose - CameraPreview na zwolnionym kontrolerze rzuca wyjątek.
+  Future<CameraController?> _wymienAparat({required bool zDzwiekiem}) async {
+    final CameraController? stary = _aparat;
+    if (mounted) {
+      setState(() {
+        _aparatPrzelacza = true;
+        _aparat = null;
+      });
+    } else {
+      _aparat = null;
+    }
+    await stary?.dispose();
+    CameraController? nowy;
+    try {
+      nowy = await _nowyAparat(zDzwiekiem: zDzwiekiem);
+    } catch (e) {
+      debugPrint('APARAT: wymiana (dźwięk: $zDzwiekiem) nieudana: $e');
+    }
+    if (!mounted) {
+      nowy?.dispose();
+      _aparatPrzelacza = false;
+      return null;
+    }
+    setState(() {
+      _aparat = nowy;
+      _aparatPrzelacza = false;
+    });
+    return nowy;
+  }
+
+  //po filmie z dźwiękiem: podgląd bez dźwięku (chyba że aparat się zamyka) i mikrofon Vosk
+  Future<void> _poFilmieZDzwiekiem() async {
+    _filmZDzwiekiem = false;
+    final bool doKomend = _komendyPoFilmie;
+    _komendyPoFilmie = false;
+    if (!_zamykamAparat && mounted) await _wymienAparat(zDzwiekiem: false);
+    if (!mounted) return;
+    //w tle mikrofon wraca sam przy powrocie ekranu (didChangeAppLifecycleState)
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+    //przerwa jak przy wznowieniu - sesja audio po aparacie (ios_record_hwformat_crash)
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+    if (doKomend) {
+      await _startSesji(); //wznowienie mikrofonu + tryb komend + "czekam na polecenia"
+    } else {
+      await _engine?.wznowOdNowa();
+    }
+  }
+
   //komenda albo przycisk migawki na podglądzie
   Future<void> _zrobZdjecie() async {
     final CameraController? aparat = _aparat;
     if (aparat == null || _robieZdjecie || !aparat.value.isInitialized) return;
+    if (_nagrywamFilm || _konczenieFilmu != null) return; //w trakcie filmu bez zdjęć
     final l = AppLocalizations.of(context)!;
     //prawa w bazie właściciela - przycisk omija bramkę _blokadaPraw z _naFraze
     final String? blokada = powodBlokady(l, [czZdjecia], pasieka: _aparatPasieka);
@@ -644,14 +743,115 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     }
   }
 
+  //komenda "nagraj film" albo przycisk na podglądzie
+  Future<void> _nagrajFilm() async {
+    final CameraController? aparat = _aparat;
+    if (aparat == null || !aparat.value.isInitialized) return;
+    if (_nagrywamFilm || _robieZdjecie || _konczenieFilmu != null) return;
+    final l = AppLocalizations.of(context)!;
+    final String? blokada = powodBlokady(l, [czZdjecia], pasieka: _aparatPasieka);
+    if (blokada != null) {
+      beep('error');
+      _powiedzOZapisie(blokada);
+      return;
+    }
+    _nagrywamFilm = true; //przed await - druga komenda nie startuje drugiego nagrania
+    await PhotoHelper.wczytajUstawieniaFilmu(); //długość i dźwięk z Ustawień
+    final bool zDzwiekiem = PhotoHelper.filmZDzwiekiem;
+    CameraController? doNagrania = aparat;
+    try {
+      if (zDzwiekiem) {
+        _filmZDzwiekiem = true;
+        _komendyPoFilmie = _engine?.tryb == TrybNasluchu.komendy;
+        _inferenceTimer?.cancel();
+        await _engine?.wstrzymaj(); //mikrofon wolny dla aparatu
+        doNagrania = await _wymienAparat(zDzwiekiem: true);
+        if (doNagrania == null) throw StateError('aparat z dźwiękiem nie wstał');
+      }
+      await doNagrania.startVideoRecording();
+    } catch (e) {
+      debugPrint('APARAT: film nie wystartował: $e');
+      _nagrywamFilm = false;
+      if (_filmZDzwiekiem) await _poFilmieZDzwiekiem();
+      if (mounted) {
+        beep('error');
+        _powiedzOZapisie(l.voiceVideoError);
+      }
+      return;
+    }
+    if (!mounted) return;
+    setState(() {}); //czerwona kropka na podglądzie
+    _timerAparatu?.cancel(); //bezczynność liczona dopiero po filmie
+    _timerFilmu?.cancel();
+    _timerFilmu = Timer(PhotoHelper.maxFilmu, _zatrzymajFilm);
+    _koniecFilmu = DateTime.now().add(PhotoHelper.maxFilmu);
+    _timerOdliczania?.cancel();
+    _timerOdliczania = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+    //z dźwiękiem komendy są wyłączone - "REC · komendy wstrzymane" na podglądzie
+    if (!zDzwiekiem) _powiedzOZapisie(l.voiceVideoStarted);
+  }
+
+  //komenda "zatrzymaj nagrywanie", przycisk, 30 s albo zamknięcie aparatu
+  Future<void> _zatrzymajFilm() {
+    final Future<void>? wToku = _konczenieFilmu;
+    if (wToku != null) return wToku;
+    if (!_nagrywamFilm) return Future.value();
+    final Future<void> f = _zapiszFilm();
+    _konczenieFilmu = f;
+    return f.whenComplete(() {
+      _konczenieFilmu = null;
+    });
+  }
+
+  Future<void> _zapiszFilm() async {
+    _timerFilmu?.cancel();
+    _zatrzymajOdliczanie();
+    final CameraController? aparat = _aparat;
+    final int pasieka = _aparatPasieka;
+    final int ul = _aparatUl;
+    try {
+      if (aparat == null) throw StateError('brak aparatu');
+      final XFile plik = await aparat.stopVideoRecording();
+      _nagrywamFilm = false;
+      await PhotoHelper.zapiszFilm(plik.path, pasieka, ul);
+      try {
+        await File(plik.path).delete(); //plik tymczasowy aparatu - kopia jest w photos/
+      } catch (_) {}
+      if (!mounted) return;
+      _playSuccess();
+      _powiedzOZapisie(AppLocalizations.of(context)!.voiceVideoSaved);
+    } catch (e) {
+      debugPrint('APARAT: film nie zapisany: $e');
+      if (mounted) {
+        beep('error');
+        _powiedzOZapisie(AppLocalizations.of(context)!.voiceVideoError);
+      }
+    } finally {
+      _nagrywamFilm = false;
+      if (_filmZDzwiekiem) await _poFilmieZDzwiekiem();
+      if (mounted) setState(() {});
+      if (_aparat != null) _odliczBezczynnoscAparatu();
+    }
+  }
+
   void _odliczBezczynnoscAparatu() {
     _timerAparatu?.cancel();
     _timerAparatu = Timer(_kAparatBezczynnosc, () {
-      if (_aparat != null) _zamknijAparat();
+      if (_aparat != null && !_nagrywamFilm) _zamknijAparat();
     });
   }
 
   void _zamknijAparat() {
+    //film w toku - najpierw zapis, potem zamknięcie (whenComplete wraca tu po zapisie,
+    //kiedy _nagrywamFilm i _konczenieFilmu są już wyczyszczone)
+    if (_nagrywamFilm || _konczenieFilmu != null) {
+      _zamykamAparat = true;
+      _zatrzymajFilm().whenComplete(_zamknijAparat);
+      return;
+    }
+    _zamykamAparat = false;
     _timerAparatu?.cancel();
     final CameraController? aparat = _aparat;
     if (aparat == null) return;
@@ -702,16 +902,56 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                     onPressed: _zamknijAparat,
                   ),
                 ),
+                //film w toku
+                if (_nagrywamFilm)
+                  Positioned(
+                    top: 44,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(150, 0, 0, 0),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.fiber_manual_record, color: Color.fromARGB(255, 244, 67, 54), size: 18),
+                          const SizedBox(width: 4),
+                          //odliczanie do końca filmu + przy dźwięku informacja o komendach
+                          Text(
+                              'REC ${_pozostaloFilmu()}'
+                              '${_filmZDzwiekiem ? ' · ${l.voiceVideoCommandsPaused}' : ''}',
+                              style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255), fontSize: 16)),
+                        ],
+                      ),
+                    ),
+                  ),
                 Positioned(
                   bottom: 12,
                   left: 0,
                   right: 0,
-                  child: Center(
-                    child: IconButton(
-                      iconSize: 64,
-                      icon: const Icon(Icons.camera, color: Color.fromARGB(255, 255, 255, 255)),
-                      onPressed: _zrobZdjecie,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        iconSize: 64,
+                        icon: Icon(Icons.camera,
+                            color: _nagrywamFilm
+                                ? const Color.fromARGB(100, 255, 255, 255)
+                                : const Color.fromARGB(255, 255, 255, 255)),
+                        onPressed: _nagrywamFilm ? null : _zrobZdjecie,
+                      ),
+                      const SizedBox(width: 32),
+                      //film: start / stop
+                      IconButton(
+                        iconSize: 64,
+                        icon: _nagrywamFilm
+                            ? const Icon(Icons.stop_circle, color: Color.fromARGB(255, 244, 67, 54))
+                            : const Icon(Icons.videocam, color: Color.fromARGB(255, 255, 255, 255)),
+                        onPressed: _nagrywamFilm ? _zatrzymajFilm : _nagrajFilm,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -1083,6 +1323,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       NfcManager.instance.stopSession();
     }
     _timerAparatu?.cancel();
+    _timerFilmu?.cancel();
+    _timerOdliczania?.cancel();
     _aparat?.dispose();
     _sound.dispose(); //zwolnienie odtwarzaczy dźwięku
     WakelockPlus.disable(); //usunięcie blokady wygaszania ekranu
@@ -1318,7 +1560,9 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     //7. aparat - podgląd, zdjęcie, zamknięcie. Zdjęcie nie podlega cofaniu.
     if (f.inference.intent == 'voiceCamera' ||
         f.inference.intent == 'voicePhoto' ||
-        f.inference.intent == 'voiceCameraClose') {
+        f.inference.intent == 'voiceCameraClose' ||
+        f.inference.intent == 'voiceVideo' ||
+        f.inference.intent == 'voiceVideoStop') {
       _komendaAparatu(f.inference.intent!);
       return;
     }
@@ -2432,6 +2676,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
         return powodBlokady(l, [czInfo], pasieka: pasieka);
       case 'voiceCamera':
       case 'voicePhoto':
+      case 'voiceVideo':
         return powodBlokady(l, [czZdjecia], pasieka: pasieka);
       case 'voiceUndo':
         return powodBlokady(l, [czRamka, czInfo], edycja: true, wyslany: false);
@@ -8713,6 +8958,14 @@ print('openDialog = $openDialog');
           },
           )),
           if (_aparat != null) Positioned.fill(child: _buildAparat(context)),
+          //wymiana kontrolera przy filmie z dźwiękiem - podgląd gaśnie na chwilę
+          if (_aparat == null && _aparatPrzelacza)
+            const Positioned.fill(
+              child: ColoredBox(
+                color: Color.fromARGB(255, 0, 0, 0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ),
           if (_skanerQr != null) Positioned.fill(child: _buildSkanerQr(context)),
         ]),
       ),

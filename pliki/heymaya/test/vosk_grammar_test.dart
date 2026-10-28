@@ -42,9 +42,10 @@ void main() {
       // 75 i 29 intencji (15.10.2026, ZMIERZONE flutter test): NFC (246c99e), aparat i zdjęcie (e5e58cc), notatka do przeglądu jako osobna intencja voiceNoteInspection (da0fd63) - te commity liczb nie podbiły.
       // 76 i 30 intencji = + voiceQr "czytaj kod" (15.10.2026, kody QR uli).
       // 77 = + "zamknij/wyłącz skaner" w voiceCameraClose (15.10.2026).
-      expect(silnik.liczbaWyrazen, 77,
+      // 79 i 32 intencje = + voiceVideo "nagraj film", voiceVideoStop "zatrzymaj nagrywanie" (28.10.2026).
+      expect(silnik.liczbaWyrazen, 79,
           reason: 'zmieniła się liczba wyrażeń w assets/grammar/pol_vosk.yml');
-      expect(silnik.intencje.length, 30); // + voiceNoteInspection, voiceNfc, voiceCamera, voicePhoto, voiceCameraClose, voiceQr
+      expect(silnik.intencje.length, 32); // + voiceNoteInspection, voiceNfc, voiceCamera, voicePhoto, voiceCameraClose, voiceQr, voiceVideo, voiceVideoStop
       expect(silnik.intencje, contains('setStore'));
       expect(silnik.intencje, contains('setMoveBody'));
     });
@@ -74,7 +75,9 @@ void main() {
       // słownika modelu; vosk_parser_ref.py, zero OOV).
       // 242 = 241 + "kod" (voiceQr, 15.10.2026).
       // 243 = + "skaner" (15.10.2026).
-      expect(silnik.slowa().length, 243,
+      // 250 = + nagraj, film, filmik, wideo, zatrzymaj, zakończ, nagrywanie (film, 28.10.2026;
+      // vosk_parser_ref.py 284 -> 291, zero OOV).
+      expect(silnik.slowa().length, 250,
           reason: 'zmienił się zbiór słów - sprawdź OOV wobec słownika modelu');
       expect(silnik.slowa(), isNot(contains('zła')),
           reason: 'jakość matki "zła" zastąpiona przez "do wymiany"');
@@ -261,7 +264,10 @@ void main() {
       // 3376 = 3372 + "matka jest struty wiała" (15.10.2026, ta sama referencja).
       // 3382 = 3376 + voiceQr (15.10.2026, vosk_parser_ref.py --frazy).
       // 3386 = + "zamknij/wyłącz skaner" (15.10.2026).
-      expect(silnik.frazy().length, 3386);
+      // 3404 = + film (28.10.2026, ZMIERZONE flutter test = vosk_parser_ref.py --frazy):
+      // "nagraj film/filmik/wideo" (6) i "zatrzymaj/zakończ nagrywanie/film/filmik" (12),
+      // każda z "hej maja" i bez.
+      expect(silnik.frazy().length, 3404);
     });
   });
 
@@ -394,6 +400,10 @@ void main() {
       }
       expect(silnik.rozpoznaj('czytaj tag').intent, 'voiceNfc');
       expect(silnik.rozpoznaj('zamknij skaner').intent, 'voiceCameraClose');
+      expect(silnik.rozpoznaj('nagraj film').intent, 'voiceVideo');
+      expect(silnik.rozpoznaj('hej maja nagraj filmik').intent, 'voiceVideo');
+      expect(silnik.rozpoznaj('zatrzymaj nagrywanie').intent, 'voiceVideoStop');
+      expect(silnik.rozpoznaj('hej maja stop').intent, 'voiceStop'); //stop filmu nie łapie stopu sesji
     });
   });
 

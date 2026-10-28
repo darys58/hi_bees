@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqlite_api.dart';
 import '../globals.dart' as globals; //plikBazy() - własna baza albo baza właściciela (etap 2)
 import 'kolor_przegladu.dart'; //kolor przeglądu po zmianie ramek
+import 'photo_helper.dart'; //sqlBezFilmow - filmy nie idą do chmury
 import '../models/apiarys.dart'; //przeładowanie kafelków pasiek po zmianie daty przeglądu
 
 //metody statyczne w klasie są po to, zeby nie tworzyć instancji tej klasy
@@ -1177,7 +1178,8 @@ class DBHelper {
   //pobieranie wszystkich nowych zdjec do achiwizacji dla import_screen
   static Future<List<Map<String, dynamic>>> getPhotosToArch() async {
     final db = await DBHelper.database();
-    return db.query("zdjecia", where: "arch=?", whereArgs: [0]);
+    //filmy zostają tylko na telefonie (PhotoHelper.sqlBezFilmow)
+    return db.query("zdjecia", where: "arch=? AND ${PhotoHelper.sqlBezFilmow}", whereArgs: [0]);
   }
 
   //odczyt z tabeli ramka rekordu o danym id  - dla frames_detail_item
@@ -1307,7 +1309,8 @@ class DBHelper {
   static Future<List<Map<String, dynamic>>> getZdjecia() async {
     final db = await DBHelper.database();
   //  print('DBHelper - pobieranie zakupy');
-    return db.rawQuery('SELECT * FROM zdjecia ORDER BY data DESC');
+    //bez filmów - ta lista idzie do pełnego eksportu do chmury (PhotoHelper.sqlBezFilmow)
+    return db.rawQuery('SELECT * FROM zdjecia WHERE ${PhotoHelper.sqlBezFilmow} ORDER BY data DESC');
   }
 
   //sprawdzenie czy rekord inspekcji istnieje w bazie (bezpośrednio, nie przez provider)

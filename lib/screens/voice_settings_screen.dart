@@ -3,6 +3,7 @@ import 'package:hi_bees/l10n/app_localizations.dart';
 import '../globals.dart' as globals;
 import '../helpers/sound_helper.dart';
 import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
+import '../helpers/photo_helper.dart'; //ustawienia filmu (dźwięk, długość)
 
 /// Ustawienia sterowania głosem - wszystko, co dotyczy Mai: podgląd korpusu,
 /// nagrywanie dyktowanych notatek i głośność odzywek.
@@ -43,6 +44,9 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
     super.initState();
     _sound.init().then((_) {
       if (mounted) setState(() => _soundReady = true);
+    });
+    PhotoHelper.wczytajUstawieniaFilmu().then((_) {
+      if (mounted) setState(() {});
     });
   }
 
@@ -158,6 +162,54 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
                     globals.nagrywajNotatki = value;
                   });
                 },
+              ),
+            ),
+          ),
+          // FILM (28.10.2026): z dźwiękiem = Vosk oddaje mikrofon na czas nagrania,
+          // komendy wracają po końcu filmu. Domyślnie WYŁĄCZONE - ponowne uruchomienie
+          // mikrofonu po aparacie z dźwiękiem to miejsce, w którym iPhone SE miewał
+          // crash wtyczki record (ios_record_hwformat_crash).
+          Card(
+            child: ListTile(
+              title: Text(l.voiceSetVideoSound),
+              subtitle: Text(l.voiceSetVideoSoundInfo),
+              //zwykły Switch, NIE Switch.adaptive - jak pozostałe na tym ekranie
+              trailing: Switch(
+                value: PhotoHelper.filmZDzwiekiem,
+                onChanged: (value) {
+                  setState(() => PhotoHelper.filmZDzwiekiem = value);
+                  PhotoHelper.zapiszUstawieniaFilmu();
+                },
+              ),
+            ),
+          ),
+          // Długość filmu: 15 / 30 / 60 s - także dla przycisku "Film" w przeglądzie
+          Card(
+            child: ListTile(
+              title: Text(l.voiceSetVideoLength),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l.voiceSetVideoLengthInfo),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final sek in PhotoHelper.dlugosciFilmu)
+                          ChoiceChip(
+                            label: Text('$sek s'),
+                            selected: PhotoHelper.sekundyFilmu == sek,
+                            onSelected: (_) {
+                              setState(() => PhotoHelper.sekundyFilmu = sek);
+                              PhotoHelper.zapiszUstawieniaFilmu();
+                            },
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

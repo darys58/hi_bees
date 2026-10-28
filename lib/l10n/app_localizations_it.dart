@@ -3087,7 +3087,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voiceCameraHint =>
-      'Say “take photo” or “snap”; “close camera” to finish';
+      'Say “take photo”, “snap” or “record video”; “close camera” to finish';
 
   @override
   String get voiceCameraError =>
@@ -3098,6 +3098,38 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voicePhotoError => 'Could not save the photo';
+
+  @override
+  String get vIdeo => 'Video';
+
+  @override
+  String get dEleteVideo => 'Eliminazione video';
+
+  @override
+  String get voiceVideoStarted => 'Recording – “stop recording” to finish';
+
+  @override
+  String get voiceVideoSaved => 'Video saved';
+
+  @override
+  String get voiceVideoError => 'Could not record the video';
+
+  @override
+  String get voiceSetVideoSound => 'Video with sound';
+
+  @override
+  String get voiceSetVideoSoundInfo =>
+      'Voice commands are paused while recording. The video ends after the set time or with the stop button, then commands come back.';
+
+  @override
+  String get voiceSetVideoLength => 'Video length';
+
+  @override
+  String get voiceSetVideoLengthInfo =>
+      'Also applies to the “Video” button in the hive inspection';
+
+  @override
+  String get voiceVideoCommandsPaused => 'commands paused';
 
   @override
   String get teamWork => 'Lavoro di squadra';
