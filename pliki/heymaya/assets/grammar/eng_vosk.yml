@@ -470,6 +470,8 @@ context:
       # ("hive earlier help me"), a gramatyka jej nie znała, więc słowo
       # "earlier" zostawało niezjedzone i całe polecenie szło w "nie rozumiem".
       - notes
+      # "camera help me" (29.10.2026) - odpowiednik polskiego "aparat"
+      - camera
       - location
       - hive before
       - hive after

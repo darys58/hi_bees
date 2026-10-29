@@ -209,6 +209,7 @@ POMOC = [
         'hive earlier help me',
         'hive later help me',
         'notes help me',
+        'camera help me',
         'close help',
         'help me',
     ]),

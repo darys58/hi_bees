@@ -114,44 +114,8 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
     TextSpan(text: '.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Hej Maja cofnij ostatni zapis/wpis', style: _wymagany),
-    TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n',
+    TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n\n',
         style: _komentarz),
-    //voiceNfc - "skanuj" mówione, w gramatyce alias "skanuje" (brak w modelu)
-    _punktor,
-    TextSpan(text: 'Czytaj/odczytaj/skanuj tag', style: _wymagany),
-    TextSpan(
-        text: Platform.isIOS
-            ? ' - otwiera czytnik NFC.\n'
-            : ' - tagi NFC są czytane cały czas.\n',
-        style: _komentarz),
-    //voiceQr (15.10.2026) - jak tag, "skanuj" przez alias "skanuje"
-    _punktor,
-    TextSpan(text: 'Czytaj/odczytaj/skanuj kod', style: _wymagany),
-    TextSpan(text: ' - skaner kodu QR na ulu, otwiera pasiekę i ul.\n',
-        style: _komentarz),
-    _punktor,
-    TextSpan(text: 'Zamknij/wyłącz skaner', style: _wymagany),
-    TextSpan(text: ' - zamyka skaner kodu QR.\n', style: _komentarz),
-    //voiceCamera / voicePhoto / voiceCameraClose
-    _punktor,
-    TextSpan(text: 'Otwórz/włącz aparat', style: _wymagany),
-    TextSpan(text: ' - podgląd aparatu (tylko przy otwartym ulu).\n',
-        style: _komentarz),
-    _punktor,
-    TextSpan(text: 'Zrób zdjęcie', style: _wymagany),
-    TextSpan(text: '/pstryk'),
-    TextSpan(text: ' - zdjęcie do zdjęć ula.\n', style: _komentarz),
-    //voiceVideo / voiceVideoStop (28.10.2026)
-    _punktor,
-    TextSpan(text: 'Nagraj film', style: _wymagany),
-    TextSpan(text: '/filmik/wideo'),
-    TextSpan(text: ' - film 15/30/60 s (Ustawienia), tylko na telefonie. Bez dźwięku, chyba że włączono „Film z dźwiękiem” - wtedy komendy czekają do końca filmu.\n', style: _komentarz),
-    _punktor,
-    TextSpan(text: 'Zatrzymaj/zakończ nagrywanie', style: _wymagany),
-    TextSpan(text: ' - kończy i zapisuje film.\n', style: _komentarz),
-    _punktor,
-    TextSpan(text: 'Zamknij/wyłącz aparat', style: _wymagany),
-    TextSpan(text: ' - zamyka podgląd.\n\n', style: _komentarz),
   ];
 }
 
@@ -192,8 +156,64 @@ List<TextSpan> _sekcjaSesjaEn() {
     TextSpan(text: '.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Hey Maya undo last save/entry', style: _wymagany),
-    TextSpan(text: ' - undoes the last saving command.\n',
+    TextSpan(text: ' - undoes the last saving command.\n\n',
         style: _komentarz),
+  ];
+}
+
+// Aparat i skaner - tag NFC, kod QR, podgląd aparatu, zdjęcie i film.
+// Wydzielone 29.10.2026 z _sekcjaSesja, która po dołożeniu NFC, QR, aparatu
+// i filmu zrobiła się za długa. Wywołanie głosem: "aparat pomóż mi" /
+// "camera help me" (wartość slotu $helpMe -> case 'aparat'/'camera'
+// w voice_vosk_screen). Tekst poza ARB - powód jak przy _sekcjaSesja.
+List<TextSpan> _sekcjaAparat(BuildContext context) {
+  if (globals.jezyk == 'en_US') return _sekcjaAparatEn();
+  return [
+    TextSpan(text: '\nAparat i skaner - powiedz np.:\n\n', style: _naglowek),
+    //voiceNfc - "skanuj" mówione, w gramatyce alias "skanuje" (brak w modelu)
+    _punktor,
+    TextSpan(text: 'Czytaj/odczytaj/skanuj tag', style: _wymagany),
+    TextSpan(
+        text: Platform.isIOS
+            ? ' - otwiera czytnik NFC.\n'
+            : ' - tagi NFC są czytane cały czas.\n',
+        style: _komentarz),
+    //voiceQr (15.10.2026) - jak tag, "skanuj" przez alias "skanuje"
+    _punktor,
+    TextSpan(text: 'Czytaj/odczytaj/skanuj kod', style: _wymagany),
+    TextSpan(text: ' - skaner kodu QR na ulu, otwiera pasiekę i ul.\n',
+        style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Zamknij/wyłącz skaner', style: _wymagany),
+    TextSpan(text: ' - zamyka skaner kodu QR.\n', style: _komentarz),
+    //voiceCamera / voicePhoto / voiceCameraClose
+    _punktor,
+    TextSpan(text: 'Otwórz/włącz aparat', style: _wymagany),
+    TextSpan(text: ' - podgląd aparatu (tylko przy otwartym ulu).\n',
+        style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Zrób zdjęcie', style: _wymagany),
+    TextSpan(text: '/pstryk'),
+    TextSpan(text: ' - zdjęcie do zdjęć ula.\n', style: _komentarz),
+    //voiceVideo / voiceVideoStop (28.10.2026)
+    _punktor,
+    TextSpan(text: 'Nagraj film', style: _wymagany),
+    TextSpan(text: '/filmik/wideo'),
+    TextSpan(text: ' - film 15/30/60 s (Ustawienia), tylko na telefonie.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Zatrzymaj/zakończ nagrywanie', style: _wymagany),
+    TextSpan(text: ' - kończy i zapisuje film.\n', style: _komentarz),
+    _punktor,
+    TextSpan(text: 'Zamknij/wyłącz aparat', style: _wymagany),
+    TextSpan(text: ' - zamyka podgląd.\n\n', style: _komentarz),
+  ];
+}
+
+//Angielski odpowiednik _sekcjaAparat - frazy z eng_vosk.yml (voiceNfc, voiceQr,
+//voiceCamera, voicePhoto, voiceVideo, voiceVideoStop, voiceCameraClose).
+List<TextSpan> _sekcjaAparatEn() {
+  return [
+    TextSpan(text: '\nCamera and scanner - say e.g.:\n\n', style: _naglowek),
     _punktor,
     TextSpan(text: 'Read/scan tag', style: _wymagany),
     TextSpan(
@@ -220,7 +240,7 @@ List<TextSpan> _sekcjaSesjaEn() {
     _punktor,
     TextSpan(text: 'Record video', style: _wymagany),
     TextSpan(text: '/record film'),
-    TextSpan(text: ' - 15/30/60 s video (Settings), kept on the phone only. Silent unless “Video with sound” is on - then commands wait until the video ends.\n', style: _komentarz),
+    TextSpan(text: ' - 15/30/60 s video (Settings), kept on the phone only.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Stop recording', style: _wymagany),
     TextSpan(text: '/finish recording/end recording'),
@@ -706,6 +726,9 @@ List<TextSpan> _sekcjaPomoc(BuildContext context) {
     //(brama w apiarys_screen), więc tam pozycja dalej odpada.
     if (globals.jezyk == 'pl_PL') ...pozycja('Notatki'),
     if (globals.jezyk == 'en_US') ...pozycja('Notes'),
+    //"aparat pomóż mi" / "camera help me" -> _sekcjaAparat (29.10.2026)
+    if (globals.jezyk == 'pl_PL') ...pozycja('Aparat'),
+    if (globals.jezyk == 'en_US') ...pozycja('Camera'),
     ...pozycja(l.lOcation),
     ...pozycja(l.iNspection),
     ...pozycja(l.eQuipment),
@@ -846,6 +869,7 @@ Future<void> _pokazOkno(
 Future<void> pomocPelna(BuildContext context, {VoidCallback? poZamknieciu}) =>
     _pokazOkno(context, [
       _sekcjaSesja,
+      _sekcjaAparat,
       _sekcjaLokacja,
       _sekcjaPrzeglad,
       _sekcjaWyposazenie,
@@ -862,6 +886,10 @@ Future<void> pomocPelna(BuildContext context, {VoidCallback? poZamknieciu}) =>
 // polecenie "notatki pomóż mi" - sesja, dyktowanie notatek i cofanie
 Future<void> pomocSesja(BuildContext context, {VoidCallback? poZamknieciu}) =>
     _pokazOkno(context, [_sekcjaSesja], poZamknieciu);
+
+// polecenie "aparat pomóż mi" - tag NFC, kod QR, aparat, zdjęcie i film
+Future<void> pomocAparat(BuildContext context, {VoidCallback? poZamknieciu}) =>
+    _pokazOkno(context, [_sekcjaAparat], poZamknieciu);
 
 Future<void> pomocLokacja(BuildContext context, {VoidCallback? poZamknieciu}) =>
     _pokazOkno(context, [_sekcjaLokacja], poZamknieciu);

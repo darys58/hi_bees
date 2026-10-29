@@ -5552,6 +5552,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                         beep('open');
                         openDialog = true;
                         break;
+                      //aparat i skaner (29.10.2026) - wydzielone z sekcji sesji
+                      case 'aparat':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        pomocAparat(context, poZamknieciu: () => openDialog = false);
+                        beep('open');
+                        openDialog = true;
+                        break;
                       case 'lokacja':
                         if (openDialog) Navigator.pop(context); //zamknij okno
                         printText1 = ' ${slots[key]}';
@@ -5929,6 +5937,14 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                         if (openDialog) Navigator.pop(context); //zamknij okno
                         printText1 = ' ${slots[key]}';
                         pomocSesja(context, poZamknieciu: () => openDialog = false);
+                        beep('open');
+                        openDialog = true;
+                        break;
+                      //odpowiednik polskiego 'aparat' (29.10.2026)
+                      case 'camera':
+                        if (openDialog) Navigator.pop(context); //zamknij okno
+                        printText1 = ' ${slots[key]}';
+                        pomocAparat(context, poZamknieciu: () => openDialog = false);
                         beep('open');
                         openDialog = true;
                         break;

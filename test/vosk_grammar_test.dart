@@ -267,7 +267,9 @@ void main() {
       // 3404 = + film (28.10.2026, ZMIERZONE flutter test = vosk_parser_ref.py --frazy):
       // "nagraj film/filmik/wideo" (6) i "zatrzymaj/zakończ nagrywanie/film/filmik" (12),
       // każda z "hej maja" i bez.
-      expect(silnik.frazy().length, 3404);
+      // 3406 = + "aparat" w $helpMe (29.10.2026, vosk_parser_ref.py --frazy):
+      // sama wartość i "aparat pomóż mi"; słów bez zmian (250).
+      expect(silnik.frazy().length, 3406);
     });
   });
 

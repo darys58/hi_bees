@@ -337,6 +337,9 @@ context:
       # (pliki/vosk_slownik_pl.txt) i w gramatyce stoi już "notatka"/"notatkę"
       # (voiceNote), więc nie wnosi nowego kontrastu do rozróżnienia.
       - notatki
+      # "aparat pomóż mi" (29.10.2026) - sekcja aparatu i skanera (tag, kod QR,
+      # zdjęcie, film), wydzielona z sekcji sesji; "aparat" już w gramatyce.
+      - aparat
       - ul po
       - ul przed
       - lokacja
