@@ -37,6 +37,9 @@ class Hive with ChangeNotifier {
   //najnowszy stan rodziny z info ("rodzina jest ...") - NIE kolumna tabeli ule;
   //ustawiany w Hives.fetchAndSetHives, do koloru ikony (colony_helpers.ikonaNaBelce)
   String stanRodziny = '';
+  //najnowsza siła rodziny z info (" rodzina jest ...", z wiodącą spacją) - jak wyżej;
+  //słaba / bardzo słaba barwią ikonę (03.11.2026)
+  String silaRodziny = '';
 
   //bool isFavorite;
 

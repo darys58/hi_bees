@@ -1887,13 +1887,13 @@ class _HivesScreenState extends State<HivesScreen> {
     
     //ustawienie ikony dla pasieki na podstawie ikon ulowych
     //najgorsza ikona uli, z uwzględnieniem stanu rodziny (colony_helpers)
-    globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3,
+    globals.ikonaPasieki = ikonaPasiekiZUli(hives.map((h) => ikonaNaBelce(h.ikona, h.stanRodziny, silaRodziny: h.silaRodziny, matka3: h.matka3,
         todo: h.todo, mateczniki: h.mateczniki, usunmat: h.usunmat)));
     
     //ule na liście - w widoku uli z problemami tylko z kolorową ikoną (ta sama ikona co na belce)
     final List<Hive> widoczneUle = _tylkoProblemy
         ? hives.where((h) => const {'yellow', 'orange', 'red', 'black', 'dead'}.contains(
-            ikonaNaBelce(h.ikona, h.stanRodziny, matka3: h.matka3,
+            ikonaNaBelce(h.ikona, h.stanRodziny, silaRodziny: h.silaRodziny, matka3: h.matka3,
                 todo: h.todo, mateczniki: h.mateczniki, usunmat: h.usunmat))).toList()
         : hives;
 

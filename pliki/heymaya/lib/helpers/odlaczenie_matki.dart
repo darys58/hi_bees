@@ -79,8 +79,10 @@ Future<void> zapiszOdlaczenieMatki(BuildContext context, Queen matki,
   //ikona pasieki z ikon jej uli - tak samo jak przy podłączaniu
   final ule = await DBHelper.getHives(pasieka);
   final stany = await stanyRodzinUli(pasieka); //stan rodziny też barwi ikonę
+  final sily = await silyRodzinUli(pasieka); //słaba / bardzo słaba też
   final String ikonaPasieki = ikonaPasiekiZUli(ule.map((u) =>
       ikonaNaBelce((u['ikona'] as String?) ?? '', stany[u['id']] ?? '',
+          silaRodziny: sily[u['id']] ?? '',
           matka3: (u['matka3'] as String?) ?? '',
           todo: (u['todo'] as String?) ?? '',
           mateczniki: (u['mateczniki'] as int?) ?? 0,

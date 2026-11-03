@@ -401,7 +401,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
     //ikona koloru ula
     Icon hiveIcon = Icon(Icons.hive, size: 30,
-        color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny, matka3: hive.matka3,
+        color: kolorIkonyUla(ikonaNaBelce(hive.ikona, hive.stanRodziny, silaRodziny: hive.silaRodziny, matka3: hive.matka3,
             todo: hive.todo, mateczniki: hive.mateczniki, usunmat: hive.usunmat)));
 
     // Szerokość belki zasobów

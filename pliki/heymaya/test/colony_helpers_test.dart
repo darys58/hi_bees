@@ -115,6 +115,26 @@ void main() {
     });
   });
 
+  group('siła rodziny barwi ikonę (03.11.2026)', () {
+    test('kolorSilyRodziny', () {
+      expect(kolorSilyRodziny('słaba'), 'orange');
+      expect(kolorSilyRodziny('weak'), 'orange');
+      expect(kolorSilyRodziny('bardzo słaba'), 'red');
+      expect(kolorSilyRodziny('very weak'), 'red');
+      expect(kolorSilyRodziny('silna'), isNull);
+      expect(kolorSilyRodziny(''), isNull);
+    });
+    test('ikonaNaBelce z siłą rodziny', () {
+      expect(ikonaNaBelce('green', 'ok', silaRodziny: 'słaba'), 'orange');
+      expect(ikonaNaBelce('green', '', silaRodziny: 'bardzo słaba'), 'red');
+      expect(ikonaNaBelce('yellow', '', silaRodziny: 'słaba'), 'orange');
+      expect(ikonaNaBelce('red', '', silaRodziny: 'słaba'), 'red'); //najgorszy wygrywa
+      expect(ikonaNaBelce('green', '', silaRodziny: 'silna'), 'green');
+      expect(ikonaNaBelce('green', 'nie żyje', silaRodziny: 'słaba'), 'dead');
+      expect(ikonaNaBelce('black', '', silaRodziny: 'bardzo słaba'), 'black');
+    });
+  });
+
   group('ikonaPasiekiZUli', () {
     test('najgorsza, bez zlikwidowanych, martwa jak czerwona', () {
       expect(ikonaPasiekiZUli([]), 'green');

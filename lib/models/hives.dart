@@ -59,6 +59,8 @@ class Hives with ChangeNotifier {
         .toList();
     final stany = await stanyRodzinUli();
     for (final h in _items) h.stanRodziny = stany[h.id] ?? '';
+    final sily = await silyRodzinUli();
+    for (final h in _items) h.silaRodziny = sily[h.id] ?? '';
     //print('wczytanie wszystkich!!!!!!! danych o ulach z wszystkich pasiek --> Hives <---');
     //print(_items);
     notifyListeners();
@@ -111,6 +113,8 @@ class Hives with ChangeNotifier {
         .toList();
     final stany = await stanyRodzinUli(nrPasieki);
     for (final h in _items) h.stanRodziny = stany[h.id] ?? '';
+    final sily = await silyRodzinUli(nrPasieki);
+    for (final h in _items) h.silaRodziny = sily[h.id] ?? '';
     //print('wczytanie wszystkich!!!!!!! danych o ulach z pasieki nr $nrPasieki --> Hives <---');
     //print(_items);
     notifyListeners();

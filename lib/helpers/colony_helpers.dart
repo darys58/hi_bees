@@ -90,6 +90,22 @@ Icon? ikonaSilyRodziny(String wartosc, {double size = 20.0}) {
   return null;
 }
 
+/// Kolor ikony ula od siły rodziny (03.11.2026): słaba - pomarańczowy, bardzo
+/// słaba - czerwony; pozostałe siły nie barwią (null).
+String? kolorSilyRodziny(String wartosc) {
+  final w = wartosc.trim();
+  if (_bardzoSlaba.contains(w)) return 'red';
+  if (_slaba.contains(w)) return 'orange';
+  return null;
+}
+
+/// Wartości siły rodziny, które są problemem (słaba, bardzo słaba) - w kolejności
+/// od najgorszej: wartości we wszystkich językach -> etykieta.
+List<(Set<String>, String Function(AppLocalizations))> slabeSilyRodziny() => [
+      (_bardzoSlaba, (l) => l.veryWeak),
+      (_slaba, (l) => l.weak),
+    ];
+
 //parametr wpisu o stanie rodziny ("rodzina jest") we wszystkich językach. Siła
 //rodziny ma ten sam napis z wiodącą spacją - IN go nie łapie.
 final Set<String> _parametryStanu = wszystkieJezyki((l) => l.colony + " " + l.isIs);
@@ -107,6 +123,13 @@ String _kluczCzasu(Object? data, Object? czas) {
 /// niczego przeliczać po imporcie, edycji czy usunięciu wpisu.
 Future<Map<String, String>> stanyRodzinUli([Object? pasieka]) async {
   final najnowsze = await _najnowszeWpisy(_parametryStanu, pasieka);
+  return najnowsze.map((id, r) => MapEntry(id, (r['wartosc'] as String?) ?? ''));
+}
+
+/// Najnowsza siła rodziny każdego ula (wpis " rodzina jest", z wiodącą spacją):
+/// 'pasieka.ul' -> info.wartosc. Jak [stanyRodzinUli] - liczone przy wczytywaniu uli.
+Future<Map<String, String>> silyRodzinUli([Object? pasieka]) async {
+  final najnowsze = await _najnowszeWpisy(_parametrySily, pasieka);
   return najnowsze.map((id, r) => MapEntry(id, (r['wartosc'] as String?) ?? ''));
 }
 
@@ -194,9 +217,13 @@ bool otwarteMateczniki(int mateczniki, int usuniete) => mateczniki > usuniete;
 /// pochodzi wyłącznie z "do zrobienia", więc liczony jest tu od nowa z [todo]
 /// (stare wpisy "można izolować" przestają barwić bez ponownego zapisu);
 /// nieusunięte mateczniki dają pomarańczowy (20.10.2026). [todo] null = bez zmian.
+/// [silaRodziny] = najnowsza siła rodziny (`Hive.silaRodziny`): słaba - pomarańczowy,
+/// bardzo słaba - czerwony (03.11.2026).
 String ikonaNaBelce(String ikona, String stanRodziny,
-    {String matka3 = '', String? todo, int mateczniki = 0, int usunmat = 0}) {
+    {String silaRodziny = '', String matka3 = '', String? todo, int mateczniki = 0, int usunmat = 0}) {
   if (ikona == 'black') return ikona;
+  final kolorSily = kolorSilyRodziny(silaRodziny); //słaba - orange, bardzo słaba - red
+  if (kolorSily != null) ikona = _gorsza(ikona, kolorSily);
   if (matka3 == 'trutowa') ikona = _gorsza(ikona, 'red');
   if (todo != null) {
     if (ikona == 'yellow') ikona = 'green';

@@ -11,7 +11,8 @@ import 'parametr_nazwy.dart'; //wszystkieJezyki, zadanieRamkiWBiezacym, kolejnos
 
 //WIDOK ULI Z PROBLEMAMI - PODSUMOWANIE (20.10.2026). Pod szarym paskiem "Ule z problemami"
 //zbiorczo: matki (brak, do wymiany, nieunasienniona, trutowa), stan rodziny (chora,
-//strutowiała, agresywna, w nastroju do ucieczki, nie żyje), mateczniki, zadania ramek
+//strutowiała, agresywna, w nastroju do ucieczki, nie żyje), siła rodziny (słaba, bardzo
+//słaba - od 03.11.2026), mateczniki, zadania ramek
 //("do zrobienia" bez "można izolować") i ule zlikwidowane - każdy wiersz z liczbą i numerami uli.
 //Matki i rodzina z belek uli (dlatego kafelek odświeża belki "o zasobach i matkach"),
 //mateczniki i zadania z RAMEK: ostatni przegląd każdego korpusu (jak Aktualności ula),
@@ -138,6 +139,12 @@ Widget panelProblemowPasieki(BuildContext context, List<Hive> ule, Map<int, Ramk
     final nazwa = etykieta(l);
     wiersz([pszczola, if (ikonaStanuRodziny(nazwa, size: 22) != null) ikonaStanuRodziny(nazwa, size: 22)!],
         '${l.cOlony}: $nazwa', gdzie((h) => wartosci.contains(h.stanRodziny.trim())));
+  }
+  //siła rodziny: słaba / bardzo słaba barwią ikonę ula (03.11.2026)
+  for (final (wartosci, etykieta) in slabeSilyRodziny()) {
+    final nazwa = etykieta(l);
+    wiersz([pszczola, if (ikonaSilyRodziny(nazwa, size: 22) != null) ikonaSilyRodziny(nazwa, size: 22)!],
+        '${l.cOlony}: $nazwa', gdzie((h) => wartosci.contains(h.silaRodziny.trim())));
   }
 
   //RAMKI - mateczniki i zadania
@@ -324,6 +331,8 @@ Future<PodsumowaniePasieki> podsumowaniePasieki(int pasieka) async {
   final ramki = await ramkiProblemowPasieki(pasieka);
   final pStanuRodziny = wszystkieJezyki((l) => l.colony + " " + l.isIs);
   final problemyRodziny = {for (final (wartosci, _) in _stanyRodziny()) ...wartosci};
+  final pSilyRodziny = wszystkieJezyki((l) => " " + l.colony + " " + l.isIs);
+  final problemySily = {for (final (wartosci, _) in slabeSilyRodziny()) ...wartosci};
   final matki = <int, StanMatkiUla>{};
   final uwagi = <int, List<String>>{};
   for (final h in ule) {
@@ -337,6 +346,17 @@ Future<PodsumowaniePasieki> podsumowaniePasieki(int pasieka) async {
       Info? najnowszy;
       for (final inf in wpisy) {
         if (pStanuRodziny.contains(inf.parametr) &&
+            (najnowszy == null ||
+                momentWpisu(inf.data, inf.czas).isAfter(momentWpisu(najnowszy.data, najnowszy.czas)))) {
+          najnowszy = inf;
+        }
+      }
+      if (najnowszy != null) lista.add(najnowszy.uwagi);
+    }
+    if (problemySily.contains(h.silaRodziny.trim())) {
+      Info? najnowszy;
+      for (final inf in wpisy) {
+        if (pSilyRodziny.contains(inf.parametr) &&
             (najnowszy == null ||
                 momentWpisu(inf.data, inf.czas).isAfter(momentWpisu(najnowszy.data, najnowszy.czas)))) {
           najnowszy = inf;
@@ -388,6 +408,10 @@ Widget panelUliDoZrobienia(BuildContext context, PodsumowaniePasieki d) {
         _ => 'orange',
       };
       problemy.add((kolor, '${l.cOlony}: ${etykieta(l)}'));
+    }
+    for (final (wartosci, etykieta) in slabeSilyRodziny()) {
+      if (!wartosci.contains(h.silaRodziny.trim())) continue;
+      problemy.add((kolorSilyRodziny(h.silaRodziny)!, '${l.cOlony}: ${etykieta(l)}'));
     }
     final r = d.ramki[h.ulNr];
     if (r != null) {
