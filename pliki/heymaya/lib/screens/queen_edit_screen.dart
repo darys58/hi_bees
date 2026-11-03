@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../models/queen.dart';
 import '../helpers/queen_helpers.dart';
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/odlaczenie_matki.dart'; //strata matki = wpis "matka brak" w ulu
 
 class QueenEditScreen extends StatefulWidget {
   static const routeName = '/queen_edit';
@@ -508,11 +509,22 @@ class _QueenEditScreenState extends State<QueenEditScreen> {
                               shape: const StadiumBorder(
                                 side: const BorderSide(color: Color.fromARGB(255, 162, 103, 0)),
                                 ),
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_formKey1.currentState!.validate()) {
-                                  //etap 2 część B: prawa w bazie właściciela
-                                  if (!mogeZapisac(context, [czMatki], edycja: edycja, wyslany: edycja && queens[0].arch != 0, pasieka: pasieka)) return;
+                                  //STRATA MATKI PODŁĄCZONEJ DO ULA (30.10.2026): nowa data straty
+                                  //u żywej matki z ulem = wpis "matka brak" w tym ulu z dniem
+                                  //straty i belka jak przy odłączeniu (odlaczenie_matki.dart).
+                                  //Matka zostaje przypisana do ula - to jej historia.
+                                  final bool strata = edycja &&
+                                      queens[0].ul != 0 &&
+                                      matkaZyje(queens[0].dataStraty) &&
+                                      !matkaZyje(dateControllerStraty.text);
+                                  //etap 2 część B: prawa w bazie właściciela (wpis "brak" = prawo do info)
+                                  if (!mogeZapisac(context, strata ? [czMatki, czInfo] : [czMatki], edycja: edycja, wyslany: edycja && queens[0].arch != 0, pasieka: pasieka)) return;
                                   // if (nowyZasobId! >= 4) nowyMiara = 2;
+                                  //przed zapisem matki - liczy matki ula, póki ta jeszcze żyje
+                                  if (strata) await zapiszOdlaczenieMatki(context, queens[0], data: dateControllerStraty.text);
+                                  if (!context.mounted) return;
                                   if (edycja) {
                                     Queens.editQueen(
                                             queens[0].id,
