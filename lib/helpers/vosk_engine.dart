@@ -136,7 +136,7 @@ class VoskFraza {
 ///
 /// To NIE są komunikaty, tylko logika czyszcząca tekst - dlatego nie idą do
 /// ARB, a tutaj, obok pozostałych map per język ([VoskEngine._frazyKonca],
-/// [VoskEngine._modeleUrl]).
+/// [VoskEngine._plikModelu]).
 class _EchaNotatki {
   const _EchaNotatki({
     required this.ogonKonca,
@@ -340,9 +340,17 @@ class VoskEngine {
   // Dodane 03.09.2026 razem z [jezyk] - dotąd był tylko polski, na sztywno.
   // "Vosk nie ma modeli EN" (stary komentarz w apiarys_screen.dart) był
   // błędny - model angielski istnieje pod tym samym adresem co polski.
-  static const Map<String, String> _modeleUrl = {
-    'pl': 'https://alphacephei.com/vosk/models/vosk-model-small-pl-0.22.zip',
-    'en': 'https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip',
+  //
+  // 03.11.2026: model leży na darys.pl (niezależność od serwera Vosk);
+  // alphacephei.com zostaje jako zapasowe źródło. Plik na darys.pl to
+  // ORYGINALNY zip bez zmian: ModelLoader nazywa katalog modelu po nazwie
+  // pliku z adresu i oczekuje w zipie katalogu o tej samej nazwie - dzięki
+  // temu modele pobrane wcześniej z alphacephei nie są pobierane ponownie.
+  static const String _modeleDarys = 'https://darys.pl/vosk';
+  static const String _modeleVosk = 'https://alphacephei.com/vosk/models';
+  static const Map<String, String> _plikModelu = {
+    'pl': 'vosk-model-small-pl-0.22.zip',
+    'en': 'vosk-model-small-en-us-0.15.zip',
   };
 
   // Rozmiar modelu do komunikatu "Pobieram model..." (patrz [uruchom]).
@@ -354,13 +362,30 @@ class VoskEngine {
     'en': '~40 MB',
   };
 
-  String get _modelUrl {
-    final url = _modeleUrl[jezyk];
-    if (url == null) {
+  // Adresy modelu w kolejności prób: najpierw darys.pl, potem serwer Vosk.
+  List<String> get _modelUrle {
+    final plik = _plikModelu[jezyk];
+    if (plik == null) {
       throw ArgumentError('brak modelu Vosk dla języka "$jezyk" - znane: '
-          '${_modeleUrl.keys.join(", ")}');
+          '${_plikModelu.keys.join(", ")}');
     }
-    return url;
+    return ['$_modeleDarys/$plik', '$_modeleVosk/$plik'];
+  }
+
+  // ModelLoader nie sprawdza statusu HTTP - przy 404 dostaje stronę błędu
+  // zamiast zipa i rzuca przy rozpakowaniu. Wtedy próbujemy kolejny adres;
+  // błąd ostatniego idzie dalej do [uruchom].
+  Future<String> _pobierzModel(ModelLoader loader) async {
+    final urle = _modelUrle;
+    for (int i = 0; i < urle.length; i++) {
+      try {
+        return await loader.loadFromNetwork(urle[i]);
+      } catch (e) {
+        debugPrint('VOSK: model z ${urle[i]} nie pobrany: $e');
+        if (i == urle.length - 1) rethrow;
+      }
+    }
+    throw StateError('brak adresów modelu');
   }
 
   // 16 kHz - standard modeli Vosk. Porcja podawana do recognizera = 0,2 s.
@@ -645,7 +670,7 @@ class VoskEngine {
       final ModelLoader loader = ModelLoader(modelStorage: storage);
       // Pobranie tylko za pierwszym razem - potem ModelLoader widzi katalog.
       _stan(teksty.voiceDownloadingModel(_rozmiarModelu[jezyk] ?? ''));
-      final String sciezka = await loader.loadFromNetwork(_modelUrl);
+      final String sciezka = await _pobierzModel(loader);
 
       _stan(teksty.voiceLoadingModel);
       _model = await _vosk.createModel(sciezka);
