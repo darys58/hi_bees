@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import AudioToolbox
+import CallKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -23,6 +24,22 @@ import AudioToolbox
 
   //odczyt kodu QR ula (16.10.2026) - krótkie systemowe „tink", inne niż potwierdzenie komendy
   private let idDzwiekuSkanu: SystemSoundID = 1057
+
+  //STAN ROZMOWY TELEFONICZNEJ (03.11.2026) - do nakładki „Polecenia dla Siri"
+  //na ekranie sterowania głosem (RozmowyHelper w Dart). CXCallObserver tylko
+  //OBSERWUJE rozmowy (także komórkowe) - nie odbiera ich i nie wymaga VoIP.
+  //Wysyłamy „dzwoni" / „trwa" / „" metodą „rozmowa"; Dart może też zapytać
+  //o bieżący stan metodą „stan".
+  private let kanalRozmow = "hej_maja/rozmowy"
+  private let obserwatorRozmow = CXCallObserver()
+  private var kanalRozmowFlutter: FlutterMethodChannel?
+
+  private func stanRozmowy() -> String {
+    let rozmowy = obserwatorRozmow.calls.filter { !$0.hasEnded }
+    if rozmowy.contains(where: { $0.hasConnected }) { return "trwa" }
+    if rozmowy.contains(where: { !$0.isOutgoing }) { return "dzwoni" }
+    return "" //wychodząca jeszcze niepołączona - pomijamy
+  }
 
   override func application(
     _ application: UIApplication,
@@ -58,6 +75,28 @@ import AudioToolbox
       }
     }
 
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let kanal = FlutterMethodChannel(
+        name: kanalRozmow,
+        binaryMessenger: controller.binaryMessenger)
+      kanal.setMethodCallHandler { [weak self] call, result in
+        guard call.method == "stan" else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        result(self?.stanRozmowy() ?? "")
+      }
+      kanalRozmowFlutter = kanal
+      obserwatorRozmow.setDelegate(self, queue: DispatchQueue.main)
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+}
+
+//zmiana stanu dowolnej rozmowy - wysyłamy do Darta stan wypadkowy
+extension AppDelegate: CXCallObserverDelegate {
+  func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
+    kanalRozmowFlutter?.invokeMethod("rozmowa", arguments: stanRozmowy())
   }
 }

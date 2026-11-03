@@ -96,6 +96,7 @@ import '../models/weathers.dart';
 import '../helpers/parametr_nazwy.dart'; //klucz bazy -> nazwa na ekran
 import '../helpers/powierzchnia_ramki.dart'; //dmRamkiUla - powierzchnia węzy wg typu ula
 import '../helpers/prawa_zespolu.dart'; //blokady w bazie właściciela (etap 2 część B)
+import '../helpers/rozmowy_helper.dart'; //nakładka „Polecenia dla Siri” w czasie rozmowy (iOS)
 //void main() {
 //  runApp(MyApp());
 //}
@@ -638,6 +639,42 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
           buildPasekStanu(context),
         ],
       ),
+    );
+  }
+
+  //NAKŁADKA „POLECENIA DLA SIRI” (03.11.2026) - widoczna, gdy przychodzi rozmowa,
+  //znika po jej zakończeniu (RozmowyHelper.stan). Aplikacja nie odbiera rozmów
+  //(iOS nie pozwala), robi to Siri - po angielsku, bo Siri nie mówi po polsku.
+  //„answer”/„decline” działają bez „Hey Siri”, „hang up” wymaga włączenia
+  //Ustawienia → Siri → Kończenie połączeń (patrz voice_calls_help_screen).
+  //Teksty PL/EN poza ARB - jak cały ekran Rozmów telefonicznych.
+  Widget _buildPoleceniaSiri(BuildContext context) {
+    final bool pl = globals.jezyk == 'pl_PL';
+    const TextStyle styl = TextStyle(fontSize: 22, color: Colors.black);
+    final List<String> polecenia = pl
+        ? const ['answer (odbierz)', 'decline (odrzuć)', 'hang up (rozłącz)']
+        : const ['answer', 'decline', 'hang up'];
+    return Center(
+        child: Container(
+          margin: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(240, 255, 255, 255),
+            border: Border.all(color: Colors.blue, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(pl ? 'Polecenia dla Siri:' : 'Siri commands:',
+                  style: styl.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              const Text('Hey Siri:', style: styl),
+              for (final p in polecenia) Text('• $p', style: styl),
+            ],
+          ),
+        ),
     );
   }
 
@@ -1330,6 +1367,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this); //przerwania: telefon, tło, Siri
+    RozmowyHelper.start(); //stan rozmowy telefonicznej -> nakładka z poleceniami Siri (tylko iOS)
     _sound.init(); //preload dźwięków
     //matki - komendy o cechach matki sprawdzają SYNCHRONICZNIE, czy ul ma matkę (_idMatkiUla)
     Provider.of<Queens>(context, listen: false).fetchAndSetQueens();
@@ -9062,6 +9100,19 @@ print('openDialog = $openDialog');
               ),
             ),
           if (_skanerQr != null) Positioned.fill(child: _buildSkanerQr(context)),
+          //rozmowa telefoniczna (iOS): polecenia dla Siri - od dzwonienia do rozłączenia
+          //Positioned MUSI być bezpośrednio w Stacku - builder siedzi w środku;
+          //IgnorePointer: nakładka (także pusta) nie zabiera dotyku
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ValueListenableBuilder<String?>(
+                valueListenable: RozmowyHelper.stan,
+                builder: (context, stan, _) => stan == null
+                    ? const SizedBox.shrink()
+                    : _buildPoleceniaSiri(context),
+              ),
+            ),
+          ),
         ]),
       ),
     );

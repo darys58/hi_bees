@@ -4,6 +4,7 @@ import '../globals.dart' as globals;
 import '../helpers/sound_helper.dart';
 import '../helpers/recording_helper.dart'; //nagrania dyktowanych notatek
 import '../helpers/photo_helper.dart'; //ustawienia filmu (dźwięk, długość)
+import 'voice_calls_help_screen.dart'; //jak odebrać rozmowę bez dotykania
 
 /// Ustawienia sterowania głosem - wszystko, co dotyczy Mai: podgląd korpusu,
 /// nagrywanie dyktowanych notatek i głośność odzywek.
@@ -211,6 +212,18 @@ class _VoiceSettingsScreenState extends State<VoiceSettingsScreen> {
                   ],
                 ),
               ),
+            ),
+          ),
+          // ROZMOWY TELEFONICZNE (03.11.2026) - belka do ekranu z instrukcją
+          // funkcji systemu (Siri / Asystent Google, auto-odbieranie): aplikacja
+          // sama nie odbierze rozmowy. Tekst bez pogrubienia i bez ikony,
+          // strzałka po prawej - jak belki w Ustawieniach.
+          Card(
+            child: ListTile(
+              title: Text(VoiceCallsHelpScreen.tytul),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const VoiceCallsHelpScreen())),
             ),
           ),
           // Wymuszenie układu poziomego dla live podglądu korpusu
