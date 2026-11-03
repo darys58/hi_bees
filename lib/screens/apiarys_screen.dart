@@ -179,6 +179,10 @@ class _ApiarysScreenState extends State<ApiarysScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this); //synchronizacja konta po powrocie z tła
+    //telefon bez NFC - przycisk QR zamiast NFC (patrz globals.nfcDostepne)
+    NfcHelper.isNfcAvailable().then((jest) {
+      if (!jest && mounted) setState(() => globals.nfcDostepne = false);
+    }).catchError((_) {});
   }
 
   @override
@@ -1970,7 +1974,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
           //polski i angielski (modele Vosk PL i EN - patrz vosk_engine.dart).
           //Warunek musi być lustrem bramki przycisku głosu niżej - do 15.09.2026
           //sprawdzał tylko 'pl_PL' i przy EN z wyłączonym NFC chował przycisk.
-          : globals.nfcMode == 'off' &&
+          : globals.nfcMode == 'off' && !globals.czytnikQr() &&
                   (globals.key == "bez_klucza" ||
                       (globals.jezyk != 'pl_PL' && globals.jezyk != 'en_US'))
             ? null
@@ -2033,7 +2037,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                         width: 10,
                       ),
     // Przycisk NFC
-                      if (globals.nfcMode != 'off')
+                      //przycisk QR także przy "Wyłącz obsługę NFC" i w telefonie bez NFC
+                      if (globals.nfcMode != 'off' || globals.czytnikQr())
                       SizedBox(
                           width: 100,
                           height: 50,
@@ -2044,14 +2049,14 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                               //     ? null
                               //     :
                               //czytnik wybrany w "Obsługa NFC i QR" (15.10.2026)
-                              if (globals.czytnikUla == 'qr') {
+                              if (globals.czytnikQr()) {
                                 NfcHelper.skanujKodQr(context);
                               } else {
                                 NfcHelper.handleNfcScan(context);
                               }
                             },
                             child: Text(
-                                globals.czytnikUla == 'qr' ? 'QR' : AppLocalizations.of(context)!.nfcButton,
+                                globals.czytnikQr() ? 'QR' : AppLocalizations.of(context)!.nfcButton,
                                 style: TextStyle(
                                     height: 1.0,
                                     fontSize: 14,

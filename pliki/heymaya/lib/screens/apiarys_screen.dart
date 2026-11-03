@@ -693,6 +693,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
     final isAvailable = await NfcManager.instance.isAvailable();
     //print('start funkcji startNfc, isAvailable = $isAvailable');
     if (!isAvailable) {
+      //telefon bez NFC (albo NFC wyłączone) - przycisk QR na pasku (globals.nfcDostepne)
+      if (mounted && globals.nfcDostepne) setState(() => globals.nfcDostepne = false);
       _showNfcNotAvailableDialog(context);//komunikat jezeli NFC jest niedostępne
       //print('NFC niedostępne');
       return;
@@ -2208,7 +2210,7 @@ class _ApiarysScreenState extends State<ApiarysScreen>
       bottomSheet: globals.key == '' ||
               ((globals.key == 'bez_klucza' ||
                       (globals.jezyk != 'pl_PL' && globals.jezyk != 'en_US')) &&
-                  globals.czytnikUla != 'qr')
+                  !globals.czytnikQr())
           ? null
           : Container(
               height: 100,
@@ -2250,7 +2252,8 @@ class _ApiarysScreenState extends State<ApiarysScreen>
                                 color: Color.fromARGB(255, 0, 0, 0))),
                       )),
                   //przycisk QR (czytnik 'qr' w "Obsługa NFC i QR", 15.10.2026)
-                  if (globals.czytnikUla == 'qr') ...[
+                  //także w telefonie bez NFC (globals.nfcDostepne)
+                  if (globals.czytnikQr()) ...[
                     const SizedBox(width: 10),
                     SizedBox(
                       width: 100,

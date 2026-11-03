@@ -198,6 +198,11 @@ String nfcMode = 'summary'; //tryb NFC: 'off' - wyłączony, 'info' - otwieraj i
 //razem z nfcMode jako przyrostek ".qr" ("info.qr") - w dodatkach nie ma wolnej kolumny
 String czytnikUla = 'nfc';
 String zapisTrybuNfc() => czytnikUla == 'qr' ? '$nfcMode.qr' : nfcMode;
+//telefon bez NFC (np. iPhone 6s, 30.10.2026) - sprawdzane przy starcie ekranu startowego.
+//Wtedy przycisk na stronie startowej jest zawsze przyciskiem QR, niezależnie od
+//wybranego czytnika i od "Wyłącz obsługę NFC" - inaczej taki telefon nie ma czym czytać uli.
+bool nfcDostepne = true;
+bool czytnikQr() => czytnikUla == 'qr' || !nfcDostepne;
 
 bool showZakupySprzedaz = true; //pokazuj/ukrywaj przyciski Zakupy i Sprzedaż na stronie startowej
 
