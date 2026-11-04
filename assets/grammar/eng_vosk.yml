@@ -152,6 +152,14 @@ context:
       - (hey maya) record [video,film]
     voiceVideoStop:
       - (hey maya) [stop,finish,end] recording
+    # --- screen scrolling (04.11.2026) ----------------------------------------
+    # Scrolls what does not fit: help window, apiary summary, text zone
+    # (voice_vosk_screen._przewinEkran). Saves nothing, "hey maya" optional.
+    # Words checked in pliki/vosk_slownik_eng.txt.
+    voiceScrollUp:
+      - (hey maya) screen up
+    voiceScrollDown:
+      - (hey maya) screen down
     setApiary:
       - $state:apiaryState apiary (number) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

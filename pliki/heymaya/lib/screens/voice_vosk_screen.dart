@@ -582,6 +582,11 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
   //najpilniejsze na górze (problemy_pasieki.dart). Znika po otwarciu ula, zamknięciu albo
   //zmianie pasieki i krzyżykiem. Bez osobnej komendy - decyzja usera.
   PodsumowaniePasieki? _podsumowanie;
+  //PRZEWIJANIE GŁOSEM (04.11.2026): "ekran w górę/w dół" - podsumowanie pasieki
+  //i strefa tekstów (pion i poziom budują się zamiennie, więc kontroler jest jeden).
+  //Okno pomocy ma własny kontroler (przewijaniePomocy w voice_help_dialogs.dart).
+  final ScrollController _podsumowanieScroll = ScrollController();
+  final ScrollController _tekstyScroll = ScrollController();
   int _podsumowanieLicznik = 0; //starsze, wolniej policzone podsumowanie nie nadpisuje nowszego
 
   Future<void> _pokazPodsumowanie(int pasieka) async {
@@ -618,6 +623,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
             child: Stack(
               children: [
                 SingleChildScrollView(
+                  controller: _podsumowanieScroll,
                   //w poziomie +30 z lewej - wycięcie ekranu iPhone'a zasłaniało ikony uli
                   padding: EdgeInsets.fromLTRB(
                       MediaQuery.of(context).orientation == Orientation.landscape ? 42 : 12,
@@ -689,7 +695,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       if (_aparat != null || _skanerQr != null) {
         _zamknijAparat();
         _zamknijSkanerQr(); //skaner kodów QR też używa aparatu
-        beep('close');
+        //bez odzywki „zamknięte” - zamknięcie podglądu widać (prośba usera 04.11.2026)
       }
       return;
     }
@@ -1429,6 +1435,8 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
     _timerFilmu?.cancel();
     _timerOdliczania?.cancel();
     _aparat?.dispose();
+    _podsumowanieScroll.dispose();
+    _tekstyScroll.dispose();
     _sound.dispose(); //zwolnienie odtwarzaczy dźwięku
     WakelockPlus.disable(); //usunięcie blokady wygaszania ekranu
     // Powrót do wymuszonej orientacji pionowej
@@ -1670,7 +1678,43 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
       return;
     }
 
+    //8. przewijanie ekranu ("ekran w górę/w dół", 04.11.2026). Nic nie zapisuje.
+    if (f.inference.intent == 'voiceScrollUp' || f.inference.intent == 'voiceScrollDown') {
+      _przewinEkran(f.inference.intent == 'voiceScrollDown');
+      return;
+    }
+
     _obsluzKomende(f.inference);
+  }
+
+  //"ekran w górę/w dół": przewija to, co jest na wierzchu - okno pomocy, potem
+  //podsumowanie pasieki (gdy nie zasłania go aparat), na końcu strefę tekstów.
+  //Krok = 3/4 widocznej wysokości, żeby ostatnie linie zostały na ekranie.
+  //Nie ma czego przewijać (wszystko się mieści albo już koniec) - sygnał błędu.
+  void _przewinEkran(bool wDol) {
+    ScrollController? kontroler;
+    final ScrollController? pomoc = przewijaniePomocy;
+    if (pomoc != null && pomoc.hasClients) { //także okno z przycisku "?" (bez openDialog)
+      kontroler = pomoc;
+    } else if (_podsumowanie != null && _aparat == null && !_aparatPrzelacza &&
+        _podsumowanieScroll.hasClients) {
+      kontroler = _podsumowanieScroll;
+    } else if (_tekstyScroll.hasClients) {
+      kontroler = _tekstyScroll;
+    }
+    if (kontroler == null || kontroler.positions.length != 1) {
+      beep('error');
+      return;
+    }
+    final ScrollPosition poz = kontroler.position;
+    final double cel = (poz.pixels + (wDol ? 1 : -1) * poz.viewportDimension * 0.75)
+        .clamp(poz.minScrollExtent, poz.maxScrollExtent);
+    if ((cel - poz.pixels).abs() < 1) {
+      beep('error');
+      return;
+    }
+    kontroler.animateTo(cel,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
   }
 
   //Opis frazy na pasku stanu.
@@ -5551,7 +5595,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                           printText1 = ' ${slots[key]}';
                           Navigator.pop(context);
                           openDialog = false;
-                          beep('close');
+                          //bez odzywki „zamknięte” - zamknięcie okna widać (prośba usera 04.11.2026)
                         }
                         break;
                     }
@@ -5569,7 +5613,7 @@ class _VoiceVoskScreenState extends State<VoiceVoskScreen>
                           printText1 = ' ${slots[key]}';
                           Navigator.pop(context);
                           openDialog = false;
-                          beep('close');
+                          //bez odzywki „zamknięte” - zamknięcie okna widać (prośba usera 04.11.2026)
                         }
                         break;
                     }
@@ -9032,6 +9076,7 @@ print('openDialog = $openDialog');
                         //zabiera.
                         Expanded(
                           child: SingleChildScrollView(
+                            controller: _tekstyScroll,
                             child: buildPasekStanu(context),
                           ),
                         ),
@@ -9080,6 +9125,7 @@ print('openDialog = $openDialog');
                 _kreska(),
                 Expanded(
                   child: SingleChildScrollView(
+                    controller: _tekstyScroll,
                     child: buildPasekStanu(context),
                   ),
                 ),

@@ -50,6 +50,7 @@ POMOC = [
         'hej maja zrób zdjęcie', 'zamknij aparat', 'wyłącz aparat',
         'nagraj film', 'nagraj filmik', 'nagraj wideo', 'hej maja nagraj film',
         'zatrzymaj nagrywanie', 'zakończ nagrywanie', 'hej maja zatrzymaj nagrywanie',
+        'ekran w górę', 'ekran w dół', 'hej maja ekran w górę', 'hej maja ekran w dół',
     ]),
     ('lokacja', [
         'otwórz pasiekę numer jeden',

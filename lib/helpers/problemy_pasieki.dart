@@ -26,6 +26,9 @@ class RamkiProblemuUla {
   int get otwarte => mateczniki > usuniete ? mateczniki - usuniete : 0;
   //daty przeglądów, z których są mateczniki i zadania - notatki przeglądu w podsumowaniu głosu
   final Set<String> daty = {};
+  //daty osobno dla mateczników i dla każdego zadania - notatka przy SWOIM problemie (04.11.2026)
+  final Set<String> datyMatecznikow = {};
+  final Map<String, Set<String>> datyZadan = {}; //zadanie -> daty przeglądów
 }
 
 /// ul -> zadania i mateczniki z ramek pasieki [pasieka].
@@ -40,15 +43,18 @@ Future<Map<int, RamkiProblemuUla>> ramkiProblemowPasieki(int pasieka) async {
       case 11:
         u.mateczniki += ile;
         u.daty.add(data);
+        u.datyMatecznikow.add(data);
         break;
       case 12:
         u.usuniete += ile;
         u.daty.add(data);
+        u.datyMatecznikow.add(data);
         break;
       case 13:
         if (zadanieDoZrobienia(wartosc)) {
           u.zadania.putIfAbsent(wartosc, () => <String>{}).add('${r['korpusNr']}.${r['ramkaNr']}');
           u.daty.add(data);
+          u.datyZadan.putIfAbsent(wartosc, () => <String>{}).add(data);
         }
         break;
     }
@@ -211,7 +217,13 @@ class StanMatkiUla {
   bool doWymiany = false;
   String stan = ''; //'nieunasienniona' / 'trutowa' / ''
   //uwagi z wpisów, które dały powyższe problemy (podsumowanie w sterowaniu głosem)
-  final List<String> uwagi = [];
+  String uwagaBrak = '';
+  String uwagaDoWymiany = '';
+  String uwagaStan = '';
+  //daty tych wpisów (rrrr-mm-dd) - dzień i miesiąc na końcu problemu (04.11.2026)
+  String dataBrak = '';
+  String dataDoWymiany = '';
+  String dataStan = '';
 }
 
 /// Stan matki ula [ul] z wpisów info - odpowiednik OdswiezBelkiMatka (matka1/2/3).
@@ -308,9 +320,18 @@ Future<StanMatkiUla> stanMatkiUla(int pasieka, int ul, {List<Info>? wpisyUla}) a
     wynik.doWymiany = false;
     wynik.stan = '';
   }
-  if (wynik.brak) wynik.uwagi.add(znak!.uwagi);
-  if (wynik.doWymiany) wynik.uwagi.add(jakosc!.uwagi);
-  if (wynik.stan.isNotEmpty) wynik.uwagi.add(stan!.uwagi);
+  if (wynik.brak) {
+    wynik.uwagaBrak = znak!.uwagi.trim();
+    wynik.dataBrak = znak!.data;
+  }
+  if (wynik.doWymiany) {
+    wynik.uwagaDoWymiany = jakosc!.uwagi.trim();
+    wynik.dataDoWymiany = jakosc!.data;
+  }
+  if (wynik.stan.isNotEmpty) {
+    wynik.uwagaStan = stan!.uwagi.trim();
+    wynik.dataStan = stan!.data;
+  }
   return wynik;
 }
 
@@ -320,8 +341,14 @@ class PodsumowaniePasieki {
   final List<Hive> ule;
   final Map<int, RamkiProblemuUla> ramki;
   final Map<int, StanMatkiUla> matki;
-  final Map<int, List<String>> uwagi; //ul -> notatki z wpisów o jego problemach
-  PodsumowaniePasieki(this.pasieka, this.ule, this.ramki, this.matki, this.uwagi);
+  final Map<int, String> uwagiRodziny; //ul -> notatka najnowszego wpisu o stanie rodziny
+  final Map<int, String> uwagiSily; //ul -> notatka najnowszego wpisu o sile rodziny
+  final Map<int, String> dataRodziny; //ul -> data najnowszego wpisu o stanie rodziny
+  final Map<int, String> dataSily; //ul -> data najnowszego wpisu o sile rodziny
+  final Map<int, Map<String, List<String>>> uwagiPrzegladow; //ul -> data przeglądu -> notatki
+  final Map<int, String> ostatniPrzeglad; //ul -> data ostatniego przeglądu (wpisy 'inspection')
+  PodsumowaniePasieki(this.pasieka, this.ule, this.ramki, this.matki, this.uwagiRodziny,
+      this.uwagiSily, this.dataRodziny, this.dataSily, this.uwagiPrzegladow, this.ostatniPrzeglad);
 }
 
 Future<PodsumowaniePasieki> podsumowaniePasieki(int pasieka) async {
@@ -334,71 +361,125 @@ Future<PodsumowaniePasieki> podsumowaniePasieki(int pasieka) async {
   final pSilyRodziny = wszystkieJezyki((l) => " " + l.colony + " " + l.isIs);
   final problemySily = {for (final (wartosci, _) in slabeSilyRodziny()) ...wartosci};
   final matki = <int, StanMatkiUla>{};
-  final uwagi = <int, List<String>>{};
+  final uwagiRodziny = <int, String>{};
+  final uwagiSily = <int, String>{};
+  final dataRodziny = <int, String>{};
+  final dataSily = <int, String>{};
+  final uwagiPrzegladow = <int, Map<String, List<String>>>{};
+  final ostatniPrzeglad = <int, String>{};
+
+  //najnowszy wpis o parametrze z [parametry]
+  Info? najnowszyWpis(List<Info> wpisy, Set<String> parametry) {
+    Info? najnowszy;
+    for (final inf in wpisy) {
+      if (parametry.contains(inf.parametr) &&
+          (najnowszy == null ||
+              momentWpisu(inf.data, inf.czas).isAfter(momentWpisu(najnowszy.data, najnowszy.czas)))) {
+        najnowszy = inf;
+      }
+    }
+    return najnowszy;
+  }
+
   for (final h in ule) {
     final wpisy = (await DBHelper.getInfosOfHive(pasieka, h.ulNr)).map((m) => Info.fromMap(m)).toList();
-    final m = await stanMatkiUla(pasieka, h.ulNr, wpisyUla: wpisy);
-    matki[h.ulNr] = m;
+    matki[h.ulNr] = await stanMatkiUla(pasieka, h.ulNr, wpisyUla: wpisy);
     //NOTATKI przy problemach (28.10.2026): uwagi wpisów, które dały problem - matka (znak,
-    //jakość, stan), rodzina (najnowszy wpis o stanie), ramki (przegląd z dnia mateczników/zadań)
-    final lista = <String>[...m.uwagi];
+    //jakość, stan), rodzina (najnowszy wpis o stanie / sile), ramki (przegląd z dnia mateczników/zadań)
     if (problemyRodziny.contains(h.stanRodziny.trim())) {
-      Info? najnowszy;
-      for (final inf in wpisy) {
-        if (pStanuRodziny.contains(inf.parametr) &&
-            (najnowszy == null ||
-                momentWpisu(inf.data, inf.czas).isAfter(momentWpisu(najnowszy.data, najnowszy.czas)))) {
-          najnowszy = inf;
-        }
+      final w = najnowszyWpis(wpisy, pStanuRodziny);
+      if (w != null) {
+        if (w.uwagi.trim().isNotEmpty) uwagiRodziny[h.ulNr] = w.uwagi.trim();
+        dataRodziny[h.ulNr] = w.data;
       }
-      if (najnowszy != null) lista.add(najnowszy.uwagi);
     }
     if (problemySily.contains(h.silaRodziny.trim())) {
-      Info? najnowszy;
-      for (final inf in wpisy) {
-        if (pSilyRodziny.contains(inf.parametr) &&
-            (najnowszy == null ||
-                momentWpisu(inf.data, inf.czas).isAfter(momentWpisu(najnowszy.data, najnowszy.czas)))) {
-          najnowszy = inf;
-        }
-      }
-      if (najnowszy != null) lista.add(najnowszy.uwagi);
-    }
-    final r = ramki[h.ulNr];
-    if (r != null && (r.otwarte > 0 || r.zadania.isNotEmpty)) {
-      for (final inf in wpisy) {
-        if (inf.kategoria == 'inspection' && r.daty.contains(inf.data)) lista.add(inf.uwagi);
+      final w = najnowszyWpis(wpisy, pSilyRodziny);
+      if (w != null) {
+        if (w.uwagi.trim().isNotEmpty) uwagiSily[h.ulNr] = w.uwagi.trim();
+        dataSily[h.ulNr] = w.data;
       }
     }
-    //bez pustych i powtórzeń (ta sama notatka bywa w kilku wpisach jednego przeglądu)
-    final czyste = <String>[];
-    for (final u in lista) {
-      final t = u.trim();
-      if (t.isNotEmpty && !czyste.contains(t)) czyste.add(t);
+    //notatki przeglądów: z dni mateczników/zadań oraz z OSTATNIEGO przeglądu ula - ten ostatni
+    //trafia na listę także wtedy, gdy ul nie ma żadnego innego problemu (04.11.2026)
+    String ostatni = '';
+    for (final inf in wpisy) {
+      if (inf.kategoria == 'inspection' && inf.data.compareTo(ostatni) > 0) ostatni = inf.data;
     }
-    if (czyste.isNotEmpty) uwagi[h.ulNr] = czyste;
+    if (ostatni.isNotEmpty) ostatniPrzeglad[h.ulNr] = ostatni;
+    final daty = <String>{...?ramki[h.ulNr]?.daty, if (ostatni.isNotEmpty) ostatni};
+    final naDzien = <String, List<String>>{};
+    for (final inf in wpisy) {
+      if (inf.kategoria != 'inspection' || !daty.contains(inf.data)) continue;
+      final t = inf.uwagi.trim();
+      final lista = naDzien.putIfAbsent(inf.data, () => <String>[]);
+      //bez powtórzeń - ta sama notatka bywa w kilku wpisach jednego przeglądu
+      if (t.isNotEmpty && !lista.contains(t)) lista.add(t);
+    }
+    naDzien.removeWhere((_, v) => v.isEmpty);
+    if (naDzien.isNotEmpty) uwagiPrzegladow[h.ulNr] = naDzien;
   }
-  return PodsumowaniePasieki(pasieka, ule, ramki, matki, uwagi);
+  return PodsumowaniePasieki(
+      pasieka, ule, ramki, matki, uwagiRodziny, uwagiSily, dataRodziny, dataSily,
+      uwagiPrzegladow, ostatniPrzeglad);
+}
+
+//najnowsza z dat rrrr-mm-dd ('' gdy brak)
+String _najnowsza(Iterable<String> daty) =>
+    daty.fold('', (a, b) => b.compareTo(a) > 0 ? b : a);
+
+//rrrr-mm-dd -> "d.mm" (np. "4.11"); inny format - pusto
+String _dzienMiesiac(String data) {
+  final c = data.trim().split('-');
+  if (c.length < 3) return '';
+  final int? dzien = int.tryParse(c[2].length > 2 ? c[2].substring(0, 2) : c[2]);
+  if (dzien == null || c[1].length != 2) return '';
+  return '$dzien.${c[1]}';
 }
 
 //pilność koloru: im mniej, tym wcześniej na liście
-const Map<String, int> _pilnosc = {'red': 0, 'dead': 1, 'orange': 2, 'yellow': 3};
+const Map<String, int> _pilnosc = {'red': 0, 'dead': 1, 'orange': 2, 'yellow': 3, 'green': 4};
 
 /// Lista uli z problemami, najpilniejsze na górze: kolor (czerwony, martwa rodzina,
-/// pomarańczowy, żółty), potem liczba problemów, potem numer ula.
+/// pomarańczowy, żółty, zielony - sama notatka z ostatniego przeglądu), potem liczba
+/// problemów, potem numer ula. Każdy problem w OSOBNEJ LINII razem ze swoją notatką.
 Widget panelUliDoZrobienia(BuildContext context, PodsumowaniePasieki d) {
   final l = AppLocalizations.of(context)!;
   final stanyRodziny = _stanyRodziny();
-  final wiersze = <(int, String, List<String>)>[]; //ul, najgorszy kolor, problemy
+  //ul, najgorszy kolor, linie (opis problemu albo '' przy samej notatce, notatki, data)
+  final wiersze = <(int, String, List<(String, List<String>, String)>)>[];
 
   for (final h in d.ule) {
-    final problemy = <(String, String)>[]; //kolor, opis
+    final problemy = <(String, String, List<String>, String)>[]; //kolor, opis, notatki, data
+    final pokazane = <String>{}; //notatka raz na ul - przy pierwszym problemie, którego dotyczy
+    List<String> notatki(Iterable<String> kandydaci) {
+      final wynik = <String>[];
+      for (final u in kandydaci) {
+        final t = u.trim();
+        if (t.isNotEmpty && pokazane.add(t)) wynik.add(t);
+      }
+      return wynik;
+    }
+
+    final przeglady = d.uwagiPrzegladow[h.ulNr] ?? const <String, List<String>>{};
+    List<String> zDni(Iterable<String> daty) =>
+        notatki([for (final data in daty) ...?przeglady[data]]);
+
     final m = d.matki[h.ulNr];
     if (m != null) {
-      if (m.brak) problemy.add(('red', '${l.qUeen}: ${l.missing}'));
-      if (m.stan == 'trutowa') problemy.add(('red', '${l.qUeen}: ${l.droneLaying}'));
-      if (m.doWymiany) problemy.add(('orange', '${l.qUeen}: ${l.canceled}'));
-      if (m.stan == 'nieunasienniona') problemy.add(('orange', '${l.qUeen}: ${l.virgine1}'));
+      if (m.brak) {
+        problemy.add(('red', '${l.qUeen}: ${l.missing}', notatki([m.uwagaBrak]), m.dataBrak));
+      }
+      if (m.stan == 'trutowa') {
+        problemy.add(('red', '${l.qUeen}: ${l.droneLaying}', notatki([m.uwagaStan]), m.dataStan));
+      }
+      if (m.doWymiany) {
+        problemy.add(
+            ('orange', '${l.qUeen}: ${l.canceled}', notatki([m.uwagaDoWymiany]), m.dataDoWymiany));
+      }
+      if (m.stan == 'nieunasienniona') {
+        problemy.add(('orange', '${l.qUeen}: ${l.virgine1}', notatki([m.uwagaStan]), m.dataStan));
+      }
     }
     for (final (wartosci, etykieta) in stanyRodziny) {
       if (!wartosci.contains(h.stanRodziny.trim())) continue;
@@ -407,31 +488,49 @@ Widget panelUliDoZrobienia(BuildContext context, PodsumowaniePasieki d) {
         OcenaRodziny.zla => 'red',
         _ => 'orange',
       };
-      problemy.add((kolor, '${l.cOlony}: ${etykieta(l)}'));
+      problemy.add((kolor, '${l.cOlony}: ${etykieta(l)}', notatki([d.uwagiRodziny[h.ulNr] ?? '']),
+          d.dataRodziny[h.ulNr] ?? ''));
     }
     for (final (wartosci, etykieta) in slabeSilyRodziny()) {
       if (!wartosci.contains(h.silaRodziny.trim())) continue;
-      problemy.add((kolorSilyRodziny(h.silaRodziny)!, '${l.cOlony}: ${etykieta(l)}'));
+      problemy.add((kolorSilyRodziny(h.silaRodziny)!, '${l.cOlony}: ${etykieta(l)}',
+          notatki([d.uwagiSily[h.ulNr] ?? '']), d.dataSily[h.ulNr] ?? ''));
     }
     final r = d.ramki[h.ulNr];
     if (r != null) {
-      if (r.otwarte > 0) problemy.add(('orange', '${l.queenCellsCount} ${r.otwarte}'));
+      if (r.otwarte > 0) {
+        problemy.add(('orange', '${l.queenCellsCount} ${r.otwarte}', zDni(r.datyMatecznikow),
+            _najnowsza(r.datyMatecznikow)));
+      }
       final zadania = r.zadania.keys.toList()
         ..sort((a, b) => kolejnoscZadaniaRamki(a).compareTo(kolejnoscZadaniaRamki(b)));
-      final policzone = <String, int>{}; //ten sam napis z różnych języków sumowany
+      //ten sam napis z różnych języków sumowany: nazwa -> (liczba ramek, daty przeglądów)
+      final policzone = <String, (int, Set<String>)>{};
       for (final z in zadania) {
         final nazwa = zadanieRamkiWBiezacym(context, z);
-        policzone[nazwa] = (policzone[nazwa] ?? 0) + r.zadania[z]!.length;
+        final (ile, daty) = policzone[nazwa] ?? (0, <String>{});
+        policzone[nazwa] = (ile + r.zadania[z]!.length, {...daty, ...?r.datyZadan[z]});
       }
       for (final e in policzone.entries) {
-        problemy.add(('yellow', '${e.key} (${e.value})'));
+        problemy.add(('yellow', '${e.key} (${e.value.$1})', zDni(e.value.$2), _najnowsza(e.value.$2)));
       }
     }
-    if (problemy.isEmpty) continue;
-    final najgorszy = problemy
-        .map((p) => p.$1)
-        .reduce((a, b) => _pilnosc[a]! <= _pilnosc[b]! ? a : b);
-    wiersze.add((h.ulNr, najgorszy, problemy.map((p) => p.$2).toList()));
+    //notatka z OSTATNIEGO przeglądu - także gdy ul nie ma innych problemów (04.11.2026)
+    final ostatni = d.ostatniPrzeglad[h.ulNr];
+    final zOstatniego = ostatni == null ? const <String>[] : zDni([ostatni]);
+    if (problemy.isEmpty && zOstatniego.isEmpty) continue;
+    final najgorszy = problemy.isEmpty
+        ? 'green'
+        : problemy.map((p) => p.$1).reduce((a, b) => _pilnosc[a]! <= _pilnosc[b]! ? a : b);
+    wiersze.add((
+      h.ulNr,
+      najgorszy,
+      [
+        for (final p in problemy) (p.$2, p.$3, p.$4),
+        if (zOstatniego.isNotEmpty)
+          (problemy.isEmpty ? '' : l.nOteForInspection, zOstatniego, ostatni!),
+      ]
+    ));
   }
   wiersze.sort((a, b) {
     final k = _pilnosc[a.$2]!.compareTo(_pilnosc[b.$2]!);
@@ -439,6 +538,28 @@ Widget panelUliDoZrobienia(BuildContext context, PodsumowaniePasieki d) {
     final n = b.$3.length.compareTo(a.$3.length);
     return n != 0 ? n : a.$1.compareTo(b.$1);
   });
+
+  //notatki pogrubione kursywą i ciemne - czytelne w słońcu (prośba usera 28.10.2026)
+  const stylNotatki = TextStyle(fontWeight: FontWeight.bold, fontStyle: FontStyle.italic);
+  Widget linia(String opis, List<String> uwagi, String data) => Padding(
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Text.rich(
+          TextSpan(
+            style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
+            children: [
+              if (opis.isNotEmpty) TextSpan(text: opis),
+              for (var i = 0; i < uwagi.length; i++)
+                TextSpan(
+                    text: '${opis.isEmpty && i == 0 ? '' : ' · '}„${uwagi[i]}”', style: stylNotatki),
+              //data wpisu na końcu problemu - dzień i miesiąc (prośba usera 04.11.2026)
+              if (_dzienMiesiac(data).isNotEmpty)
+                TextSpan(
+                    text: '  ${_dzienMiesiac(data)}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+            ],
+          ),
+        ),
+      );
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,7 +571,7 @@ Widget panelUliDoZrobienia(BuildContext context, PodsumowaniePasieki d) {
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 6),
-      for (final (ul, kolor, problemy) in wiersze)
+      for (final (ul, kolor, linie) in wiersze)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 5),
           child: Row(
@@ -463,20 +584,11 @@ Widget panelUliDoZrobienia(BuildContext context, PodsumowaniePasieki d) {
                 child: Text('${l.hIve} $ul',
                     style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               ),
-              //problemy i notatki W JEDNEJ LINII (w poziomie mieści się mało uli),
-              //notatki pogrubione i ciemne - czytelne w słońcu (prośba usera 28.10.2026)
+              //każdy problem w nowej linii: problem · „notatka” (prośba usera 04.11.2026)
               Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
-                    children: [
-                      TextSpan(text: problemy.join(' · ')),
-                      for (final u in d.uwagi[ul] ?? const <String>[])
-                        TextSpan(
-                            text: ' · „$u”',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontStyle: FontStyle.italic)),
-                    ],
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [for (final (opis, uwagi, data) in linie) linia(opis, uwagi, data)],
                 ),
               ),
             ],

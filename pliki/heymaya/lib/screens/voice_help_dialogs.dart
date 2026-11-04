@@ -114,7 +114,12 @@ List<TextSpan> _sekcjaSesja(BuildContext context) {
     TextSpan(text: '.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Hej Maja cofnij ostatni zapis/wpis', style: _wymagany),
-    TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n\n',
+    TextSpan(text: ' - cofa ostatnie zapisujące polecenie.\n',
+        style: _komentarz),
+    //voiceScrollUp / voiceScrollDown (04.11.2026)
+    _punktor,
+    TextSpan(text: 'Ekran w górę/w dół', style: _wymagany),
+    TextSpan(text: ' - przewija pomoc, podsumowanie pasieki albo komunikaty, gdy się nie mieszczą.\n\n',
         style: _komentarz),
   ];
 }
@@ -156,7 +161,12 @@ List<TextSpan> _sekcjaSesjaEn() {
     TextSpan(text: '.\n', style: _komentarz),
     _punktor,
     TextSpan(text: 'Hey Maya undo last save/entry', style: _wymagany),
-    TextSpan(text: ' - undoes the last saving command.\n\n',
+    TextSpan(text: ' - undoes the last saving command.\n',
+        style: _komentarz),
+    //voiceScrollUp / voiceScrollDown (04.11.2026)
+    _punktor,
+    TextSpan(text: 'Screen up/down', style: _wymagany),
+    TextSpan(text: ' - scrolls the help, apiary summary or messages when they do not fit.\n\n',
         style: _komentarz),
   ];
 }
@@ -824,10 +834,34 @@ TextSpan _poleceniaMalymi(TextSpan span) {
   return TextSpan(text: maly, style: span.style);
 }
 
+/// Przewijanie OTWARTEGO okna pomocy poleceniem "ekran w górę/w dół" (04.11.2026).
+/// Ustawiane przy otwarciu okna, czyszczone po jego zamknięciu - null = okna nie ma.
+ScrollController? przewijaniePomocy;
+
 Future<void> _pokazOkno(
   BuildContext context,
   List<_Sekcja> sekcje,
   VoidCallback? poZamknieciu,
+) async {
+  final ScrollController przewijanie = ScrollController();
+  przewijaniePomocy = przewijanie;
+  try {
+    await _oknoPomocy(context, sekcje, poZamknieciu, przewijanie);
+  } finally {
+    //okno mogło zostać już zastąpione nowym (drugie "pomóż mi") - wtedy nie ruszamy
+    if (identical(przewijaniePomocy, przewijanie)) przewijaniePomocy = null;
+    //dispose po zakończeniu animacji zamykania - wcześniej scroll view jeszcze żyje
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 500), przewijanie.dispose);
+    });
+  }
+}
+
+Future<void> _oknoPomocy(
+  BuildContext context,
+  List<_Sekcja> sekcje,
+  VoidCallback? poZamknieciu,
+  ScrollController przewijanie,
 ) {
   return showDialog<void>(
     context: context,
@@ -836,6 +870,7 @@ Future<void> _pokazOkno(
         contentPadding: EdgeInsets.only(left: 15, right: 15),
         content: Container(
           child: SingleChildScrollView(
+            controller: przewijanie,
             child: RichText(
               text: TextSpan(
                 style: TextStyle(color: Colors.black),

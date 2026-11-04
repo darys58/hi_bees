@@ -128,6 +128,15 @@ context:
       - (hej maja) nagraj [film,filmik,wideo]
     voiceVideoStop:
       - (hej maja) [zatrzymaj,zakończ] [nagrywanie,film,filmik]
+    # --- przewijanie ekranu (04.11.2026) ---------------------------------------
+    # Przewija to, co się nie mieści: okno pomocy, podsumowanie pasieki, strefę
+    # tekstów (voice_vosk_screen._przewinEkran). Nic nie zapisuje, więc "hej maja"
+    # opcjonalne. Pełna fraza z "ekran" - same "w górę"/"w dół" Vosk myliłby
+    # z rozmową przy ulu. Słowa sprawdzone w pliki/vosk_slownik_pl.txt.
+    voiceScrollUp:
+      - (hej maja) ekran w górę
+    voiceScrollDown:
+      - (hej maja) ekran w dół
     setApiary:
       - $state:apiaryState pasiekę (numer) $pv.TwoDigitInteger:nrXXOfApiary
     setHive:

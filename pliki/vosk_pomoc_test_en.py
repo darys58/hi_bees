@@ -251,6 +251,10 @@ POMOC = [
         'finish recording',
         'end recording',
         'hey maya stop recording',
+        'screen up',
+        'screen down',
+        'hey maya screen up',
+        'hey maya screen down',
     ]),
 ]
 
