@@ -35,11 +35,12 @@ T = {
     ('🔳', 'Kody QR na ulach', 'Wydruk naklejek z kodami dla wybranych uli. Zeskanowanie kodu aparatem – albo polecenie głosowe „czytaj kod” – otwiera pasiekę i ul, tak samo jak tag NFC.'),
     ('👥', 'Praca zespołowa', 'Zapraszanie pomocników do swojej bazy z prawami odczytu lub zapisu w wybranych pasiekach i zakresach danych. Każdy pracuje na swoim telefonie, dane trafiają do jednej bazy.'),
     ('🐝', 'Stan rodziny', 'Nowe cechy rodziny (m.in. „chora”, „strutowiała”), ikonki stanu i siły rodziny w statystyce ula, kolor ikony belki ula według najpoważniejszego problemu.'),
-    ('🎙️', 'Sterowanie głosem', 'Zdjęcia poleceniem „zrób zdjęcie”, notatka do ostatniego zapisu („zanotuj”), cofanie poleceniem „cofnij ostatni zapis”, otwieranie ula tagiem NFC.'),
+    ('🎙️', 'Sterowanie głosem', 'Zdjęcia i filmy poleceniami „zrób zdjęcie” i „nagraj film”, notatka do ostatniego zapisu („zanotuj”), cofanie poleceniem „cofnij ostatni zapis”, otwieranie ula tagiem NFC.'),
     ('🍯', 'Zbiory i raporty', 'Podsumowanie zbiorów osobno dla każdej pasieki, raport osypu varroa, eksport danych do CSV z ośmiu ekranów, liczba nowych ramek z węzą wstawionych do ula od początku sezonu.'),
     ('☁️', 'Kopia w chmurze', 'Ochrona tokenem urządzenia, automatyczna synchronizacja konta, usunięte wpisy znikają też z chmury i z innych telefonów, a import nie nadpisuje niewysłanych zmian.'),
   ],
   aktualizuj='Zmiany są w najnowszej wersji aplikacji, dostępnej w sklepach:',
+  filmy='Jak korzystać z aplikacji? Filmiki instruktażowe znajdziesz na naszym kanale YouTube:',
   reg_tytul='Nowa wersja Regulaminu i Polityki prywatności',
   reg_tekst='Od <strong>{data}</strong> obowiązuje nowa wersja Regulaminu i Polityki prywatności. Dopisaliśmy, jakie wiadomości e-mail wysyłamy: wiadomości o usłudze (takie jak ta) oraz – tylko za odrębną zgodą – informacje o nowościach. Jeśli nie akceptujesz zmian, możesz usunąć konto w aplikacji (O aplikacji → Usuń konto).',
   reg_linki=[('Regulamin', 'https://heymaya.eu/index.php/regulamin/'), ('Polityka prywatności', 'https://heymaya.eu/index.php/polityka-prywatnosci/')],
@@ -68,11 +69,12 @@ T = {
     ('🔳', 'QR codes on hives', 'Printing code stickers for selected hives. Scanning a code with the camera – or the voice command “read code” – opens the apiary and hive, just like an NFC tag.'),
     ('👥', 'Teamwork', 'Inviting helpers to your database with read or write rights in selected apiaries and data scopes. Everyone works on their own phone, the data goes into one database.'),
     ('🐝', 'Colony state', 'New colony traits (including “sick” and “drone laying”), icons for colony state and strength in the hive statistics, hive bar icon colour by the most serious problem.'),
-    ('🎙️', 'Voice control', 'Photos with “take photo”, a note for the last entry, undo with “undo last save”, opening a hive with an NFC tag.'),
+    ('🎙️', 'Voice control', 'Photos and videos with “take photo” and “record video”, a note for the last entry, undo with “undo last save”, opening a hive with an NFC tag.'),
     ('🍯', 'Harvests and reports', 'Harvest summary for each apiary separately, varroa mite drop report, CSV export from eight screens, number of new frames with foundation added to the hive since the start of the season.'),
     ('☁️', 'Cloud backup', 'Protection with a device token, automatic account sync, deleted entries also disappear from the cloud and other phones, and import does not overwrite unsent changes.'),
   ],
   aktualizuj='The changes are in the latest version of the app, available in the stores:',
+  filmy='How to use the app? You will find tutorial videos (in Polish, with English subtitles) on our YouTube channel:',
   reg_tytul='New version of the Terms and Privacy Policy',
   reg_tekst='From <strong>{data}</strong> a new version of the Terms and Privacy Policy applies. We have added which e-mails we send: service messages (like this one) and – only with separate consent – news about the app. If you do not accept the changes, you can delete your account in the app (About app → Delete account).',
   reg_linki=[('Terms', 'https://heymaya.eu/index.php/en/regulations/'), ('Privacy Policy', 'https://heymaya.eu/index.php/en/privacy-policy/')],
@@ -105,6 +107,7 @@ T = {
     ('☁️', 'Cloud-Sicherung', 'Schutz mit einem Gerätetoken, automatische Kontosynchronisierung, gelöschte Einträge verschwinden auch aus der Cloud und von anderen Handys, und der Import überschreibt keine nicht gesendeten Änderungen.'),
   ],
   aktualizuj='Die Änderungen sind in der neuesten Version der App enthalten, erhältlich in den Stores:',
+  filmy='Wie nutzt man die App? Anleitungsvideos (auf Polnisch, mit englischen Untertiteln) finden Sie auf unserem YouTube-Kanal:',
   reg_tytul='Neue Fassung der Nutzungsbedingungen und der Datenschutzerklärung',
   reg_tekst='Ab dem <strong>{data}</strong> gilt eine neue Fassung der Nutzungsbedingungen und der Datenschutzerklärung. Wir haben ergänzt, welche E-Mails wir senden: Nachrichten zum Dienst (wie diese) und – nur mit gesonderter Einwilligung – Neuigkeiten über die App. Wenn Sie mit den Änderungen nicht einverstanden sind, können Sie Ihr Konto in der App löschen (Über die App → Konto löschen).',
   reg_linki=[('Nutzungsbedingungen (Englisch)', 'https://heymaya.eu/index.php/en/regulations/'), ('Datenschutzerklärung (Englisch)', 'https://heymaya.eu/index.php/en/privacy-policy/')],
@@ -230,6 +233,14 @@ def mail(jez, t):
           <tr>
 {przycisk('App Store', 'https://apps.apple.com/app/id6447341365')}{przycisk('Google Play', 'https://play.google.com/store/apps/details?id=eu.darys.heymaya')}          </tr>
         </table>
+      </td>
+    </tr>
+
+    <!-- FILMY INSTRUKTAŻOWE -->
+    <tr>
+      <td class="odstep" align="center" style="padding:18px 40px 0 40px; {F} color:#333333;">
+        <p style="margin:0; font-size:15px; line-height:23px;">{t['filmy']}<br>
+          <a href="https://www.youtube.com/@heymaya_eu" target="_blank" style="color:#c47a00; font-weight:bold;">www.youtube.com/@heymaya_eu</a></p>
       </td>
     </tr>
 
